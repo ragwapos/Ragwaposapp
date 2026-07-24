@@ -1,0 +1,35 @@
+# Query: tenant_settings
+# ContextLines: 1
+
+8 results - 1 file
+
+src\App.jsx:
+    72  // Single-row-style — for tables where a given filter matches at most one row
+    73: // (tenant_settings for one tenant, platform_config's single row).
+    74  function subscribeToRow(table, filterColumn, filterValue, setState) {
+
+  3629  
+  3630:   // tenant_settings has its own `id` primary key, separate from `tenant_id`
+  3631    // (which is just the filter/uniqueness column) — this holds it once known,
+
+  3653      };
+  3654:     const unsub = subscribeToRow("tenant_settings", "tenant_id", tenantId, applyRow);
+  3655      return () => unsub();
+
+  3663      // is the equivalent of Firestore's { merge: true } here.
+  3664:     db.from("tenant_settings").upsert(toSnakeCase({ id: shop, tenantId, merchant, ownerPassword, sectionLocks, enabledPayMethods, lang }))
+  3665        .then(({ error }) => { if (error) console.error("settings save failed", error); });
+
+  3895        subscribeToTable("purchases", "tenant_id", mgmtTenantId, setPurchases),
+  3896:       subscribeToRow("tenant_settings", "tenant_id", mgmtTenantId, (row) => setSettings(row || { enabledPayMethods: {} })),
+  3897      ];
+
+  3913      // Partial upsert — only id/tenant_id/enabledPayMethods provided, so
+  3914:     // Postgres leaves every other tenant_settings column untouched (same
+  3915      // effect as Firestore's { merge: true }).
+  3916:     db.from("tenant_settings").upsert(toSnakeCase({ id: shop, tenantId: mgmtTenantId, enabledPayMethods: next }))
+  3917        .then(({ error }) => { if (error) console.error("admin togglePayMethod failed", error); });
+
+  4263    "addons", "service_types", "suppliers", "purchases", "expense_categories",
+  4264:   "expenses", "promotions", "tenant_settings",
+  4265  ];

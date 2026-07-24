@@ -1,0 +1,144 @@
+rules_version = '2';
+
+// Simple, tenant-isolated security rules for Laundry POS (رغوة).
+//
+// Model:
+//   config/platform                             — ONE doc: { adminEmails: string[],
+//                                                  autoApprove: bool }. Publicly readable
+//                                                  (the login/signup screens need to know
+//                                                  "is this an admin email" before anyone
+//                                                  is signed in) — write restricted to
+//                                                  admins, see isAdmin() below.
+//   tenants/{tenantId}                          — one doc per approved laundry, doc id ==
+//                                                  that owner's Firebase Auth uid
+//   tenants/{tenantId}/products/{id}            — products
+//   tenants/{tenantId}/categories/{id}          — categories
+//   tenants/{tenantId}/invoices/{id}            — sales + delivery invoices
+//   tenants/{tenantId}/customers/{id}           — POS customers (doc id == customer's
+//                                                  own numeric system id)
+//   tenants/{tenantId}/customerTransactions/{id}— wallet top-ups / debt settlements
+//   tenants/{tenantId}/addons/{id}              — add-ons catalog
+//   tenants/{tenantId}/serviceTypes/{id}        — service types (Iron Only, etc.)
+//   tenants/{tenantId}/suppliers/{id}           — suppliers
+//   tenants/{tenantId}/purchases/{id}           — purchase orders
+//   tenants/{tenantId}/expenseCategories/{id}   — expense categories
+//   tenants/{tenantId}/expenses/{id}            — expenses
+//   tenants/{tenantId}/promotions/{id}          — offers/discounts
+//   tenants/{tenantId}/settings/shop            — merchant profile, owner PIN, section
+//                                                  locks, enabled payment methods, UI
+//                                                  language
+//   registrationRequests/{id}                   — one doc per signup (uid field links
+//                                                  back to the requesting user)
+//   salesInquiries/{id}                         — public "contact us" leads from the
+//                                                  landing page (submitted signed-out)
+//
+// Rule of thumb: nobody signed out can read or write anything EXCEPT the two things
+// that are deliberately public by design — config/platform (read-only, so the login
+// screen can route admins correctly) and salesInquiries (create-only, so the landing
+// page's contact form works for visitors who aren't logged in yet). Everything else
+// requires being signed in, and a tenant can only ever touch their own tenants/{uid}
+// doc and everything under it — never another laundry's data.
+//
+// Within a tenant, admins get different levels of access per collection:
+//   - invoices, settings/*  : admin has full read + write (can correct amounts,
+//                             fix payment status, and edit enabled payment methods
+//                             on behalf of any tenant from the admin console).
+//   - everything else       : admin has read-only + delete access. Read is for
+//                             oversight/reporting; delete exists ONLY so the
+//                             admin console's "delete tenant" action can
+//                             actually remove a shop's data when the tenant
+//                             doc itself is deleted — admin still can never
+//                             create or update a shop's business data.
+//                             Current and future collections included via the
+//                             recursive catch-all.
+//
+// Admin status is fully dynamic: isAdmin() checks config/platform.adminEmails, which
+// is managed from the in-app "Admins" screen (AdminDashboard) — no rules edit needed
+// when admins are added/removed. The ADMIN_BOOTSTRAP_EMAIL below is only a one-time
+// bootstrap: it lets that single address create config/platform if (and only if) it
+// doesn't exist yet, on a brand-new project where no admin exists at all. After that
+// first write, this constant is never consulted again.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(tenantId) {
+      return isSignedIn() && request.auth.uid == tenantId;
+    }
+
+    function isAdmin() {
+      // The exists() check MUST come before get() — get() on a missing
+      // document throws, which denies the ENTIRE containing rule (not just
+      // this function), even when isAdmin() is only one half of an `||`.
+      // Before config/platform's very first bootstrap write, this must
+      // gracefully evaluate to false instead of blowing up every rule that
+      // calls isAdmin() across the whole app.
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/config/platform) &&
+        request.auth.token.email in get(/databases/$(database)/documents/config/platform).data.adminEmails;
+    }
+
+    match /config/platform {
+      allow read: if true;
+      // Before this doc exists, isAdmin() correctly evaluates to false (see
+      // the exists() guard above) — so nobody is an admin yet, and the ONLY
+      // way to create it the very first time is this seed-email clause.
+      // Once it exists, isAdmin() takes over normally for every write after.
+      allow create: if (!exists(/databases/$(database)/documents/config/platform) &&
+                         isSignedIn() && request.auth.token.email == 'ragwapos@gmail.com')
+                     || isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    match /tenants/{tenantId} {
+      allow read: if isOwner(tenantId) || isAdmin();
+      allow create: if isOwner(tenantId) || isAdmin();
+      allow update: if isOwner(tenantId) || isAdmin();
+      allow delete: if isAdmin();
+
+      // Invoices — admin has full read/write (correcting amounts, fixing
+      // payment status, editing item stages) from the admin console.
+      match /invoices/{invoiceId} {
+        allow read, write: if isOwner(tenantId) || isAdmin();
+      }
+
+      // Shop settings (merchant profile, owner PIN, section locks, enabled
+      // payment methods, UI language) — admin has full read/write.
+      match /settings/{settingsId} {
+        allow read, write: if isOwner(tenantId) || isAdmin();
+      }
+
+      // Everything else under this tenant (products, categories, customers,
+      // customerTransactions, addons, serviceTypes, suppliers, purchases,
+      // expenseCategories, expenses, promotions, and any future
+      // subcollection) — admin can READ for oversight/reporting and DELETE
+      // (needed to cascade-delete a tenant's data from the admin console),
+      // but create/update stay owner-only. Recursive, so it covers any depth
+      // automatically.
+      match /{document=**} {
+        allow read: if isOwner(tenantId) || isAdmin();
+        allow create, update: if isOwner(tenantId);
+        allow delete: if isOwner(tenantId) || isAdmin();
+      }
+    }
+
+    match /registrationRequests/{requestId} {
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow read: if isAdmin() || (isSignedIn() && resource.data.uid == request.auth.uid);
+      allow update, delete: if isAdmin();
+    }
+
+    match /salesInquiries/{inquiryId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
