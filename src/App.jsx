@@ -1525,7 +1525,7 @@ function promosOverlap(aStart, aEnd, bStart, bEnd) {
   return aS <= bE && bS <= aE;
 }
 
-function POSView({ categories, products, addons, customers, addCustomer, onCreateInvoice, merchant, promotions, enabledPayMethods }) {
+function POSView({ categories, products, addons, customers, addCustomer, onCreateInvoice, merchant, promotions, enabledPayMethods, setTab }) {
   const { t } = useLang();
   const [activeCat, setActiveCat] = useState("all");
   const [modalProduct, setModalProduct] = useState(null);
@@ -1660,6 +1660,7 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
         <Package size={40} className="mb-3 text-stone-300" />
         <div className="f-display text-lg font-semibold text-slate-800">{t("pos_noProductsTitle")}</div>
         <div className="mt-1 max-w-sm text-sm text-slate-500">{t("pos_noProductsSubtitle")}</div>
+        <button onClick={() => setTab("inventory")} className="mt-3 text-sm font-semibold text-teal-700 hover:underline">{t("nav_products")}</button>
       </div>
     );
   }
@@ -3503,7 +3504,7 @@ function AppShell({ tab, setTab, categories, addCategory, products, addProduct, 
       <Fonts />
       <Sidebar tab={tab} setTab={setTab} sectionLocks={sectionLocks} />
       <main className="flex-1 overflow-y-auto p-6">
-        {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promotions} enabledPayMethods={enabledPayMethods} />}
+        {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promotions} enabledPayMethods={enabledPayMethods} setTab={setTab} />}
         {tab === "invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} />}
         {tab === "delivery_invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} isDelivery />}
         {tab === "customers" && <CustomersView customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} invoices={invoices} addInvoice={addInvoice} transactions={customerTransactions} addTransaction={addTransaction} merchant={merchant} />}
@@ -3517,9 +3518,12 @@ function AppShell({ tab, setTab, categories, addCategory, products, addProduct, 
   );
 }
 
-function LaundryOpsApp({ tenantId, onLogout }) {
+function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   const [tab, setTab] = useState("pos");
-  const [lang, setLang] = useState("en");
+  // Starts from whatever language the visitor picked on the landing page;
+  // a saved tenant_settings.lang (once one exists) still overrides this on
+  // load below, so a returning user's own explicit choice always wins.
+  const [lang, setLang] = useState(initialLang || "en");
   const dir = lang === "en" ? "ltr" : "rtl";
 
   // Every piece of shop data lives in Firestore under this tenant's own
@@ -4951,8 +4955,8 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   function LandingPage(props) {
   const { setCurrentPage, showWorkflow, setShowWorkflow, showContact, setShowContact,
     contactName, setContactName, contactMobile, setContactMobile, contactEmail, setContactEmail,
-    contactType, setContactType, contactMessage, setContactMessage, contactSent, submitContact } = props;
-  const [lang, setLang] = useState('ar');
+    contactType, setContactType, contactMessage, setContactMessage, contactSent, submitContact,
+    lang, setLang } = props;
   const t = LANDING_TEXT[lang];
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
@@ -5381,6 +5385,10 @@ function SignupPage(props) {
 
 const LaundryPOS = () => {
   const [currentPage, setCurrentPage] = useState('landing');
+  // Chosen once on the landing page (before any login/signup) and carried
+  // through as the dashboard's starting language, so a visitor who picked
+  // Arabic there doesn't land on an English dashboard after signing up.
+  const [siteLang, setSiteLang] = useState('ar');
   const [showPassword, setShowPassword] = useState(false);
   const [showWorkflow, setShowWorkflow] = useState(false);
   const [authResolved, setAuthResolved] = useState(false);
@@ -5495,8 +5503,7 @@ const LaundryPOS = () => {
       await ensurePlatformConfig(user.email).catch(() => {});
       return { page: 'admin' };
     }
-    // Email confirmation is intentionally NOT required to reach the
-    // dashboard (no confirm-email step in this flow — see handleSignup).
+    if (!user.email_confirmed_at) return { page: 'verify' };
     // maybeSingle() (not single()) — a missing tenant row is the expected,
     // non-error outcome for a user who just signed up and isn't approved yet.
     const { data: tenantRow } = await db.from('tenants').select().eq('id', user.id).maybeSingle();
@@ -5605,9 +5612,8 @@ const LaundryPOS = () => {
       if (signUpErr) throw signUpErr;
       const user = data.user;
       // Supabase still fires its own confirmation email as a side effect of
-      // signUp() (no client-side way to suppress that) — but this flow no
-      // longer waits for or requires it. That background email — and its
-      // 429 rate-limit failures — no longer affect the user experience.
+      // signUp() — kept on purpose as a fallback in case the branded Resend
+      // email below fails to send for any reason.
 
       const approved = autoApprove;
       const { error: reqErr } = await db.from('registration_requests').insert(toSnakeCase({
@@ -5620,15 +5626,19 @@ const LaundryPOS = () => {
           id: user.id, shopName, mobile: signupMobile, email: emailNorm, address, approvedDate: new Date().toISOString(),
         }));
         if (tenantErr) throw tenantErr;
-        // Straight to the dashboard — no email-confirmation step in this flow.
-        setTenantId(user.id);
-        setCurrentPage('dashboard');
-      } else {
-        // Not auto-approved: no tenant row exists yet, so there's no
-        // dashboard to enter — same "awaiting admin approval" destination
-        // resolveDestination() would compute for this user.
-        setCurrentPage('pending');
       }
+      // Custom branded email — best-effort. The API route generates the
+      // real Supabase confirmation link server-side (needs the service_role
+      // key, which must never touch client code) and sends it via Resend.
+      // Supabase's own default email above is the fallback if this fails,
+      // so a failure here must never block the signup flow itself.
+      fetch('/api/send-verification-email', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailNorm, password: signupPassword, shopName }),
+      }).catch((e) => console.error('send-verification-email failed', e));
+
+      setPendingSignup({ email: emailNorm });
+      setShowEmailVerification(true);
     } catch (e) {
       setSignupError(authErrorMessage(e));
     }
@@ -5720,6 +5730,7 @@ const LaundryPOS = () => {
       contactType={contactType} setContactType={setContactType}
       contactMessage={contactMessage} setContactMessage={setContactMessage}
       contactSent={contactSent} submitContact={submitContact}
+      lang={siteLang} setLang={setSiteLang}
     />
   ) : currentPage === 'login' ? (
     <LoginPage
@@ -5748,7 +5759,7 @@ const LaundryPOS = () => {
       onLogout={handleLogout}
     />
   ) : (
-    <LaundryOpsApp tenantId={tenantId} onLogout={handleLogout} />
+    <LaundryOpsApp tenantId={tenantId} onLogout={handleLogout} initialLang={siteLang} />
   );
 };
 
