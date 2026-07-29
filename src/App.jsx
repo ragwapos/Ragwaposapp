@@ -5672,8 +5672,12 @@ function EmailVerificationPage({ email, onVerified, onBack }) {
 
           <input
             type="text" inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)}
-            placeholder="000000" maxLength={6} dir="ltr"
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white text-center text-2xl tracking-[0.5em] placeholder-gray-600 focus:border-cyan-400 outline-none transition mb-4"
+            // Supabase's generateLink() email_otp for the "signup" type is 8
+            // digits, not the more common 6 — a 6-char maxLength here would
+            // have silently truncated every real code before it ever reached
+            // verifyOtp(), making confirmation fail for every real user.
+            placeholder="00000000" maxLength={8} dir="ltr"
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white text-center text-2xl tracking-[0.35em] placeholder-gray-600 focus:border-cyan-400 outline-none transition mb-4"
           />
 
           {error && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{error}</div>}
