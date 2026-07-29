@@ -15,11 +15,20 @@
 -- "تأكيد البريد الإلكتروني" — بالضبط نفس السلوك اللي يشتكي منه العميل.
 --
 -- الحل: سياسة INSERT مفتوحة لـ anon (نفس النمط المستخدم فعلاً بجدول
--- sales_inquiries لنموذج "تواصل مع المبيعات" العام)، مع تقييد بسيط:
---   - registration_requests: يمنع أي حالة غير pending/approved وقت الإدخال
---     (الرفض "rejected" يصير بس من لوحة الأدمن بعدين، مو وقت التسجيل).
---   - tenants: ما تنشئ صف تينانت جديد إلا لو فيه طلب تسجيل بنفس الـ uid
---     صار "approved" فعلاً — يمنع أي حد يحقن صف تينانت وهمي من فراغ.
+-- sales_inquiries لنموذج "تواصل مع المبيعات" العام)، مع تقييد بسيط على
+-- registration_requests: يمنع أي حالة غير pending/approved وقت الإدخال
+-- (الرفض "rejected" يصير بس من لوحة الأدمن بعدين، مو وقت التسجيل).
+--
+-- ملاحظة: أول نسخة من هذا الملف حطت شرط WITH CHECK على tenants يتطلب وجود
+-- صف registration_requests بنفس الـ uid وحالته 'approved' قبل لا يسمح
+-- بالإدخال. تبين إنه ما يشتغل: ذاك الشرط EXISTS(...) يستعلم عن جدول محمي
+-- بـ RLS هو نفسه، وبما إنه ما فيه سياسة SELECT تسمح لـ anon يشوف صف
+-- registration_requests (ولا لازم تكون فيه — نفتحها بس كشف بيانات كل طلبات
+-- التسجيل المعلّقة لأي زائر)، الاستعلام يرجع فاضي دايماً من منظور anon
+-- ويفشل الإدخال بنفس خطأ RLS من جديد. والشرط أصلاً ما يضيف حماية حقيقية:
+-- نفس الزائر المجهول قادر يحقن صف registration_requests بحالة 'approved'
+-- بنفسه قبلها مباشرة (لأن سياسة الإدخال عليه مفتوحة). فبقينا بس بفتح
+-- الإدخال على tenants مباشرة، بدون شرط وهمي.
 -- =========================================================================
 
 alter table registration_requests enable row level security;
@@ -32,12 +41,8 @@ create policy registration_requests_insert_public on registration_requests
   with check (status in ('pending', 'approved'));
 
 drop policy if exists tenants_insert_from_approved_request on tenants;
-create policy tenants_insert_from_approved_request on tenants
+drop policy if exists tenants_insert_public on tenants;
+create policy tenants_insert_public on tenants
   for insert
   to anon, authenticated
-  with check (
-    exists (
-      select 1 from registration_requests r
-      where r.uid = tenants.id and r.status = 'approved'
-    )
-  );
+  with check (true);

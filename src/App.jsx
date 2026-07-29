@@ -5614,9 +5614,10 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
 }
 
 function EmailVerificationPage({ email, onVerified, onBack }) {
+  const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
-  const [checking, setChecking] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [resent, setResent] = useState(false);
 
   const handleResend = async () => {
@@ -5629,19 +5630,22 @@ function EmailVerificationPage({ email, onVerified, onBack }) {
     setResendLoading(false);
   };
 
-  const handleCheck = async () => {
-    setChecking(true); setError('');
-    // auth.getUser() re-validates against the Supabase Auth server (not a
-    // locally cached value) — the equivalent of Firebase's
-    // currentUser.reload() + emailVerified check, in one round trip.
-    const { data, error: err } = await auth.getUser();
-    if (err || !data.user) { setError('انتهت الجلسة — سجل دخول من جديد.'); setChecking(false); return; }
-    if (data.user.email_confirmed_at) {
-      await onVerified();
-    } else {
-      setError('لسا ما فتحت رابط التحقق من بريدك — افتح الإيميل واضغط على الرابط أول، بعدين ارجع هنا.');
-    }
-    setChecking(false);
+  // Deliberately a typed one-time code instead of "click the link, then
+  // come back and press a button": a plain confirmation link is a bare GET
+  // request, and mail providers (Gmail, Outlook, corporate gateways)
+  // routinely pre-fetch every link in an incoming email to scan it for
+  // malware before the recipient ever opens it — which silently consumes a
+  // one-time confirmation link exactly like a real click. The customer then
+  // opens the email, clicks it themselves, and hits "invalid/expired link"
+  // even though the account was already confirmed by the scanner. A code
+  // the user has to actually read and type has no URL for anything to
+  // pre-fetch, so only this explicit submit can consume it.
+  const handleConfirm = async () => {
+    setVerifying(true); setError('');
+    const { error: err } = await auth.verifyOtp({ email, token: code.trim(), type: 'signup' });
+    if (err) setError(authErrorMessage(err));
+    else await onVerified();
+    setVerifying(false);
   };
 
   return (
@@ -5658,22 +5662,28 @@ function EmailVerificationPage({ email, onVerified, onBack }) {
               <Mail className="text-cyan-400" size={20} />
             </div>
             <p className="text-gray-300 text-sm">
-              أرسلنا رابط تحقق حقيقي إلى
+              أرسلنا رمز تحقق إلى
               <br />
               <span className="text-cyan-400 font-semibold" dir="ltr">{email}</span>
               <br />
-              افتح بريدك واضغط على الرابط، وبعدين ارجع هنا واضغط "تحققت، تابع".
+              افتح بريدك، وحط الرمز اللي وصلك بالمربع تحت.
             </p>
           </div>
 
-          {error && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{error}</div>}
-          {resent && <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500/30 px-4 py-2.5 text-sm text-green-400">تم إرسال الرابط من جديد.</div>}
+          <input
+            type="text" inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)}
+            placeholder="000000" maxLength={6} dir="ltr"
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white text-center text-2xl tracking-[0.5em] placeholder-gray-600 focus:border-cyan-400 outline-none transition mb-4"
+          />
 
-          <button onClick={handleCheck} disabled={checking} className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-3">
-            {checking ? 'جارٍ التحقق...' : 'تحققت، تابع'}
+          {error && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{error}</div>}
+          {resent && <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500/30 px-4 py-2.5 text-sm text-green-400">تم إرسال رمز جديد.</div>}
+
+          <button onClick={handleConfirm} disabled={verifying || !code.trim()} className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-3">
+            {verifying ? 'جارٍ التحقق...' : 'تأكيد'}
           </button>
           <button onClick={handleResend} disabled={resendLoading} className="w-full bg-slate-800 hover:bg-slate-700 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-3">
-            {resendLoading ? 'جارٍ الإرسال...' : 'إعادة إرسال رابط التحقق'}
+            {resendLoading ? 'جارٍ الإرسال...' : 'إعادة إرسال الرمز'}
           </button>
           <button onClick={onBack} className="w-full text-gray-400 hover:text-gray-300 text-sm py-2 transition">
             رجوع
