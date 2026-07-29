@@ -6,3 +6,13 @@ body {
   margin: 0;
   font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
 }
+
+/* Browsers center <th> text by default (their own built-in stylesheet, not
+   Tailwind) while a <td> defaults to text-align:start — so any table with
+   no explicit alignment on either renders headers visibly offset from
+   their column's data, worse the more RTL/LTR width differs per column.
+   This app's tables never override <th> alignment on purpose, so make
+   headers match the body's default instead of the browser's centered one. */
+th {
+  text-align: start;
+}

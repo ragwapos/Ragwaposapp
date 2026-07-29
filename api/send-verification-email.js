@@ -50,16 +50,20 @@ export default async function handler(req, res) {
     if (!actionLink) throw new Error('No action_link returned by Supabase');
 
     const { error: sendErr } = await resend.emails.send({
-      from: 'Ragwa <onboarding@resend.dev>',
+      from: 'Ragwa <no-reply@ragwapos.com>',
       to: email,
       subject: 'تأكيد بريدك الإلكتروني — رغوة',
       html: emailHtml({ shopName, actionLink }),
     });
     if (sendErr) throw sendErr;
 
-    return res.status(200).json({ success: true });
+    // generateLink is what actually creates the Supabase Auth user (type:
+    // 'signup' behaves like signUp() itself) — the caller never calls
+    // auth.signUp() separately, so it needs this user object back to know
+    // the new uid for its own registration_requests/tenants inserts.
+    return res.status(200).json({ success: true, user: linkData.user });
   } catch (e) {
     console.error('send-verification-email error', e);
-    return res.status(200).json({ success: false, error: e.message || String(e) });
+    return res.status(200).json({ success: false, error: e.message || String(e), code: e.code });
   }
 }

@@ -18,7 +18,7 @@ import { toSnakeCase, toCamelCase } from "./utils/transforms.js";
    ========================================================================= */
 const STAGES = ["Received", "Washing", "Pressing", "Ready", "Delivered"];
 const VAT_RATE = 0.15;
-const ADMIN_EMAILS_DEFAULT = ["ragwapos@gmail.com", "admin.diag.test@example.com"];
+const ADMIN_EMAILS_DEFAULT = ["ragwapos@gmail.com"];
 
 /* =========================================================================
    SUPABASE DATA-LAYER HELPERS
@@ -124,7 +124,11 @@ const authErrorMessage = (error) => {
     case "invalid_credentials": return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
     case "over_request_rate_limit":
     case "over_email_send_rate_limit": return "محاولات كثيرة فاشلة — انتظر شوي وحاول مرة ثانية.";
-    default: return "صار خطأ غير متوقع — حاول مرة ثانية.";
+    // No matching Supabase auth code — this is most likely an error relayed
+    // as-is from /api/send-verification-email (Resend/service-role failures
+    // have their own message text, not a Supabase auth code), so show it
+    // instead of masking it behind the generic fallback below.
+    default: return (error && typeof error.message === "string" && error.message) || "صار خطأ غير متوقع — حاول مرة ثانية.";
   }
 };
 // Revenue/VAT actually reportable for a given invoice:
@@ -180,6 +184,36 @@ function buildSalesRows(invoices, start, end, method) {
 const uid = (p = "id") => `${p}_${Math.random().toString(36).slice(2, 9)}`;
 const sar = (n) => `${(Math.round((n + Number.EPSILON) * 100) / 100).toFixed(2)} SAR`;
 const nowISO = () => new Date().toISOString();
+// Owner/section PINs are hashed before storage (Web Crypto, no extra
+// dependency) so a tenant_settings row leak or network capture doesn't hand
+// over the raw 4-digit PIN. This is still a UI-level gate within the SAME
+// already-authenticated tenant session (hiding sections from a cashier
+// sharing the login) — not a security boundary against an outside attacker.
+// Thrown specifically when apply_customer_payment()/adjust_supplier_balance()
+// (see supabase-rls-and-integrity.sql) reject a change for being genuinely
+// short of funds — as opposed to any OTHER failure (network hiccup, the SQL
+// migration not having been run yet so the function doesn't exist, etc.).
+// Distinguishing the two matters: telling a cashier "wallet balance is too
+// low" when the real problem is an unrelated system error is actively
+// misleading, especially for a Credit (On Account) sale, which never
+// touches the wallet at all.
+class InsufficientBalanceError extends Error {}
+function rpcBalanceError(error) {
+  return error?.message?.includes("insufficient_balance") ? new InsufficientBalanceError(error.message) : error;
+}
+// True when a db.rpc() call failed because the Postgres function itself
+// doesn't exist yet — i.e. supabase-rls-and-integrity.sql hasn't been run
+// on this project — as opposed to any other kind of failure (network,
+// permissions, a real business-rule rejection). PGRST202 is PostgREST's own
+// code for "function not found in the schema cache"; 42883 is Postgres's.
+function isMissingRpcError(error) {
+  return error?.code === "PGRST202" || error?.code === "42883" || /could not find the function|does not exist/i.test(error?.message || "");
+}
+async function sha256Hex(text) {
+  const bytes = new TextEncoder().encode(text);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 const fmtDate = (iso) => new Date(iso).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 const fmtDateSec = (iso) => new Date(iso).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 function printDateLabel(iso) {
@@ -200,6 +234,15 @@ const Fonts = () => (
     .f-display{font-family:'Space Grotesk',sans-serif;}
     .f-body{font-family:'Inter',sans-serif;}
     .f-mono{font-family:'JetBrains Mono',monospace; direction:ltr; unicode-bidi:embed; display:inline-block;}
+    /* .f-mono's own display:inline-block (needed so a <span> of it sits
+       correctly LTR inside surrounding RTL text) silently breaks any <td>/<th>
+       that also carries the class: inline-block removes it from the table's
+       column-width algorithm entirely, so that cell shrinks to its own content
+       width instead of matching its column — the header then visibly sits
+       over a completely different width than the data below it. Table cells
+       need their native table-cell display restored; unicode-bidi/direction
+       above still make the LTR number render correctly either way. */
+    td.f-mono, th.f-mono { display: table-cell; }
     @media print {
       body * { visibility: hidden; }
       .print-area, .print-area * { visibility: visible; }
@@ -448,19 +491,91 @@ function PrintDocumentModal({ doc, onClose }) {
   const isTax = doc.kind === "tax";
   const isDelivery = doc.kind === "delivery";
 
-  const printInNewWindow = () => {
+  // Same-page hidden iframe instead of window.open() + a guessed setTimeout:
+  // no popup (nothing for a popup blocker to block, and no extra Chrome
+  // window/dialog to manage), and printing is triggered from the iframe's
+  // own `load` event — i.e. only once the receipt HTML has actually
+  // finished rendering — instead of hoping 300ms was long enough. That
+  // fixed-timeout race was the likely cause of "blank page instead of the
+  // receipt" on the thermal printer: print() firing before layout/paint
+  // completed. Combined with launching Chrome with --kiosk-printing (set
+  // on the till's shortcut, not in this code) and the OS default printer
+  // set to the receipt printer, this prints immediately with no dialog.
+  const printOnce = () => new Promise((resolve) => {
     const html = buildPrintableHtml(doc);
-    const win = window.open("", "_blank", "width=420,height=720");
-    if (!win) return; // popup blocked — the in-app preview below still lets the user read/copy the invoice
-    win.document.open();
-    win.document.write(html);
-    win.document.close();
-    setTimeout(() => { try { win.focus(); win.print(); } catch (e) {} }, 300);
+    const iframe = document.createElement("iframe");
+    // Positioned off-screen rather than 0×0 — a zero-size iframe renders its
+    // document at a 0px-wide viewport, which computes every "width:100%"
+    // element in the receipt to 0 and prints blank. Real (off-screen)
+    // dimensions matching the receipt's own max-width keep layout correct.
+    iframe.style.position = "fixed";
+    iframe.style.top = "-9999px";
+    iframe.style.left = "-9999px";
+    iframe.style.width = "380px";
+    iframe.style.height = "600px";
+    iframe.style.border = "0";
+    iframe.setAttribute("aria-hidden", "true");
+    const cleanup = () => { if (iframe.parentNode) iframe.parentNode.removeChild(iframe); resolve(); };
+    iframe.onload = () => {
+      try { iframe.contentWindow.focus(); iframe.contentWindow.print(); } catch (e) { console.error("print failed", e); }
+      // afterprint doesn't fire in every browser once the dialog is skipped
+      // (kiosk-printing) — the fallback timeout guarantees cleanup either way.
+      try { iframe.contentWindow.onafterprint = cleanup; } catch (e) {}
+      setTimeout(cleanup, 5000);
+    };
+    iframe.srcdoc = html;
+    document.body.appendChild(iframe);
+  });
+
+  // copies > 1 (see settings_autoPrintCopies) prints sequentially, one
+  // iframe/print job at a time, rather than firing them all at once —
+  // overlapping print jobs against the same physical printer can otherwise
+  // collide or get dropped.
+  const printInNewWindow = async (copies = 1) => {
+    for (let i = 0; i < copies; i++) {
+      await printOnce();
+      if (i < copies - 1) await new Promise((r) => setTimeout(r, 400));
+    }
   };
+
+  // Auto Print (settings_autoPrint): skips the manual "طباعة" click
+  // entirely — fires as soon as this receipt is ready to show, using
+  // whatever copy count the owner configured in Settings. Runs once per
+  // receipt (mount-only effect — a new receipt is always a fresh mount
+  // since the caller unmounts this modal via `printDoc && <...>` on close).
+  // The `firedRef` guard is required because React.StrictMode (see
+  // main.jsx) deliberately double-invokes effects in development to catch
+  // exactly this kind of bug — without it, dev mode prints every copy twice.
+  // The configured copy count only applies to the main POS sale
+  // invoice/receipt — a delivery/pickup receipt (ايصال استلام الملابس) or a
+  // wallet top-up invoice always auto-prints exactly one copy regardless of
+  // that setting, since those are single hand-to-customer documents, not
+  // something the shop typically wants duplicated.
+  // settings_showPrintPreview: with auto-print on, the owner can also
+  // choose to skip this whole dialog — print happens in the background and
+  // the modal closes itself the moment printing has been dispatched, so the
+  // cashier lands straight back on a fresh sale instead of having to close
+  // a popup first. Defaults to shown (=== false is the only opt-out) so
+  // existing tenants who saved settings before this option existed keep
+  // seeing the preview exactly as before.
+  const silent = Boolean(doc.merchant?.autoPrint) && doc.merchant?.showPrintPreview === false;
+
+  const autoPrintFiredRef = useRef(false);
+  useEffect(() => {
+    if (doc.merchant?.autoPrint && !autoPrintFiredRef.current) {
+      autoPrintFiredRef.current = true;
+      const copies = (isDelivery || doc.isTopUp) ? 1 : Math.min(10, Math.max(1, Number(doc.merchant.autoPrintCopies) || 1));
+      printInNewWindow(copies).then(() => { if (silent) onClose(); });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (silent) return null;
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4" onClick={onClose}>
-      <div className="w-full max-w-sm max-h-[92vh] overflow-y-auto rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+      <div className="flex w-full max-w-sm max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="flex-1 overflow-y-auto">
         <div className="print-area p-6 text-slate-900" style={{ fontFamily: "'Inter', sans-serif" }}>
           <div className="mb-4 text-center text-lg font-bold">{doc.merchant.name || "—"}</div>
 
@@ -540,9 +655,11 @@ function PrintDocumentModal({ doc, onClose }) {
             </>
           )}
         </div>
+        </div>
 
-        <div className="no-print flex gap-2 border-t border-stone-200 p-4">
-          <button onClick={printInNewWindow} className="flex-1 rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("print_printBtn")}</button>
+        <div className="no-print flex shrink-0 gap-2 border-t border-stone-200 p-4 bg-white">
+          {/* Manual click always prints exactly one copy — "عدد النسخ" only governs the automatic (no-click) auto-print above. */}
+          <button onClick={() => printInNewWindow(1)} className="flex-1 rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("print_printBtn")}</button>
           <button onClick={onClose} className="rounded-lg border border-stone-300 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-stone-50">{t("print_close")}</button>
         </div>
       </div>
@@ -616,6 +733,7 @@ const DICT = {
     common_cash: "Cash", common_externalNetwork: "External Network", common_walletBalance: "Wallet Balance",
     common_creditOnAccount: "Credit (On Account)", common_splitPayment: "Split Payment", common_selectPlaceholder: "Select...",
     common_addNew: "➕ Add New", common_newNamePlaceholder: "New name",
+    common_operationFailed: "Could not complete this operation — please try again.",
     common_live: "Live", common_draft: "Draft", common_active: "Active", common_expired: "Expired",
     common_yes: "Yes", common_no: "No", common_view: "View",
 
@@ -771,6 +889,9 @@ const DICT = {
     settings_lang_ar: "العربية", settings_lang_en: "English", settings_lang_ur: "اردو",
 
     settings_merchantInfo: "Merchant Information", settings_merchantInfoHint: "Used to print tax invoices and receipts.",
+    settings_autoPrint: "Auto Print", settings_autoPrintHint: "Automatically print the receipt/invoice right after a sale, with no extra click.",
+    settings_autoPrintCopies: "Number of copies",
+    settings_showPrintPreview: "Show invoice preview", settings_showPrintPreviewHint: "Turn off to print silently with no popup and go straight to the next sale.",
     settings_merchantName: "Name (as registered in the Commercial Registry)", settings_merchantPhone: "Store Phone Number",
     settings_merchantAddress: "Store Location", settings_merchantTax: "Tax Number",
     settings_ownerOnly: "For Owner Only", settings_ownerOnlyHint: "Protect sensitive sections with a password only you know.",
@@ -808,6 +929,7 @@ const DICT = {
     common_cash: "نقدًا", common_externalNetwork: "شبكة خارجية", common_walletBalance: "رصيد المحفظة",
     common_creditOnAccount: "آجل (على الحساب)", common_splitPayment: "دفع متعدد", common_selectPlaceholder: "اختر...",
     common_addNew: "➕ إضافة جديد", common_newNamePlaceholder: "اسم جديد",
+    common_operationFailed: "تعذر إتمام العملية — حاول مرة أخرى.",
     common_live: "مفعّل", common_draft: "مسودة", common_active: "نشط", common_expired: "منتهي",
     common_yes: "نعم", common_no: "لا", common_view: "عرض",
 
@@ -963,6 +1085,9 @@ const DICT = {
     settings_lang_ar: "العربية", settings_lang_en: "English", settings_lang_ur: "اردو",
 
     settings_merchantInfo: "بيانات التاجر", settings_merchantInfoHint: "تُستخدم لطباعة الفواتير الضريبية والإيصالات.",
+    settings_autoPrint: "الطباعة التلقائية", settings_autoPrintHint: "تطبع الفاتورة/الإيصال تلقائيًا فور إتمام البيع، بدون ضغطة إضافية.",
+    settings_autoPrintCopies: "عدد النسخ",
+    settings_showPrintPreview: "إظهار معاينة الفاتورة", settings_showPrintPreviewHint: "أطفئها عشان تطبع مباشرة بدون أي نافذة، وتنتقل فورًا للبيعة التالية.",
     settings_merchantName: "الاسم (كما هو مسجل في السجل التجاري)", settings_merchantPhone: "رقم هاتف المحل",
     settings_merchantAddress: "موقع المحل", settings_merchantTax: "الرقم الضريبي",
     settings_ownerOnly: "للمالك فقط", settings_ownerOnlyHint: "احمِ الأقسام الحساسة بكلمة مرور ما يعرفها إلا أنت.",
@@ -1000,6 +1125,7 @@ const DICT = {
     common_cash: "نقد", common_externalNetwork: "بیرونی نیٹ ورک", common_walletBalance: "والٹ بیلنس",
     common_creditOnAccount: "ادھار (کھاتے پر)", common_splitPayment: "ملٹی پیمنٹ", common_selectPlaceholder: "منتخب کریں...",
     common_addNew: "➕ نیا شامل کریں", common_newNamePlaceholder: "نیا نام",
+    common_operationFailed: "یہ عمل مکمل نہیں ہو سکا — دوبارہ کوشش کریں۔",
     common_live: "فعال", common_draft: "ڈرافٹ", common_active: "جاری", common_expired: "ختم شدہ",
     common_yes: "جی ہاں", common_no: "نہیں", common_view: "دیکھیں",
 
@@ -1155,6 +1281,9 @@ const DICT = {
     settings_lang_ar: "العربية", settings_lang_en: "English", settings_lang_ur: "اردو",
 
     settings_merchantInfo: "تاجر کی معلومات", settings_merchantInfoHint: "ٹیکس انوائسز اور رسیدیں پرنٹ کرنے کے لیے استعمال ہوتی ہیں۔",
+    settings_autoPrint: "خودکار پرنٹ", settings_autoPrintHint: "سیل مکمل ہوتے ہی رسید/انوائس خودکار طور پر پرنٹ ہو جائے گی، بغیر کسی اضافی کلک کے۔",
+    settings_autoPrintCopies: "کاپیوں کی تعداد",
+    settings_showPrintPreview: "انوائس پیش نظارہ دکھائیں", settings_showPrintPreviewHint: "بند کریں تاکہ بغیر کسی پاپ اپ کے خاموشی سے پرنٹ ہو اور فوراً اگلی سیل پر جائے۔",
     settings_merchantName: "نام (کمرشل رجسٹریشن میں درج شدہ)", settings_merchantPhone: "دکان کا فون نمبر",
     settings_merchantAddress: "دکان کا مقام", settings_merchantTax: "ٹیکس نمبر",
     settings_ownerOnly: "صرف مالک کے لیے", settings_ownerOnlyHint: "حساس حصوں کو ایسے پاس ورڈ سے محفوظ کریں جو صرف آپ جانتے ہوں۔",
@@ -1203,7 +1332,7 @@ const NAV = [
   { key: "settings", labelKey: "nav_settings", icon: Settings },
 ];
 
-function Sidebar({ tab, setTab, sectionLocks }) {
+function Sidebar({ tab, setTab, sectionLocks, setSectionLocks }) {
   const { t } = useLang();
   const [pendingNav, setPendingNav] = useState(null);
 
@@ -1243,7 +1372,15 @@ function Sidebar({ tab, setTab, sectionLocks }) {
         <PinPromptModal
           title={t("owner_enterSectionTitle")}
           mode="enter"
-          verify={(pin) => pin === sectionLocks[pendingNav]}
+          verify={async (pin) => {
+            const stored = sectionLocks[pendingNav];
+            if (pin === stored) { // legacy plaintext — self-heal to a hash
+              const key = pendingNav;
+              sha256Hex(pin).then((h) => setSectionLocks((p) => ({ ...p, [key]: h })));
+              return true;
+            }
+            return (await sha256Hex(pin)) === stored;
+          }}
           onSuccess={() => { setTab(pendingNav); setPendingNav(null); }}
           onClose={() => setPendingNav(null)}
         />
@@ -1432,7 +1569,7 @@ function SupplierDetailModal({ supplier, purchases, onClose, onPayBalance }) {
       <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("supplierDetail_history")}</div>
       <div className="overflow-hidden rounded-xl border border-stone-200">
         <table className="w-full text-sm">
-          <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr><th className="px-3 py-2">{t("supplierDetail_poId")}</th><th className="px-3 py-2">{t("common_date")}</th><th className="px-3 py-2">{t("supplierDetail_method")}</th><th className="px-3 py-2">{t("supplierDetail_amount")}</th><th className="px-3 py-2">{t("supplierDetail_invoice")}</th></tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
@@ -1510,8 +1647,8 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
 function isPromoActive(p) {
   if (p.active === false) return false;
   const now = Date.now();
-  if (p.start && now < new Date(p.start).getTime()) return false;
-  if (p.end && now > new Date(p.end).getTime()) return false;
+  if (p.startDate && now < new Date(p.startDate).getTime()) return false;
+  if (p.endDate && now > new Date(p.endDate).getTime()) return false;
   return true;
 }
 function promoDiscount(p, base) { return p.isPercent ? (base * p.value) / 100 : p.value; }
@@ -1543,6 +1680,10 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [couponError, setCouponError] = useState("");
   const [saleError, setSaleError] = useState("");
+  // Ref (not just state) guards re-entrancy — see TopUpModal's confirm() for why a
+  // state-only check can still let same-tick rapid clicks slip through.
+  const saleSubmittingRef = useRef(false);
+  const [saleSubmitting, setSaleSubmitting] = useState(false);
 
   const availablePosPayMethods = POS_PAY_METHODS.filter((m) => enabledPayMethods[m.value] !== false);
   const availableSplitMethods = PAY_METHODS.filter((m) => enabledPayMethods[m.value] !== false);
@@ -1594,9 +1735,16 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
   };
   const removeCoupon = () => { setAppliedCoupon(null); setCouponCode(""); setCouponError(""); };
 
-  const complete = () => {
+  const complete = async () => {
+    // Guards against a rapid double-click on "إتمام البيع" firing two
+    // overlapping sales for the same cart before the first one's async
+    // round trip (payment RPC + invoice insert) has even finished.
+    if (saleSubmittingRef.current) return;
     setSaleError("");
     if (cart.length === 0 || !customerChosen || !deliveryFeeValid || saleBlocked) return;
+    saleSubmittingRef.current = true;
+    setSaleSubmitting(true);
+    try {
     const fee = Number(deliveryFee || 0);
 
     // If a split payment pairs Wallet Balance with exactly one other method,
@@ -1621,7 +1769,14 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
       }
     }
 
-    const invoice = onCreateInvoice({ customerId: Number(customerId), items: cart, total: cartTotal, discount: finalDiscount, payMethod: finalPayMethod, isDelivery, deliveryFee: fee, splitPayments: splitPaymentsToSend, walletDeduct });
+    let invoice;
+    try {
+      invoice = await onCreateInvoice({ customerId: Number(customerId), items: cart, total: cartTotal, discount: finalDiscount, payMethod: finalPayMethod, isDelivery, deliveryFee: fee, splitPayments: splitPaymentsToSend, walletDeduct });
+    } catch (e) {
+      console.error("complete: createInvoice failed", e);
+      setSaleError(t("common_operationFailed"));
+      return;
+    }
     if (!invoice) { setSaleError(t("pos_walletInsufficient")); return; }
 
     const docItems = cart.map((i) => ({ name: i.name, price: i.servicePrice + i.addons.reduce((s, a) => s + a.price, 0), qty: i.qty, lineTotal: i.lineTotal }));
@@ -1652,6 +1807,10 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
 
     setCart([]); setIsDelivery(false); setDeliveryFee(""); setAppliedCoupon(null); setCouponCode(""); setCouponError("");
     setPayMethod("External Network"); setSplitMethod1("Cash"); setSplitAmount1(""); setSplitMethod2("Wallet Balance");
+    } finally {
+      saleSubmittingRef.current = false;
+      setSaleSubmitting(false);
+    }
   };
 
   if (products.length === 0) {
@@ -1789,7 +1948,7 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
               <span>{t("pos_total")}</span><span className="f-mono text-lg font-bold text-slate-900">{sar(grandTotal)}</span>
             </div>
             {saleError && <div className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{saleError}</div>}
-            <button onClick={complete} disabled={cart.length === 0 || !customerChosen || !deliveryFeeValid || saleBlocked} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:bg-stone-300">{t("pos_completeSale")}</button>
+            <button onClick={complete} disabled={cart.length === 0 || !customerChosen || !deliveryFeeValid || saleBlocked || saleSubmitting} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:bg-stone-300">{t("pos_completeSale")}</button>
           </div>
         </div>
       </div>
@@ -1985,7 +2144,7 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
       </div>
       <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
         <table className="w-full text-sm">
-          <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr><th className="px-4 py-3">{t("invoices_invoiceId")}</th><th className="px-4 py-3">{t("invoices_customer")}</th><th className="px-4 py-3">{t("invoices_items")}</th>{isDelivery && <th className="px-4 py-3">{t("invoices_deliveryFee")}</th>}<th className="px-4 py-3">{t("common_status")}</th><th className="px-4 py-3"></th></tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
@@ -2024,13 +2183,36 @@ function splitBreakdownLabel(t, inv) {
   return inv.splitPayments.map((sp) => `${payMethodLabel(t, sp.method)} ${sar(sp.amount)}`).join(" + ");
 }
 
-function TopUpModal({ customer, onClose, onSubmit }) {
+function TopUpModal({ customer, onClose, onSubmit, error }) {
   const { t } = useLang();
   const [topUp, setTopUp] = useState(100);
   const [mode, setMode] = useState("flat"); // flat | percent
   const [discountVal, setDiscountVal] = useState(0);
   const [payMethod, setPayMethod] = useState("Cash");
   const [notes, setNotes] = useState("");
+  // Without this, the modal gives no feedback while the top-up is in
+  // flight (no spinner, no disabled state) — a customer who clicks
+  // "تأكيد الشحن" repeatedly because nothing visibly happens fires that
+  // many independent top-ups, each one really crediting the wallet again.
+  // A ref (not just state) guards the actual re-entrancy check: several
+  // click() calls fired synchronously in the same tick all close over the
+  // same pre-render `submitting` state value, so a state-only guard can
+  // still let a tight burst of clicks slip through before React re-renders
+  // with the disabled button — the ref is updated immediately, so even
+  // same-tick re-entry is blocked.
+  const submittingRef = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
+  const confirm = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+    try {
+      await onSubmit({ topUp: Number(topUp || 0), duePayable, notes, mode, discountAmount, payMethod });
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
+    }
+  };
 
   const discountAmount = mode === "flat" ? Number(discountVal || 0) : (Number(topUp || 0) * Number(discountVal || 0)) / 100;
   const newBalance = Number(customer.walletBalance) + Number(topUp || 0);
@@ -2071,16 +2253,18 @@ function TopUpModal({ customer, onClose, onSubmit }) {
         </div>
       )}
       <Field label={t("common_notes")}><textarea maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputCls} /></Field>
+      {error && <div className="mb-4 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{error}</div>}
       <button
-        onClick={() => onSubmit({ topUp: Number(topUp || 0), newBalance, duePayable, notes, mode, discountAmount, payMethod })}
-        className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">
+        onClick={confirm}
+        disabled={submitting}
+        className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:opacity-60">
         {t("topup_confirm")}
       </button>
     </Modal>
   );
 }
 
-function SettleDebtModal({ customer, onClose, onSubmit }) {
+function SettleDebtModal({ customer, onClose, onSubmit, error }) {
   const { t } = useLang();
   const [amount, setAmount] = useState(customer.debt);
   const [payMethod, setPayMethod] = useState("Cash");
@@ -2088,6 +2272,20 @@ function SettleDebtModal({ customer, onClose, onSubmit }) {
   const remaining = Math.max(0, Number(customer.debt) - Number(amount || 0));
   const overWallet = payMethod === "Wallet Balance" && Number(amount || 0) > customer.walletBalance;
   const exceedsDebt = Number(amount || 0) > customer.debt;
+  // Same rapid-double-click guard as TopUpModal (ref, not just state — see there for why).
+  const submittingRef = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
+  const confirm = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+    try {
+      await onSubmit({ amount: Number(amount || 0), notes, payMethod });
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
+    }
+  };
 
   return (
     <Modal title={`${t("settle_title")} · ${customer.name}`} onClose={onClose}>
@@ -2116,9 +2314,10 @@ function SettleDebtModal({ customer, onClose, onSubmit }) {
         <div className="f-mono font-semibold text-slate-900">{sar(remaining)}</div>
       </div>
       <Field label={t("common_notes")}><textarea maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputCls} /></Field>
+      {error && <div className="mb-4 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{error}</div>}
       <button
-        disabled={overWallet || exceedsDebt || Number(amount || 0) <= 0}
-        onClick={() => onSubmit({ amount: Number(amount || 0), notes, payMethod })}
+        disabled={overWallet || exceedsDebt || Number(amount || 0) <= 0 || submitting}
+        onClick={confirm}
         className="w-full rounded-lg bg-slate-900 py-2.5 font-semibold text-white hover:bg-slate-800 disabled:bg-stone-300">
         {t("settle_confirm")}
       </button>
@@ -2166,7 +2365,7 @@ function CustomerDetailModal({ customer, invoices, transactions, onClose, onOpen
       <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("customerDetail_invoiceHistory")}</div>
       <div className="mb-6 overflow-hidden rounded-xl border border-stone-200">
         <table className="w-full text-sm">
-          <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr><th className="px-3 py-2">{t("customerDetail_invoice")}</th><th className="px-3 py-2">{t("common_date")}</th><th className="px-3 py-2">{t("invoices_items")}</th><th className="px-3 py-2">{t("customerDetail_method")}</th><th className="px-3 py-2">{t("customerDetail_total")}</th><th className="px-3 py-2">{t("common_status")}</th></tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
@@ -2196,7 +2395,7 @@ function CustomerDetailModal({ customer, invoices, transactions, onClose, onOpen
       <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("customerDetail_transactions")}</div>
       <div className="overflow-hidden rounded-xl border border-stone-200">
         <table className="w-full text-sm">
-          <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr><th className="px-3 py-2">{t("customerDetail_receipt")}</th><th className="px-3 py-2">{t("common_date")}</th><th className="px-3 py-2">{t("customerDetail_type")}</th><th className="px-3 py-2">{t("customerDetail_detail")}</th><th className="px-3 py-2">{t("customerDetail_paid")}</th></tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
@@ -2217,7 +2416,7 @@ function CustomerDetailModal({ customer, invoices, transactions, onClose, onOpen
   );
 }
 
-function CustomersView({ customers, updateCustomer, addCustomer, invoices, addInvoice, transactions, addTransaction, merchant }) {
+function CustomersView({ customers, updateCustomer, addCustomer, invoices, addInvoice, transactions, addTransaction, merchant, applyCustomerPayment, nextDocNumber }) {
   const { t } = useLang();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(null);
@@ -2225,6 +2424,8 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
   const [settleFor, setSettleFor] = useState(null);
   const [showAddCustomer, setShowAddCustomer] = useState(false);
   const [printDoc, setPrintDoc] = useState(null);
+  const [topUpError, setTopUpError] = useState("");
+  const [settleError, setSettleError] = useState("");
 
   const idOnly = query.startsWith("#");
   const filtered = customers.filter((c) =>
@@ -2233,60 +2434,83 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
   );
   const selectedLive = selected ? customers.find((c) => c.id === selected.id) : null;
 
-  const applyTopUp = ({ newBalance, topUp, duePayable, notes, mode, discountAmount, payMethod }) => {
+  const applyTopUp = async ({ topUp, duePayable, notes, mode, discountAmount, payMethod }) => {
     const customer = topUpFor;
-    updateCustomer(topUpFor.id, {
-      walletBalance: newBalance,
-      debt: payMethod === "Credit (On Account)" ? customer.debt + duePayable : customer.debt,
-    });
-    addTransaction({
-      customerId: topUpFor.id, type: "topup",
-      code: `RCT-${1000 + transactions.length + 1}`,
-      creditedAmount: topUp, paidAmount: duePayable, payMethod,
-      discountAmount, discountMode: mode,
-      notes, date: nowISO(),
-    });
+    setTopUpError("");
+    // Everything below is one try/catch, not just the balance RPC: an
+    // earlier version left nextDocNumber()/addTransaction()/addInvoice()
+    // unprotected, so if any of them failed AFTER the wallet was already
+    // credited, the failure was a silent unhandled rejection — the modal
+    // just sat there looking stuck, inviting another click, which credited
+    // the wallet AGAIN (that RPC alone always succeeds) without ever
+    // recording a matching transaction/invoice. Any failure now surfaces a
+    // real error instead of leaving wallet and books out of sync silently.
+    try {
+      // Delta-based (+topUp to the wallet, +duePayable to debt only if on
+      // credit) via apply_customer_payment() — see createInvoice for why.
+      await applyCustomerPayment(customer.id, topUp, payMethod === "Credit (On Account)" ? duePayable : 0);
 
-    if (payMethod !== "Credit (On Account)") {
-      // A real Simplified Tax Invoice is generated the moment cash/network payment
-      // is actually collected for a top-up — this is what feeds Sales Reports.
-      // Later POS sales paid FROM this wallet balance must NOT be recounted as
-      // revenue, or the same money would be counted twice.
-      const code = `TOP-${1000 + invoices.length + 1}`;
-      const now = nowISO();
-      const vatExempt = !merchant.taxNumber || !merchant.taxNumber.trim();
-      const invoice = {
-        code, customerId: topUpFor.id, customerName: customer.name, payMethod,
-        total: duePayable, isDelivery: false, deliveryFee: 0, createdAt: now, closed: true, isTopUp: true, vatExempt,
-        items: [{ itemId: uid("item"), name: t("customerDetail_topupType"), service: "-", addons: [], status: "Delivered", urgent: false, deliveredAt: now, price: duePayable, qty: 1, lineTotal: duePayable }],
-      };
-      addInvoice(invoice);
-
-      const net = vatExempt ? duePayable : duePayable / (1 + VAT_RATE);
-      const vat = vatExempt ? 0 : duePayable - net;
-      setPrintDoc({
-        kind: vatExempt ? "receipt" : "tax", merchant, dateLabel: printDateLabel(now), isoDateTime: now, invoiceCode: code, customerName: customer.name,
-        items: [{ name: t("customerDetail_topupType"), price: duePayable, qty: 1, lineTotal: duePayable }],
-        totals: { net, discount: discountAmount, vat, gross: duePayable, paid: duePayable, remaining: 0, pieceCount: 1 },
-        payMethodLabel: payMethodPrintLabel(t, payMethod), dueDate: null,
+      addTransaction({
+        customerId: topUpFor.id, type: "topup",
+        code: `RCT-${await nextDocNumber("RCT")}`,
+        creditedAmount: topUp, paidAmount: duePayable, payMethod,
+        discountAmount, discountMode: mode,
+        notes, date: nowISO(),
       });
+
+      if (payMethod !== "Credit (On Account)") {
+        // A real Simplified Tax Invoice is generated the moment cash/network payment
+        // is actually collected for a top-up — this is what feeds Sales Reports.
+        // Later POS sales paid FROM this wallet balance must NOT be recounted as
+        // revenue, or the same money would be counted twice.
+        const code = `TOP-${await nextDocNumber("TOP")}`;
+        const now = nowISO();
+        const vatExempt = !merchant.taxNumber || !merchant.taxNumber.trim();
+        const invoice = {
+          code, customerId: topUpFor.id, customerName: customer.name, payMethod,
+          // isTopup (lowercase "up") — matches the actual `is_topup` column
+          // exactly; the more natural-looking `isTopUp` would snake_case to
+          // `is_top_up`, which doesn't exist and silently failed every
+          // wallet top-up's invoice insert (verified against the live schema).
+          total: duePayable, isDelivery: false, deliveryFee: 0, createdAt: now, closed: true, isTopup: true, vatExempt,
+          items: [{ itemId: uid("item"), name: t("customerDetail_topupType"), service: "-", addons: [], status: "Delivered", urgent: false, deliveredAt: now, price: duePayable, qty: 1, lineTotal: duePayable }],
+        };
+        addInvoice(invoice);
+
+        const net = vatExempt ? duePayable : duePayable / (1 + VAT_RATE);
+        const vat = vatExempt ? 0 : duePayable - net;
+        setPrintDoc({
+          kind: vatExempt ? "receipt" : "tax", isTopUp: true, merchant, dateLabel: printDateLabel(now), isoDateTime: now, invoiceCode: code, customerName: customer.name,
+          items: [{ name: t("customerDetail_topupType"), price: duePayable, qty: 1, lineTotal: duePayable }],
+          totals: { net, discount: discountAmount, vat, gross: duePayable, paid: duePayable, remaining: 0, pieceCount: 1 },
+          payMethodLabel: payMethodPrintLabel(t, payMethod), dueDate: null,
+        });
+      }
+      setTopUpFor(null);
+    } catch (e) {
+      console.error("applyTopUp failed", e);
+      setTopUpError(t("common_operationFailed"));
     }
-    setTopUpFor(null);
   };
 
-  const applySettle = ({ amount, notes, payMethod }) => {
+  const applySettle = async ({ amount, notes, payMethod }) => {
     const customer = settleFor;
+    setSettleError("");
     if (!amount || amount <= 0 || amount > customer.debt) return; // belt-and-braces — the modal's own disabled button already blocks this
-    updateCustomer(settleFor.id, {
-      debt: Math.max(0, customer.debt - amount),
-      walletBalance: payMethod === "Wallet Balance" ? Math.max(0, customer.walletBalance - amount) : customer.walletBalance,
-    });
-    addTransaction({
-      customerId: settleFor.id, type: "debt_payment",
-      code: `PMT-${1000 + transactions.length + 1}`,
-      paidAmount: amount, payMethod, notes, date: nowISO(),
-    });
-    setSettleFor(null);
+    try {
+      // Delta-based (-amount from debt, and also -amount from the wallet if
+      // that's where it's coming from) via apply_customer_payment().
+      await applyCustomerPayment(customer.id, payMethod === "Wallet Balance" ? -amount : 0, -amount);
+      addTransaction({
+        customerId: settleFor.id, type: "debt_payment",
+        code: `PMT-${await nextDocNumber("PMT")}`,
+        paidAmount: amount, payMethod, notes, date: nowISO(),
+      });
+      setSettleFor(null);
+    } catch (e) {
+      console.error("applySettle failed", e);
+      setSettleError(t("common_operationFailed"));
+    }
   };
 
   const saveNewCustomer = (data) => {
@@ -2306,7 +2530,7 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
       </div>
       <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
         <table className="w-full text-sm">
-          <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr><th className="px-4 py-3">{t("customers_id")}</th><th className="px-4 py-3">{t("customers_name")}</th><th className="px-4 py-3">{t("customers_mobile")}</th><th className="px-4 py-3">{t("customers_wallet")}</th><th className="px-4 py-3">{t("customers_debt")}</th><th className="px-4 py-3"></th></tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
@@ -2335,8 +2559,8 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
           onOpenSettleDebt={() => setSettleFor(selectedLive)}
         />
       )}
-      {topUpFor && <TopUpModal customer={topUpFor} onClose={() => setTopUpFor(null)} onSubmit={applyTopUp} />}
-      {settleFor && <SettleDebtModal customer={settleFor} onClose={() => setSettleFor(null)} onSubmit={applySettle} />}
+      {topUpFor && <TopUpModal customer={topUpFor} onClose={() => setTopUpFor(null)} onSubmit={applyTopUp} error={topUpError} />}
+      {settleFor && <SettleDebtModal customer={settleFor} onClose={() => setSettleFor(null)} onSubmit={applySettle} error={settleError} />}
       {showAddCustomer && <AddCustomerModal customers={customers} onClose={() => setShowAddCustomer(false)} onSave={saveNewCustomer} />}
       {printDoc && <PrintDocumentModal doc={printDoc} onClose={() => setPrintDoc(null)} />}
     </div>
@@ -2597,7 +2821,7 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
       <div className="lg:col-span-2 space-y-6">
         <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm h-fit">
           <table className="w-full text-sm">
-            <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
               <tr><th className="px-4 py-3">{t("products_table_product")}</th><th className="px-4 py-3">{t("products_table_category")}</th><th className="px-4 py-3">{t("products_table_services")}</th><th className="px-4 py-3">{t("products_table_from")}</th><th className="px-4 py-3">{t("products_table_status")}</th><th className="px-4 py-3"></th></tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
@@ -2651,7 +2875,7 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
 /* =========================================================================
    MODULE 5 — PURCHASES & EXPENSES
    ========================================================================= */
-function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense }) {
+function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, adjustSupplierBalance, nextDocNumber }) {
   const { t } = useLang();
   const [tab, setTab] = useState("purchases");
 
@@ -2665,6 +2889,12 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
   const [payBalanceFor, setPayBalanceFor] = useState(null);
   const [payAmount, setPayAmount] = useState("");
   const [payBalanceError, setPayBalanceError] = useState("");
+  const [purchaseError, setPurchaseError] = useState("");
+  // Refs (not just state) guard re-entrancy — see TopUpModal's confirm() for why.
+  const purchaseSubmittingRef = useRef(false);
+  const [purchaseSubmitting, setPurchaseSubmitting] = useState(false);
+  const payBalanceSubmittingRef = useRef(false);
+  const [payBalanceSubmitting, setPayBalanceSubmitting] = useState(false);
   const [showAddSupplier, setShowAddSupplier] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
 
@@ -2682,28 +2912,55 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
     reader.readAsDataURL(file);
   };
 
-  const recordPurchase = () => {
-    if (!supplierId || !amount) return;
+  const recordPurchase = async () => {
+    // Guards against a rapid double-click firing two overlapping submissions
+    // — each would otherwise independently succeed at the balance RPC (it's
+    // safely atomic per-call) while the resulting purchase record could
+    // still end up duplicated or, if a later step failed, missing entirely.
+    if (purchaseSubmittingRef.current || !supplierId || !amount) return;
     const amt = Number(amount);
-    addPurchase({ code: `PO-${purchases.length + 1001}`, supplierId, amount: amt, method, date: nowISO(), attachment, attachmentName });
-    if (method === "Credit / On Account") {
-      const supplier = suppliers.find((s) => s.id === supplierId);
-      if (supplier) updateSupplier(supplierId, { balance: supplier.balance + amt });
+    setPurchaseError("");
+    purchaseSubmittingRef.current = true;
+    setPurchaseSubmitting(true);
+    try {
+      if (method === "Credit (On Account)") {
+        // Atomic +amt via adjust_supplier_balance() — see createInvoice for
+        // why this replaced a client-computed "supplier.balance + amt" write.
+        await adjustSupplierBalance(supplierId, amt);
+      }
+      addPurchase({ code: `PO-${await nextDocNumber("PO")}`, supplierId, amount: amt, method, date: nowISO(), attachment, attachmentName });
+      setAmount(""); setAttachment(""); setAttachmentName("");
+    } catch (e) {
+      console.error("recordPurchase failed", e);
+      setPurchaseError(t("common_operationFailed"));
+    } finally {
+      purchaseSubmittingRef.current = false;
+      setPurchaseSubmitting(false);
     }
-    setAmount(""); setAttachment(""); setAttachmentName("");
   };
 
   const openPayBalance = (s) => { setPayBalanceFor(s); setPayAmount(""); setPayBalanceError(""); };
 
-  const payBalance = () => {
+  const payBalance = async () => {
+    if (payBalanceSubmittingRef.current) return;
     const amt = Number(payAmount || 0);
     if (!amt || amt <= 0) return;
     if (amt > payBalanceFor.balance) {
       setPayBalanceError(t("payBalance_exceedsError", { amount: sar(payBalanceFor.balance) }));
       return;
     }
-    updateSupplier(payBalanceFor.id, { balance: Math.max(0, payBalanceFor.balance - amt) });
-    setPayBalanceFor(null); setPayAmount(""); setPayBalanceError("");
+    payBalanceSubmittingRef.current = true;
+    setPayBalanceSubmitting(true);
+    try {
+      await adjustSupplierBalance(payBalanceFor.id, -amt);
+      setPayBalanceFor(null); setPayAmount(""); setPayBalanceError("");
+    } catch (e) {
+      console.error("payBalance failed", e);
+      setPayBalanceError(t("common_operationFailed"));
+    } finally {
+      payBalanceSubmittingRef.current = false;
+      setPayBalanceSubmitting(false);
+    }
   };
 
   // Expenses sub-state
@@ -2744,19 +3001,20 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
             <Field label={t("purchases_payment")}>
               <div className="flex gap-2">
                 <button onClick={() => setMethod("Cash")} className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${method === "Cash" ? "border-teal-600 bg-teal-50 text-teal-700" : "border-stone-300 text-slate-600"}`}>{t("common_cash")}</button>
-                <button onClick={() => setMethod("Credit / On Account")} className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${method !== "Cash" ? "border-teal-600 bg-teal-50 text-teal-700" : "border-stone-300 text-slate-600"}`}>{t("purchases_credit")}</button>
+                <button onClick={() => setMethod("Credit (On Account)")} className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${method !== "Cash" ? "border-teal-600 bg-teal-50 text-teal-700" : "border-stone-300 text-slate-600"}`}>{t("purchases_credit")}</button>
               </div>
             </Field>
             <Field label={t("purchases_invoiceFile")}>
               <button onClick={() => purchaseFileRef.current.click()} className="w-full rounded-lg border border-dashed border-stone-300 px-3 py-2 text-sm text-slate-500 hover:bg-stone-50"><Upload size={13} className="inline mr-1.5" />{attachmentName || t("purchases_uploadInvoice")}</button>
               <input ref={purchaseFileRef} type="file" accept="image/*,.pdf" className="hidden" onChange={handlePurchaseFile} />
             </Field>
-            <button onClick={recordPurchase} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("purchases_savePurchase")}</button>
+            {purchaseError && <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{purchaseError}</div>}
+            <button onClick={recordPurchase} disabled={purchaseSubmitting} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("purchases_savePurchase")}</button>
           </div>
 
           <div className="lg:col-span-2 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm h-fit">
             <table className="w-full text-sm">
-              <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr><th className="px-4 py-3">{t("purchases_table_supplier")}</th><th className="px-4 py-3">{t("purchases_table_agent")}</th><th className="px-4 py-3">{t("purchases_table_contact")}</th><th className="px-4 py-3">{t("purchases_table_liability")}</th><th className="px-4 py-3"></th></tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -2794,7 +3052,7 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
           </div>
           <div className="lg:col-span-2 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm h-fit">
             <table className="w-full text-sm">
-              <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr><th className="px-4 py-3">{t("expenses_table_category")}</th><th className="px-4 py-3">{t("expenses_table_amount")}</th><th className="px-4 py-3">{t("expenses_table_tax")}</th><th className="px-4 py-3">{t("expenses_table_date")}</th><th className="px-4 py-3">{t("expenses_table_receipt")}</th></tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -2818,7 +3076,7 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
           <div className="mb-4 text-sm text-slate-500">{t("payBalance_liability")} <span className="f-mono text-rose-600 font-semibold">{sar(payBalanceFor.balance)}</span></div>
           <Field label={t("common_amount")}><input type="number" value={payAmount} onChange={(e) => { setPayAmount(e.target.value); setPayBalanceError(""); }} className={inputCls} /></Field>
           {payBalanceError && <div className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{payBalanceError}</div>}
-          <button onClick={payBalance} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("payBalance_confirm")}</button>
+          <button onClick={payBalance} disabled={payBalanceSubmitting} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("payBalance_confirm")}</button>
         </Modal>
       )}
       {selectedSupplier && (
@@ -2844,8 +3102,8 @@ function PromotionModal({ onClose, onSave, promotions, editing }) {
   const [coupon, setCoupon] = useState(editing?.coupon || "");
   const [isPercent, setIsPercent] = useState(editing ? editing.isPercent : true);
   const [value, setValue] = useState(editing ? String(editing.value) : "");
-  const [start, setStart] = useState(editing?.start || "");
-  const [end, setEnd] = useState(editing?.end || "");
+  const [start, setStart] = useState(editing?.startDate || "");
+  const [end, setEnd] = useState(editing?.endDate || "");
   const [error, setError] = useState("");
 
   const handleSave = () => {
@@ -2853,9 +3111,12 @@ function PromotionModal({ onClose, onSave, promotions, editing }) {
     if (!name.trim()) return;
     // Two active discounts may not cover the same moment in time — an
     // overlapping period would make it ambiguous which one applies at POS.
-    const overlap = promotions.some((p) => p.id !== editing?.id && p.active !== false && promosOverlap(start, end, p.start, p.end));
+    const overlap = promotions.some((p) => p.id !== editing?.id && p.active !== false && promosOverlap(start, end, p.startDate, p.endDate));
     if (overlap) { setError(t("promoModal_overlapError")); return; }
-    onSave({ name: name.trim(), couponOn, coupon, isPercent, value: Number(value || 0), start, end });
+    // start_date/end_date are timestamptz columns — Postgres accepts NULL
+    // for "no limit" but rejects an empty string outright, so "" must be
+    // normalized to null before it ever reaches the database.
+    onSave({ name: name.trim(), couponOn, coupon, isPercent, value: Number(value || 0), startDate: start || null, endDate: end || null });
   };
 
   return (
@@ -2896,20 +3157,20 @@ function PromotionsView({ promotions, addPromotion, updatePromotion }) {
       </div>
       <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
         <table className="w-full text-sm">
-          <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr><th className="px-4 py-3">{t("promotions_table_name")}</th><th className="px-4 py-3">{t("promotions_table_type")}</th><th className="px-4 py-3">{t("promotions_table_coupon")}</th><th className="px-4 py-3">{t("promotions_table_start")}</th><th className="px-4 py-3">{t("promotions_table_end")}</th><th className="px-4 py-3">{t("promotions_table_status")}</th><th className="px-4 py-3"></th></tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
             {promotions.map((p) => {
               const cancelled = p.active === false;
-              const live = !cancelled && (p.end ? now < new Date(p.end).getTime() : true);
+              const live = !cancelled && (p.endDate ? now < new Date(p.endDate).getTime() : true);
               return (
                 <tr key={p.id} className="hover:bg-stone-50">
                   <td className="px-4 py-3 font-medium text-slate-900">{p.name}</td>
                   <td className="px-4 py-3 text-slate-600 f-mono">{p.isPercent ? `${p.value}%` : sar(p.value)}</td>
                   <td className="px-4 py-3">{p.couponOn ? <span className="f-mono rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-700">{p.coupon}</span> : <span className="text-slate-400 text-xs">{t("common_no")}</span>}</td>
-                  <td className="px-4 py-3 f-mono text-xs text-slate-500">{p.start ? fmtDate(p.start) : "—"}</td>
-                  <td className="px-4 py-3 f-mono text-xs text-slate-500">{p.end ? fmtDate(p.end) : "—"}</td>
+                  <td className="px-4 py-3 f-mono text-xs text-slate-500">{p.startDate ? fmtDate(p.startDate) : "—"}</td>
+                  <td className="px-4 py-3 f-mono text-xs text-slate-500">{p.endDate ? fmtDate(p.endDate) : "—"}</td>
                   <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${cancelled ? "bg-rose-100 text-rose-600" : live ? "bg-teal-100 text-teal-700" : "bg-stone-100 text-stone-500"}`}>{cancelled ? t("promotions_cancelled") : live ? t("common_active") : t("common_expired")}</span></td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
@@ -3102,7 +3363,7 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
           </div>
           <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
             <table className="w-full text-sm">
-              <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr><th className="px-4 py-3">{t("reports_table_invoice")}</th><th className="px-4 py-3">{t("reports_table_client")}</th><th className="px-4 py-3">{t("reports_table_method")}</th><th className="px-4 py-3">{t("reports_table_net")}</th><th className="px-4 py-3">{t("reports_table_vat")}</th><th className="px-4 py-3">{t("reports_table_gross")}</th></tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -3133,7 +3394,7 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
           </div>
           <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
             <table className="w-full text-sm">
-              <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr><th className="px-4 py-3">{t("reports_table_poId")}</th><th className="px-4 py-3">{t("reports_table_supplier")}</th><th className="px-4 py-3">{t("reports_table_value")}</th><th className="px-4 py-3">{t("reports_table_created")}</th><th className="px-4 py-3">{t("customerDetail_method")}</th><th className="px-4 py-3">{t("supplierDetail_invoice")}</th></tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -3174,7 +3435,7 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
           </div>
           <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
             <table className="w-full text-sm">
-              <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                 <tr><th className="px-4 py-3">{t("expenses_table_category")}</th><th className="px-4 py-3">{t("expenses_table_amount")}</th><th className="px-4 py-3">{t("expenses_table_tax")}</th><th className="px-4 py-3">{t("expenses_table_date")}</th><th className="px-4 py-3">{t("expenses_table_receipt")}</th></tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
@@ -3256,7 +3517,7 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
             <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("reports_vat_salesTable")}</div>
             <div className="mb-6 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
               <table className="w-full text-sm">
-                <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr><th className="px-4 py-3">#</th><th className="px-4 py-3">{t("common_category")}</th><th className="px-4 py-3">{t("reports_vat_taxableAmount")}</th><th className="px-4 py-3">{t("reports_vat_vatAmount")}</th></tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
@@ -3274,7 +3535,7 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
             <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("reports_vat_purchasesTable")}</div>
             <div className="mb-6 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
               <table className="w-full text-sm">
-                <thead className="bg-stone-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr><th className="px-4 py-3">#</th><th className="px-4 py-3">{t("common_category")}</th><th className="px-4 py-3">{t("reports_vat_taxableAmount")}</th><th className="px-4 py-3">{t("reports_vat_vatAmount")}</th></tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
@@ -3320,13 +3581,13 @@ function PinPromptModal({ title, mode, verify, onSuccess, onClose }) {
   const isSet = mode === "set";
   const digits = (v) => v.replace(/\D/g, "").slice(0, 4);
 
-  const submit = () => {
+  const submit = async () => {
     if (!/^\d{4}$/.test(pin)) { setError(t("owner_pinFormatError")); return; }
     if (isSet) {
       if (pin !== confirmPin) { setError(t("owner_pinMismatch")); return; }
-      onSuccess(pin);
+      onSuccess(await sha256Hex(pin));
     } else {
-      if (verify(pin)) onSuccess(pin);
+      if (await verify(pin)) onSuccess(pin);
       else setError(t("owner_pinWrong"));
     }
   };
@@ -3430,7 +3691,13 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
         <PinPromptModal
           title={ownerPassword ? t("owner_enterMasterTitle") : t("owner_setMasterTitle")}
           mode={ownerPassword ? "enter" : "set"}
-          verify={(pin) => pin === ownerPassword}
+          verify={async (pin) => {
+            if (pin === ownerPassword) { // legacy plaintext — self-heal to a hash
+              sha256Hex(pin).then(setOwnerPassword);
+              return true;
+            }
+            return (await sha256Hex(pin)) === ownerPassword;
+          }}
           onSuccess={handleMasterSuccess}
           onClose={() => setShowMasterPin(false)}
         />
@@ -3482,6 +3749,32 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
         <Field label={t("settings_merchantTax")}><input value={merchant.taxNumber} onChange={update("taxNumber")} className={inputCls} autoComplete="off" /></Field>
       </div>
 
+      <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-800"><ReceiptText size={16} className="text-teal-600" /> {t("settings_autoPrint")}</div>
+            <p className="text-xs text-slate-500">{t("settings_autoPrintHint")}</p>
+          </div>
+          <Toggle checked={Boolean(merchant.autoPrint)} onChange={(val) => setMerchant((prev) => ({ ...prev, autoPrint: val }))} />
+        </div>
+        {merchant.autoPrint && (
+          <div className="mt-4 space-y-4">
+            <Field label={t("settings_autoPrintCopies")}>
+              <input type="number" min="1" max="10" value={merchant.autoPrintCopies || 1}
+                onChange={(e) => setMerchant((prev) => ({ ...prev, autoPrintCopies: Math.min(10, Math.max(1, Number(e.target.value) || 1)) }))}
+                className={`${inputCls} w-24`} />
+            </Field>
+            <div className="flex items-center justify-between rounded-lg border border-stone-200 px-3 py-2.5">
+              <div>
+                <div className="text-sm text-slate-700">{t("settings_showPrintPreview")}</div>
+                <p className="text-[11px] text-slate-500">{t("settings_showPrintPreviewHint")}</p>
+              </div>
+              <Toggle checked={merchant.showPrintPreview !== false} onChange={(val) => setMerchant((prev) => ({ ...prev, showPrintPreview: val }))} />
+            </div>
+          </div>
+        )}
+      </div>
+
       <OwnerOnlySettings ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} />
 
       <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
@@ -3497,19 +3790,19 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
 /* =========================================================================
    ROOT APP
    ========================================================================= */
-function AppShell({ tab, setTab, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, onLogout }) {
+function AppShell({ tab, setTab, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber }) {
   const { dir } = useLang();
   return (
     <div dir={dir} className="flex h-screen w-full bg-stone-100 f-body">
       <Fonts />
-      <Sidebar tab={tab} setTab={setTab} sectionLocks={sectionLocks} />
+      <Sidebar tab={tab} setTab={setTab} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} />
       <main className="flex-1 overflow-y-auto p-6">
         {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promotions} enabledPayMethods={enabledPayMethods} setTab={setTab} />}
         {tab === "invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} />}
         {tab === "delivery_invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} isDelivery />}
-        {tab === "customers" && <CustomersView customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} invoices={invoices} addInvoice={addInvoice} transactions={customerTransactions} addTransaction={addTransaction} merchant={merchant} />}
+        {tab === "customers" && <CustomersView customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} invoices={invoices} addInvoice={addInvoice} transactions={customerTransactions} addTransaction={addTransaction} merchant={merchant} applyCustomerPayment={applyCustomerPayment} nextDocNumber={nextDocNumber} />}
         {tab === "inventory" && <InventoryView categories={categories} addCategory={addCategory} products={products} addProduct={addProduct} updateProduct={updateProduct} addons={addons} addAddon={addAddon} removeAddon={removeAddon} serviceTypes={serviceTypes} addServiceType={addServiceType} />}
-        {tab === "purchases" && <PurchasesExpensesView suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={purchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={expenses} addExpense={addExpense} />}
+        {tab === "purchases" && <PurchasesExpensesView suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={purchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={expenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
         {tab === "promotions" && <PromotionsView promotions={promotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
         {tab === "reports" && <ReportsView invoices={invoices} purchases={purchases} suppliers={suppliers} categories={categories} customers={customers} expenses={expenses} expenseCategories={expenseCategories} />}
         {tab === "settings" && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} onLogout={onLogout} />}
@@ -3650,6 +3943,58 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     return txn;
   };
 
+  // Atomic, tenant-scoped document numbering (RCT-/TOP-/PMT-/INV-/DLV-/PO-)
+  // via next_doc_number() (see supabase-rls-and-integrity.sql) — a real
+  // Postgres sequence per tenant/doc-type, instead of the old
+  // `1000 + array.length + 1` guess, which two terminals (or two fast
+  // clicks) could both compute identically and mint duplicate codes.
+  const nextDocNumber = async (docType) => {
+    const { data, error } = await db.rpc("next_doc_number", { p_tenant_id: tenantId, p_doc_type: docType });
+    if (!error) return data;
+    if (!isMissingRpcError(error)) { console.error("nextDocNumber failed", error); throw error; }
+    // Fallback to the old (non-atomic) numbering scheme so sales keep
+    // working before supabase-rls-and-integrity.sql has been run.
+    console.warn("next_doc_number() not found in the database — run supabase-rls-and-integrity.sql. Using non-atomic fallback numbering for now.");
+    const lengthByType = { RCT: customerTransactions.length, PMT: customerTransactions.length, TOP: invoices.length, INV: invoices.length, DLV: invoices.length, PO: purchases.length };
+    return 1000 + (lengthByType[docType] || 0) + 1;
+  };
+
+  // Atomic wallet/debt change via apply_customer_payment() — takes DELTAS,
+  // not an absolute new value, so the database (not a possibly-stale React
+  // state read) is what decides whether the balance can go negative. Two
+  // concurrent operations against the same customer can no longer silently
+  // lose one write. Updates local state from the DB's confirmed result;
+  // throws (caller shows an error) if the balance check fails.
+  const applyCustomerPayment = async (customerId, walletDelta, debtDelta) => {
+    const { data, error } = await db.rpc("apply_customer_payment", {
+      p_tenant_id: tenantId, p_customer_id: customerId, p_wallet_delta: walletDelta, p_debt_delta: debtDelta,
+    });
+    if (!error) {
+      const row = Array.isArray(data) ? data[0] : data;
+      setCustomersState((prev) => prev.map((c) => (c.id === customerId ? { ...c, walletBalance: row.wallet_balance, debt: row.debt } : c)));
+      return row;
+    }
+    if (!isMissingRpcError(error)) throw rpcBalanceError(error);
+    // Fallback to the old read-then-write-absolute-value approach so
+    // sales/top-ups/debt settlement keep working before
+    // supabase-rls-and-integrity.sql has been run — loses the atomic
+    // race-safety until then, but that beats every payment failing outright.
+    console.warn("apply_customer_payment() not found in the database — run supabase-rls-and-integrity.sql. Using non-atomic fallback for now.");
+    const customer = customers.find((c) => c.id === customerId);
+    if (!customer) throw new InsufficientBalanceError("customer not found");
+    const newWallet = customer.walletBalance + walletDelta;
+    const newDebt = customer.debt + debtDelta;
+    if (newWallet < 0 || newDebt < 0) throw new InsufficientBalanceError("insufficient_balance");
+    let previous;
+    setCustomersState((prev) => prev.map((c) => { if (c.id === customerId) previous = c; return c.id === customerId ? { ...c, walletBalance: newWallet, debt: newDebt } : c; }));
+    const { error: updErr } = await db.from("customers").update(toSnakeCase({ walletBalance: newWallet, debt: newDebt })).eq("id", customerId);
+    if (updErr) {
+      if (previous) setCustomersState((prev) => prev.map((c) => (c.id === customerId ? previous : c)));
+      throw updErr;
+    }
+    return { wallet_balance: newWallet, debt: newDebt };
+  };
+
   // Shared add/update/remove helpers for every plain catalog table (addons,
   // service_types, suppliers, purchases, expense_categories, expenses,
   // promotions) — they all follow the exact same "one row, tenant-scoped" shape.
@@ -3694,6 +4039,31 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   const addSupplier = addTo("suppliers");
   const updateSupplier = updateIn("suppliers");
   const addPurchase = addTo("purchases");
+  // Atomic supplier balance change (credit purchases increase it, paying
+  // it down decreases it) via adjust_supplier_balance() — same delta-based,
+  // race-safe pattern as applyCustomerPayment above.
+  const adjustSupplierBalance = async (supplierId, delta) => {
+    const { data, error } = await db.rpc("adjust_supplier_balance", { p_tenant_id: tenantId, p_supplier_id: supplierId, p_delta: delta });
+    if (!error) {
+      setSuppliersState((prev) => prev.map((s) => (s.id === supplierId ? { ...s, balance: data } : s)));
+      return data;
+    }
+    if (!isMissingRpcError(error)) throw rpcBalanceError(error);
+    // Same fallback rationale as applyCustomerPayment above.
+    console.warn("adjust_supplier_balance() not found in the database — run supabase-rls-and-integrity.sql. Using non-atomic fallback for now.");
+    const supplier = suppliers.find((s) => s.id === supplierId);
+    if (!supplier) throw new InsufficientBalanceError("supplier not found");
+    const newBalance = supplier.balance + delta;
+    if (newBalance < 0) throw new InsufficientBalanceError("insufficient_balance");
+    let previous;
+    setSuppliersState((prev) => prev.map((s) => { if (s.id === supplierId) previous = s; return s.id === supplierId ? { ...s, balance: newBalance } : s; }));
+    const { error: updErr } = await db.from("suppliers").update(toSnakeCase({ balance: newBalance })).eq("id", supplierId);
+    if (updErr) {
+      if (previous) setSuppliersState((prev) => prev.map((s) => (s.id === supplierId ? previous : s)));
+      throw updErr;
+    }
+    return newBalance;
+  };
   const addExpenseCategory = addTo("expense_categories");
   const addExpense = addTo("expenses");
   const addPromotion = addTo("promotions");
@@ -3703,7 +4073,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   // methods) live as one doc — loaded once on mount, auto-saved on any change
   // once the initial load has completed (so we never overwrite real saved
   // settings with the blank defaults during the first render).
-  const [merchant, setMerchant] = useState({ name: "", phone: "", address: "", taxNumber: "" });
+  const [merchant, setMerchant] = useState({ name: "", phone: "", address: "", taxNumber: "", autoPrint: false, autoPrintCopies: 1, showPrintPreview: true });
   const [ownerPassword, setOwnerPassword] = useState(null);
   const [sectionLocks, setSectionLocks] = useState({ customers: null, inventory: null, purchases: null, promotions: null, reports: null });
   const [enabledPayMethods, setEnabledPayMethods] = useState({ Cash: true, "External Network": true, "Wallet Balance": true, "Credit (On Account)": true, Split: true });
@@ -3750,37 +4120,42 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
 
   const walkInLabel = lang === "ar" ? "عميل مباشر" : lang === "ur" ? "براہ راست گاہک" : "Walk-in";
 
-  const createInvoice = ({ customerId, items, total, discount = 0, payMethod, isDelivery = false, deliveryFee = 0, splitPayments = null, walletDeduct = 0 }) => {
+  // Async now (was sync): both the balance change and the document number
+  // are a real round trip to Postgres (apply_customer_payment() /
+  // next_doc_number(), see supabase-rls-and-integrity.sql) instead of a
+  // client-computed guess, so two terminals selling against the same
+  // customer/number at once can no longer silently clobber each other.
+  // Still returns null on insufficient funds — same contract callers
+  // (POSView.complete) already check for.
+  const createInvoice = async ({ customerId, items, total, discount = 0, payMethod, isDelivery = false, deliveryFee = 0, splitPayments = null, walletDeduct = 0 }) => {
     const customer = customers.find((c) => c.id === customerId);
     const grandTotal = Math.max(0, total - discount) + (isDelivery ? deliveryFee : 0);
 
-    if (walletDeduct > 0 && (!customer || customer.walletBalance < walletDeduct)) return null; // insufficient funds — caller must check for null
+    if (walletDeduct > 0 && (!customer || customer.walletBalance < walletDeduct)) return null; // quick client-side check — DB call below is the real guard
 
-    if (payMethod === "Wallet Balance") {
-      if (!customer || customer.walletBalance < grandTotal) return null;
-      updateCustomer(customerId, { walletBalance: customer.walletBalance - grandTotal });
-    } else if (payMethod === "Split" && splitPayments) {
-      const walletNeeded = splitPayments.filter((sp) => sp.method === "Wallet Balance").reduce((s, sp) => s + sp.amount, 0);
-      if (walletNeeded > 0 && (!customer || customer.walletBalance < walletNeeded)) return null;
-      let walletBalance = customer.walletBalance;
-      let debt = customer.debt;
-      splitPayments.forEach((sp) => {
-        if (sp.method === "Wallet Balance") walletBalance -= sp.amount;
-        else if (sp.method === "Credit (On Account)") debt += sp.amount;
-      });
-      updateCustomer(customerId, { walletBalance, debt });
-    } else if (customer) {
-      // Cash / External Network / Credit (On Account) — possibly combined with
-      // walletDeduct: the wallet portion of a wallet+X split reclassified as a
-      // discount (see POSView). Real money still leaves the wallet even though
-      // the invoice's recorded payment method/total no longer mentions it.
-      const patch = {};
-      if (walletDeduct > 0) patch.walletBalance = customer.walletBalance - walletDeduct;
-      if (payMethod === "Credit (On Account)") patch.debt = customer.debt + grandTotal;
-      if (Object.keys(patch).length > 0) updateCustomer(customerId, patch);
+    try {
+      if (payMethod === "Wallet Balance") {
+        if (!customer) return null;
+        await applyCustomerPayment(customerId, -grandTotal, 0);
+      } else if (payMethod === "Split" && splitPayments) {
+        if (!customer) return null;
+        const walletNeeded = splitPayments.filter((sp) => sp.method === "Wallet Balance").reduce((s, sp) => s + sp.amount, 0);
+        const creditNeeded = splitPayments.filter((sp) => sp.method === "Credit (On Account)").reduce((s, sp) => s + sp.amount, 0);
+        if (walletNeeded > 0 || creditNeeded > 0) await applyCustomerPayment(customerId, -walletNeeded, creditNeeded);
+      } else if (customer && (walletDeduct > 0 || payMethod === "Credit (On Account)")) {
+        // Cash / External Network / Credit (On Account) — possibly combined with
+        // walletDeduct: the wallet portion of a wallet+X split reclassified as a
+        // discount (see POSView). Real money still leaves the wallet even though
+        // the invoice's recorded payment method/total no longer mentions it.
+        const debtDelta = payMethod === "Credit (On Account)" ? grandTotal : 0;
+        await applyCustomerPayment(customerId, -walletDeduct, debtDelta);
+      }
+    } catch (e) {
+      if (e instanceof InsufficientBalanceError) { console.error("createInvoice: insufficient balance", e); return null; }
+      throw e; // anything else (RPC missing, network, etc.) is NOT "insufficient funds" — let the caller show an accurate error instead of blaming the wallet
     }
 
-    const code = `${isDelivery ? "DLV" : "INV"}-${1000 + invoices.length + 1}`;
+    const code = `${isDelivery ? "DLV" : "INV"}-${await nextDocNumber(isDelivery ? "DLV" : "INV")}`;
     const invoice = {
       code, customerId, customerName: customer?.name || walkInLabel, payMethod, splitPayments, total: grandTotal, discount, isDelivery, deliveryFee, createdAt: nowISO(), closed: false,
       vatExempt: !merchant.taxNumber || !merchant.taxNumber.trim(),
@@ -3811,6 +4186,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
         sectionLocks={sectionLocks} setSectionLocks={setSectionLocks}
         enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods}
         onLogout={onLogout}
+        applyCustomerPayment={applyCustomerPayment} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber}
       />
     </LangContext.Provider>
   );
@@ -3836,19 +4212,6 @@ function KpiCard({ label, value }) {
   );
 }
 
-function ComingSoonPanel({ tab }) {
-  const labels = { orders: "الطلبيات" };
-  return (
-    <div>
-      <h1 className="text-2xl font-bold mb-6">{labels[tab]}</h1>
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-10 text-center text-gray-400">
-        <div className="text-4xl mb-3">🚧</div>
-        <p>هذا القسم لسا ما اتبنى — ما فيه مفهوم "طلبية" منفصل عن الفاتورة بالنظام حاليًا.</p>
-      </div>
-    </div>
-  );
-}
-
 function AdminModal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
@@ -3869,7 +4232,6 @@ const ADMIN_NAV = [
   { key: "customers", label: "العملاء", icon: "👥" },
   { key: "tenantData", label: "إدارة بيانات المحلات", icon: "🗂️" },
   { key: "invoices", label: "الفواتير", icon: "📄" },
-  { key: "orders", label: "الطلبيات", icon: "📋" },
   { key: "sales", label: "المبيعات", icon: "💰" },
   { key: "reports", label: "التقارير", icon: "📊" },
   { key: "settings", label: "الإعدادات", icon: "⚙️" },
@@ -4690,8 +5052,6 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
         {tab === "sales" && <AdminSalesLeaderboardView invoices={liveInvoices} tenants={tenants} />}
         {tab === "reports" && <AdminPlatformReportsView invoices={liveInvoices} tenants={tenants} customerCounts={liveCustomerCounts} />}
 
-        {tab === "orders" && <ComingSoonPanel tab={tab} />}
-
         {tab === "settings" && (
           <div className="max-w-xl space-y-6">
             <h1 className="text-2xl font-bold">إعدادات الإدارة</h1>
@@ -5370,7 +5730,7 @@ function SignupPage(props) {
 
           {signupError && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{signupError}</div>}
 
-          <button onClick={handleSignup} disabled={signupLoading} className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-6">
+          <button onClick={handleSignup} disabled={signupLoading || !signupAgree} className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-6">
             {signupLoading ? 'جارٍ الإنشاء...' : 'إنشاء الحساب'}
           </button>
 
@@ -5394,24 +5754,21 @@ const LaundryPOS = () => {
   const [authResolved, setAuthResolved] = useState(false);
   const [tenantId, setTenantId] = useState(null);
 
-  // Disabled on purpose at the user's explicit request (platform_config not
-  // needed at initial load — Auth + tenants table only, for now). Means
-  // adminEmails/autoApprove stay pinned to their hardcoded defaults below
-  // and never pick up whatever's actually saved in platform_config (so
-  // AdminDashboard's "add admin" / "toggle auto-approve" won't take effect
-  // for any session but this file's hardcoded default) until this is
-  // re-enabled. See the commented-out effect for how to restore it.
+  // Live-synced from platform_config so AdminDashboard's "add admin" /
+  // "remove admin" / "toggle auto-approve" controls actually take effect.
+  // Falls back to ADMIN_EMAILS_DEFAULT/true until the row loads (or if it's
+  // still missing / rejected by RLS pre-bootstrap).
   const [adminEmails, setAdminEmails] = useState(ADMIN_EMAILS_DEFAULT);
   const [autoApprove, setAutoApprove] = useState(true);
-  // useEffect(() => {
-  //   const applyRow = (d) => {
-  //     if (!d) return;
-  //     if (Array.isArray(d.adminEmails) && d.adminEmails.length > 0) setAdminEmails(d.adminEmails);
-  //     if (typeof d.autoApprove === 'boolean') setAutoApprove(d.autoApprove);
-  //   };
-  //   const unsub = subscribeToRow('platform_config', null, null, applyRow);
-  //   return () => unsub();
-  // }, []);
+  useEffect(() => {
+    const applyRow = (d) => {
+      if (!d) return;
+      if (Array.isArray(d.adminEmails) && d.adminEmails.length > 0) setAdminEmails(d.adminEmails);
+      if (typeof d.autoApprove === 'boolean') setAutoApprove(d.autoApprove);
+    };
+    const unsub = subscribeToRow('platform_config', null, null, applyRow);
+    return () => unsub();
+  }, []);
 
   const [registrationRequests, setRegistrationRequests] = useState([]);
   const [salesInquiries, setSalesInquiries] = useState([]);
@@ -5466,29 +5823,19 @@ const LaundryPOS = () => {
     }
   };
 
-  // First-ever admin login provisions a real Supabase Auth account lazily —
-  // whatever password is typed the FIRST time (for an already-allow-listed
-  // admin email, see isAdminEmail()) becomes that account's real password
-  // from then on. No shared/hardcoded bootstrap secret to know, type, or
-  // leak — this is what actually enforces "who can log in as admin" going
-  // forward is a real Supabase Auth password, chosen by that admin.
-  //
-  // We try auth.signUp() FIRST rather than sign-in-then-fall-back-on-error:
-  // it fails with a reliable "user_already_exists" error code only when the
-  // account genuinely already exists — an unambiguous signal, unlike trying
-  // to distinguish "wrong password" from "no such account" on sign-in
-  // (Supabase deliberately returns the same invalid_credentials error for
-  // both, for enumeration protection).
+  // Admin accounts must already exist in Supabase Auth (created manually by
+  // the owner via the Supabase Dashboard → Authentication → Users) before
+  // anyone can log in as that email. Deliberately NOT auto-provisioning via
+  // auth.signUp() here anymore — the old behavior let whoever typed ANY
+  // password for an allow-listed admin email FIRST claim that account
+  // permanently, which is an open race for any email added to admin_emails
+  // (including the hardcoded default, which ships in client JS). Sign-in
+  // only, no bootstrap.
   const adminSignIn = async (emailNorm, password) => {
-    const { error: signUpErr } = await auth.signUp({ email: emailNorm, password });
-    if (!signUpErr) { await ensurePlatformConfig(emailNorm); return; }
-    if (signUpErr.code !== 'user_already_exists') throw signUpErr;
-    // Account already exists — fall through to a normal sign-in below.
     const { error: signInErr } = await auth.signInWithPassword({ email: emailNorm, password });
     if (signInErr) throw signInErr;
     // Self-heal: covers the case where the account exists but config/platform
-    // was never bootstrapped (e.g. an earlier attempt hit the branch above
-    // and never created it).
+    // was never bootstrapped yet.
     await ensurePlatformConfig(emailNorm).catch(() => {});
   };
 
@@ -5565,7 +5912,22 @@ const LaundryPOS = () => {
         return;
       }
       const { data, error: signInErr } = await auth.signInWithPassword({ email: emailNorm, password: loginPassword });
-      if (signInErr) throw signInErr;
+      if (signInErr) {
+        // Supabase rejects the sign-in itself for an unconfirmed account
+        // (error_code "email_not_confirmed") rather than letting it through
+        // with a null email_confirmed_at — so a customer who signed up,
+        // didn't finish clicking the verification link, and comes back to
+        // log in later would otherwise hit a dead-end error and never see
+        // the "check your email" screen again. Route them back to it here,
+        // same as resolveDestination does for an already-signed-in session.
+        if (signInErr.code === 'email_not_confirmed') {
+          setPendingSignup({ email: emailNorm });
+          setShowEmailVerification(true);
+          setLoginLoading(false);
+          return;
+        }
+        throw signInErr;
+      }
       const user = data.user;
       const dest = await resolveDestination(user);
       if (dest.page === 'verify') {
@@ -5599,6 +5961,7 @@ const LaundryPOS = () => {
       setSignupLoading(false);
       return;
     }
+    if (!signupAgree) { setSignupError('لازم توافق على شروط الخدمة.'); return; }
     if (!/^05\d{8}$/.test(signupMobile)) { setSignupError('رقم الجوال لازم يكون 10 أرقام ويبدأ بـ 05.'); return; }
     const emailNorm = signupEmail.trim().toLowerCase();
     if (!emailNorm || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) { setSignupError('حط بريد إلكتروني صحيح.'); return; }
@@ -5608,12 +5971,20 @@ const LaundryPOS = () => {
     try {
       const shopName = signupShop.trim() || '—';
       const address = signupAddress.trim() || '—';
-      const { data, error: signUpErr } = await auth.signUp({ email: emailNorm, password: signupPassword });
-      if (signUpErr) throw signUpErr;
-      const user = data.user;
-      // Supabase still fires its own confirmation email as a side effect of
-      // signUp() — kept on purpose as a fallback in case the branded Resend
-      // email below fails to send for any reason.
+
+      // The API route creates the Supabase Auth user itself, via
+      // admin.generateLink({type:'signup'}) — that call behaves like
+      // auth.signUp() and fails with "user already registered" if the user
+      // already exists. So this must be the ONLY place that creates the
+      // account; calling auth.signUp() here too (the old code did, before
+      // this fetch) silently broke the branded Resend email on every signup.
+      const resp = await fetch('/api/send-verification-email', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: emailNorm, password: signupPassword, shopName }),
+      });
+      const result = await resp.json();
+      if (!result.success) throw { message: result.error, code: result.code };
+      const user = result.user;
 
       const approved = autoApprove;
       const { error: reqErr } = await db.from('registration_requests').insert(toSnakeCase({
@@ -5627,15 +5998,6 @@ const LaundryPOS = () => {
         }));
         if (tenantErr) throw tenantErr;
       }
-      // Custom branded email — best-effort. The API route generates the
-      // real Supabase confirmation link server-side (needs the service_role
-      // key, which must never touch client code) and sends it via Resend.
-      // Supabase's own default email above is the fallback if this fails,
-      // so a failure here must never block the signup flow itself.
-      fetch('/api/send-verification-email', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailNorm, password: signupPassword, shopName }),
-      }).catch((e) => console.error('send-verification-email failed', e));
 
       setPendingSignup({ email: emailNorm });
       setShowEmailVerification(true);
