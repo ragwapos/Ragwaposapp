@@ -6003,7 +6003,14 @@ const LaundryPOS = () => {
       }));
       if (reqErr) throw reqErr;
       if (approved) {
-        const { error: tenantErr } = await db.from('tenants').upsert(toSnakeCase({
+        // insert(), not upsert(): this id is a just-created auth user, so a
+        // conflicting row can never legitimately exist here — and upsert's
+        // INSERT ... ON CONFLICT DO UPDATE needs the UPDATE policy to pass
+        // too (in case the conflict branch is taken), not just INSERT's.
+        // tenants' UPDATE policy is scoped to auth.uid(), which this
+        // still-anon signup client doesn't have, so upsert() was rejected by
+        // RLS here even though no conflict could ever actually occur.
+        const { error: tenantErr } = await db.from('tenants').insert(toSnakeCase({
           id: user.id, shopName, mobile: signupMobile, email: emailNorm, address, approvedDate: new Date().toISOString(),
         }));
         if (tenantErr) throw tenantErr;
