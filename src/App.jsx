@@ -183,6 +183,15 @@ function buildSalesRows(invoices, start, end, method) {
 }
 const uid = (p = "id") => `${p}_${Math.random().toString(36).slice(2, 9)}`;
 const sar = (n) => `${(Math.round((n + Number.EPSILON) * 100) / 100).toFixed(2)} SAR`;
+// Customer ledger list only — keeps the wallet/debt columns from growing
+// with the number's length (a 6-figure balance shouldn't be what forces the
+// whole row wider). Caps at the first 4 integer digits + "+"; the exact
+// amount is always still shown in full inside that customer's own detail
+// view, this is display-only for the compact list.
+const sarCompact = (n) => {
+  const digits = String(Math.round(Math.abs(n)));
+  return digits.length > 4 ? `${digits.slice(0, 4)}+ SAR` : sar(n);
+};
 const nowISO = () => new Date().toISOString();
 // Owner/section PINs are hashed before storage (Web Crypto, no extra
 // dependency) so a tenant_settings row leak or network capture doesn't hand
@@ -792,6 +801,7 @@ const DICT = {
     addCustomer_title: "➕ Add New Customer", addCustomer_systemId: "System ID (auto, can be edited)",
     addCustomer_idTaken: "This number is already used by another customer — pick a different one.",
     addCustomer_mobileTaken: "This number is already registered for customer #{id} ({name}).",
+    addCustomer_mobileInvalid: "Mobile number must be 10 digits starting with 05.",
     addCustomer_name: "Customer Name", addCustomer_mobile: "Mobile Number",
     addCustomer_openingBalance: "Opening Wallet Balance (SAR)", addCustomer_openingDebt: "Opening Debt / On Account (SAR)",
     addCustomer_save: "Save Customer",
@@ -988,6 +998,7 @@ const DICT = {
     addCustomer_title: "➕ إضافة عميل جديد", addCustomer_systemId: "الرقم التسلسلي (تلقائي، يمكن تعديله)",
     addCustomer_idTaken: "هذا الرقم مستخدم مسبقًا لعميل آخر — اختر رقمًا آخر.",
     addCustomer_mobileTaken: "هذا الرقم مسجل مسبقًا للعميل #{id} ({name}).",
+    addCustomer_mobileInvalid: "رقم الجوال لازم يكون 10 أرقام ويبدأ بـ 05.",
     addCustomer_name: "اسم العميل", addCustomer_mobile: "رقم الجوال",
     addCustomer_openingBalance: "رصيد المحفظة الافتتاحي (ريال)", addCustomer_openingDebt: "الدين الافتتاحي / على الحساب (ريال)",
     addCustomer_save: "حفظ العميل",
@@ -1184,6 +1195,7 @@ const DICT = {
     addCustomer_title: "➕ نیا کسٹمر شامل کریں", addCustomer_systemId: "سسٹم نمبر (خودکار، تبدیل کیا جا سکتا ہے)",
     addCustomer_idTaken: "یہ نمبر پہلے سے کسی اور کسٹمر کے پاس ہے — دوسرا نمبر منتخب کریں۔",
     addCustomer_mobileTaken: "یہ نمبر پہلے سے کسٹمر #{id} ({name}) کے لیے رجسٹرڈ ہے۔",
+    addCustomer_mobileInvalid: "موبائل نمبر 10 ہندسوں کا ہونا چاہیے اور 05 سے شروع ہونا چاہیے۔",
     addCustomer_name: "کسٹمر کا نام", addCustomer_mobile: "موبائل نمبر",
     addCustomer_openingBalance: "ابتدائی والٹ بیلنس (ریال)", addCustomer_openingDebt: "ابتدائی ادھار / کھاتہ (ریال)",
     addCustomer_save: "کسٹمر محفوظ کریں",
@@ -1493,7 +1505,11 @@ function AddCustomerModal({ customers, onClose, onSave }) {
 
   const mobileTrimmed = mobile.trim();
   const existingByMobile = mobileTrimmed && mobileTrimmed !== "-" ? customers.find((c) => c.mobile === mobileTrimmed) : null;
-  const mobileInvalid = Boolean(existingByMobile);
+  const mobileTaken = Boolean(existingByMobile);
+  // Empty is allowed (renders as "-" in the ledger, same as before) — the
+  // 05XXXXXXXX format is only enforced once the owner actually types something.
+  const mobileFormatInvalid = mobileTrimmed !== "" && !/^05\d{8}$/.test(mobileTrimmed);
+  const mobileInvalid = mobileTaken || mobileFormatInvalid;
 
   return (
     <Modal title={t("addCustomer_title")} onClose={onClose}>
@@ -1501,10 +1517,13 @@ function AddCustomerModal({ customers, onClose, onSave }) {
         <input type="number" min="1" value={id} onChange={(e) => setId(e.target.value)} className={`${inputCls} ${idTaken ? "border-rose-400" : ""}`} />
         {idTaken && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("addCustomer_idTaken")}</div>}
       </Field>
-      <Field label={t("addCustomer_name")}><input autoFocus value={name} onChange={(e) => setName(e.target.value)} className={inputCls} /></Field>
+      {/* Capped at 15 chars so a long name can't be the thing that forces the
+          customer ledger's name column wider than its allotted share. */}
+      <Field label={t("addCustomer_name")}><input autoFocus value={name} onChange={(e) => setName(e.target.value.slice(0, 15))} maxLength={15} className={inputCls} /></Field>
       <Field label={t("addCustomer_mobile")}>
-        <input value={mobile} onChange={(e) => setMobile(e.target.value)} className={`${inputCls} ${mobileInvalid ? "border-rose-400" : ""}`} />
-        {mobileInvalid && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("addCustomer_mobileTaken", { id: existingByMobile.id, name: existingByMobile.name })}</div>}
+        <input value={mobile} onChange={(e) => setMobile(e.target.value)} maxLength={10} dir="ltr" className={`${inputCls} ${mobileInvalid ? "border-rose-400" : ""}`} />
+        {mobileTaken && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("addCustomer_mobileTaken", { id: existingByMobile.id, name: existingByMobile.name })}</div>}
+        {!mobileTaken && mobileFormatInvalid && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("addCustomer_mobileInvalid")}</div>}
       </Field>
       <Field label={t("addCustomer_openingBalance")}><input type="number" value={openingBalance} onChange={(e) => setOpeningBalance(e.target.value)} className={inputCls} /></Field>
       <Field label={t("addCustomer_openingDebt")}><input type="number" value={openingDebt} onChange={(e) => setOpeningDebt(e.target.value)} className={inputCls} /></Field>
@@ -2535,29 +2554,25 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
         <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("customers_searchPlaceholder")} className={`${inputCls} pl-9`} />
       </div>
-      <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-        {/* table-layout:fixed + explicit widths on every column except name:
-            this page (like every other dashboard view) has no max-width
-            wrapper, so on a genuinely wide monitor the default auto layout
-            hands leftover space to columns however its own heuristic picks —
-            id/mobile/wallet/debt could each end up a very different width
-            from their header's, reading as "shifted" even though every
-            header still maps to the right data underneath. Widths below are
-            sized for real content (mobile numbers, amounts up to 6 figures),
-            not the column's current shortest value, so nothing truncates —
-            name is left unconstrained to absorb whatever space is left. */}
+      {/* max-w-2xl on the card itself (not just the table) — this page, like
+          every other dashboard view, has no outer max-width wrapper, so
+          without one here the card stretches edge-to-edge on a wide monitor.
+          Column widths below are sized to the caps now enforced at entry
+          (name ≤15 chars, mobile 05+8 digits, wallet/debt shown to 4 digits
+          via sarCompact), so table-layout:fixed can't truncate anything real. */}
+      <div className="max-w-2xl overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
         <table className="w-full text-sm table-fixed">
           <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <tr><th className="px-4 py-3 w-24">{t("customers_id")}</th><th className="px-4 py-3">{t("customers_name")}</th><th className="px-4 py-3 w-36">{t("customers_mobile")}</th><th className="px-4 py-3 w-40">{t("customers_wallet")}</th><th className="px-4 py-3 w-40">{t("customers_debt")}</th><th className="px-4 py-3 w-10"></th></tr>
+            <tr><th className="px-4 py-3 w-20">{t("customers_id")}</th><th className="px-4 py-3 w-44">{t("customers_name")}</th><th className="px-4 py-3 w-32">{t("customers_mobile")}</th><th className="px-4 py-3 w-32">{t("customers_wallet")}</th><th className="px-4 py-3 w-32">{t("customers_debt")}</th><th className="px-4 py-3 w-10"></th></tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
             {filtered.map((c) => (
               <tr key={c.id} onClick={() => setSelected(c)} className="cursor-pointer hover:bg-stone-50">
-                <td className="px-4 py-3 f-mono text-slate-500 w-24">#{c.id}</td>
-                <td className="px-4 py-3 font-medium text-slate-900 truncate">{c.name}</td>
-                <td className="px-4 py-3 f-mono text-slate-600 w-36">{c.mobile}</td>
-                <td className="px-4 py-3 f-mono text-teal-700 w-40">{sar(c.walletBalance)}</td>
-                <td className="px-4 py-3 f-mono text-rose-600 w-40">{sar(c.debt)}</td>
+                <td className="px-4 py-3 f-mono text-slate-500 w-20">#{c.id}</td>
+                <td className="px-4 py-3 font-medium text-slate-900 truncate w-44">{c.name}</td>
+                <td className="px-4 py-3 f-mono text-slate-600 w-32">{c.mobile}</td>
+                <td className="px-4 py-3 f-mono text-teal-700 w-32">{sarCompact(c.walletBalance)}</td>
+                <td className="px-4 py-3 f-mono text-rose-600 w-32">{sarCompact(c.debt)}</td>
                 <td className="px-4 py-3 text-right text-slate-300 w-10"><ChevronRight size={16} /></td>
               </tr>
             ))}
