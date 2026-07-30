@@ -2554,26 +2554,33 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
         <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("customers_searchPlaceholder")} className={`${inputCls} pl-9`} />
       </div>
-      {/* max-w-2xl on the card itself (not just the table) — this page, like
+      {/* max-w-4xl on the card itself (not just the table) — this page, like
           every other dashboard view, has no outer max-width wrapper, so
           without one here the card stretches edge-to-edge on a wide monitor.
-          Column widths below are sized to the caps now enforced at entry
-          (name ≤15 chars, mobile 05+8 digits, wallet/debt shown to 4 digits
-          via sarCompact), so table-layout:fixed can't truncate anything real. */}
-      <div className="max-w-2xl overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+          Column widths are generous (not squeezed to content), each roomy
+          enough for its entry-time cap (name ≤15 chars, mobile 05+8 digits,
+          wallet/debt to 4 digits via sarCompact) with real breathing room —
+          and every header/cell is centered in its column rather than hugging
+          an edge, so header and data read as one aligned block per column. */}
+      <div className="max-w-4xl overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
         <table className="w-full text-sm table-fixed">
           <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <tr><th className="px-4 py-3 w-20">{t("customers_id")}</th><th className="px-4 py-3 w-44">{t("customers_name")}</th><th className="px-4 py-3 w-32">{t("customers_mobile")}</th><th className="px-4 py-3 w-32">{t("customers_wallet")}</th><th className="px-4 py-3 w-32">{t("customers_debt")}</th><th className="px-4 py-3 w-10"></th></tr>
+            <tr><th className="px-4 py-3 w-24 text-center">{t("customers_id")}</th><th className="px-4 py-3 w-56 text-center">{t("customers_name")}</th><th className="px-4 py-3 w-40 text-center">{t("customers_mobile")}</th><th className="px-4 py-3 w-40 text-center">{t("customers_wallet")}</th><th className="px-4 py-3 w-40 text-center">{t("customers_debt")}</th><th className="px-4 py-3 w-12"></th></tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
             {filtered.map((c) => (
               <tr key={c.id} onClick={() => setSelected(c)} className="cursor-pointer hover:bg-stone-50">
-                <td className="px-4 py-3 f-mono text-slate-500 w-20">#{c.id}</td>
-                <td className="px-4 py-3 font-medium text-slate-900 truncate w-44">{c.name}</td>
-                <td className="px-4 py-3 f-mono text-slate-600 w-32">{c.mobile}</td>
-                <td className="px-4 py-3 f-mono text-teal-700 w-32">{sarCompact(c.walletBalance)}</td>
-                <td className="px-4 py-3 f-mono text-rose-600 w-32">{sarCompact(c.debt)}</td>
-                <td className="px-4 py-3 text-right text-slate-300 w-10"><ChevronRight size={16} /></td>
+                {/* inline textAlign, not just the text-center class: .f-mono
+                    itself sets text-align via a (class+element) CSS rule,
+                    which beats a same-specificity Tailwind utility class —
+                    an inline style always wins regardless, so this is the
+                    one reliable way to center an f-mono cell specifically. */}
+                <td className="px-4 py-3 f-mono text-slate-500 w-24" style={{ textAlign: "center" }}>#{c.id}</td>
+                <td className="px-4 py-3 font-medium text-slate-900 truncate w-56 text-center">{c.name}</td>
+                <td className="px-4 py-3 f-mono text-slate-600 w-40" style={{ textAlign: "center" }}>{c.mobile}</td>
+                <td className="px-4 py-3 f-mono text-teal-700 w-40" style={{ textAlign: "center" }}>{sarCompact(c.walletBalance)}</td>
+                <td className="px-4 py-3 f-mono text-rose-600 w-40" style={{ textAlign: "center" }}>{sarCompact(c.debt)}</td>
+                <td className="px-4 py-3 text-right text-slate-300 w-12"><ChevronRight size={16} /></td>
               </tr>
             ))}
             {filtered.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-slate-400">{t("customers_noneYet")}</td></tr>}
