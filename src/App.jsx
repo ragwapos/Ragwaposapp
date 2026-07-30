@@ -242,7 +242,7 @@ const Fonts = () => (
        over a completely different width than the data below it. Table cells
        need their native table-cell display restored; unicode-bidi/direction
        above still make the LTR number render correctly either way.
-       Separately, .f-mono's own direction:ltr flips `text-align:start` (the
+       Separately, .f-mono's own direction:ltr flips text-align:start (the
        browser default for table cells) from right to left in an RTL table —
        so every f-mono column's values hugged the opposite edge from their
        header and from every other (non-mono) column, even though the DOM
