@@ -2536,19 +2536,29 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("customers_searchPlaceholder")} className={`${inputCls} pl-9`} />
       </div>
       <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-        <table className="w-full text-sm">
+        {/* table-layout:fixed + explicit widths on every column except name:
+            this page (like every other dashboard view) has no max-width
+            wrapper, so on a genuinely wide monitor the default auto layout
+            hands leftover space to columns however its own heuristic picks —
+            id/mobile/wallet/debt could each end up a very different width
+            from their header's, reading as "shifted" even though every
+            header still maps to the right data underneath. Widths below are
+            sized for real content (mobile numbers, amounts up to 6 figures),
+            not the column's current shortest value, so nothing truncates —
+            name is left unconstrained to absorb whatever space is left. */}
+        <table className="w-full text-sm table-fixed">
           <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <tr><th className="px-4 py-3">{t("customers_id")}</th><th className="px-4 py-3">{t("customers_name")}</th><th className="px-4 py-3">{t("customers_mobile")}</th><th className="px-4 py-3">{t("customers_wallet")}</th><th className="px-4 py-3">{t("customers_debt")}</th><th className="px-4 py-3"></th></tr>
+            <tr><th className="px-4 py-3 w-24">{t("customers_id")}</th><th className="px-4 py-3">{t("customers_name")}</th><th className="px-4 py-3 w-36">{t("customers_mobile")}</th><th className="px-4 py-3 w-40">{t("customers_wallet")}</th><th className="px-4 py-3 w-40">{t("customers_debt")}</th><th className="px-4 py-3 w-10"></th></tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
             {filtered.map((c) => (
               <tr key={c.id} onClick={() => setSelected(c)} className="cursor-pointer hover:bg-stone-50">
-                <td className="px-4 py-3 f-mono text-slate-500">#{c.id}</td>
-                <td className="px-4 py-3 font-medium text-slate-900">{c.name}</td>
-                <td className="px-4 py-3 f-mono text-slate-600">{c.mobile}</td>
-                <td className="px-4 py-3 f-mono text-teal-700">{sar(c.walletBalance)}</td>
-                <td className="px-4 py-3 f-mono text-rose-600">{sar(c.debt)}</td>
-                <td className="px-4 py-3 text-right text-slate-300"><ChevronRight size={16} /></td>
+                <td className="px-4 py-3 f-mono text-slate-500 w-24">#{c.id}</td>
+                <td className="px-4 py-3 font-medium text-slate-900 truncate">{c.name}</td>
+                <td className="px-4 py-3 f-mono text-slate-600 w-36">{c.mobile}</td>
+                <td className="px-4 py-3 f-mono text-teal-700 w-40">{sar(c.walletBalance)}</td>
+                <td className="px-4 py-3 f-mono text-rose-600 w-40">{sar(c.debt)}</td>
+                <td className="px-4 py-3 text-right text-slate-300 w-10"><ChevronRight size={16} /></td>
               </tr>
             ))}
             {filtered.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-slate-400">{t("customers_noneYet")}</td></tr>}
