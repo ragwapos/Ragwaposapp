@@ -241,8 +241,15 @@ const Fonts = () => (
        width instead of matching its column — the header then visibly sits
        over a completely different width than the data below it. Table cells
        need their native table-cell display restored; unicode-bidi/direction
-       above still make the LTR number render correctly either way. */
-    td.f-mono, th.f-mono { display: table-cell; }
+       above still make the LTR number render correctly either way.
+       Separately, .f-mono's own direction:ltr flips `text-align:start` (the
+       browser default for table cells) from right to left in an RTL table —
+       so every f-mono column's values hugged the opposite edge from their
+       header and from every other (non-mono) column, even though the DOM
+       order and column widths were always correct. match-parent resolves
+       start/end against the table's actual direction instead of the cell's
+       own forced-ltr one, so it lines back up in both RTL and LTR (EN) mode. */
+    td.f-mono, th.f-mono { display: table-cell; text-align: match-parent; }
     @media print {
       body * { visibility: hidden; }
       .print-area, .print-area * { visibility: visible; }
