@@ -804,7 +804,6 @@ const DICT = {
     addCustomer_mobileTaken: "This number is already registered for customer #{id} ({name}).",
     addCustomer_mobileInvalid: "Mobile number must be 10 digits starting with 05.",
     addCustomer_name: "Customer Name", addCustomer_mobile: "Mobile Number",
-    addCustomer_openingBalance: "Opening Wallet Balance (SAR)", addCustomer_openingDebt: "Opening Debt / On Account (SAR)",
     addCustomer_save: "Save Customer",
 
     topup_title: "Top-Up Wallet", topup_amount: "Top-Up Amount (SAR)", topup_discountMode: "Discount Mode",
@@ -845,8 +844,9 @@ const DICT = {
     expenses_uploadReceipt: "Upload receipt", expenses_save: "Save Expense",
     expenses_table_category: "Category", expenses_table_amount: "Amount", expenses_table_tax: "Tax",
     expenses_table_date: "Date", expenses_table_receipt: "Receipt",
-    addSupplier_title: "➕ Add New Supplier", addSupplier_company: "Company Name", addSupplier_agent: "Agent Name",
+    addSupplier_title: "➕ Add New Supplier", addSupplier_editTitle: "✏️ Edit Supplier", addSupplier_company: "Company Name", addSupplier_agent: "Agent Name",
     addSupplier_contact: "Contact Number", addSupplier_taxNumber: "Tax Number (optional)", addSupplier_save: "Save Supplier",
+    addSupplier_taxExempt: "Supplier is Tax Exempt", addSupplier_exemptionNumber: "Tax Exemption Number",
     supplierDetail_agent: "Agent", supplierDetail_contact: "Contact", supplierDetail_liability: "Outstanding Liability",
     supplierDetail_totalPurchased: "Total Purchased", supplierDetail_payBalance: "Pay Balance",
     supplierDetail_taxNumber: "Tax Number", supplierDetail_noTaxNumber: "Not registered",
@@ -1042,8 +1042,9 @@ const DICT = {
     expenses_uploadReceipt: "رفع الإيصال", expenses_save: "حفظ المصروف",
     expenses_table_category: "الفئة", expenses_table_amount: "المبلغ", expenses_table_tax: "الضريبة",
     expenses_table_date: "التاريخ", expenses_table_receipt: "الإيصال",
-    addSupplier_title: "➕ إضافة مورد جديد", addSupplier_company: "اسم الشركة", addSupplier_agent: "اسم الوكيل",
+    addSupplier_title: "➕ إضافة مورد جديد", addSupplier_editTitle: "✏️ تعديل المورد", addSupplier_company: "اسم الشركة", addSupplier_agent: "اسم الوكيل",
     addSupplier_contact: "رقم التواصل", addSupplier_taxNumber: "الرقم الضريبي (اختياري)", addSupplier_save: "حفظ المورد",
+    addSupplier_taxExempt: "المورد معفى من الضريبة", addSupplier_exemptionNumber: "رقم الإعفاء الضريبي",
     supplierDetail_agent: "الوكيل", supplierDetail_contact: "التواصل", supplierDetail_liability: "المستحق عليه",
     supplierDetail_totalPurchased: "إجمالي المشتريات", supplierDetail_payBalance: "سداد الرصيد",
     supplierDetail_taxNumber: "الرقم الضريبي", supplierDetail_noTaxNumber: "غير مسجّل",
@@ -1239,8 +1240,9 @@ const DICT = {
     expenses_uploadReceipt: "رسید اپ لوڈ کریں", expenses_save: "خرچہ محفوظ کریں",
     expenses_table_category: "کیٹگری", expenses_table_amount: "رقم", expenses_table_tax: "ٹیکس",
     expenses_table_date: "تاریخ", expenses_table_receipt: "رسید",
-    addSupplier_title: "➕ نیا سپلائر شامل کریں", addSupplier_company: "کمپنی کا نام", addSupplier_agent: "ایجنٹ کا نام",
+    addSupplier_title: "➕ نیا سپلائر شامل کریں", addSupplier_editTitle: "✏️ سپلائر میں ترمیم کریں", addSupplier_company: "کمپنی کا نام", addSupplier_agent: "ایجنٹ کا نام",
     addSupplier_contact: "رابطہ نمبر", addSupplier_taxNumber: "ٹیکس نمبر (اختیاری)", addSupplier_save: "سپلائر محفوظ کریں",
+    addSupplier_taxExempt: "سپلائر ٹیکس سے مستثنیٰ ہے", addSupplier_exemptionNumber: "ٹیکس چھوٹ نمبر",
     supplierDetail_agent: "ایجنٹ", supplierDetail_contact: "رابطہ", supplierDetail_liability: "واجب الادا رقم",
     supplierDetail_totalPurchased: "کل خریداری", supplierDetail_payBalance: "بیلنس ادا کریں",
     supplierDetail_taxNumber: "ٹیکس نمبر", supplierDetail_noTaxNumber: "رجسٹرڈ نہیں",
@@ -1498,8 +1500,6 @@ function AddCustomerModal({ customers, onClose, onSave }) {
   const [id, setId] = useState(suggestedId);
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
-  const [openingBalance, setOpeningBalance] = useState("0");
-  const [openingDebt, setOpeningDebt] = useState("0");
 
   const idTaken = customers.some((c) => c.id === Number(id));
   const idInvalid = id === "" || Number(id) <= 0 || idTaken;
@@ -1526,11 +1526,9 @@ function AddCustomerModal({ customers, onClose, onSave }) {
         {mobileTaken && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("addCustomer_mobileTaken", { id: existingByMobile.id, name: existingByMobile.name })}</div>}
         {!mobileTaken && mobileFormatInvalid && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("addCustomer_mobileInvalid")}</div>}
       </Field>
-      <Field label={t("addCustomer_openingBalance")}><input type="number" value={openingBalance} onChange={(e) => setOpeningBalance(e.target.value)} className={inputCls} /></Field>
-      <Field label={t("addCustomer_openingDebt")}><input type="number" value={openingDebt} onChange={(e) => setOpeningDebt(e.target.value)} className={inputCls} /></Field>
       <button
         disabled={!name.trim() || idInvalid || mobileInvalid}
-        onClick={() => onSave({ id: Number(id), name: name.trim(), mobile: mobileTrimmed || "-", walletBalance: Number(openingBalance || 0), debt: Number(openingDebt || 0) })}
+        onClick={() => onSave({ id: Number(id), name: name.trim(), mobile: mobileTrimmed || "-", walletBalance: 0, debt: 0 })}
         className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:bg-stone-300">
         {t("addCustomer_save")}
       </button>
@@ -1538,20 +1536,33 @@ function AddCustomerModal({ customers, onClose, onSave }) {
   );
 }
 
-function AddSupplierModal({ onClose, onSave }) {
+function AddSupplierModal({ onClose, onSave, editing }) {
   const { t } = useLang();
-  const [company, setCompany] = useState("");
-  const [agent, setAgent] = useState("");
-  const [contact, setContact] = useState("");
-  const [taxNumber, setTaxNumber] = useState("");
+  const [company, setCompany] = useState(editing?.company || "");
+  const [agent, setAgent] = useState(editing?.agent && editing.agent !== "-" ? editing.agent : "");
+  const [contact, setContact] = useState(editing?.contact && editing.contact !== "-" ? editing.contact : "");
+  const [taxNumber, setTaxNumber] = useState(editing?.taxNumber || "");
+  const [taxExempt, setTaxExempt] = useState(Boolean(editing?.taxExempt));
+  const [exemptionNumber, setExemptionNumber] = useState(editing?.exemptionNumber || "");
   return (
-    <Modal title={t("addSupplier_title")} onClose={onClose}>
+    <Modal title={editing ? t("addSupplier_editTitle") : t("addSupplier_title")} onClose={onClose}>
       <Field label={t("addSupplier_company")}><input autoFocus value={company} onChange={(e) => setCompany(e.target.value)} className={inputCls} /></Field>
       <Field label={t("addSupplier_agent")}><input value={agent} onChange={(e) => setAgent(e.target.value.slice(0, 15))} maxLength={15} className={inputCls} /></Field>
       <Field label={t("addSupplier_contact")}><input value={contact} onChange={(e) => setContact(e.target.value)} className={inputCls} /></Field>
       <Field label={t("addSupplier_taxNumber")}><input value={taxNumber} onChange={(e) => setTaxNumber(e.target.value)} className={`${inputCls} f-mono`} /></Field>
+      <div className="mb-4">
+        <Toggle checked={taxExempt} onChange={setTaxExempt} label={t("addSupplier_taxExempt")} />
+      </div>
+      {/* Distinct from the regular tax number above: this is what makes a
+          purchase count toward the Tax Return's exempt-purchases box (#5)
+          instead of the standard-rated box. Without it, purchases from this
+          supplier stay recorded in the system/reports but excluded from the
+          tax return entirely, same as any supplier with no tax info at all. */}
+      {taxExempt && (
+        <Field label={t("addSupplier_exemptionNumber")}><input value={exemptionNumber} onChange={(e) => setExemptionNumber(e.target.value)} className={`${inputCls} f-mono`} /></Field>
+      )}
       <button
-        onClick={() => { if (!company.trim()) return; onSave({ company: company.trim(), agent: agent.trim() || "-", contact: contact.trim() || "-", taxNumber: taxNumber.trim() }); }}
+        onClick={() => { if (!company.trim()) return; onSave({ company: company.trim(), agent: agent.trim() || "-", contact: contact.trim() || "-", taxNumber: taxNumber.trim(), taxExempt, exemptionNumber: taxExempt ? exemptionNumber.trim() : "" }); }}
         className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">
         {t("addSupplier_save")}
       </button>
@@ -1559,13 +1570,20 @@ function AddSupplierModal({ onClose, onSave }) {
   );
 }
 
-function SupplierDetailModal({ supplier, purchases, onClose, onPayBalance }) {
+function SupplierDetailModal({ supplier, purchases, onClose, onPayBalance, onEdit }) {
   const { t } = useLang();
   const supplierPurchases = purchases.filter((p) => p.supplierId === supplier.id).sort((a, b) => new Date(b.date) - new Date(a.date));
   const totalSpent = supplierPurchases.reduce((s, p) => s + p.amount, 0);
 
   return (
-    <Modal title={supplier.company} onClose={onClose} width="max-w-2xl">
+    <Modal
+      title={
+        <span className="flex items-center gap-2">
+          {supplier.company}
+          <button onClick={onEdit} className="rounded-full p-1 text-slate-400 hover:bg-stone-100 hover:text-teal-700"><Pencil size={15} /></button>
+        </span>
+      }
+      onClose={onClose} width="max-w-2xl">
       <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
           <div className="text-xs text-slate-500">{t("supplierDetail_agent")}</div>
@@ -1587,6 +1605,12 @@ function SupplierDetailModal({ supplier, purchases, onClose, onPayBalance }) {
           <div className="text-xs text-slate-500">{t("supplierDetail_taxNumber")}</div>
           <div className="f-mono font-semibold text-slate-800 text-sm">{supplier.taxNumber ? supplier.taxNumber : t("supplierDetail_noTaxNumber")}</div>
         </div>
+        {supplier.taxExempt && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+            <div className="text-xs text-amber-700">{t("addSupplier_exemptionNumber")}</div>
+            <div className="f-mono font-semibold text-amber-800 text-sm">{supplier.exemptionNumber || "—"}</div>
+          </div>
+        )}
       </div>
 
       {supplier.balance > 0 && (
@@ -2944,11 +2968,17 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
   const [payBalanceSubmitting, setPayBalanceSubmitting] = useState(false);
   const [showAddSupplier, setShowAddSupplier] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
+  const [editingSupplier, setEditingSupplier] = useState(null);
 
   const saveNewSupplier = (data) => {
     const sup = addSupplier({ ...data, balance: 0 });
     setSupplierId(sup.id);
     setShowAddSupplier(false);
+  };
+
+  const saveEditedSupplier = (data) => {
+    updateSupplier(editingSupplier.id, data);
+    setEditingSupplier(null);
   };
 
   const handlePurchaseFile = (e) => {
@@ -3062,16 +3092,16 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
           <div className="lg:col-span-2 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm h-fit">
             <table className="w-full text-sm table-fixed">
               <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <tr><th className="px-4 py-3 w-56 text-center">{t("purchases_table_supplier")}</th><th className="px-4 py-3 w-56 text-center">{t("purchases_table_agent")}</th><th className="px-4 py-3 w-40 text-center">{t("purchases_table_contact")}</th><th className="px-4 py-3 w-40 text-center">{t("purchases_table_liability")}</th><th className="px-4 py-3 w-40"></th></tr>
+                <tr><th className="px-4 py-3 w-44 text-center">{t("purchases_table_supplier")}</th><th className="px-4 py-3 w-44 text-center">{t("purchases_table_agent")}</th><th className="px-4 py-3 w-32 text-center">{t("purchases_table_contact")}</th><th className="px-4 py-3 w-32 text-center">{t("purchases_table_liability")}</th><th className="px-4 py-3 w-36"></th></tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {suppliers.map((s) => (
                   <tr key={s.id} onClick={() => setSelectedSupplier(s)} className="cursor-pointer hover:bg-stone-50">
-                    <td className="px-4 py-3 w-56 text-center font-medium text-slate-900 truncate"><Building2 size={13} className="inline mr-1.5 text-slate-400" />{s.company}</td>
-                    <td className="px-4 py-3 w-56 text-center text-slate-600 truncate">{s.agent}</td>
-                    <td className="px-4 py-3 f-mono text-slate-600 w-40" style={{ textAlign: "center" }}>{s.contact}</td>
-                    <td className="px-4 py-3 f-mono text-rose-600 w-40" style={{ textAlign: "center" }}>{sarCompact(s.balance)}</td>
-                    <td className="px-4 py-3 text-right w-40">{s.balance > 0 && <button onClick={(e) => { e.stopPropagation(); openPayBalance(s); }} className="rounded-lg border border-stone-300 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-stone-50">{t("purchases_payBalance")}</button>}</td>
+                    <td className="px-4 py-3 w-44 text-center font-medium text-slate-900 truncate"><Building2 size={13} className="inline mr-1.5 text-slate-400" />{s.company}</td>
+                    <td className="px-4 py-3 w-44 text-center text-slate-600 truncate">{s.agent}</td>
+                    <td className="px-4 py-3 f-mono text-slate-600 w-32 truncate" style={{ textAlign: "center" }}>{s.contact}</td>
+                    <td className="px-4 py-3 f-mono text-rose-600 w-32" style={{ textAlign: "center" }}>{sarCompact(s.balance)}</td>
+                    <td className="px-4 py-3 text-center w-36">{s.balance > 0 && <button onClick={(e) => { e.stopPropagation(); openPayBalance(s); }} className="rounded-lg border border-stone-300 px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-stone-50">{t("purchases_payBalance")}</button>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -3131,10 +3161,12 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
           supplier={suppliers.find((s) => s.id === selectedSupplier.id) || selectedSupplier}
           purchases={purchases}
           onClose={() => setSelectedSupplier(null)}
-          onPayBalance={(s) => openPayBalance(s)}
+          onPayBalance={(s) => { setSelectedSupplier(null); openPayBalance(s); }}
+          onEdit={() => { setEditingSupplier(suppliers.find((s) => s.id === selectedSupplier.id) || selectedSupplier); setSelectedSupplier(null); }}
         />
       )}
       {showAddSupplier && <AddSupplierModal onClose={() => setShowAddSupplier(false)} onSave={saveNewSupplier} />}
+      {editingSupplier && <AddSupplierModal editing={editingSupplier} onClose={() => setEditingSupplier(null)} onSave={saveEditedSupplier} />}
     </div>
   );
 }
@@ -3337,13 +3369,20 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
   const salesBox1Taxable = vatSalesInvoices.reduce((s, i) => s + invoiceRevenue(i).net, 0);
   const salesBox1Vat = vatSalesInvoices.reduce((s, i) => s + invoiceRevenue(i).vat, 0);
 
+  // A supplier only counts as "exempt" for box 5 if the owner explicitly
+  // flagged it and gave an exemption number — a supplier with neither a tax
+  // number nor an exemption number is just left out of the tax return
+  // entirely (its purchases still show up in the Procurement Ledger/reports).
+  const exemptSupplierIds = new Set(suppliers.filter((s) => s.taxExempt && s.exemptionNumber && s.exemptionNumber.trim()).map((s) => s.id));
+
   const vatPurchases = purchases.filter((p) => inVatPeriod(p.date) && taxedSupplierIds.has(p.supplierId));
+  const vatPurchasesExempt = purchases.filter((p) => inVatPeriod(p.date) && exemptSupplierIds.has(p.supplierId));
   const vatExpensesIncl = expenses.filter((e) => e.taxFlag === "Inclusive" && inVatPeriod(e.date));
   const vatExpensesExempt = expenses.filter((e) => e.taxFlag === "Exempt" && inVatPeriod(e.date));
   const purchBox1Gross = vatPurchases.reduce((s, p) => s + p.amount, 0) + vatExpensesIncl.reduce((s, e) => s + e.amount, 0);
   const purchBox1Taxable = purchBox1Gross / (1 + VAT_RATE);
   const purchBox1Vat = purchBox1Gross - purchBox1Taxable;
-  const purchBox5Exempt = vatExpensesExempt.reduce((s, e) => s + e.amount, 0);
+  const purchBox5Exempt = vatExpensesExempt.reduce((s, e) => s + e.amount, 0) + vatPurchasesExempt.reduce((s, p) => s + p.amount, 0);
 
   const totalSalesValue = salesBox1Taxable;
   const totalOutputVat = salesBox1Vat;
