@@ -491,7 +491,7 @@ function buildPrintableHtml(doc) {
         ${totalsRow(doc.payMethodLabel, PRINT.payMethodAr)}
         ${doc.dueDate ? totalsRow(doc.dueDate, PRINT.dueDateAr) : ""}
       </div>
-      ${isTax ? `<div style="margin-top:16px;">${buildQrSvgString(buildZatcaQrFromDoc(doc))}</div>` : ""}
+      ${isTax ? `<div style="margin-top:16px;">${buildQrSvgString(doc.zatcaQrOverride || buildZatcaQrFromDoc(doc))}</div>` : ""}
     `;
   }
 
@@ -668,7 +668,7 @@ function PrintDocumentModal({ doc, onClose }) {
                 <div className="flex justify-between"><span>{doc.payMethodLabel}</span><span>{PRINT.payMethodAr}</span></div>
                 {doc.dueDate && <div className="flex justify-between"><span className="f-mono">{doc.dueDate}</span><span>{PRINT.dueDateAr}</span></div>}
               </div>
-              {isTax && <div className="mt-4"><RealQR value={buildZatcaQrFromDoc(doc)} /></div>}
+              {isTax && <div className="mt-4"><RealQR value={doc.zatcaQrOverride || buildZatcaQrFromDoc(doc)} /></div>}
             </>
           )}
         </div>
@@ -1908,6 +1908,10 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
       items: docItems, totals: { net, discount: finalDiscount, vat, gross, paid, remaining, pieceCount },
       payMethodLabel: payMethodLabelText,
       dueDate: creditAmount > 0 ? `${due.getFullYear()}/${String(due.getMonth() + 1).padStart(2, "0")}/${String(due.getDate()).padStart(2, "0")}` : null,
+      // Set only when ZATCA Phase 2 is enabled and signing succeeded — a
+      // real 9-tag QR from api/zatca-sign-invoice.js instead of the
+      // Phase 1 5-tag one buildZatcaQrFromDoc would otherwise compute.
+      zatcaQrOverride: invoice.zatcaQr || null,
     });
 
     setCart([]); setIsDelivery(false); setDeliveryFee(""); setAppliedCoupon(null); setCouponCode(""); setCouponError("");
@@ -4614,6 +4618,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
       if (row.status === "CLEARED") next.invoicesClearedCount = (prev.invoicesClearedCount || 0) + 1;
       return next;
     });
+    return row;
   };
 
   // Async now (was sync): both the balance change and the document number
@@ -4658,13 +4663,24 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
       items: items.map((it) => ({ itemId: uid("item"), name: it.name, service: it.service, addons: it.addons, price: it.servicePrice + it.addons.reduce((s, a) => s + a.price, 0), qty: it.qty, lineTotal: it.lineTotal, status: "Received", urgent: false, deliveredAt: null })),
     };
     const savedInvoice = addInvoice(invoice);
-    // Fire-and-forget: the real invoice above already saved successfully
-    // regardless of what happens here. See submitInvoiceToZatca's own
-    // comment for why this can never block or break a real sale.
+    // The real invoice above already saved successfully regardless of what
+    // happens below — wrapped in try/catch so a ZATCA failure can never
+    // turn a completed sale into an error. This IS awaited (not
+    // fire-and-forget) on purpose: the printed tax invoice needs the real
+    // Phase 2 QR the moment checkout finishes, not moments later once a
+    // background call happens to land — a customer walking out with a
+    // Phase 1 QR on their receipt while Phase 2 is enabled is exactly the
+    // "not compliant" bug this was fixed for.
+    let zatcaQr = null;
     if (zatcaConfig?.isEnabled) {
-      submitInvoiceToZatca(savedInvoice).catch((e) => console.error("ZATCA simulated submission failed", e));
+      try {
+        const zatcaRow = await submitInvoiceToZatca(savedInvoice);
+        zatcaQr = zatcaRow?.qrPayload || null;
+      } catch (e) {
+        console.error("ZATCA submission failed", e);
+      }
     }
-    return savedInvoice;
+    return { ...savedInvoice, zatcaQr };
   };
 
   return (
