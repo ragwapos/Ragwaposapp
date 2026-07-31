@@ -780,6 +780,7 @@ const DICT = {
     invoices_noActive: "No active invoices. All caught up.", invoices_noActiveDelivery: "No active delivery orders.",
     invoices_clearFilter: "Clear Filter",
     invoiceDetail_title: "Invoice", invoiceDetail_deliveryOrder: "Delivery Order", invoiceDetail_fee: "Fee:",
+    invoiceDetail_zatcaCleared: "Verified by ZATCA ✅", invoiceDetail_zatcaSigned: "Digitally signed — pending submission to ZATCA",
     invoiceDetail_itemizedMatrix: "Itemized Matrix", invoiceDetail_closeAll: "Close Invoice / Deliver All",
     invoiceDetail_urgent: "Urgent",
 
@@ -920,6 +921,23 @@ const DICT = {
     owner_pinWrong: "Incorrect password.", owner_lockPanel: "🔒 Lock this section again",
     owner_payMethodsTitle: "Payment Methods Shown at POS", owner_payMethodsHint: "Turn off any payment method the staff should not see or use at checkout.",
     owner_atLeastOnePayMethod: "At least one payment method must stay enabled.",
+    zatca_title: "ZATCA Integration (Phase 2)", zatca_hint: "When enabled, new invoices are verified with ZATCA automatically.",
+    zatca_enableToggle: "Enable ZATCA Integration", zatca_otpLabel: "OTP Code", zatca_otpPlaceholder: "6-digit code",
+    zatca_otpInvalid: "Code must be 6 digits.", zatca_connect: "🔗 Connect to ZATCA", zatca_cancel: "Cancel",
+    zatca_disableConfirm: "Disable ZATCA integration? New invoices will go back to normal.",
+    zatca_statusConnected: "✅ Connected", zatca_statusDisconnected: "⭕ Disconnected",
+    zatca_certificateStatus: "Certificate Status", zatca_certActive: "✅ Active", zatca_certPending: "⏳ Pending",
+    zatca_certExpired: "❌ Expired", zatca_certRevoked: "❌ Revoked",
+    zatca_expiresOn: "Expires on", zatca_lastSync: "Last Sync", zatca_neverSynced: "Not synced yet",
+    zatca_stats: "Statistics", zatca_cleared: "Cleared Invoices", zatca_reported: "Reported Invoices", zatca_failed: "Failed",
+    zatca_testConnection: "🧪 Test Connection", zatca_testSuccess: "✅ Connection working",
+    zatca_reset: "🗑️ Remove ZATCA Data", zatca_resetConfirm: "Delete all ZATCA configuration? This cannot be undone.",
+    zatca_enableSuccess: "✅ Connected to ZATCA successfully", zatca_lastError: "Last Error",
+    zatca_generateCsr: "1. Generate Certificate Request (CSR)", zatca_generateCsrButton: "🔑 Generate CSR",
+    zatca_businessCategory: "Business Category", zatca_businessCategoryPlaceholder: "e.g. Laundry Services",
+    zatca_csrLabel: "Certificate Request (CSR)", zatca_csrHint: "Submit this CSR at ZATCA's Fatoora portal (fatoora.zatca.gov.sa) to get your real verification code, then enter it below.",
+    zatca_copyCsr: "Copy CSR", zatca_copied: "Copied", zatca_publicKeyLabel: "Public Key",
+    zatca_connectStep: "2. Enter ZATCA's Verification Code", zatca_csrRequiredFirst: "Generate a CSR first.",
     settings_account: "Account", settings_logout: "🚪 Log Out",
 
     print_taxInvoice: "Simplified Tax Invoice", print_receipt: "Receipt", print_deliveryReceipt: "Delivery Receipt",
@@ -977,6 +995,7 @@ const DICT = {
     invoices_noActive: "لا توجد فواتير نشطة. كل شيء منجز.", invoices_noActiveDelivery: "لا توجد طلبات توصيل نشطة.",
     invoices_clearFilter: "حذف الفلترة",
     invoiceDetail_title: "فاتورة", invoiceDetail_deliveryOrder: "طلب توصيل", invoiceDetail_fee: "السعر:",
+    invoiceDetail_zatcaCleared: "موثقة من الهيئة ✅", invoiceDetail_zatcaSigned: "موقّعة رقميًا — بانتظار الإرسال للهيئة",
     invoiceDetail_itemizedMatrix: "تفاصيل القطع", invoiceDetail_closeAll: "إغلاق الفاتورة / تسليم الكل",
     invoiceDetail_urgent: "مستعجل",
 
@@ -1118,6 +1137,23 @@ const DICT = {
     owner_pinWrong: "كلمة المرور غير صحيحة.", owner_lockPanel: "🔒 إغلاق هذا القسم مرة ثانية",
     owner_payMethodsTitle: "طرق الدفع الظاهرة بصفحة البيع", owner_payMethodsHint: "أطفئ أي طريقة دفع ما تبي الموظف يشوفها أو يستخدمها وقت البيع.",
     owner_atLeastOnePayMethod: "لازم تبقى طريقة دفع واحدة على الأقل مفعّلة.",
+    zatca_title: "الربط مع هيئة الزكاة والضريبة (المرحلة الثانية)", zatca_hint: "عند التفعيل، يتم توثيق الفواتير الجديدة مع الهيئة تلقائيًا.",
+    zatca_enableToggle: "تفعيل الربط مع الهيئة", zatca_otpLabel: "رمز التحقق (OTP)", zatca_otpPlaceholder: "٦ أرقام",
+    zatca_otpInvalid: "الرمز يجب أن يكون 6 أرقام.", zatca_connect: "🔗 ربط مع الهيئة", zatca_cancel: "إلغاء",
+    zatca_disableConfirm: "هل تريد تعطيل الربط مع الهيئة؟ الفواتير الجديدة ستعود للوضع العادي.",
+    zatca_statusConnected: "✅ متصل", zatca_statusDisconnected: "⭕ غير متصل",
+    zatca_certificateStatus: "حالة الشهادة", zatca_certActive: "✅ نشطة", zatca_certPending: "⏳ قيد الانتظار",
+    zatca_certExpired: "❌ منتهية", zatca_certRevoked: "❌ ملغاة",
+    zatca_expiresOn: "تنتهي في", zatca_lastSync: "آخر تحديث", zatca_neverSynced: "لم يتم التحديث بعد",
+    zatca_stats: "الإحصائيات", zatca_cleared: "فواتير موثقة", zatca_reported: "فواتير مبلغة", zatca_failed: "فواتير فاشلة",
+    zatca_testConnection: "🧪 اختبار الاتصال", zatca_testSuccess: "✅ الاتصال يعمل بشكل صحيح",
+    zatca_reset: "🗑️ إزالة بيانات الربط", zatca_resetConfirm: "هل تريد حذف جميع بيانات الربط مع الهيئة؟ لا يمكن التراجع عن هذا.",
+    zatca_enableSuccess: "✅ تم الربط مع الهيئة بنجاح", zatca_lastError: "آخر خطأ",
+    zatca_generateCsr: "١. توليد طلب الشهادة (CSR)", zatca_generateCsrButton: "🔑 توليد CSR",
+    zatca_businessCategory: "النشاط التجاري", zatca_businessCategoryPlaceholder: "مثال: خدمات المغاسل",
+    zatca_csrLabel: "طلب الشهادة (CSR)", zatca_csrHint: "قدّم طلب الشهادة هذا في بوابة فاتورة (fatoora.zatca.gov.sa) للحصول على رمز التحقق الحقيقي، ثم أدخله بالأسفل.",
+    zatca_copyCsr: "نسخ CSR", zatca_copied: "تم النسخ", zatca_publicKeyLabel: "المفتاح العام",
+    zatca_connectStep: "٢. أدخل رمز التحقق من الهيئة", zatca_csrRequiredFirst: "وَلّد CSR أولاً.",
     settings_account: "الحساب", settings_logout: "🚪 تسجيل الخروج",
 
     print_taxInvoice: "فاتورة ضريبية مبسطة", print_receipt: "إيصال", print_deliveryReceipt: "إيصال تسليم الملابس",
@@ -1175,6 +1211,7 @@ const DICT = {
     invoices_noActive: "کوئی جاری آرڈر نہیں۔ سب کچھ مکمل ہے۔", invoices_noActiveDelivery: "کوئی جاری ڈیلیوری آرڈر نہیں۔",
     invoices_clearFilter: "فلٹر ہٹائیں",
     invoiceDetail_title: "آرڈر", invoiceDetail_deliveryOrder: "ڈیلیوری آرڈر", invoiceDetail_fee: "چارجز:",
+    invoiceDetail_zatcaCleared: "زکوٰۃ اتھارٹی سے تصدیق شدہ ✅", invoiceDetail_zatcaSigned: "ڈیجیٹل دستخط شدہ — اتھارٹی کو ارسال کا انتظار",
     invoiceDetail_itemizedMatrix: "اشیاء کی تفصیل", invoiceDetail_closeAll: "آرڈر بند کریں / سب ڈیلیور کریں",
     invoiceDetail_urgent: "فوری",
 
@@ -1316,6 +1353,23 @@ const DICT = {
     owner_pinWrong: "پاس ورڈ غلط ہے۔", owner_lockPanel: "🔒 اس حصے کو دوبارہ لاک کریں",
     owner_payMethodsTitle: "POS پر دکھائے جانے والے ادائیگی کے طریقے", owner_payMethodsHint: "کوئی بھی ایسا طریقہ بند کر دیں جو عملے کو چیک آؤٹ پر نظر نہیں آنا چاہیے۔",
     owner_atLeastOnePayMethod: "کم از کم ایک ادائیگی کا طریقہ فعال رہنا ضروری ہے۔",
+    zatca_title: "زکوٰۃ اتھارٹی کے ساتھ ربط (فیز 2)", zatca_hint: "فعال ہونے پر، نئے انوائسز خودکار طور پر اتھارٹی سے تصدیق شدہ ہوں گے۔",
+    zatca_enableToggle: "زکوٰۃ ربط فعال کریں", zatca_otpLabel: "OTP کوڈ", zatca_otpPlaceholder: "6 ہندسوں کا کوڈ",
+    zatca_otpInvalid: "کوڈ 6 ہندسوں کا ہونا چاہیے۔", zatca_connect: "🔗 اتھارٹی سے ربط کریں", zatca_cancel: "منسوخ کریں",
+    zatca_disableConfirm: "زکوٰۃ ربط غیر فعال کریں؟ نئے انوائسز معمول کی حالت میں واپس چلے جائیں گے۔",
+    zatca_statusConnected: "✅ منسلک", zatca_statusDisconnected: "⭕ غیر منسلک",
+    zatca_certificateStatus: "سرٹیفکیٹ کی صورتحال", zatca_certActive: "✅ فعال", zatca_certPending: "⏳ زیر التوا",
+    zatca_certExpired: "❌ ختم شدہ", zatca_certRevoked: "❌ منسوخ شدہ",
+    zatca_expiresOn: "ختم ہونے کی تاریخ", zatca_lastSync: "آخری ہم آہنگی", zatca_neverSynced: "ابھی تک ہم آہنگ نہیں ہوا",
+    zatca_stats: "اعداد و شمار", zatca_cleared: "تصدیق شدہ انوائسز", zatca_reported: "رپورٹ شدہ انوائسز", zatca_failed: "ناکام",
+    zatca_testConnection: "🧪 کنکشن ٹیسٹ کریں", zatca_testSuccess: "✅ کنکشن ٹھیک کام کر رہا ہے",
+    zatca_reset: "🗑️ زکوٰۃ ڈیٹا ہٹائیں", zatca_resetConfirm: "زکوٰۃ کی تمام ترتیبات حذف کریں؟ اسے واپس نہیں لیا جا سکتا۔",
+    zatca_enableSuccess: "✅ اتھارٹی سے کامیابی سے ربط ہو گیا", zatca_lastError: "آخری خرابی",
+    zatca_generateCsr: "1. سرٹیفکیٹ ریکویسٹ (CSR) بنائیں", zatca_generateCsrButton: "🔑 CSR بنائیں",
+    zatca_businessCategory: "کاروباری زمرہ", zatca_businessCategoryPlaceholder: "مثلاً: لانڈری سروسز",
+    zatca_csrLabel: "سرٹیفکیٹ ریکویسٹ (CSR)", zatca_csrHint: "یہ CSR ZATCA کے فاتورہ پورٹل (fatoora.zatca.gov.sa) پر جمع کروائیں تاکہ اصل تصدیقی کوڈ ملے، پھر نیچے درج کریں۔",
+    zatca_copyCsr: "CSR کاپی کریں", zatca_copied: "کاپی ہو گیا", zatca_publicKeyLabel: "پبلک کی",
+    zatca_connectStep: "2. ZATCA کا تصدیقی کوڈ درج کریں", zatca_csrRequiredFirst: "پہلے CSR بنائیں۔",
     settings_account: "اکاؤنٹ", settings_logout: "🚪 لاگ آؤٹ",
 
     print_taxInvoice: "سادہ ٹیکس انوائس", print_receipt: "رسید", print_deliveryReceipt: "کپڑوں کی ڈیلیوری رسید",
@@ -2042,7 +2096,7 @@ function LifecycleBar({ status }) {
   );
 }
 
-function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoice, merchant }) {
+function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoice, merchant, zatcaRecord }) {
   const { t } = useLang();
   const status = invoiceOverallStatus(invoice);
   const [printDoc, setPrintDoc] = useState(null);
@@ -2066,6 +2120,16 @@ function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoi
       <div className="mb-6 flex items-center justify-between text-sm text-slate-500">
         <span>{invoice.customerName}</span><span className="f-mono">{fmtDate(invoice.createdAt)}</span>
       </div>
+      {zatcaRecord?.status === "CLEARED" && (
+        <div className="mb-6 flex items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-800">
+          <CheckCircle2 size={14} /> {t("invoiceDetail_zatcaCleared")}
+        </div>
+      )}
+      {zatcaRecord?.status === "SIGNED" && (
+        <div className="mb-6 flex items-center gap-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
+          <CheckCircle2 size={14} /> {t("invoiceDetail_zatcaSigned")}
+        </div>
+      )}
       {invoice.isDelivery && (
         <div className="mb-6 flex items-center justify-between rounded-lg border border-teal-200 bg-teal-50 px-4 py-2.5 text-sm">
           <span className="flex items-center gap-1.5 font-medium text-teal-800"><Truck size={14} /> {t("invoiceDetail_deliveryOrder")}</span>
@@ -2161,7 +2225,7 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
   );
 }
 
-function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, merchant }) {
+function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, merchant, zatcaInvoices = [] }) {
   const { t } = useLang();
   const [openId, setOpenId] = useState(null);
   const [customerFilter, setCustomerFilter] = useState(null);
@@ -2172,6 +2236,7 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
     .filter((i) => !i.closed && Boolean(i.isDelivery) === isDelivery && (!customerFilter || i.customerId === customerFilter.id))
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const openInvoice = invoices.find((i) => i.id === openId);
+  const openInvoiceZatcaRecord = openInvoice ? zatcaInvoices.find((z) => z.invoiceId === openInvoice.id) : null;
 
   const updateItemStatus = (invId, itemId, status) => {
     const inv = invoices.find((i) => i.id === invId);
@@ -2223,7 +2288,7 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
           </tbody>
         </table>
       </div>
-      {openInvoice && <InvoiceDetailModal invoice={openInvoice} onClose={() => setOpenId(null)} onUpdateItemStatus={updateItemStatus} onCloseInvoice={closeInvoice} merchant={merchant} />}
+      {openInvoice && <InvoiceDetailModal invoice={openInvoice} onClose={() => setOpenId(null)} onUpdateItemStatus={updateItemStatus} onCloseInvoice={closeInvoice} merchant={merchant} zatcaRecord={openInvoiceZatcaRecord} />}
     </div>
   );
 }
@@ -3702,7 +3767,193 @@ const OWNER_SECTIONS = [
   { key: "reports", labelKey: "nav_reports" },
 ];
 
-function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods }) {
+// ZATCA Phase 2 panel — SCAFFOLD. Every "connect"/"test" action here is
+// simulated client-side (no live ZATCA network call yet); see
+// enableZatca/submitInvoiceToZatca in LaundryOpsApp for what's real
+// (a genuine SHA-256 hash and the same TLV QR builder Phase 1 printing
+// already uses) versus simulated (the certificate/clearance round trip
+// itself). Fully isolated: this is the only place in the Settings tree
+// that reads zatcaConfig or calls enable/disable/resetZatcaConfig.
+function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+  const { t } = useLang();
+  const [showOtpInput, setShowOtpInput] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [businessCategory, setBusinessCategory] = useState("");
+  const [csrCopied, setCsrCopied] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  // Inline confirm instead of window.confirm() — a native dialog would
+  // block the whole page (and any automated testing driving it), unlike
+  // every other confirmation in this app which is just more UI.
+  const [confirmAction, setConfirmAction] = useState(null); // "disable" | "reset" | null
+
+  const isEnabled = Boolean(zatcaConfig?.isEnabled);
+
+  const handleToggle = () => {
+    setError(""); setNotice("");
+    if (isEnabled) setConfirmAction("disable");
+    else { setShowOtpInput(true); setOtp(""); }
+  };
+
+  const runConfirmedAction = async () => {
+    const action = confirmAction;
+    setConfirmAction(null);
+    setBusy(true);
+    try {
+      if (action === "disable") await disableZatca();
+      else if (action === "reset") { await resetZatcaConfig(); setNotice(""); }
+    } catch (e) {
+      console.error(`zatca ${action} failed`, e);
+      setError(String(e.message || e));
+    }
+    setBusy(false);
+  };
+
+  const handleGenerateCsr = async () => {
+    setError(""); setNotice(""); setBusy(true);
+    try {
+      await generateZatcaCsr(businessCategory);
+    } catch (e) {
+      console.error("generateZatcaCsr failed", e);
+      setError(String(e.message || e));
+    }
+    setBusy(false);
+  };
+
+  const copyCsr = () => {
+    if (!zatcaConfig?.csr || !navigator.clipboard) return;
+    navigator.clipboard.writeText(zatcaConfig.csr).catch(() => {});
+    setCsrCopied(true);
+    setTimeout(() => setCsrCopied(false), 1500);
+  };
+
+  const handleConnect = async () => {
+    if (!zatcaConfig?.csr) { setError(t("zatca_csrRequiredFirst")); return; }
+    if (!/^\d{6}$/.test(otp)) { setError(t("zatca_otpInvalid")); return; }
+    setError(""); setBusy(true);
+    try {
+      await enableZatca(otp);
+      setNotice(t("zatca_enableSuccess"));
+      setShowOtpInput(false); setOtp("");
+    } catch (e) {
+      console.error("enableZatca failed", e);
+      setError(String(e.message || e));
+    }
+    setBusy(false);
+  };
+
+  const handleTest = () => {
+    setError(""); setNotice(isEnabled ? t("zatca_testSuccess") : "");
+  };
+
+  const certLabelKey = { PENDING: "zatca_certPending", ACTIVE: "zatca_certActive", EXPIRED: "zatca_certExpired", REVOKED: "zatca_certRevoked" }[zatcaConfig?.certificateStatus] || "zatca_certPending";
+
+  return (
+    <div className="pt-3 mt-1 border-t border-stone-200">
+      <div className="flex items-center justify-between rounded-lg border border-stone-200 px-3 py-2.5">
+        <div>
+          <div className="text-sm font-semibold text-slate-800">{t("zatca_title")}</div>
+          <div className="text-[11px] text-slate-500">{t("zatca_hint")}</div>
+        </div>
+        <Toggle checked={isEnabled} onChange={handleToggle} />
+      </div>
+
+      {showOtpInput && !isEnabled && !zatcaConfig?.csr && (
+        <div className="mt-2 rounded-lg border border-stone-200 p-3">
+          <div className="mb-2 text-xs font-semibold text-slate-700">{t("zatca_generateCsr")}</div>
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t("zatca_businessCategory")}</label>
+          <input
+            value={businessCategory}
+            onChange={(e) => setBusinessCategory(e.target.value)}
+            placeholder={t("zatca_businessCategoryPlaceholder")}
+            className={inputCls}
+          />
+          <div className="mt-2 flex gap-2">
+            <button onClick={handleGenerateCsr} disabled={busy} className="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("zatca_generateCsrButton")}</button>
+            <button onClick={() => { setShowOtpInput(false); setError(""); }} className="rounded-lg border border-stone-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-stone-50">{t("zatca_cancel")}</button>
+          </div>
+        </div>
+      )}
+
+      {showOtpInput && !isEnabled && zatcaConfig?.csr && (
+        <div className="mt-2 space-y-2">
+          <div className="rounded-lg border border-stone-200 p-3">
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t("zatca_csrLabel")}</span>
+              <button onClick={copyCsr} className="text-[11px] font-medium text-teal-700 hover:underline">{csrCopied ? t("zatca_copied") : t("zatca_copyCsr")}</button>
+            </div>
+            <textarea readOnly value={zatcaConfig.csr} rows={4} className={`${inputCls} f-mono text-[10px] leading-tight`} onClick={(e) => e.target.select()} />
+            <p className="mt-1.5 text-[11px] text-slate-500">{t("zatca_csrHint")}</p>
+          </div>
+
+          <div className="rounded-lg border border-stone-200 p-3">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t("zatca_connectStep")}</label>
+            <input
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              maxLength={6}
+              placeholder={t("zatca_otpPlaceholder")}
+              className={`${inputCls} f-mono tracking-widest`}
+            />
+            <div className="mt-2 flex gap-2">
+              <button onClick={handleConnect} disabled={busy} className="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("zatca_connect")}</button>
+              <button onClick={() => { setShowOtpInput(false); setOtp(""); setError(""); }} className="rounded-lg border border-stone-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-stone-50">{t("zatca_cancel")}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isEnabled && (
+        <div className="mt-2 space-y-2">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-lg border border-stone-200 bg-stone-50 p-2.5">
+              <div className="text-[11px] text-slate-500">{t("zatca_certificateStatus")}</div>
+              <div className="text-sm font-semibold text-slate-800">{t(certLabelKey)}</div>
+            </div>
+            <div className="rounded-lg border border-stone-200 bg-stone-50 p-2.5">
+              <div className="text-[11px] text-slate-500">{t("zatca_lastSync")}</div>
+              <div className="text-sm font-semibold text-slate-800">{zatcaConfig.lastSyncAt ? fmtDate(zatcaConfig.lastSyncAt) : t("zatca_neverSynced")}</div>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-stone-200 p-2.5">
+            <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t("zatca_stats")}</div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div><div className="f-mono text-lg font-semibold text-teal-700">{zatcaConfig.invoicesClearedCount || 0}</div><div className="text-[11px] text-slate-500">{t("zatca_cleared")}</div></div>
+              <div><div className="f-mono text-lg font-semibold text-slate-700">{zatcaConfig.invoicesReportedCount || 0}</div><div className="text-[11px] text-slate-500">{t("zatca_reported")}</div></div>
+              <div><div className="f-mono text-lg font-semibold text-rose-600">{zatcaConfig.failedInvoices || 0}</div><div className="text-[11px] text-slate-500">{t("zatca_failed")}</div></div>
+            </div>
+          </div>
+
+          {zatcaConfig.lastErrorMessage && (
+            <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><strong>{t("zatca_lastError")}:</strong> {zatcaConfig.lastErrorMessage}</div>
+          )}
+
+          <div className="flex gap-2">
+            <button onClick={handleTest} className="flex-1 rounded-lg border border-stone-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-stone-50">{t("zatca_testConnection")}</button>
+            <button onClick={() => setConfirmAction("reset")} disabled={busy} className="flex-1 rounded-lg border border-rose-300 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-60">{t("zatca_reset")}</button>
+          </div>
+        </div>
+      )}
+
+      {confirmAction && (
+        <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <div className="mb-2 text-xs font-medium text-amber-800">{t(confirmAction === "disable" ? "zatca_disableConfirm" : "zatca_resetConfirm")}</div>
+          <div className="flex gap-2">
+            <button onClick={runConfirmedAction} disabled={busy} className="flex-1 rounded-lg bg-rose-600 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-60">{t("common_yes")}</button>
+            <button onClick={() => setConfirmAction(null)} className="rounded-lg border border-stone-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-stone-50">{t("zatca_cancel")}</button>
+          </div>
+        </div>
+      )}
+
+      {error && <div className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{error}</div>}
+      {notice && <div className="mt-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-medium text-teal-700">{notice}</div>}
+    </div>
+  );
+}
+
+function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { t } = useLang();
   const [authenticated, setAuthenticated] = useState(false);
   const [showMasterPin, setShowMasterPin] = useState(false);
@@ -3769,6 +4020,8 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
             {payMethodError && <div className="mt-2 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{payMethodError}</div>}
           </div>
 
+          <ZatcaSettingsPanel zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />
+
           <button onClick={() => setAuthenticated(false)} className="mt-2 text-xs font-medium text-teal-700 hover:underline">{t("owner_lockPanel")}</button>
         </div>
       )}
@@ -3800,7 +4053,7 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
   );
 }
 
-function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, onLogout }) {
+function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, onLogout, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { lang, setLang, t } = useLang();
   const options = [
     { code: "ar", key: "settings_lang_ar" },
@@ -3861,7 +4114,7 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
         )}
       </div>
 
-      <OwnerOnlySettings ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} />
+      <OwnerOnlySettings ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />
 
       <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
         <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800"><Lock size={16} className="text-teal-600" /> {t("settings_account")}</div>
@@ -3876,7 +4129,7 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
 /* =========================================================================
    ROOT APP
    ========================================================================= */
-function AppShell({ tab, setTab, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber }) {
+function AppShell({ tab, setTab, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { dir } = useLang();
   return (
     <div dir={dir} className="flex h-screen w-full bg-stone-100 f-body">
@@ -3884,14 +4137,14 @@ function AppShell({ tab, setTab, categories, addCategory, products, addProduct, 
       <Sidebar tab={tab} setTab={setTab} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} />
       <main className="flex-1 overflow-y-auto p-6">
         {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promotions} enabledPayMethods={enabledPayMethods} setTab={setTab} />}
-        {tab === "invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} />}
-        {tab === "delivery_invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} isDelivery />}
+        {tab === "invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} />}
+        {tab === "delivery_invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} isDelivery />}
         {tab === "customers" && <CustomersView customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} invoices={invoices} addInvoice={addInvoice} transactions={customerTransactions} addTransaction={addTransaction} merchant={merchant} applyCustomerPayment={applyCustomerPayment} nextDocNumber={nextDocNumber} />}
         {tab === "inventory" && <InventoryView categories={categories} addCategory={addCategory} products={products} addProduct={addProduct} updateProduct={updateProduct} addons={addons} addAddon={addAddon} removeAddon={removeAddon} serviceTypes={serviceTypes} addServiceType={addServiceType} />}
         {tab === "purchases" && <PurchasesExpensesView suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={purchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={expenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
         {tab === "promotions" && <PromotionsView promotions={promotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
         {tab === "reports" && <ReportsView invoices={invoices} purchases={purchases} suppliers={suppliers} categories={categories} customers={customers} expenses={expenses} expenseCategories={expenseCategories} />}
-        {tab === "settings" && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} onLogout={onLogout} />}
+        {tab === "settings" && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
       </main>
     </div>
   );
@@ -3944,6 +4197,22 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
       unsubCats(); unsubProds(); unsubInv(); unsubCust(); unsubTxn(); unsubAddons();
       unsubSvc(); unsubSup(); unsubPur(); unsubExpCat(); unsubExp(); unsubPromo();
     };
+  }, [tenantId]);
+
+  // ===== ZATCA Phase 2 integration — SCAFFOLD, fully isolated from the rest
+  // of this component. zatcaConfig is null (not just isEnabled: false) until
+  // its own subscription resolves, so createInvoice below never mistakes
+  // "not loaded yet" for "disabled" and vice versa. See submitInvoiceToZatca
+  // for what "isolated" means in practice: it's the only other place in this
+  // file that reads/writes either of these two tables.
+  const [zatcaConfig, setZatcaConfig] = useState(null);
+  const [zatcaInvoices, setZatcaInvoicesState] = useState([]);
+
+  useEffect(() => {
+    if (!tenantId) return;
+    const unsubZCfg = subscribeToRow("zatca_configurations", "tenant_id", tenantId, setZatcaConfig);
+    const unsubZInv = subscribeToTable("zatca_invoices", "tenant_id", tenantId, setZatcaInvoicesState);
+    return () => { unsubZCfg(); unsubZInv(); };
   }, [tenantId]);
 
   // crypto.randomUUID() replaces Firestore's doc(collection(...)).id trick —
@@ -4206,6 +4475,147 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
 
   const walkInLabel = lang === "ar" ? "عميل مباشر" : lang === "ur" ? "براہ راست گاہک" : "Walk-in";
 
+  // ===== ZATCA Phase 2 integration — SCAFFOLD (simulated, no live ZATCA API
+  // calls yet). Enable/disable/reset just write zatca_configurations; OTP is
+  // validated for shape only and never persisted anywhere (nothing secret
+  // exists yet to protect, since there's no real certificate/CSID behind
+  // it). submitInvoiceToZatca is the only function that touches
+  // zatca_invoices, and it is only ever called as a fire-and-forget side
+  // effect from createInvoice below — its failure can never surface to the
+  // caller or affect the real invoice that already saved successfully.
+  // Optimistic local update on every write below — same reason every other
+  // add/update helper in this file does it (see setStateByTable comment):
+  // the realtime channel echoing a change back can lag or, if a table was
+  // never added to the project's realtime publication, never fire at all,
+  // which otherwise leaves the panel looking like "connect" silently did
+  // nothing even though the write actually succeeded.
+  // Calls the Vercel serverless function that generates the real secp256k1
+  // key pair + CSR server-side (see api/zatca-generate-keys.js) — the
+  // private key is encrypted there and never reaches this browser tab, only
+  // the public key and the CSR PEM (both non-secret) come back. Only runs
+  // against a real deployment (production or a Vercel preview) — the plain
+  // `vite` dev server has no /api routes to call.
+  const generateZatcaCsr = async (businessCategory) => {
+    const res = await fetch("/api/zatca-generate-keys", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        tenantId,
+        organizationName: merchant.name || "",
+        vatNumber: merchant.taxNumber || "",
+        address: merchant.address || "",
+        businessCategory: businessCategory || "",
+        egsSerial: `1-Ragwa|2-POS|3-${tenantId.slice(0, 12)}`,
+      }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || "csr_generation_failed");
+    setZatcaConfig((prev) => ({ ...prev, publicKey: data.publicKey, csr: data.csr }));
+    return data;
+  };
+
+  // Calls ZATCA's real Compliance CSID API (api/zatca-request-compliance-csid.js)
+  // with the CSR already on file and the OTP the owner got from ZATCA's own
+  // Fatoora portal — this is a genuine outbound call, not a simulation, so
+  // it will fail with whatever error ZATCA returns until the tenant is
+  // actually registered there. That's expected, correct behavior now, not
+  // a bug: there is nothing left in this pipeline that's faked.
+  const enableZatca = async (otp) => {
+    if (!/^\d{6}$/.test(otp)) throw new Error("invalid_otp");
+    if (!zatcaConfig?.csr) throw new Error("no_csr — generate a CSR first");
+    const res = await fetch("/api/zatca-request-compliance-csid", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tenantId, otp }),
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || "compliance_request_failed");
+    setZatcaConfig((prev) => ({
+      ...prev,
+      isEnabled: true,
+      enabledAt: nowISO(),
+      disabledAt: null,
+      certificateStatus: "ACTIVE",
+      certificateExpiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+      lastErrorMessage: null,
+    }));
+  };
+
+  const disableZatca = async () => {
+    const patch = { isEnabled: false, disabledAt: nowISO() };
+    const { error } = await db.from("zatca_configurations").update(toSnakeCase(patch)).eq("tenant_id", tenantId);
+    if (error) throw error;
+    setZatcaConfig((prev) => (prev ? { ...prev, ...patch } : prev));
+  };
+
+  const resetZatcaConfig = async () => {
+    const { error } = await db.from("zatca_configurations").delete().eq("tenant_id", tenantId);
+    if (error) throw error;
+    setZatcaConfig(null);
+  };
+
+  // Two paths, chosen by whether the owner has generated a real key/CSR yet
+  // (zatcaConfig.publicKey):
+  //  - Real path: calls api/zatca-sign-invoice.js, which builds a genuine
+  //    UBL 2.1 invoice, hashes + ECDSA-signs it server-side (private key
+  //    never reaches this browser tab), and returns a real Phase 2 (9-tag)
+  //    QR. Status lands as "SIGNED", not "CLEARED" — nothing has actually
+  //    been transmitted to ZATCA yet (see Stage 6 in the task list); that
+  //    distinction is what the invoice-detail badge below keys off of.
+  //  - Fallback path: the original scaffold's simulated hash/QR, kept only
+  //    so this can never throw if zatcaConfig somehow says enabled without
+  //    a key yet (shouldn't happen — the Settings UI gates OTP entry behind
+  //    CSR generation — but this function must never be what breaks a sale).
+  const submitInvoiceToZatca = async (invoice) => {
+    const lastEntry = [...zatcaInvoices].sort((a, b) => new Date(b.submittedAt || 0) - new Date(a.submittedAt || 0))[0];
+    const previousInvoiceHash = lastEntry?.invoiceHash || null;
+
+    let row;
+    if (zatcaConfig?.publicKey) {
+      const res = await fetch("/api/zatca-sign-invoice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tenantId, invoice, merchant, previousInvoiceHash }),
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "zatca_signing_failed");
+      row = {
+        id: crypto.randomUUID(), tenantId, invoiceId: invoice.id, uuid: data.uuid,
+        invoiceHash: data.invoiceHash, status: "SIGNED", qrPayload: data.qrBase64,
+        submittedAt: nowISO(), clearedAt: null,
+      };
+    } else {
+      const zatcaUuid = crypto.randomUUID();
+      const canonical = `${invoice.id}|${invoice.code}|${invoice.total}|${invoice.createdAt}|${merchant.taxNumber || ""}`;
+      const hashBuf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical));
+      const invoiceHash = [...new Uint8Array(hashBuf)].map((b) => b.toString(16).padStart(2, "0")).join("");
+      const vatTotal = invoice.total - invoice.total / (1 + VAT_RATE);
+      const qrPayload = buildZatcaQrBase64({
+        sellerName: merchant.name || "",
+        vatNumber: merchant.taxNumber || "",
+        isoDateTime: invoice.createdAt,
+        total: invoice.total.toFixed(2),
+        vatTotal: vatTotal.toFixed(2),
+      });
+      row = {
+        id: crypto.randomUUID(), tenantId, invoiceId: invoice.id, uuid: zatcaUuid,
+        invoiceHash, status: "CLEARED", qrPayload,
+        submittedAt: nowISO(), clearedAt: nowISO(),
+      };
+    }
+
+    const { error } = await db.from("zatca_invoices").insert(toSnakeCase(row));
+    if (error) throw error;
+    setZatcaInvoicesState((prev) => [...prev, row]);
+    await db.rpc("zatca_record_invoice_result", { p_tenant_id: tenantId, p_status: row.status });
+    setZatcaConfig((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, lastSyncAt: nowISO() };
+      if (row.status === "CLEARED") next.invoicesClearedCount = (prev.invoicesClearedCount || 0) + 1;
+      return next;
+    });
+  };
+
   // Async now (was sync): both the balance change and the document number
   // are a real round trip to Postgres (apply_customer_payment() /
   // next_doc_number(), see supabase-rls-and-integrity.sql) instead of a
@@ -4247,7 +4657,14 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
       vatExempt: !merchant.taxNumber || !merchant.taxNumber.trim(),
       items: items.map((it) => ({ itemId: uid("item"), name: it.name, service: it.service, addons: it.addons, price: it.servicePrice + it.addons.reduce((s, a) => s + a.price, 0), qty: it.qty, lineTotal: it.lineTotal, status: "Received", urgent: false, deliveredAt: null })),
     };
-    return addInvoice(invoice);
+    const savedInvoice = addInvoice(invoice);
+    // Fire-and-forget: the real invoice above already saved successfully
+    // regardless of what happens here. See submitInvoiceToZatca's own
+    // comment for why this can never block or break a real sale.
+    if (zatcaConfig?.isEnabled) {
+      submitInvoiceToZatca(savedInvoice).catch((e) => console.error("ZATCA simulated submission failed", e));
+    }
+    return savedInvoice;
   };
 
   return (
@@ -4273,6 +4690,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
         enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods}
         onLogout={onLogout}
         applyCustomerPayment={applyCustomerPayment} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber}
+        zatcaConfig={zatcaConfig} zatcaInvoices={zatcaInvoices} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig}
       />
     </LangContext.Provider>
   );
