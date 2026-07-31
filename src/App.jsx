@@ -183,14 +183,15 @@ function buildSalesRows(invoices, start, end, method) {
 }
 const uid = (p = "id") => `${p}_${Math.random().toString(36).slice(2, 9)}`;
 const sar = (n) => `${(Math.round((n + Number.EPSILON) * 100) / 100).toFixed(2)} SAR`;
-// Customer ledger list only — keeps the wallet/debt columns from growing
+// Quick-glance list columns only (customers wallet/debt, product price,
+// delivery fee, supplier balance, expense amount) — keeps them from growing
 // with the number's length (a 6-figure balance shouldn't be what forces the
-// whole row wider). Caps at the first 4 integer digits + "+"; the exact
-// amount is always still shown in full inside that customer's own detail
-// view, this is display-only for the compact list.
-const sarCompact = (n) => {
+// whole row wider). Caps at the first `maxDigits` integer digits + "+"; the
+// exact amount is always still shown in full inside that row's own detail
+// view. Never used on Reports/Tax Return — those need the real number.
+const sarCompact = (n, maxDigits = 4) => {
   const digits = String(Math.round(Math.abs(n)));
-  return digits.length > 4 ? `${digits.slice(0, 4)}+ SAR` : sar(n);
+  return digits.length > maxDigits ? `${digits.slice(0, maxDigits)}+ SAR` : sar(n);
 };
 const nowISO = () => new Date().toISOString();
 // Owner/section PINs are hashed before storage (Web Crypto, no extra
@@ -1546,7 +1547,7 @@ function AddSupplierModal({ onClose, onSave }) {
   return (
     <Modal title={t("addSupplier_title")} onClose={onClose}>
       <Field label={t("addSupplier_company")}><input autoFocus value={company} onChange={(e) => setCompany(e.target.value)} className={inputCls} /></Field>
-      <Field label={t("addSupplier_agent")}><input value={agent} onChange={(e) => setAgent(e.target.value)} className={inputCls} /></Field>
+      <Field label={t("addSupplier_agent")}><input value={agent} onChange={(e) => setAgent(e.target.value.slice(0, 15))} maxLength={15} className={inputCls} /></Field>
       <Field label={t("addSupplier_contact")}><input value={contact} onChange={(e) => setContact(e.target.value)} className={inputCls} /></Field>
       <Field label={t("addSupplier_taxNumber")}><input value={taxNumber} onChange={(e) => setTaxNumber(e.target.value)} className={`${inputCls} f-mono`} /></Field>
       <button
@@ -2169,21 +2170,28 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
         <InvoiceCustomerFilter customers={customers} selected={customerFilter} onSelect={setCustomerFilter} />
       </div>
       <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed">
           <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <tr><th className="px-4 py-3">{t("invoices_invoiceId")}</th><th className="px-4 py-3">{t("invoices_customer")}</th><th className="px-4 py-3">{t("invoices_items")}</th>{isDelivery && <th className="px-4 py-3">{t("invoices_deliveryFee")}</th>}<th className="px-4 py-3">{t("common_status")}</th><th className="px-4 py-3"></th></tr>
+            <tr>
+              <th className="px-4 py-3 w-40 text-center">{t("invoices_invoiceId")}</th>
+              <th className="px-4 py-3 w-56 text-center">{t("invoices_customer")}</th>
+              <th className="px-4 py-3 w-20 text-center">{t("invoices_items")}</th>
+              {isDelivery && <th className="px-4 py-3 w-40 text-center">{t("invoices_deliveryFee")}</th>}
+              <th className="px-4 py-3">{t("common_status")}</th>
+              <th className="px-4 py-3 w-10"></th>
+            </tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
             {active.map((inv) => {
               const status = invoiceOverallStatus(inv);
               return (
                 <tr key={inv.id} className="hover:bg-stone-50 cursor-pointer" onClick={() => setOpenId(inv.id)}>
-                  <td className="px-4 py-3 f-mono text-slate-700">{inv.code}</td>
-                  <td className="px-4 py-3 text-slate-800">{inv.customerName}</td>
-                  <td className="px-4 py-3 text-slate-600">{inv.items.length}</td>
-                  {isDelivery && <td className="px-4 py-3 f-mono text-teal-700">{sar(inv.deliveryFee || 0)}</td>}
+                  <td className="px-4 py-3 f-mono text-slate-700 w-40" style={{ textAlign: "center" }}>{inv.code}</td>
+                  <td className="px-4 py-3 text-slate-800 truncate w-56 text-center">{inv.customerName}</td>
+                  <td className="px-4 py-3 text-slate-600 w-20" style={{ textAlign: "center" }}>{inv.items.length}</td>
+                  {isDelivery && <td className="px-4 py-3 f-mono text-teal-700 w-40" style={{ textAlign: "center" }}>{sarCompact(inv.deliveryFee || 0)}</td>}
                   <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${status === "Ready" ? "bg-teal-100 text-teal-700" : status === "Received" ? "bg-stone-100 text-stone-600" : "bg-amber-100 text-amber-700"}`}>{stageLabel(t, status)}</span></td>
-                  <td className="px-4 py-3 text-right text-slate-300"><ChevronRight size={16} /></td>
+                  <td className="px-4 py-3 text-right text-slate-300 w-10"><ChevronRight size={16} /></td>
                 </tr>
               );
             })}
@@ -2859,19 +2867,19 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
 
       <div className="lg:col-span-2 space-y-6">
         <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm h-fit">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm table-fixed">
             <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              <tr><th className="px-4 py-3">{t("products_table_product")}</th><th className="px-4 py-3">{t("products_table_category")}</th><th className="px-4 py-3">{t("products_table_services")}</th><th className="px-4 py-3">{t("products_table_from")}</th><th className="px-4 py-3">{t("products_table_status")}</th><th className="px-4 py-3"></th></tr>
+              <tr><th className="px-4 py-3 w-56 text-center">{t("products_table_product")}</th><th className="px-4 py-3 text-center">{t("products_table_category")}</th><th className="px-4 py-3 text-center">{t("products_table_services")}</th><th className="px-4 py-3 w-28 text-center">{t("products_table_from")}</th><th className="px-4 py-3">{t("products_table_status")}</th><th className="px-4 py-3 w-10"></th></tr>
             </thead>
             <tbody className="divide-y divide-stone-100">
               {products.map((p) => (
                 <tr key={p.id} onClick={() => setEditingProduct(p)} className="cursor-pointer hover:bg-stone-50">
-                  <td className="px-4 py-3"><div className="flex items-center gap-2">{p.image ? <img src={p.image} alt="" className="h-8 w-8 rounded object-cover" /> : <div className="flex h-8 w-8 items-center justify-center rounded bg-stone-100"><ImageIcon size={14} className="text-stone-300" /></div>}<span className="font-medium text-slate-900">{p.name}</span></div></td>
-                  <td className="px-4 py-3 text-slate-600">{categories.find((c) => c.id === p.categoryId)?.name || "—"}</td>
-                  <td className="px-4 py-3 text-xs text-slate-500">{Object.keys(p.services).join(" · ")}</td>
-                  <td className="px-4 py-3 f-mono text-slate-800">{sar(p.price)}</td>
+                  <td className="px-4 py-3 w-56"><div className="flex items-center justify-center gap-2">{p.image ? <img src={p.image} alt="" className="h-8 w-8 shrink-0 rounded object-cover" /> : <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-stone-100"><ImageIcon size={14} className="text-stone-300" /></div>}<span className="truncate font-medium text-slate-900">{p.name}</span></div></td>
+                  <td className="px-4 py-3 text-center text-slate-600 truncate">{categories.find((c) => c.id === p.categoryId)?.name || "—"}</td>
+                  <td className="px-4 py-3 text-center text-xs text-slate-500 truncate">{Object.keys(p.services).join(" · ")}</td>
+                  <td className="px-4 py-3 f-mono text-slate-800 w-28" style={{ textAlign: "center" }}>{sarCompact(p.price)}</td>
                   <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${p.published ? "bg-teal-100 text-teal-700" : "bg-stone-100 text-stone-500"}`}>{p.published ? t("common_live") : t("common_draft")}</span></td>
-                  <td className="px-4 py-3 text-right text-slate-300"><ChevronRight size={16} /></td>
+                  <td className="px-4 py-3 text-right text-slate-300 w-10"><ChevronRight size={16} /></td>
                 </tr>
               ))}
               {products.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">{t("products_table_empty")}</td></tr>}
@@ -3052,18 +3060,18 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
           </div>
 
           <div className="lg:col-span-2 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm h-fit">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <tr><th className="px-4 py-3">{t("purchases_table_supplier")}</th><th className="px-4 py-3">{t("purchases_table_agent")}</th><th className="px-4 py-3">{t("purchases_table_contact")}</th><th className="px-4 py-3">{t("purchases_table_liability")}</th><th className="px-4 py-3"></th></tr>
+                <tr><th className="px-4 py-3 w-56 text-center">{t("purchases_table_supplier")}</th><th className="px-4 py-3 w-56 text-center">{t("purchases_table_agent")}</th><th className="px-4 py-3 w-40 text-center">{t("purchases_table_contact")}</th><th className="px-4 py-3 w-40 text-center">{t("purchases_table_liability")}</th><th className="px-4 py-3 w-40"></th></tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {suppliers.map((s) => (
                   <tr key={s.id} onClick={() => setSelectedSupplier(s)} className="cursor-pointer hover:bg-stone-50">
-                    <td className="px-4 py-3 font-medium text-slate-900"><Building2 size={13} className="inline mr-1.5 text-slate-400" />{s.company}</td>
-                    <td className="px-4 py-3 text-slate-600">{s.agent}</td>
-                    <td className="px-4 py-3 f-mono text-slate-600">{s.contact}</td>
-                    <td className="px-4 py-3 f-mono text-rose-600">{sar(s.balance)}</td>
-                    <td className="px-4 py-3 text-right">{s.balance > 0 && <button onClick={(e) => { e.stopPropagation(); openPayBalance(s); }} className="rounded-lg border border-stone-300 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-stone-50">{t("purchases_payBalance")}</button>}</td>
+                    <td className="px-4 py-3 w-56 text-center font-medium text-slate-900 truncate"><Building2 size={13} className="inline mr-1.5 text-slate-400" />{s.company}</td>
+                    <td className="px-4 py-3 w-56 text-center text-slate-600 truncate">{s.agent}</td>
+                    <td className="px-4 py-3 f-mono text-slate-600 w-40" style={{ textAlign: "center" }}>{s.contact}</td>
+                    <td className="px-4 py-3 f-mono text-rose-600 w-40" style={{ textAlign: "center" }}>{sarCompact(s.balance)}</td>
+                    <td className="px-4 py-3 text-right w-40">{s.balance > 0 && <button onClick={(e) => { e.stopPropagation(); openPayBalance(s); }} className="rounded-lg border border-stone-300 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-stone-50">{t("purchases_payBalance")}</button>}</td>
                   </tr>
                 ))}
               </tbody>
@@ -3090,17 +3098,17 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
             <button onClick={recordExpense} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("expenses_save")}</button>
           </div>
           <div className="lg:col-span-2 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm h-fit">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <tr><th className="px-4 py-3">{t("expenses_table_category")}</th><th className="px-4 py-3">{t("expenses_table_amount")}</th><th className="px-4 py-3">{t("expenses_table_tax")}</th><th className="px-4 py-3">{t("expenses_table_date")}</th><th className="px-4 py-3">{t("expenses_table_receipt")}</th></tr>
+                <tr><th className="px-4 py-3 w-56 text-center">{t("expenses_table_category")}</th><th className="px-4 py-3 w-40 text-center">{t("expenses_table_amount")}</th><th className="px-4 py-3 w-32 text-center">{t("expenses_table_tax")}</th><th className="px-4 py-3 w-40 text-center">{t("expenses_table_date")}</th><th className="px-4 py-3">{t("expenses_table_receipt")}</th></tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {expenses.map((e) => (
                   <tr key={e.id} className="hover:bg-stone-50">
-                    <td className="px-4 py-3 font-medium text-slate-900">{expenseCategories.find((c) => c.id === e.categoryId)?.name}</td>
-                    <td className="px-4 py-3 f-mono text-slate-800">{sar(e.amount)}</td>
-                    <td className="px-4 py-3 text-slate-600">{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</td>
-                    <td className="px-4 py-3 f-mono text-slate-500">{e.date}</td>
+                    <td className="px-4 py-3 w-56 text-center font-medium text-slate-900 truncate">{expenseCategories.find((c) => c.id === e.categoryId)?.name}</td>
+                    <td className="px-4 py-3 f-mono text-slate-800 w-40" style={{ textAlign: "center" }}>{sarCompact(e.amount)}</td>
+                    <td className="px-4 py-3 w-32 text-center text-slate-600">{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</td>
+                    <td className="px-4 py-3 f-mono text-slate-500 w-40" style={{ textAlign: "center" }}>{e.date}</td>
                     <td className="px-4 py-3 text-slate-500 flex items-center gap-1"><ReceiptText size={13} />{e.receipt || "—"}</td>
                   </tr>
                 ))}
@@ -3160,7 +3168,7 @@ function PromotionModal({ onClose, onSave, promotions, editing }) {
 
   return (
     <Modal title={editing ? t("promoModal_editTitle") : t("promoModal_title")} onClose={onClose}>
-      <Field label={t("promoModal_name")}><input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} /></Field>
+      <Field label={t("promoModal_name")}><input value={name} onChange={(e) => setName(e.target.value.slice(0, 15))} maxLength={15} className={inputCls} /></Field>
       <Field label={t("promoModal_requiresCoupon")}><Toggle checked={couponOn} onChange={setCouponOn} label={couponOn ? t("promoModal_couponRequired") : t("promoModal_appliesAuto")} /></Field>
       {couponOn && <Field label={t("promoModal_couponCode")}><input value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} className={`${inputCls} f-mono tracking-widest`} /></Field>}
       <Field label={t("promoModal_evalType")}>
@@ -3195,9 +3203,9 @@ function PromotionsView({ promotions, addPromotion, updatePromotion }) {
         <button onClick={() => setShowModal(true)} className="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white hover:bg-teal-700"><Plus size={15} /> {t("promotions_addDiscount")}</button>
       </div>
       <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-        <table className="w-full text-sm">
+        <table className="w-full text-sm table-fixed">
           <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <tr><th className="px-4 py-3">{t("promotions_table_name")}</th><th className="px-4 py-3">{t("promotions_table_type")}</th><th className="px-4 py-3">{t("promotions_table_coupon")}</th><th className="px-4 py-3">{t("promotions_table_start")}</th><th className="px-4 py-3">{t("promotions_table_end")}</th><th className="px-4 py-3">{t("promotions_table_status")}</th><th className="px-4 py-3"></th></tr>
+            <tr><th className="px-4 py-3 w-56 text-center">{t("promotions_table_name")}</th><th className="px-4 py-3 w-28 text-center">{t("promotions_table_type")}</th><th className="px-4 py-3 w-28 text-center">{t("promotions_table_coupon")}</th><th className="px-4 py-3 w-64 text-center">{t("promotions_table_start")}</th><th className="px-4 py-3 w-64 text-center">{t("promotions_table_end")}</th><th className="px-4 py-3">{t("promotions_table_status")}</th><th className="px-4 py-3"></th></tr>
           </thead>
           <tbody className="divide-y divide-stone-100">
             {promotions.map((p) => {
@@ -3205,11 +3213,11 @@ function PromotionsView({ promotions, addPromotion, updatePromotion }) {
               const live = !cancelled && (p.endDate ? now < new Date(p.endDate).getTime() : true);
               return (
                 <tr key={p.id} className="hover:bg-stone-50">
-                  <td className="px-4 py-3 font-medium text-slate-900">{p.name}</td>
-                  <td className="px-4 py-3 text-slate-600 f-mono">{p.isPercent ? `${p.value}%` : sar(p.value)}</td>
-                  <td className="px-4 py-3">{p.couponOn ? <span className="f-mono rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-700">{p.coupon}</span> : <span className="text-slate-400 text-xs">{t("common_no")}</span>}</td>
-                  <td className="px-4 py-3 f-mono text-xs text-slate-500">{p.startDate ? fmtDate(p.startDate) : "—"}</td>
-                  <td className="px-4 py-3 f-mono text-xs text-slate-500">{p.endDate ? fmtDate(p.endDate) : "—"}</td>
+                  <td className="px-4 py-3 w-56 text-center font-medium text-slate-900 truncate">{p.name}</td>
+                  <td className="px-4 py-3 w-28 text-center text-slate-600 f-mono">{p.isPercent ? `${p.value}%` : sar(p.value)}</td>
+                  <td className="px-4 py-3 w-28 text-center">{p.couponOn ? <span className="f-mono rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-700">{p.coupon}</span> : <span className="text-slate-400 text-xs">{t("common_no")}</span>}</td>
+                  <td className="px-4 py-3 f-mono text-xs text-slate-500 w-64" style={{ textAlign: "center" }}>{p.startDate ? fmtDate(p.startDate) : "—"}</td>
+                  <td className="px-4 py-3 f-mono text-xs text-slate-500 w-64" style={{ textAlign: "center" }}>{p.endDate ? fmtDate(p.endDate) : "—"}</td>
                   <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${cancelled ? "bg-rose-100 text-rose-600" : live ? "bg-teal-100 text-teal-700" : "bg-stone-100 text-stone-500"}`}>{cancelled ? t("promotions_cancelled") : live ? t("common_active") : t("common_expired")}</span></td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
@@ -3241,7 +3249,7 @@ function CopyableNumber({ value, t }) {
     setTimeout(() => setCopied(false), 1500);
   };
   return (
-    <div className="flex items-center gap-2">
+    <div className="inline-flex items-center gap-2">
       <span className="f-mono font-semibold">{value}</span>
       <button onClick={copy} className="rounded border border-stone-200 px-1.5 py-0.5 text-[10px] font-medium text-teal-700 hover:bg-teal-50">{copied ? t("reports_vat_copied") : t("reports_vat_copy")}</button>
     </div>
@@ -3401,19 +3409,19 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
             </select>
           </div>
           <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <tr><th className="px-4 py-3">{t("reports_table_invoice")}</th><th className="px-4 py-3">{t("reports_table_client")}</th><th className="px-4 py-3">{t("reports_table_method")}</th><th className="px-4 py-3">{t("reports_table_net")}</th><th className="px-4 py-3">{t("reports_table_vat")}</th><th className="px-4 py-3">{t("reports_table_gross")}</th></tr>
+                <tr><th className="px-4 py-3 w-40 text-center">{t("reports_table_invoice")}</th><th className="px-4 py-3 w-56 text-center">{t("reports_table_client")}</th><th className="px-4 py-3 text-center">{t("reports_table_method")}</th><th className="px-4 py-3 w-28 text-center">{t("reports_table_net")}</th><th className="px-4 py-3 w-28 text-center">{t("reports_table_vat")}</th><th className="px-4 py-3 w-28 text-center">{t("reports_table_gross")}</th></tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {salesRows.map((r) => (
                   <tr key={r.inv.id} className="hover:bg-stone-50">
-                    <td className="px-4 py-3 f-mono text-slate-600">{r.inv.code}</td>
-                    <td className="px-4 py-3 text-slate-800">{r.inv.customerName}</td>
-                    <td className="px-4 py-3 text-slate-600">{method === "all" ? splitBreakdownLabel(t, r.inv) : payMethodLabel(t, method)}</td>
-                    <td className="px-4 py-3 f-mono">{sar(r.net)}</td>
-                    <td className="px-4 py-3 f-mono text-amber-600">{sar(r.vat)}</td>
-                    <td className="px-4 py-3 f-mono font-semibold text-slate-900">{sar(r.amount)}</td>
+                    <td className="px-4 py-3 f-mono text-slate-600 w-40" style={{ textAlign: "center" }}>{r.inv.code}</td>
+                    <td className="px-4 py-3 w-56 text-center text-slate-800 truncate">{r.inv.customerName}</td>
+                    <td className="px-4 py-3 text-center text-slate-600">{method === "all" ? splitBreakdownLabel(t, r.inv) : payMethodLabel(t, method)}</td>
+                    <td className="px-4 py-3 f-mono w-28" style={{ textAlign: "center" }}>{sar(r.net)}</td>
+                    <td className="px-4 py-3 f-mono text-amber-600 w-28" style={{ textAlign: "center" }}>{sar(r.vat)}</td>
+                    <td className="px-4 py-3 f-mono font-semibold text-slate-900 w-28" style={{ textAlign: "center" }}>{sar(r.amount)}</td>
                   </tr>
                 ))}
                 {salesRows.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-slate-400">{t("reports_salesEmpty")}</td></tr>}
@@ -3432,18 +3440,18 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
             <KPI label={t("reports_kpi_netCost")} value={sar(pNet)} accent="teal" />
           </div>
           <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <tr><th className="px-4 py-3">{t("reports_table_poId")}</th><th className="px-4 py-3">{t("reports_table_supplier")}</th><th className="px-4 py-3">{t("reports_table_value")}</th><th className="px-4 py-3">{t("reports_table_created")}</th><th className="px-4 py-3">{t("customerDetail_method")}</th><th className="px-4 py-3">{t("supplierDetail_invoice")}</th></tr>
+                <tr><th className="px-4 py-3 w-40 text-center">{t("reports_table_poId")}</th><th className="px-4 py-3 w-56 text-center">{t("reports_table_supplier")}</th><th className="px-4 py-3 w-36 text-center">{t("reports_table_value")}</th><th className="px-4 py-3 w-72 text-center">{t("reports_table_created")}</th><th className="px-4 py-3 w-28 text-center">{t("customerDetail_method")}</th><th className="px-4 py-3">{t("supplierDetail_invoice")}</th></tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {purchases.map((p) => (
                   <tr key={p.id} className="hover:bg-stone-50">
-                    <td className="px-4 py-3 f-mono text-slate-600">{p.code}</td>
-                    <td className="px-4 py-3 text-slate-800">{suppliers.find((s) => s.id === p.supplierId)?.company}</td>
-                    <td className="px-4 py-3 f-mono font-semibold text-slate-900">{sar(p.amount)}</td>
-                    <td className="px-4 py-3 f-mono text-slate-500">{fmtDate(p.date)}</td>
-                    <td className="px-4 py-3 text-slate-600">{p.method === "Cash" ? t("common_cash") : t("purchases_credit")}</td>
+                    <td className="px-4 py-3 f-mono text-slate-600 w-40" style={{ textAlign: "center" }}>{p.code}</td>
+                    <td className="px-4 py-3 w-56 text-center text-slate-800 truncate">{suppliers.find((s) => s.id === p.supplierId)?.company}</td>
+                    <td className="px-4 py-3 f-mono font-semibold text-slate-900 w-36" style={{ textAlign: "center" }}>{sar(p.amount)}</td>
+                    <td className="px-4 py-3 f-mono text-slate-500 w-72" style={{ textAlign: "center" }}>{fmtDate(p.date)}</td>
+                    <td className="px-4 py-3 w-28 text-center text-slate-600">{p.method === "Cash" ? t("common_cash") : t("purchases_credit")}</td>
                     <td className="px-4 py-3">
                       {p.attachment ? (
                         <a href={p.attachment} target="_blank" rel="noreferrer" download={p.attachmentName || "invoice"} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
@@ -3473,17 +3481,17 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
             <input type="date" value={expEnd} onChange={(e) => setExpEnd(e.target.value)} className={`${inputCls} w-auto`} />
           </div>
           <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm table-fixed">
               <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <tr><th className="px-4 py-3">{t("expenses_table_category")}</th><th className="px-4 py-3">{t("expenses_table_amount")}</th><th className="px-4 py-3">{t("expenses_table_tax")}</th><th className="px-4 py-3">{t("expenses_table_date")}</th><th className="px-4 py-3">{t("expenses_table_receipt")}</th></tr>
+                <tr><th className="px-4 py-3 w-56 text-center">{t("expenses_table_category")}</th><th className="px-4 py-3 w-40 text-center">{t("expenses_table_amount")}</th><th className="px-4 py-3 w-48 text-center">{t("expenses_table_tax")}</th><th className="px-4 py-3 w-72 text-center">{t("expenses_table_date")}</th><th className="px-4 py-3">{t("expenses_table_receipt")}</th></tr>
               </thead>
               <tbody className="divide-y divide-stone-100">
                 {filteredExpenses.map((e) => (
                   <tr key={e.id} className="hover:bg-stone-50">
-                    <td className="px-4 py-3 font-medium text-slate-900">{expenseCategories.find((c) => c.id === e.categoryId)?.name || "—"}</td>
-                    <td className="px-4 py-3 f-mono text-slate-800">{sar(e.amount)}</td>
-                    <td className="px-4 py-3 text-slate-600">{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</td>
-                    <td className="px-4 py-3 f-mono text-slate-500">{e.date}</td>
+                    <td className="px-4 py-3 w-56 text-center font-medium text-slate-900 truncate">{expenseCategories.find((c) => c.id === e.categoryId)?.name || "—"}</td>
+                    <td className="px-4 py-3 f-mono text-slate-800 w-40" style={{ textAlign: "center" }}>{sar(e.amount)}</td>
+                    <td className="px-4 py-3 w-48 text-center text-slate-600">{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</td>
+                    <td className="px-4 py-3 f-mono text-slate-500 w-72" style={{ textAlign: "center" }}>{e.date}</td>
                     <td className="px-4 py-3 text-slate-500">{e.receipt || "—"}</td>
                   </tr>
                 ))}
@@ -3555,17 +3563,17 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
           <div className="print-area">
             <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("reports_vat_salesTable")}</div>
             <div className="mb-6 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm table-fixed">
                 <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  <tr><th className="px-4 py-3">#</th><th className="px-4 py-3">{t("common_category")}</th><th className="px-4 py-3">{t("reports_vat_taxableAmount")}</th><th className="px-4 py-3">{t("reports_vat_vatAmount")}</th></tr>
+                  <tr><th className="px-4 py-3 w-10 text-center">#</th><th className="px-4 py-3 text-center">{t("common_category")}</th><th className="px-4 py-3 w-56 text-center">{t("reports_vat_taxableAmount")}</th><th className="px-4 py-3 w-40 text-center">{t("reports_vat_vatAmount")}</th></tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
-                  <tr><td className="px-4 py-3 f-mono">1</td><td className="px-4 py-3">{t("reports_vat_box1_sales")}</td><td className="px-4 py-3"><CopyableNumber value={round2(salesBox1Taxable)} t={t} /></td><td className="px-4 py-3"><CopyableNumber value={round2(salesBox1Vat)} t={t} /></td></tr>
-                  <tr><td className="px-4 py-3 f-mono">2</td><td className="px-4 py-3">{t("reports_vat_box2_sales")}</td><td className="px-4 py-3 f-mono text-slate-400">0.00</td><td className="px-4 py-3 f-mono text-slate-400">0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono">3</td><td className="px-4 py-3">{t("reports_vat_box3_sales")}</td><td className="px-4 py-3 f-mono text-slate-400">0.00</td><td className="px-4 py-3 f-mono text-slate-400">0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono">4</td><td className="px-4 py-3">{t("reports_vat_box4_sales")}</td><td className="px-4 py-3 f-mono text-slate-400">0.00</td><td className="px-4 py-3 f-mono text-slate-400">0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono">5</td><td className="px-4 py-3">{t("reports_vat_box5_sales")}</td><td className="px-4 py-3 f-mono text-slate-400">0.00</td><td className="px-4 py-3 f-mono text-slate-400">0.00</td></tr>
-                  <tr className="bg-stone-50 font-semibold"><td className="px-4 py-3" colSpan={2}>{t("reports_vat_totalSales")} / {t("reports_vat_totalOutputVat")}</td><td className="px-4 py-3"><CopyableNumber value={round2(totalSalesValue)} t={t} /></td><td className="px-4 py-3"><CopyableNumber value={round2(totalOutputVat)} t={t} /></td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>1</td><td className="px-4 py-3 text-center">{t("reports_vat_box1_sales")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(salesBox1Taxable)} t={t} /></td><td className="px-4 py-3 w-40 text-center"><CopyableNumber value={round2(salesBox1Vat)} t={t} /></td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>2</td><td className="px-4 py-3 text-center">{t("reports_vat_box2_sales")}</td><td className="px-4 py-3 f-mono text-slate-400 w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>3</td><td className="px-4 py-3 text-center">{t("reports_vat_box3_sales")}</td><td className="px-4 py-3 f-mono text-slate-400 w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>4</td><td className="px-4 py-3 text-center">{t("reports_vat_box4_sales")}</td><td className="px-4 py-3 f-mono text-slate-400 w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>5</td><td className="px-4 py-3 text-center">{t("reports_vat_box5_sales")}</td><td className="px-4 py-3 f-mono text-slate-400 w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr className="bg-stone-50 font-semibold"><td className="px-4 py-3 text-center" colSpan={2}>{t("reports_vat_totalSales")} / {t("reports_vat_totalOutputVat")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(totalSalesValue)} t={t} /></td><td className="px-4 py-3 w-40 text-center"><CopyableNumber value={round2(totalOutputVat)} t={t} /></td></tr>
                 </tbody>
               </table>
               <div className="border-t border-stone-100 px-4 py-2 text-[11px] text-slate-400">{t("reports_vat_notTracked")}</div>
@@ -3573,17 +3581,17 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
 
             <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("reports_vat_purchasesTable")}</div>
             <div className="mb-6 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm table-fixed">
                 <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  <tr><th className="px-4 py-3">#</th><th className="px-4 py-3">{t("common_category")}</th><th className="px-4 py-3">{t("reports_vat_taxableAmount")}</th><th className="px-4 py-3">{t("reports_vat_vatAmount")}</th></tr>
+                  <tr><th className="px-4 py-3 w-10 text-center">#</th><th className="px-4 py-3 text-center">{t("common_category")}</th><th className="px-4 py-3 w-56 text-center">{t("reports_vat_taxableAmount")}</th><th className="px-4 py-3 w-40 text-center">{t("reports_vat_vatAmount")}</th></tr>
                 </thead>
                 <tbody className="divide-y divide-stone-100">
-                  <tr><td className="px-4 py-3 f-mono">1</td><td className="px-4 py-3">{t("reports_vat_box1_purch")}</td><td className="px-4 py-3"><CopyableNumber value={round2(purchBox1Taxable)} t={t} /></td><td className="px-4 py-3"><CopyableNumber value={round2(purchBox1Vat)} t={t} /></td></tr>
-                  <tr><td className="px-4 py-3 f-mono">2</td><td className="px-4 py-3">{t("reports_vat_box2_purch")}</td><td className="px-4 py-3 f-mono text-slate-400">0.00</td><td className="px-4 py-3 f-mono text-slate-400">0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono">3</td><td className="px-4 py-3">{t("reports_vat_box3_purch")}</td><td className="px-4 py-3 f-mono text-slate-400">0.00</td><td className="px-4 py-3 f-mono text-slate-400">0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono">4</td><td className="px-4 py-3">{t("reports_vat_box4_purch")}</td><td className="px-4 py-3 f-mono text-slate-400">0.00</td><td className="px-4 py-3 f-mono text-slate-400">0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono">5</td><td className="px-4 py-3">{t("reports_vat_box5_purch")}</td><td className="px-4 py-3"><CopyableNumber value={round2(purchBox5Exempt)} t={t} /></td><td className="px-4 py-3 f-mono text-slate-400">0.00</td></tr>
-                  <tr className="bg-stone-50 font-semibold"><td className="px-4 py-3" colSpan={2}>{t("reports_vat_totalPurchases")} / {t("reports_vat_totalInputVat")}</td><td className="px-4 py-3"><CopyableNumber value={round2(totalPurchasesValue)} t={t} /></td><td className="px-4 py-3"><CopyableNumber value={round2(totalInputVat)} t={t} /></td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>1</td><td className="px-4 py-3 text-center">{t("reports_vat_box1_purch")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(purchBox1Taxable)} t={t} /></td><td className="px-4 py-3 w-40 text-center"><CopyableNumber value={round2(purchBox1Vat)} t={t} /></td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>2</td><td className="px-4 py-3 text-center">{t("reports_vat_box2_purch")}</td><td className="px-4 py-3 f-mono text-slate-400 w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>3</td><td className="px-4 py-3 text-center">{t("reports_vat_box3_purch")}</td><td className="px-4 py-3 f-mono text-slate-400 w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>4</td><td className="px-4 py-3 text-center">{t("reports_vat_box4_purch")}</td><td className="px-4 py-3 f-mono text-slate-400 w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>5</td><td className="px-4 py-3 text-center">{t("reports_vat_box5_purch")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(purchBox5Exempt)} t={t} /></td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr className="bg-stone-50 font-semibold"><td className="px-4 py-3 text-center" colSpan={2}>{t("reports_vat_totalPurchases")} / {t("reports_vat_totalInputVat")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(totalPurchasesValue)} t={t} /></td><td className="px-4 py-3 w-40 text-center"><CopyableNumber value={round2(totalInputVat)} t={t} /></td></tr>
                 </tbody>
               </table>
               <div className="border-t border-stone-100 px-4 py-2 text-[11px] text-slate-400">{t("reports_vat_notTracked")}</div>
