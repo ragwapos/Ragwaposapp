@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { sha256 } from '@noble/hashes/sha2.js';
+import { verifyTenantSession } from './_auth.js';
 
 // Server-side only, same pattern as zatca-generate-keys.js — the tenant's
 // decrypted private key must never leave this function.
@@ -201,6 +202,9 @@ export default async function handler(req, res) {
   if (!tenantId || !invoice || !merchant) {
     return res.status(400).json({ success: false, error: 'tenantId, invoice, and merchant are required' });
   }
+
+  const authResult = await verifyTenantSession(req, supabaseAdmin, tenantId);
+  if (!authResult.ok) return res.status(authResult.status).json({ success: false, error: authResult.error });
 
   try {
     const { data: config, error: cfgErr } = await supabaseAdmin

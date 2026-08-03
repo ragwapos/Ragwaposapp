@@ -6,11 +6,11 @@ import {
   ReceiptText, Building2, FileText, Sparkles, Settings, Globe, Lock, Pencil, Paperclip
 } from "lucide-react";
 import QRCode from "qrcode";
-// auth/db here are supabase.auth / the Supabase client (see src/firebase.js).
+// auth/db here are supabase.auth / the Supabase client (see src/supabase.js).
 // Every database call below is a METHOD chain on db — db.from('table').select()
 // / .upsert() / .delete() / .channel() — not a standalone function imported
 // from a package the way Firebase's collection()/doc()/setDoc() worked.
-import { auth, db } from "./firebase";
+import { auth, db } from "./supabase";
 import { toSnakeCase, toCamelCase } from "./utils/transforms.js";
 
 /* =========================================================================
@@ -866,6 +866,7 @@ const DICT = {
     promoModal_fixed: "Fixed SAR", promoModal_discountPercent: "Discount (%)", promoModal_discountAmount: "Discount (SAR)",
     promoModal_start: "Start", promoModal_end: "End", promoModal_save: "Save Discount", promoModal_saveEdit: "Save Changes",
     promoModal_overlapError: "There is already an active discount running during this period — overlapping discount periods are not allowed.",
+    promoModal_valueError: "Enter a value greater than 0 (percentage discounts can't exceed 100%).",
 
     reports_salesTab: "Sales Ledger", reports_procurementTab: "Procurement Ledger",
     reports_kpi_invoices: "Invoices", reports_kpi_grossSales: "Gross Sales", reports_kpi_vatCollected: "VAT Collected",
@@ -1082,6 +1083,7 @@ const DICT = {
     promoModal_fixed: "مبلغ ثابت", promoModal_discountPercent: "الخصم (%)", promoModal_discountAmount: "الخصم (ريال)",
     promoModal_start: "البداية", promoModal_end: "النهاية", promoModal_save: "حفظ الخصم", promoModal_saveEdit: "حفظ التعديلات",
     promoModal_overlapError: "يوجد خصم آخر نشط بالفعل خلال هذه الفترة — لا يُسمح بتداخل فترات الخصومات.",
+    promoModal_valueError: "أدخل قيمة أكبر من صفر (الخصم كنسبة مئوية ما يتجاوز 100%).",
 
     reports_salesTab: "سجل المبيعات", reports_procurementTab: "سجل المشتريات",
     reports_kpi_invoices: "الفواتير", reports_kpi_grossSales: "إجمالي المبيعات", reports_kpi_vatCollected: "الضريبة المحصلة",
@@ -1298,6 +1300,7 @@ const DICT = {
     promoModal_fixed: "فکسڈ ریال", promoModal_discountPercent: "رعایت (%)", promoModal_discountAmount: "رعایت (ریال)",
     promoModal_start: "آغاز", promoModal_end: "اختتام", promoModal_save: "رعایت محفوظ کریں", promoModal_saveEdit: "تبدیلیاں محفوظ کریں",
     promoModal_overlapError: "اس مدت کے دوران پہلے سے ایک فعال رعایت موجود ہے — رعایتوں کی مدت میں تداخل کی اجازت نہیں ہے۔",
+    promoModal_valueError: "صفر سے بڑی ایک قیمت درج کریں (فیصد رعایت 100% سے زیادہ نہیں ہو سکتی)۔",
 
     reports_salesTab: "سیلز رپورٹ", reports_procurementTab: "خریداری رپورٹ",
     reports_kpi_invoices: "آرڈرز", reports_kpi_grossSales: "کل فروخت", reports_kpi_vatCollected: "وصول شدہ ٹیکس",
@@ -3257,6 +3260,15 @@ function PromotionModal({ onClose, onSave, promotions, editing }) {
   const handleSave = () => {
     setError("");
     if (!name.trim()) return;
+    // A discount of 0 or below (or a percentage over 100) isn't a discount —
+    // depending on how promoDiscount()/Math.min() combine it with the cart
+    // total at POS, a negative value actually INCREASES the customer's total
+    // instead of reducing it, silently. Reject it here before it can be saved.
+    const numValue = Number(value);
+    if (!Number.isFinite(numValue) || numValue <= 0 || (isPercent && numValue > 100)) {
+      setError(t("promoModal_valueError"));
+      return;
+    }
     // Two active discounts may not cover the same moment in time — an
     // overlapping period would make it ambiguous which one applies at POS.
     const overlap = promotions.some((p) => p.id !== editing?.id && p.active !== false && promosOverlap(start, end, p.startDate, p.endDate));
@@ -3264,7 +3276,7 @@ function PromotionModal({ onClose, onSave, promotions, editing }) {
     // start_date/end_date are timestamptz columns — Postgres accepts NULL
     // for "no limit" but rejects an empty string outright, so "" must be
     // normalized to null before it ever reaches the database.
-    onSave({ name: name.trim(), couponOn, coupon, isPercent, value: Number(value || 0), startDate: start || null, endDate: end || null });
+    onSave({ name: name.trim(), couponOn, coupon, isPercent, value: numValue, startDate: start || null, endDate: end || null });
   };
 
   return (
@@ -3278,7 +3290,7 @@ function PromotionModal({ onClose, onSave, promotions, editing }) {
           <button onClick={() => setIsPercent(false)} className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${!isPercent ? "border-teal-600 bg-teal-50 text-teal-700" : "border-stone-300 text-slate-600"}`}>{t("promoModal_fixed")}</button>
         </div>
       </Field>
-      <Field label={isPercent ? t("promoModal_discountPercent") : t("promoModal_discountAmount")}><input type="number" value={value} onChange={(e) => setValue(e.target.value)} className={inputCls} /></Field>
+      <Field label={isPercent ? t("promoModal_discountPercent") : t("promoModal_discountAmount")}><input type="number" min="0" max={isPercent ? 100 : undefined} value={value} onChange={(e) => setValue(e.target.value)} className={inputCls} /></Field>
       <div className="grid grid-cols-2 gap-3">
         <Field label={t("promoModal_start")}><input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} className={inputCls} /></Field>
         <Field label={t("promoModal_end")}><input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} className={inputCls} /></Field>
@@ -4493,6 +4505,19 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   // never added to the project's realtime publication, never fire at all,
   // which otherwise leaves the panel looking like "connect" silently did
   // nothing even though the write actually succeeded.
+  // The api/zatca-*.js endpoints run with the Supabase service-role key
+  // (bypasses RLS) and act on whatever tenantId is in the request body — so
+  // each call must also prove, via a real session access token, that the
+  // caller IS that tenant. Without this header the endpoint now rejects the
+  // request outright (see api/_auth.js's verifyTenantSession) instead of
+  // just trusting the tenantId string.
+  const zatcaAuthHeaders = async () => {
+    const { data } = await auth.getSession();
+    const token = data?.session?.access_token;
+    if (!token) throw new Error("no_session");
+    return { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
+  };
+
   // Calls the Vercel serverless function that generates the real secp256k1
   // key pair + CSR server-side (see api/zatca-generate-keys.js) — the
   // private key is encrypted there and never reaches this browser tab, only
@@ -4502,7 +4527,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   const generateZatcaCsr = async (businessCategory) => {
     const res = await fetch("/api/zatca-generate-keys", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await zatcaAuthHeaders(),
       body: JSON.stringify({
         tenantId,
         organizationName: merchant.name || "",
@@ -4529,7 +4554,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     if (!zatcaConfig?.csr) throw new Error("no_csr — generate a CSR first");
     const res = await fetch("/api/zatca-request-compliance-csid", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: await zatcaAuthHeaders(),
       body: JSON.stringify({ tenantId, otp }),
     });
     const data = await res.json();
@@ -4578,7 +4603,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     if (zatcaConfig?.publicKey) {
       const res = await fetch("/api/zatca-sign-invoice", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await zatcaAuthHeaders(),
         body: JSON.stringify({ tenantId, invoice, merchant, previousInvoiceHash }),
       });
       const data = await res.json();

@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import * as asn1js from 'asn1js';
+import { verifyTenantSession } from './_auth.js';
 
 // Server-side only, same pattern as send-verification-email.js: the tenant's
 // ZATCA private key and the AES key that encrypts it must never reach the
@@ -181,6 +182,9 @@ export default async function handler(req, res) {
   if (!tenantId || !organizationName || !vatNumber) {
     return res.status(400).json({ success: false, error: 'tenantId, organizationName, and vatNumber are required' });
   }
+
+  const authResult = await verifyTenantSession(req, supabaseAdmin, tenantId);
+  if (!authResult.ok) return res.status(authResult.status).json({ success: false, error: authResult.error });
 
   try {
     const privateKeyBytes = secp256k1.utils.randomSecretKey();

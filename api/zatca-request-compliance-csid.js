@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { verifyTenantSession } from './_auth.js';
 
 // Server-side only, same pattern as the other api/zatca-*.js files.
 const supabaseAdmin = createClient(
@@ -49,6 +50,9 @@ export default async function handler(req, res) {
   const { tenantId, otp } = req.body || {};
   if (!tenantId || !otp) return res.status(400).json({ success: false, error: 'tenantId and otp are required' });
   if (!/^\d{6}$/.test(otp)) return res.status(400).json({ success: false, error: 'invalid_otp' });
+
+  const authResult = await verifyTenantSession(req, supabaseAdmin, tenantId);
+  if (!authResult.ok) return res.status(authResult.status).json({ success: false, error: authResult.error });
 
   try {
     const { data: config, error: cfgErr } = await supabaseAdmin
