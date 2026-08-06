@@ -181,6 +181,77 @@ function buildSalesRows(invoices, start, end, method) {
   });
   return rows;
 }
+
+/* =========================================================================
+   RETENTION / COHORT ANALYSIS (admin — SaaS tenant retention). Cohort =
+   tenant's signup month; a tenant is "retained" in a given month if it has
+   ≥1 invoice (wallet top-ups count) in that calendar month.
+   ========================================================================= */
+function monthKey(iso) { return String(iso).slice(0, 7); } // "YYYY-MM"
+
+// Pure integer arithmetic on "YYYY-MM" — deliberately NOT Date.setMonth(),
+// which has no day component here to overflow but would still drag in
+// local-timezone conversion for zero benefit.
+function addMonths(mKey, n) {
+  const [y, m] = mKey.split("-").map(Number);
+  const total = y * 12 + (m - 1) + n;
+  const ny = Math.floor(total / 12);
+  const nm = (total % 12) + 1;
+  return `${ny}-${String(nm).padStart(2, "0")}`;
+}
+
+const RETENTION_MAX_OFFSET = 12; // cap columns so a years-old cohort can't blow up the table width
+
+// entities: [{ cohortPeriod: "YYYY-MM", activePeriods: Set<string>, ...extra }]
+// (extra fields like id/shopName are ignored here but fine to carry through
+// for the caller's own use, e.g. building a tenant picker)
+// Returns { rows: [{ cohortPeriod, size, offsets: [{ offset, retainedCount, pct, valid }] }], maxOffset }
+// `valid: false` means that offset's period hasn't happened yet for that
+// cohort (still in the future) — rendered as "—", not 0%, since "no data
+// yet" and "nobody came back" are very different things.
+function computeCohortRetention(entities) {
+  const currentPeriodKey = monthKey(new Date().toISOString());
+
+  const cohorts = new Map();
+  entities.forEach((e) => {
+    if (!cohorts.has(e.cohortPeriod)) cohorts.set(e.cohortPeriod, []);
+    cohorts.get(e.cohortPeriod).push(e);
+  });
+
+  const cohortKeys = [...cohorts.keys()].sort();
+  let maxOffset = 0;
+
+  const rows = cohortKeys.map((cohortPeriod) => {
+    const members = cohorts.get(cohortPeriod) || [];
+    const size = members.length;
+    const offsets = [];
+    for (let offset = 0; offset <= RETENTION_MAX_OFFSET; offset++) {
+      const periodAtOffset = addMonths(cohortPeriod, offset);
+      const valid = periodAtOffset <= currentPeriodKey;
+      if (!valid) break; // periods only move forward — once invalid, every later offset is too
+      maxOffset = Math.max(maxOffset, offset);
+      const retainedCount = size > 0 ? members.filter((m) => m.activePeriods.has(periodAtOffset)).length : 0;
+      const pct = size > 0 ? (retainedCount / size) * 100 : 0;
+      offsets.push({ offset, retainedCount, pct, valid: true });
+    }
+    return { cohortPeriod, size, offsets };
+  });
+
+  return { rows, maxOffset };
+}
+
+// Small color-tier scale for the cohort matrix cells — kept as its own pure
+// function (not inline JSX ternaries) to match this file's existing habit
+// (payMethodLabel, invoicePaymentStatus) of extracting small display-logic
+// helpers. Cyan-tinted to match the admin panel's existing dark theme.
+function retentionShade(pct) {
+  if (pct >= 75) return "bg-cyan-500/30 text-cyan-300";
+  if (pct >= 50) return "bg-cyan-500/20 text-cyan-300";
+  if (pct >= 25) return "bg-cyan-500/10 text-gray-300";
+  if (pct > 0) return "bg-slate-800 text-gray-400";
+  return "bg-slate-800/50 text-gray-600";
+}
+
 const uid = (p = "id") => `${p}_${Math.random().toString(36).slice(2, 9)}`;
 const sar = (n) => `${(Math.round((n + Number.EPSILON) * 100) / 100).toFixed(2)} SAR`;
 // Every upload in this app (product image, purchase invoice attachment) is
@@ -4807,6 +4878,7 @@ const ADMIN_NAV = [
   { key: "invoices", label: "الفواتير", icon: "📄" },
   { key: "sales", label: "المبيعات", icon: "💰" },
   { key: "reports", label: "التقارير", icon: "📊" },
+  { key: "retention", label: "احتفاظ المحلات", icon: "📈" },
   { key: "settings", label: "الإعدادات", icon: "⚙️" },
 ];
 
@@ -5271,6 +5343,142 @@ function AdminPlatformReportsView({ invoices, tenants, customerCounts }) {
   );
 }
 
+// Dedicated SaaS retention/cohort screen — deliberately its own top-level
+// admin nav tab, not nested inside "التقارير", so it doesn't get lost among
+// the other report sections. Three modes:
+//   - "all": every tenant, grouped into the standard cohort-by-signup-month
+//     matrix (one row per signup month) — platform-level "are shops sticking
+//     around" view.
+//   - "cohort": the same matrix filtered down to a single signup month —
+//     picking a cohort just narrows the tenant entities before the same
+//     computeCohortRetention() call, no separate code path needed.
+//   - "tenant": drills all the way down into ONE selected shop's OWN
+//     customers — a completely different entity set (that tenant's
+//     customers grouped by their first purchase month, not tenants grouped
+//     by signup month). "Is this specific shop's business itself active" is
+//     a degenerate single-row question with no useful "size" column; "are
+//     THIS shop's customers loyal" is the actually useful drill-down, and
+//     reuses the exact same computeCohortRetention() shape one level down.
+function AdminRetentionView({ invoices, tenants }) {
+  const [mode, setMode] = useState("all"); // "all" | "cohort" | "tenant"
+  const [selectedCohort, setSelectedCohort] = useState("");
+  const [selectedTenantId, setSelectedTenantId] = useState("");
+
+  const tenantEntities = tenants
+    .filter((t) => t.approvedDate)
+    .map((t) => ({
+      id: t.id,
+      shopName: t.shopName,
+      cohortPeriod: String(t.approvedDate).slice(0, 7),
+      activePeriods: new Set(invoices.filter((inv) => inv.tenantId === t.id).map((inv) => monthKey(inv.createdAt))),
+    }));
+  const cohortOptions = [...new Set(tenantEntities.map((e) => e.cohortPeriod))].sort();
+
+  useEffect(() => {
+    if (mode === "cohort" && !selectedCohort && cohortOptions.length > 0) setSelectedCohort(cohortOptions[0]);
+    if (mode === "tenant" && !selectedTenantId && tenantEntities.length > 0) setSelectedTenantId(tenantEntities[0].id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, cohortOptions.length, tenantEntities.length]);
+
+  // "tenant" mode swaps the entity set entirely: customers of the selected
+  // shop (grouped by customerId, cohort = their own first-purchase month),
+  // not tenants at all — same pattern createInvoice/POS already guarantee
+  // (every invoice has a real customerId).
+  const customerEntitiesForSelectedTenant = useMemo(() => {
+    if (mode !== "tenant" || !selectedTenantId) return [];
+    const byCustomer = new Map();
+    invoices.filter((inv) => inv.tenantId === selectedTenantId).forEach((inv) => {
+      if (!byCustomer.has(inv.customerId)) byCustomer.set(inv.customerId, []);
+      byCustomer.get(inv.customerId).push(inv);
+    });
+    return [...byCustomer.values()].map((custInvoices) => {
+      const periods = custInvoices.map((inv) => monthKey(inv.createdAt)).sort();
+      return { cohortPeriod: periods[0], activePeriods: new Set(periods) };
+    });
+  }, [mode, selectedTenantId, invoices]);
+
+  const entitiesForView = mode === "cohort" ? tenantEntities.filter((e) => e.cohortPeriod === selectedCohort)
+    : mode === "tenant" ? customerEntitiesForSelectedTenant
+    : tenantEntities;
+  const retention = computeCohortRetention(entitiesForView);
+  const selectedTenantName = mode === "tenant" ? tenantEntities.find((e) => e.id === selectedTenantId)?.shopName : null;
+  const cohortColLabel = mode === "tenant" ? "دفعة أول شراء" : "دفعة التسجيل";
+  const sizeColLabel = mode === "tenant" ? "عدد العملاء" : "عدد المحلات";
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold mb-6">احتفاظ المحلات (Retention & Cohorts)</h1>
+
+      <div className="flex flex-wrap items-center gap-3 mb-6 bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <div className="flex gap-2">
+          <button onClick={() => setMode("all")} className={`px-4 py-2 rounded-lg text-sm font-medium ${mode === "all" ? "bg-cyan-500 text-slate-950" : "bg-slate-800 text-gray-300"}`}>كل المحلات</button>
+          <button onClick={() => setMode("cohort")} className={`px-4 py-2 rounded-lg text-sm font-medium ${mode === "cohort" ? "bg-cyan-500 text-slate-950" : "bg-slate-800 text-gray-300"}`}>دفعة معينة</button>
+          <button onClick={() => setMode("tenant")} className={`px-4 py-2 rounded-lg text-sm font-medium ${mode === "tenant" ? "bg-cyan-500 text-slate-950" : "bg-slate-800 text-gray-300"}`}>محل معين</button>
+        </div>
+
+        {mode === "cohort" && (
+          cohortOptions.length > 0 ? (
+            <select value={selectedCohort} onChange={(e) => setSelectedCohort(e.target.value)} className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white" dir="ltr">
+              {cohortOptions.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          ) : <span className="text-sm text-gray-500">ما فيه دفعات تسجيل بعد.</span>
+        )}
+        {mode === "tenant" && (
+          tenantEntities.length > 0 ? (
+            <select value={selectedTenantId} onChange={(e) => setSelectedTenantId(e.target.value)} className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white">
+              {tenantEntities.map((e) => <option key={e.id} value={e.id}>{e.shopName}</option>)}
+            </select>
+          ) : <span className="text-sm text-gray-500">ما فيه محلات بعد.</span>
+        )}
+      </div>
+
+      {mode === "tenant" && selectedTenantName && (
+        <div className="mb-3 text-sm text-gray-400">احتفاظ عملاء محل: <span className="text-white font-semibold">{selectedTenantName}</span></div>
+      )}
+
+      {entitiesForView.length === 0 ? (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 text-sm text-gray-500">ما فيه بيانات كافية.</div>
+      ) : (
+        <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <tr>
+                  <th className="px-3 py-2 text-center" style={{ width: `${100 / (retention.maxOffset + 2)}%` }}>{cohortColLabel}</th>
+                  <th className="px-3 py-2 text-center" style={{ width: `${100 / (retention.maxOffset + 2)}%` }}>{sizeColLabel}</th>
+                  {Array.from({ length: retention.maxOffset + 1 }, (_, o) => o).map((o) => (
+                    <th key={o} className="px-2 py-2 text-center font-mono" dir="ltr" style={{ width: `${100 / (retention.maxOffset + 2)}%` }}>+{o}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800">
+                {retention.rows.map((row) => (
+                  <tr key={row.cohortPeriod}>
+                    <td className="px-3 py-2 text-center font-mono text-gray-300" dir="ltr">{row.cohortPeriod}</td>
+                    <td className="px-3 py-2 text-center font-mono text-gray-300">{row.size}</td>
+                    {Array.from({ length: retention.maxOffset + 1 }, (_, o) => o).map((o) => {
+                      const cell = row.offsets[o];
+                      return (
+                        <td key={o} className="px-1 py-1 text-center">
+                          {cell ? (
+                            <div className={`mx-auto rounded-md py-1.5 font-mono text-xs font-semibold ${retentionShade(cell.pct)}`}>{cell.pct.toFixed(0)}%</div>
+                          ) : (
+                            <span className="text-gray-700">—</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Every subcollection a tenant document can own (mirrors the onSnapshot list
 // in LaundryOpsApp) — deleted before the tenant doc itself, since Firestore
 // never cascades deletes on its own and orphaned subcollections would keep
@@ -5333,7 +5541,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   const tenantIdsKey = tenants.map((t) => t.id).join(",");
 
   useEffect(() => {
-    if (!["invoices", "sales", "reports"].includes(tab) || tenants.length === 0) {
+    if (!["invoices", "sales", "reports", "retention"].includes(tab) || tenants.length === 0) {
       setAllInvoices([]);
       setTenantCustomerCounts({});
       return;
@@ -5624,6 +5832,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
         {tab === "invoices" && <AdminAllInvoicesView invoices={liveInvoices} />}
         {tab === "sales" && <AdminSalesLeaderboardView invoices={liveInvoices} tenants={tenants} />}
         {tab === "reports" && <AdminPlatformReportsView invoices={liveInvoices} tenants={tenants} customerCounts={liveCustomerCounts} />}
+        {tab === "retention" && <AdminRetentionView invoices={liveInvoices} tenants={tenants} />}
 
         {tab === "settings" && (
           <div className="max-w-xl space-y-6">
