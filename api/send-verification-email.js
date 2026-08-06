@@ -21,7 +21,17 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 // work" symptom. A displayed one-time code that the user types into the app
 // (verified via auth.verifyOtp() on an explicit button press) has no URL
 // for anything to pre-fetch, so only a real user action can consume it.
+// shopName comes straight from the public signup form (this endpoint needs
+// no auth — anyone can call it) and gets interpolated into an HTML email
+// body, not React JSX, so it gets none of JSX's automatic escaping. Without
+// this, a shop name like `<img src=x onerror=...>` would inject live HTML
+// into a real branded email sent from no-reply@ragwapos.com.
+function escHtml(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 function emailHtml({ shopName, otp }) {
+  const safeShopName = escHtml(shopName);
   return `
   <div style="font-family: Arial, sans-serif; background:#f4f6f8; padding:32px 0;">
     <div style="max-width:480px; margin:0 auto; background:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,0.06);">
@@ -30,7 +40,7 @@ function emailHtml({ shopName, otp }) {
         <div style="font-size:12px; color:#94a3b8; margin-top:4px;">THE LEADING LAUNDRY ASSISTANT</div>
       </div>
       <div style="padding:32px; text-align:center; direction:rtl;">
-        <h1 style="font-size:20px; color:#0f172a; margin:0 0 12px;">أهلًا ${shopName ? `— ${shopName}` : ''} 👋</h1>
+        <h1 style="font-size:20px; color:#0f172a; margin:0 0 12px;">أهلًا ${safeShopName ? `— ${safeShopName}` : ''} 👋</h1>
         <p style="font-size:14px; color:#475569; line-height:1.7; margin:0 0 24px;">
           شكرًا لتسجيلك في رغوة. ارجع لصفحة التسجيل وحط رمز التحقق التالي لتفعيل حسابك.
         </p>

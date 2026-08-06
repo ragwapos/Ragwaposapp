@@ -183,6 +183,25 @@ function buildSalesRows(invoices, start, end, method) {
 }
 const uid = (p = "id") => `${p}_${Math.random().toString(36).slice(2, 9)}`;
 const sar = (n) => `${(Math.round((n + Number.EPSILON) * 100) / 100).toFixed(2)} SAR`;
+// Every upload in this app (product image, purchase invoice attachment) is
+// read via FileReader.readAsDataURL and stored as a base64 string directly
+// in a Postgres text column — there's no object-storage backend, no server
+// size limit, and no real content check (file.type is client-reported and
+// trivially spoofable, so this is a sanity check, not a security boundary).
+// Unbounded, this both bloats every row a plain `select("*")` fetches for
+// the whole tenant on every load, and lets arbitrary bytes get stored
+// behind a misleading name/type for a colleague to later download and
+// open. This narrows that window; it does not close it — a real fix means
+// moving to Supabase Storage with actual server-side validation.
+const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
+const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+const ALLOWED_ATTACHMENT_TYPES = [...ALLOWED_IMAGE_TYPES, "application/pdf"];
+function validateUploadedFile(file, { maxBytes, allowedTypes }) {
+  if (allowedTypes && !allowedTypes.includes(file.type)) return "upload_badType";
+  if (file.size > maxBytes) return "upload_tooLarge";
+  return null;
+}
 // Quick-glance list columns only (customers wallet/debt, product price,
 // delivery fee, supplier balance, expense amount) — keeps them from growing
 // with the number's length (a 6-figure balance shouldn't be what forces the
@@ -826,6 +845,7 @@ const DICT = {
     products_liveOnPos: "Live on POS", products_draft: "Saved as Draft", products_save: "Save Product",
     products_editTitle: "Edit Product", products_saveChanges: "Save Changes",
     products_errName: "Enter a product name.", products_errCategory: "Choose or add a category.",
+    upload_tooLarge: "File is too large.", upload_badType: "Unsupported file type.",
     products_errService: "You must set the price of at least one service.",
     products_table_product: "Product", products_table_category: "Category", products_table_services: "Services",
     products_table_from: "From", products_table_cost: "Cost", products_table_status: "Status",
@@ -1043,6 +1063,7 @@ const DICT = {
     products_liveOnPos: "مفعّل في نقطة البيع", products_draft: "محفوظ كمسودة", products_save: "حفظ المنتج",
     products_editTitle: "تعديل المنتج", products_saveChanges: "حفظ التعديلات",
     products_errName: "حط اسم المنتج.", products_errCategory: "اختر أو أضف فئة.",
+    upload_tooLarge: "حجم الملف كبير جداً.", upload_badType: "نوع الملف غير مدعوم.",
     products_errService: "لازم تحط سعر خدمة واحدة على الأقل.",
     products_table_product: "المنتج", products_table_category: "الفئة", products_table_services: "الخدمات",
     products_table_from: "يبدأ من", products_table_cost: "التكلفة", products_table_status: "الحالة",
@@ -1260,6 +1281,7 @@ const DICT = {
     products_liveOnPos: "پوائنٹ آف سیل پر فعال", products_draft: "ڈرافٹ کے طور پر محفوظ", products_save: "پروڈکٹ محفوظ کریں",
     products_editTitle: "پروڈکٹ میں ترمیم کریں", products_saveChanges: "تبدیلیاں محفوظ کریں",
     products_errName: "پروڈکٹ کا نام درج کریں۔", products_errCategory: "کیٹگری منتخب کریں یا شامل کریں۔",
+    upload_tooLarge: "فائل بہت بڑی ہے۔", upload_badType: "فائل کی قسم معاون نہیں ہے۔",
     products_errService: "کم از کم ایک سروس کی قیمت درج کرنا لازمی ہے۔",
     products_table_product: "پروڈکٹ", products_table_category: "کیٹگری", products_table_services: "سروسز",
     products_table_from: "شروع قیمت", products_table_cost: "لاگت", products_table_status: "صورتحال",
@@ -2750,6 +2772,8 @@ function EditProductModal({ product, categories, addCategory, serviceTypes, addS
   };
   const handleFile = (e) => {
     const file = e.target.files?.[0]; if (!file) return;
+    const err = validateUploadedFile(file, { maxBytes: MAX_IMAGE_BYTES, allowedTypes: ALLOWED_IMAGE_TYPES });
+    if (err) { setFormError(t(err)); e.target.value = ""; return; }
     const reader = new FileReader();
     reader.onload = () => setImgPreview(reader.result);
     reader.readAsDataURL(file);
@@ -2875,6 +2899,8 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
 
   const handleFile = (e) => {
     const file = e.target.files?.[0]; if (!file) return;
+    const err = validateUploadedFile(file, { maxBytes: MAX_IMAGE_BYTES, allowedTypes: ALLOWED_IMAGE_TYPES });
+    if (err) { setFormError(t(err)); e.target.value = ""; return; }
     const reader = new FileReader();
     reader.onload = () => setImgPreview(reader.result);
     reader.readAsDataURL(file);
@@ -3056,6 +3082,8 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
   const handlePurchaseFile = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const err = validateUploadedFile(file, { maxBytes: MAX_ATTACHMENT_BYTES, allowedTypes: ALLOWED_ATTACHMENT_TYPES });
+    if (err) { setPurchaseError(t(err)); e.target.value = ""; return; }
     const reader = new FileReader();
     reader.onload = () => { setAttachment(reader.result); setAttachmentName(file.name); };
     reader.readAsDataURL(file);
