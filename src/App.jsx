@@ -596,6 +596,11 @@ function buildPrintableHtml(doc) {
 </head><body>${header}${body}</body></html>`;
 }
 
+// Shown in the placeholder tab window.open()'d synchronously on click, for
+// the rare case the background PDF prep (see PrintDocumentModal) hasn't
+// finished yet — a real "preparing" message instead of a truly blank tab.
+const WHATSAPP_PREPARING_HTML = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>رغوة</title><style>body{font-family:sans-serif;background:#0f172a;color:#e2e8f0;height:100vh;margin:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:15px}</style></head><body><div>جارٍ تجهيز الفاتورة لإرسالها عبر واتساب…</div></body></html>`;
+
 function PrintDocumentModal({ doc, onClose }) {
   const { t } = useLang();
   const isTax = doc.kind === "tax";
@@ -673,25 +678,21 @@ function PrintDocumentModal({ doc, onClose }) {
   // Rasterizes the very same .print-area node below (ref'd, not re-rendered
   // offscreen) into a PDF and uploads it, so Arabic renders exactly as the
   // browser already shapes it here — no separate font-embedding pipeline.
-  // Deliberately on-demand (only when the cashier actually clicks "واتساب"),
-  // not generated for every sale — most receipts are never shared, and this
-  // keeps the common case (print-only) exactly as fast as it was before.
+  // Started in the background the moment this modal MOUNTS (see the effect
+  // below), not when "واتساب" is clicked — a cashier normally spends a few
+  // seconds looking at / printing the receipt first, so by the time they
+  // actually click, the upload has usually already finished and the click
+  // just opens wa.me directly with zero wait and no placeholder tab. Only a
+  // click within that first second or two still has to wait on it.
   const printAreaRef = useRef(null);
   const [whatsappSending, setWhatsappSending] = useState(false);
   const [whatsappError, setWhatsappError] = useState("");
+  const [pdfUrl, setPdfUrl] = useState(null);
+  const pdfPrepRef = useRef(null);
 
-  const shareOnWhatsApp = async () => {
-    if (!doc.customerPhone || whatsappSending) return;
-    setWhatsappError("");
-    setWhatsappSending(true);
-    // Opened synchronously, inside the click handler's own call stack —
-    // by the time the PDF is generated and uploaded below (several awaits
-    // later), the browser no longer considers a fresh window.open() call
-    // "user-initiated" and popup-blocks it. Opening a blank tab right away
-    // and redirecting it once the wa.me URL is known keeps the original
-    // click's permission alive.
-    const waTab = window.open("", "_blank");
-    try {
+  const preparePdfUrl = () => {
+    if (pdfPrepRef.current) return pdfPrepRef.current;
+    const promise = (async () => {
       const { data } = await auth.getUser();
       const uid = data?.user?.id;
       if (!uid) throw new Error("no_session");
@@ -700,11 +701,46 @@ function PrintDocumentModal({ doc, onClose }) {
       const { error: uploadErr } = await db.storage.from("invoice-pdfs").upload(path, blob, { contentType: "application/pdf" });
       if (uploadErr) throw uploadErr;
       const { data: pub } = db.storage.from("invoice-pdfs").getPublicUrl(path);
+      return pub?.publicUrl || "";
+    })();
+    pdfPrepRef.current = promise;
+    return promise;
+  };
+
+  useEffect(() => {
+    // Skipped entirely in silent auto-print mode (see `silent` below) —
+    // that mode never renders a "واتساب" button for anyone to click, so
+    // preparing a PDF for it would just be a wasted upload.
+    if (!doc.customerPhone || silent) return;
+    preparePdfUrl().then(setPdfUrl).catch((e) => {
+      console.error("background whatsapp pdf prep failed", e);
+      pdfPrepRef.current = null; // let a manual click retry from scratch
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const shareOnWhatsApp = async () => {
+    if (!doc.customerPhone || whatsappSending) return;
+    setWhatsappError("");
+    setWhatsappSending(true);
+    let waTab = null;
+    try {
+      let url = pdfUrl;
+      if (url === null) {
+        // Background prep hasn't resolved yet — still open synchronously,
+        // inside this click's own call stack, so the browser doesn't
+        // popup-block it once the awaits below run; show a real "preparing"
+        // message in it instead of leaving it blank while we wait.
+        waTab = window.open("", "_blank");
+        if (waTab) waTab.document.write(WHATSAPP_PREPARING_HTML);
+        url = await preparePdfUrl();
+        setPdfUrl(url);
+      }
       const message = fillWhatsAppTemplate(doc.whatsappTemplate, {
         customer_name: doc.customerName || "",
         invoice_id: doc.invoiceCode || "",
         store_name: doc.merchant?.name || "",
-        invoice_url: pub?.publicUrl || "",
+        invoice_url: url,
         total_amount: doc.totals?.gross != null ? doc.totals.gross.toFixed(2) : "",
       });
       const waUrl = `https://wa.me/${cleanPhoneForWhatsApp(doc.customerPhone)}?text=${encodeURIComponent(message)}`;
