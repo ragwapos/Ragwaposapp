@@ -1814,9 +1814,8 @@ function AddCustomerModal({ customers, onClose, onSave }) {
           customer ledger's name column wider than its allotted share. */}
       <Field label={t("addCustomer_name")}><input autoFocus value={name} onChange={(e) => setName(e.target.value.slice(0, 15))} maxLength={15} className={inputCls} /></Field>
       <Field label={t("addCustomer_mobile")}>
-        <input value={mobile} onChange={(e) => setMobile(normalizeSaudiMobile(e.target.value))} placeholder="05XXXXXXXX" maxLength={12} dir="ltr" className={`${inputCls} ${mobileInvalid ? "border-rose-400" : ""}`} />
+        <input value={mobile} onChange={(e) => setMobile(normalizeSaudiMobile(e.target.value))} placeholder="05XXXXXXXX" maxLength={12} dir="ltr" className={`${inputCls} ${mobileTaken ? "border-rose-400" : ""}`} />
         {mobileTaken && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("addCustomer_mobileTaken", { id: existingByMobile.id, name: existingByMobile.name })}</div>}
-        {!mobileTaken && mobileFormatInvalid && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("addCustomer_mobileInvalid")}</div>}
       </Field>
       <button
         disabled={!name.trim() || idInvalid || mobileInvalid}
