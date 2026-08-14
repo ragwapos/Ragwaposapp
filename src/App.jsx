@@ -4,7 +4,7 @@ import {
   Truck, Tag, BarChart3, Wallet, ImageIcon, Ban, ArrowRight, Trash2, CreditCard,
   Banknote, Percent, Clock, Mail, AlertTriangle, CheckCircle2, Circle, Upload,
   ReceiptText, Building2, FileText, Sparkles, Settings, Globe, Lock, Pencil, Paperclip,
-  MessageCircle
+  MessageCircle, Loader2
 } from "lucide-react";
 import QRCode from "qrcode";
 // auth/db here are supabase.auth / the Supabase client (see src/supabase.js).
@@ -601,6 +601,39 @@ function buildPrintableHtml(doc) {
 // finished yet — a real "preparing" message instead of a truly blank tab.
 const WHATSAPP_PREPARING_HTML = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>رغوة</title><style>body{font-family:sans-serif;background:#0f172a;color:#e2e8f0;height:100vh;margin:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:15px}</style></head><body><div>جارٍ تجهيز الفاتورة لإرسالها عبر واتساب…</div></body></html>`;
 
+// api.whatsapp.com/send is WhatsApp's own "Click to Chat" API endpoint —
+// wa.me is a short link that itself redirects here, so calling it directly
+// skips that extra redirect hop.
+// On desktop, WhatsApp Desktop registers a whatsapp:// protocol handler at
+// install time; trying it first can skip WhatsApp Web's own load time
+// entirely. There's no reliable way from a web page to confirm the OS
+// actually switched to the app, so this uses the standard heuristic other
+// sites use for this same problem (Slack, Zoom, etc.): fire the deep link,
+// and treat the browser window losing focus (`blur`) within the next
+// ~1.2s as "handed off successfully" and skip the web fallback; otherwise
+// assume the app isn't installed/registered and fall back automatically.
+// Imperfect (an unrelated alt-tab in that window could suppress the
+// fallback) but strictly additive — mobile skips this path entirely, since
+// wa.me/api.whatsapp.com already hands off to the native app there via the
+// OS's own app-link mechanism with no extra step needed.
+function openWhatsApp(tab, phone, message) {
+  const encoded = encodeURIComponent(message);
+  const webUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encoded}`;
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const goWeb = () => { if (tab) tab.location.href = webUrl; else window.open(webUrl, "_blank"); };
+  if (isMobile) { goWeb(); return; }
+
+  let handedOff = false;
+  const onBlur = () => { handedOff = true; };
+  window.addEventListener("blur", onBlur, { once: true });
+  const deepLink = `whatsapp://send?phone=${phone}&text=${encoded}`;
+  if (tab) tab.location.href = deepLink; else window.open(deepLink, "_blank");
+  setTimeout(() => {
+    window.removeEventListener("blur", onBlur);
+    if (!handedOff) goWeb();
+  }, 1200);
+}
+
 function PrintDocumentModal({ doc, onClose }) {
   const { t } = useLang();
   const isTax = doc.kind === "tax";
@@ -723,15 +756,15 @@ function PrintDocumentModal({ doc, onClose }) {
     if (!doc.customerPhone || whatsappSending) return;
     setWhatsappError("");
     setWhatsappSending(true);
-    let waTab = null;
+    // Opened synchronously, inside this click's own call stack, whether or
+    // not the PDF is ready yet — needed both to stay popup-blocker-safe if
+    // we still have to await preparePdfUrl() below, and to give
+    // openWhatsApp a stable tab to redirect (desktop-app attempt, then web
+    // fallback) either way.
+    const waTab = window.open("", "_blank");
     try {
       let url = pdfUrl;
       if (url === null) {
-        // Background prep hasn't resolved yet — still open synchronously,
-        // inside this click's own call stack, so the browser doesn't
-        // popup-block it once the awaits below run; show a real "preparing"
-        // message in it instead of leaving it blank while we wait.
-        waTab = window.open("", "_blank");
         if (waTab) waTab.document.write(WHATSAPP_PREPARING_HTML);
         url = await preparePdfUrl();
         setPdfUrl(url);
@@ -743,8 +776,7 @@ function PrintDocumentModal({ doc, onClose }) {
         invoice_url: url,
         total_amount: doc.totals?.gross != null ? doc.totals.gross.toFixed(2) : "",
       });
-      const waUrl = `https://wa.me/${cleanPhoneForWhatsApp(doc.customerPhone)}?text=${encodeURIComponent(message)}`;
-      if (waTab) waTab.location.href = waUrl; else window.open(waUrl, "_blank");
+      openWhatsApp(waTab, cleanPhoneForWhatsApp(doc.customerPhone), message);
     } catch (e) {
       console.error("shareOnWhatsApp failed", e);
       if (waTab) waTab.close();
@@ -857,7 +889,7 @@ function PrintDocumentModal({ doc, onClose }) {
             {/* Manual click always prints exactly one copy — "عدد النسخ" only governs the automatic (no-click) auto-print above. */}
             <button onClick={() => printInNewWindow(1)} className="flex-1 rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("print_printBtn")}</button>
             <button onClick={shareOnWhatsApp} disabled={!doc.customerPhone || whatsappSending} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 py-2.5 font-semibold text-white hover:bg-emerald-700 disabled:opacity-40">
-              <MessageCircle size={16} /> {whatsappSending ? t("print_whatsappSending") : t("print_whatsappBtn")}
+              {whatsappSending ? <Loader2 size={16} className="animate-spin" /> : <MessageCircle size={16} />} {whatsappSending ? t("print_whatsappSending") : t("print_whatsappBtn")}
             </button>
             <button onClick={onClose} className="rounded-lg border border-stone-300 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-stone-50">{t("print_close")}</button>
           </div>
