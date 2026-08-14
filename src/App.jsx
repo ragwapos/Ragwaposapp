@@ -4226,6 +4226,23 @@ const WHATSAPP_TAGS = ["customer_name", "invoice_id", "store_name", "invoice_url
 // appears once it's on, prompting the owner to customize their message.
 function WhatsAppSettingsPanel({ whatsappEnabled, setWhatsappEnabled, whatsappTemplate, setWhatsappTemplate }) {
   const { t } = useLang();
+  const textareaRef = useRef(null);
+
+  // Inserts {tag} at the cursor (or replaces the current selection) instead
+  // of appending blindly to the end, so the owner can drop a tag anywhere
+  // mid-sentence — click, keep typing, no manual copy/paste needed.
+  const insertTag = (tag) => {
+    const insertion = `{${tag}}`;
+    const el = textareaRef.current;
+    if (!el) { setWhatsappTemplate((whatsappTemplate || "") + insertion); return; }
+    const start = el.selectionStart ?? whatsappTemplate.length;
+    const end = el.selectionEnd ?? whatsappTemplate.length;
+    const next = whatsappTemplate.slice(0, start) + insertion + whatsappTemplate.slice(end);
+    setWhatsappTemplate(next);
+    const cursor = start + insertion.length;
+    requestAnimationFrame(() => { el.focus(); el.setSelectionRange(cursor, cursor); });
+  };
+
   return (
     <div className="pt-3 mt-1 border-t border-stone-200">
       <div className="flex items-center justify-between">
@@ -4238,6 +4255,7 @@ function WhatsAppSettingsPanel({ whatsappEnabled, setWhatsappEnabled, whatsappTe
       {whatsappEnabled && (
         <div className="mt-3">
           <textarea
+            ref={textareaRef}
             value={whatsappTemplate}
             onChange={(e) => setWhatsappTemplate(e.target.value)}
             placeholder={DEFAULT_WHATSAPP_TEMPLATE}
@@ -4247,7 +4265,7 @@ function WhatsAppSettingsPanel({ whatsappEnabled, setWhatsappEnabled, whatsappTe
           />
           <div className="mt-2 flex flex-wrap gap-1.5">
             {WHATSAPP_TAGS.map((tag) => (
-              <code key={tag} className="rounded bg-stone-100 px-1.5 py-0.5 text-[11px] text-slate-600" dir="ltr">{`{${tag}}`}</code>
+              <button key={tag} type="button" onClick={() => insertTag(tag)} className="rounded bg-stone-100 px-1.5 py-0.5 text-[11px] font-mono text-slate-600 transition hover:bg-teal-100 hover:text-teal-800" dir="ltr">{`{${tag}}`}</button>
             ))}
           </div>
         </div>
