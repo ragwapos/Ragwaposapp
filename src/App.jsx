@@ -596,41 +596,42 @@ function buildPrintableHtml(doc) {
 </head><body>${header}${body}</body></html>`;
 }
 
-// Shown in the placeholder tab window.open()'d synchronously on click, for
-// the rare case the background PDF prep (see PrintDocumentModal) hasn't
-// finished yet — a real "preparing" message instead of a truly blank tab.
-const WHATSAPP_PREPARING_HTML = `<!doctype html><html dir="rtl" lang="ar"><head><meta charset="utf-8"><title>رغوة</title><style>body{font-family:sans-serif;background:#0f172a;color:#e2e8f0;height:100vh;margin:0;display:flex;align-items:center;justify-content:center;text-align:center;font-size:15px}</style></head><body><div>جارٍ تجهيز الفاتورة لإرسالها عبر واتساب…</div></body></html>`;
-
 // api.whatsapp.com/send is WhatsApp's own "Click to Chat" API endpoint —
 // wa.me is a short link that itself redirects here, so calling it directly
 // skips that extra redirect hop.
-// On desktop, WhatsApp Desktop registers a whatsapp:// protocol handler at
-// install time; trying it first can skip WhatsApp Web's own load time
-// entirely. There's no reliable way from a web page to confirm the OS
-// actually switched to the app, so this uses the standard heuristic other
-// sites use for this same problem (Slack, Zoom, etc.): fire the deep link,
-// and treat the browser window losing focus (`blur`) within the next
-// ~1.2s as "handed off successfully" and skip the web fallback; otherwise
-// assume the app isn't installed/registered and fall back automatically.
-// Imperfect (an unrelated alt-tab in that window could suppress the
-// fallback) but strictly additive — mobile skips this path entirely, since
-// wa.me/api.whatsapp.com already hands off to the native app there via the
-// OS's own app-link mechanism with no extra step needed.
-function openWhatsApp(tab, phone, message) {
+// On desktop, the native attempt below goes through a hidden iframe rather
+// than window.open()/location.href — a custom-protocol navigation there
+// never touches this tab or opens a blank one: if WhatsApp Desktop has the
+// whatsapp:// handler registered, the OS switches to it; if not, the
+// iframe's failed navigation is invisible, no error page, no popup. The POS
+// tab itself is never touched either way.
+// There's no reliable way from a web page to confirm the OS actually
+// switched to the app, so this uses the standard heuristic other sites use
+// for this same problem (Slack, Zoom, etc.): treat the browser window
+// losing focus (`blur`) within the next ~1.2s as "handed off successfully"
+// and skip the web fallback; otherwise assume the app isn't
+// installed/registered and open the web version in a genuinely new tab —
+// the ONLY point anything new gets opened. Imperfect (an unrelated alt-tab
+// could suppress the fallback) but strictly additive — mobile skips this
+// path entirely, since wa.me/api.whatsapp.com already hands off to the
+// native app there via the OS's own app-link mechanism with no extra step.
+function openWhatsApp(phone, message) {
   const encoded = encodeURIComponent(message);
   const webUrl = `https://api.whatsapp.com/send?phone=${phone}&text=${encoded}`;
   const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  const goWeb = () => { if (tab) tab.location.href = webUrl; else window.open(webUrl, "_blank"); };
-  if (isMobile) { goWeb(); return; }
+  if (isMobile) { window.open(webUrl, "_blank"); return; }
 
   let handedOff = false;
   const onBlur = () => { handedOff = true; };
   window.addEventListener("blur", onBlur, { once: true });
-  const deepLink = `whatsapp://send?phone=${phone}&text=${encoded}`;
-  if (tab) tab.location.href = deepLink; else window.open(deepLink, "_blank");
+  const iframe = document.createElement("iframe");
+  iframe.style.display = "none";
+  iframe.src = `whatsapp://send?phone=${phone}&text=${encoded}`;
+  document.body.appendChild(iframe);
   setTimeout(() => {
+    iframe.remove();
     window.removeEventListener("blur", onBlur);
-    if (!handedOff) goWeb();
+    if (!handedOff) window.open(webUrl, "_blank");
   }, 1200);
 }
 
@@ -713,23 +714,23 @@ function PrintDocumentModal({ doc, onClose }) {
   // Arabic renders exactly as the browser already shapes it here (no font
   // embedding) AND the customer sees the receipt as an inline WhatsApp
   // thumbnail instead of having to open a separate PDF viewer.
+  // Only runs at all when this tenant has WhatsApp sharing turned on (see
+  // "واتس" in Settings) — everyone else never triggers any of this.
   // Started in the background the moment this modal MOUNTS (see the effect
-  // below), not when "واتساب" is clicked — a cashier normally spends a few
-  // seconds looking at / printing the receipt first, so by the time they
-  // actually click, the upload has usually already finished and the click
-  // just opens wa.me directly with zero wait and no placeholder tab. Only a
-  // click within that first second or two still has to wait on it.
+  // below), not when "واتساب" is clicked, so by the time a cashier at a
+  // shop that uses this feature actually clicks, the upload has usually
+  // already finished and the click opens WhatsApp with zero wait.
   const printAreaRef = useRef(null);
   const [whatsappSending, setWhatsappSending] = useState(false);
   const [whatsappError, setWhatsappError] = useState("");
   const [imageUrl, setImageUrl] = useState(null);
   const imagePrepRef = useRef(null);
-  // Set the instant Print or Close is clicked (see cancelBackgroundPrep
-  // below) — html2canvas is synchronous, main-thread work, so while it's
-  // rasterizing, EVERY click (including Print/Close) queues up and waits
-  // for it to finish. A cashier who isn't sharing this receipt shouldn't
-  // pay that cost, so the kickoff below is delayed and skipped if this
-  // flag is already set by the time it would run.
+  // Set the instant Print or Close is clicked — html2canvas is synchronous,
+  // main-thread work, so a click landing while it's already running still
+  // has to wait for it either way (JS can't interrupt its own currently-
+  // running code); this just stops the THEN-finished result from doing
+  // anything further (no pointless setImageUrl call) once the cashier has
+  // already moved on to the next sale.
   const cancelledRef = useRef(false);
   const cancelBackgroundPrep = () => { cancelledRef.current = true; };
 
@@ -755,24 +756,15 @@ function PrintDocumentModal({ doc, onClose }) {
   };
 
   useEffect(() => {
-    // Skipped entirely in silent auto-print mode (see `silent` below) —
-    // that mode never renders a "واتساب" button for anyone to click, so
-    // preparing an image for it would just be a wasted upload.
-    if (!doc.customerPhone || silent) return;
-    // Delayed rather than fired immediately on mount: most "print and move
-    // to the next sale" cashiers click Print/Close within this window, so
-    // cancelBackgroundPrep() (see the buttons below) sets cancelledRef
-    // before this timer ever fires — the common case now costs nothing.
-    // Only a cashier who actually pauses on the receipt pays the (short,
-    // one-time) html2canvas cost.
-    const timer = setTimeout(() => {
-      if (cancelledRef.current) return;
-      prepareImageUrl().then((url) => { if (!cancelledRef.current) setImageUrl(url); }).catch((e) => {
-        console.error("background whatsapp image prep failed", e);
-        imagePrepRef.current = null; // let a manual click retry from scratch
-      });
-    }, 500);
-    return () => clearTimeout(timer);
+    // Skipped entirely when this tenant hasn't turned WhatsApp sharing on,
+    // or in silent auto-print mode (neither renders a "واتساب" button for
+    // anyone to click), or with no phone to share to — preparing an image
+    // in any of those cases would just be a wasted upload.
+    if (!doc.whatsappEnabled || !doc.customerPhone || silent) return;
+    prepareImageUrl().then((url) => { if (!cancelledRef.current) setImageUrl(url); }).catch((e) => {
+      console.error("background whatsapp image prep failed", e);
+      imagePrepRef.current = null; // let a manual click retry from scratch
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -780,19 +772,10 @@ function PrintDocumentModal({ doc, onClose }) {
     if (!doc.customerPhone || whatsappSending) return;
     setWhatsappError("");
     setWhatsappSending(true);
-    // Opened synchronously, inside this click's own call stack, whether or
-    // not the image is ready yet — needed both to stay popup-blocker-safe
-    // if we still have to await prepareImageUrl() below, and to give
-    // openWhatsApp a stable tab to redirect (desktop-app attempt, then web
-    // fallback) either way.
-    const waTab = window.open("", "_blank");
     try {
       let url = imageUrl;
-      if (url === null) {
-        if (waTab) waTab.document.write(WHATSAPP_PREPARING_HTML);
-        url = await prepareImageUrl();
-        setImageUrl(url);
-      }
+      if (url === null) url = await prepareImageUrl(); // rare — the button's own spinner covers this wait
+      setImageUrl(url);
       const message = fillWhatsAppTemplate(doc.whatsappTemplate, {
         customer_name: doc.customerName || "",
         invoice_id: doc.invoiceCode || "",
@@ -800,10 +783,9 @@ function PrintDocumentModal({ doc, onClose }) {
         invoice_url: url,
         total_amount: doc.totals?.gross != null ? doc.totals.gross.toFixed(2) : "",
       });
-      openWhatsApp(waTab, cleanPhoneForWhatsApp(doc.customerPhone), message);
+      openWhatsApp(cleanPhoneForWhatsApp(doc.customerPhone), message);
     } catch (e) {
       console.error("shareOnWhatsApp failed", e);
-      if (waTab) waTab.close();
       setWhatsappError(t("print_whatsappError"));
     }
     setWhatsappSending(false);
@@ -907,14 +889,16 @@ function PrintDocumentModal({ doc, onClose }) {
         </div>
 
         <div className="no-print flex shrink-0 flex-col gap-2 border-t border-stone-200 p-4 bg-white">
-          {whatsappError && <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{whatsappError}</div>}
-          {!doc.customerPhone && <div className="text-center text-[11px] text-slate-400">{t("print_whatsappNoPhone")}</div>}
+          {doc.whatsappEnabled && whatsappError && <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{whatsappError}</div>}
+          {doc.whatsappEnabled && !doc.customerPhone && <div className="text-center text-[11px] text-slate-400">{t("print_whatsappNoPhone")}</div>}
           <div className="flex gap-2">
             {/* Manual click always prints exactly one copy — "عدد النسخ" only governs the automatic (no-click) auto-print above. */}
             <button onClick={() => { cancelBackgroundPrep(); printInNewWindow(1); }} className="flex-1 rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("print_printBtn")}</button>
-            <button onClick={shareOnWhatsApp} disabled={!doc.customerPhone || whatsappSending} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 py-2.5 font-semibold text-white hover:bg-emerald-700 disabled:opacity-40">
-              {whatsappSending ? <Loader2 size={16} className="animate-spin" /> : <MessageCircle size={16} />} {whatsappSending ? t("print_whatsappSending") : t("print_whatsappBtn")}
-            </button>
+            {doc.whatsappEnabled && (
+              <button onClick={shareOnWhatsApp} disabled={!doc.customerPhone || whatsappSending} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 py-2.5 font-semibold text-white hover:bg-emerald-700 disabled:opacity-40">
+                {whatsappSending ? <Loader2 size={16} className="animate-spin" /> : <MessageCircle size={16} />} {whatsappSending ? t("print_whatsappSending") : t("print_whatsappBtn")}
+              </button>
+            )}
             <button onClick={() => { cancelBackgroundPrep(); onClose(); }} className="rounded-lg border border-stone-300 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-stone-50">{t("print_close")}</button>
           </div>
         </div>
@@ -1155,7 +1139,7 @@ const DICT = {
     settings_merchantName: "Name (as registered in the Commercial Registry)", settings_merchantPhone: "Store Phone Number",
     settings_merchantAddress: "Store Location", settings_merchantTax: "Tax Number",
     settings_ownerOnly: "For Owner Only", settings_ownerOnlyHint: "Protect sensitive sections with a password only you know.",
-    whatsapp_title: "WhatsApp Message", whatsapp_hint: "Customize the message sent with the invoice PDF link when the cashier taps \"WhatsApp\" on a receipt. Leave empty to use the default message. Available tags:",
+    whatsapp_title: "WhatsApp", whatsapp_hint: "Let cashiers share receipts over WhatsApp. Off by default. Turning it on lets you customize the message below — available tags:",
     owner_setMasterTitle: "Set a password for this section", owner_enterMasterTitle: "Enter the owner password",
     owner_setSectionTitle: "Set a password for \"{section}\"", owner_enterSectionTitle: "This section is locked — enter the password",
     owner_pinLabel: "Password (4 digits)", owner_pinConfirmLabel: "Confirm password",
@@ -1376,7 +1360,7 @@ const DICT = {
     settings_merchantName: "الاسم (كما هو مسجل في السجل التجاري)", settings_merchantPhone: "رقم هاتف المحل",
     settings_merchantAddress: "موقع المحل", settings_merchantTax: "الرقم الضريبي",
     settings_ownerOnly: "للمالك فقط", settings_ownerOnlyHint: "احمِ الأقسام الحساسة بكلمة مرور ما يعرفها إلا أنت.",
-    whatsapp_title: "رسالة الواتس", whatsapp_hint: "خصّص الرسالة اللي تنرسل مع رابط الفاتورة (PDF) لما الكاشير يضغط \"واتساب\" على الإيصال. سيبها فاضية عشان تستخدم الرسالة الافتراضية. الوسوم المتاحة:",
+    whatsapp_title: "واتس", whatsapp_hint: "يسمح للكاشير يشارك الفواتير عبر واتساب. مطفّى افتراضيًا. لما تفعّله تقدر تخصّص الرسالة بالأسفل — الوسوم المتاحة:",
     owner_setMasterTitle: "حط كلمة مرور جديدة لهذي الخانة", owner_enterMasterTitle: "أدخل كلمة مرور المالك",
     owner_setSectionTitle: "حط كلمة مرور لقسم \"{section}\"", owner_enterSectionTitle: "هذا القسم مقفل — أدخل كلمة المرور",
     owner_pinLabel: "كلمة المرور (٤ أرقام)", owner_pinConfirmLabel: "تأكيد كلمة المرور",
@@ -1597,7 +1581,7 @@ const DICT = {
     settings_merchantName: "نام (کمرشل رجسٹریشن میں درج شدہ)", settings_merchantPhone: "دکان کا فون نمبر",
     settings_merchantAddress: "دکان کا مقام", settings_merchantTax: "ٹیکس نمبر",
     settings_ownerOnly: "صرف مالک کے لیے", settings_ownerOnlyHint: "حساس حصوں کو ایسے پاس ورڈ سے محفوظ کریں جو صرف آپ جانتے ہوں۔",
-    whatsapp_title: "واٹس ایپ پیغام", whatsapp_hint: "جب کیشیئر رسید پر \"واٹس ایپ\" دبائے تو انوائس PDF لنک کے ساتھ بھیجا جانے والا پیغام حسبِ ضرورت بنائیں۔ خالی چھوڑنے پر ڈیفالٹ پیغام استعمال ہوگا۔ دستیاب ٹیگز:",
+    whatsapp_title: "واٹس ایپ", whatsapp_hint: "کیشیئرز کو رسیدیں واٹس ایپ پر شیئر کرنے دیں۔ ڈیفالٹ میں بند ہے۔ فعال کرنے پر نیچے پیغام حسبِ ضرورت بنا سکتے ہیں — دستیاب ٹیگز:",
     owner_setMasterTitle: "اس حصے کے لیے نیا پاس ورڈ بنائیں", owner_enterMasterTitle: "مالک کا پاس ورڈ درج کریں",
     owner_setSectionTitle: "\"{section}\" کے لیے پاس ورڈ بنائیں", owner_enterSectionTitle: "یہ حصہ لاک ہے — پاس ورڈ درج کریں",
     owner_pinLabel: "پاس ورڈ (4 ہندسے)", owner_pinConfirmLabel: "پاس ورڈ کی تصدیق کریں",
@@ -2021,7 +2005,7 @@ function promosOverlap(aStart, aEnd, bStart, bEnd) {
   return aS <= bE && bS <= aE;
 }
 
-function POSView({ categories, products, addons, customers, addCustomer, onCreateInvoice, merchant, promotions, enabledPayMethods, whatsappTemplate, setTab }) {
+function POSView({ categories, products, addons, customers, addCustomer, onCreateInvoice, merchant, promotions, enabledPayMethods, whatsappTemplate, whatsappEnabled, setTab }) {
   const { t } = useLang();
   const [activeCat, setActiveCat] = useState("all");
   const [modalProduct, setModalProduct] = useState(null);
@@ -2159,7 +2143,7 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
     setPrintDoc({
       kind: (finalPayMethod === "Wallet Balance" || vatExempt) ? "receipt" : "tax",
       merchant, dateLabel: printDateLabel(nowIso), isoDateTime: nowIso, invoiceCode: invoice.code, customerName: customer?.name || "—",
-      customerPhone: customer?.mobile || null, whatsappTemplate,
+      customerPhone: customer?.mobile || null, whatsappTemplate, whatsappEnabled,
       items: docItems, totals: { net, discount: finalDiscount, vat, gross, paid, remaining, pieceCount },
       payMethodLabel: payMethodLabelText,
       dueDate: creditAmount > 0 ? `${due.getFullYear()}/${String(due.getMonth() + 1).padStart(2, "0")}/${String(due.getDate()).padStart(2, "0")}` : null,
@@ -2359,7 +2343,7 @@ function LifecycleBar({ status }) {
   );
 }
 
-function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoice, merchant, zatcaRecord, customerPhone, whatsappTemplate }) {
+function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoice, merchant, zatcaRecord, customerPhone, whatsappTemplate, whatsappEnabled }) {
   const { t } = useLang();
   const status = invoiceOverallStatus(invoice);
   const [printDoc, setPrintDoc] = useState(null);
@@ -2374,7 +2358,7 @@ function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoi
     setPrintError("");
     setPrintDoc({
       kind: "delivery", merchant, dateLabel: printDateLabel(nowISO()), invoiceCode: invoice.code, customerName: invoice.customerName,
-      customerPhone: customerPhone || null, whatsappTemplate,
+      customerPhone: customerPhone || null, whatsappTemplate, whatsappEnabled,
       deliveredItems: delivered.map((it) => ({ name: it.name, service: it.service, deliveredAt: it.deliveredAt || nowISO() })),
     });
   };
@@ -2489,7 +2473,7 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
   );
 }
 
-function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, merchant, zatcaInvoices = [], whatsappTemplate }) {
+function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, merchant, zatcaInvoices = [], whatsappTemplate, whatsappEnabled }) {
   const { t } = useLang();
   const [openId, setOpenId] = useState(null);
   const [customerFilter, setCustomerFilter] = useState(null);
@@ -2553,7 +2537,7 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
           </tbody>
         </table>
       </div>
-      {openInvoice && <InvoiceDetailModal invoice={openInvoice} onClose={() => setOpenId(null)} onUpdateItemStatus={updateItemStatus} onCloseInvoice={closeInvoice} merchant={merchant} zatcaRecord={openInvoiceZatcaRecord} customerPhone={openInvoiceCustomerPhone} whatsappTemplate={whatsappTemplate} />}
+      {openInvoice && <InvoiceDetailModal invoice={openInvoice} onClose={() => setOpenId(null)} onUpdateItemStatus={updateItemStatus} onCloseInvoice={closeInvoice} merchant={merchant} zatcaRecord={openInvoiceZatcaRecord} customerPhone={openInvoiceCustomerPhone} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} />}
     </div>
   );
 }
@@ -2804,7 +2788,7 @@ function CustomerDetailModal({ customer, invoices, transactions, onClose, onOpen
   );
 }
 
-function CustomersView({ customers, updateCustomer, addCustomer, invoices, addInvoice, transactions, addTransaction, merchant, applyCustomerPayment, nextDocNumber, whatsappTemplate }) {
+function CustomersView({ customers, updateCustomer, addCustomer, invoices, addInvoice, transactions, addTransaction, merchant, applyCustomerPayment, nextDocNumber, whatsappTemplate, whatsappEnabled }) {
   const { t } = useLang();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(null);
@@ -2869,7 +2853,7 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
         const vat = vatExempt ? 0 : duePayable - net;
         setPrintDoc({
           kind: vatExempt ? "receipt" : "tax", isTopUp: true, merchant, dateLabel: printDateLabel(now), isoDateTime: now, invoiceCode: code, customerName: customer.name,
-          customerPhone: customer.mobile || null, whatsappTemplate,
+          customerPhone: customer.mobile || null, whatsappTemplate, whatsappEnabled,
           items: [{ name: t("customerDetail_topupType"), price: duePayable, qty: 1, lineTotal: duePayable }],
           totals: { net, discount: discountAmount, vat, gross: duePayable, paid: duePayable, remaining: 0, pieceCount: 1 },
           payMethodLabel: payMethodPrintLabel(t, payMethod), dueDate: null,
@@ -4236,30 +4220,44 @@ function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disabl
 
 const WHATSAPP_TAGS = ["customer_name", "invoice_id", "store_name", "invoice_url", "total_amount"];
 
-function WhatsAppSettingsPanel({ whatsappTemplate, setWhatsappTemplate }) {
+// Collapsed (off) by default — a shop that never opens this toggle never
+// triggers any background image work on a receipt (see PrintDocumentModal),
+// so tenants who don't use WhatsApp sharing pay nothing for it at all.
+// Opening the toggle is what "enables" the feature; the template box only
+// appears once it's on, prompting the owner to customize their message.
+function WhatsAppSettingsPanel({ whatsappEnabled, setWhatsappEnabled, whatsappTemplate, setWhatsappTemplate }) {
   const { t } = useLang();
   return (
     <div className="pt-3 mt-1 border-t border-stone-200">
-      <div className="mb-1 text-sm font-semibold text-slate-800">{t("whatsapp_title")}</div>
-      <p className="mb-2 text-xs text-slate-500">{t("whatsapp_hint")}</p>
-      <textarea
-        value={whatsappTemplate}
-        onChange={(e) => setWhatsappTemplate(e.target.value)}
-        placeholder={DEFAULT_WHATSAPP_TEMPLATE}
-        rows={5}
-        dir="rtl"
-        className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-teal-500"
-      />
-      <div className="mt-2 flex flex-wrap gap-1.5">
-        {WHATSAPP_TAGS.map((tag) => (
-          <code key={tag} className="rounded bg-stone-100 px-1.5 py-0.5 text-[11px] text-slate-600" dir="ltr">{`{${tag}}`}</code>
-        ))}
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-sm font-semibold text-slate-800">{t("whatsapp_title")}</div>
+          <p className="text-xs text-slate-500">{t("whatsapp_hint")}</p>
+        </div>
+        <Toggle checked={whatsappEnabled} onChange={setWhatsappEnabled} />
       </div>
+      {whatsappEnabled && (
+        <div className="mt-3">
+          <textarea
+            value={whatsappTemplate}
+            onChange={(e) => setWhatsappTemplate(e.target.value)}
+            placeholder={DEFAULT_WHATSAPP_TEMPLATE}
+            rows={5}
+            dir="rtl"
+            className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-teal-500"
+          />
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {WHATSAPP_TAGS.map((tag) => (
+              <code key={tag} className="rounded bg-stone-100 px-1.5 py-0.5 text-[11px] text-slate-600" dir="ltr">{`{${tag}}`}</code>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { t } = useLang();
   const [authenticated, setAuthenticated] = useState(false);
   const [showMasterPin, setShowMasterPin] = useState(false);
@@ -4326,7 +4324,7 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
             {payMethodError && <div className="mt-2 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{payMethodError}</div>}
           </div>
 
-          <WhatsAppSettingsPanel whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} />
+          <WhatsAppSettingsPanel whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} />
 
           <ZatcaSettingsPanel zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />
 
@@ -4361,7 +4359,7 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
   );
 }
 
-function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, onLogout, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, onLogout, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { lang, setLang, t } = useLang();
   const options = [
     { code: "ar", key: "settings_lang_ar" },
@@ -4422,7 +4420,7 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
         )}
       </div>
 
-      <OwnerOnlySettings ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />
+      <OwnerOnlySettings ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />
 
       <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
         <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800"><Lock size={16} className="text-teal-600" /> {t("settings_account")}</div>
@@ -4437,22 +4435,22 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
 /* =========================================================================
    ROOT APP
    ========================================================================= */
-function AppShell({ tab, setTab, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+function AppShell({ tab, setTab, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { dir } = useLang();
   return (
     <div dir={dir} className="flex h-screen w-full bg-stone-100 f-body">
       <Fonts />
       <Sidebar tab={tab} setTab={setTab} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} />
       <main className="flex-1 overflow-y-auto p-6">
-        {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promotions} enabledPayMethods={enabledPayMethods} whatsappTemplate={whatsappTemplate} setTab={setTab} />}
-        {tab === "invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} />}
-        {tab === "delivery_invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} isDelivery />}
-        {tab === "customers" && <CustomersView customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} invoices={invoices} addInvoice={addInvoice} transactions={customerTransactions} addTransaction={addTransaction} merchant={merchant} applyCustomerPayment={applyCustomerPayment} nextDocNumber={nextDocNumber} whatsappTemplate={whatsappTemplate} />}
+        {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promotions} enabledPayMethods={enabledPayMethods} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} setTab={setTab} />}
+        {tab === "invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} />}
+        {tab === "delivery_invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} isDelivery />}
+        {tab === "customers" && <CustomersView customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} invoices={invoices} addInvoice={addInvoice} transactions={customerTransactions} addTransaction={addTransaction} merchant={merchant} applyCustomerPayment={applyCustomerPayment} nextDocNumber={nextDocNumber} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} />}
         {tab === "inventory" && <InventoryView categories={categories} addCategory={addCategory} products={products} addProduct={addProduct} updateProduct={updateProduct} addons={addons} addAddon={addAddon} removeAddon={removeAddon} serviceTypes={serviceTypes} addServiceType={addServiceType} />}
         {tab === "purchases" && <PurchasesExpensesView suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={purchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={expenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
         {tab === "promotions" && <PromotionsView promotions={promotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
         {tab === "reports" && <ReportsView invoices={invoices} purchases={purchases} suppliers={suppliers} categories={categories} customers={customers} expenses={expenses} expenseCategories={expenseCategories} />}
-        {tab === "settings" && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
+        {tab === "settings" && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
       </main>
     </div>
   );
@@ -4744,6 +4742,10 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   // rather than storing the default text itself, so a future change to the
   // built-in default keeps applying to every tenant who never customized it.
   const [whatsappTemplate, setWhatsappTemplate] = useState("");
+  // Off by default — a tenant who never opens/enables WhatsApp sharing in
+  // Settings never pays for it: no background image generation/upload, no
+  // "واتساب" button on any receipt at all (see PrintDocumentModal).
+  const [whatsappEnabled, setWhatsappEnabled] = useState(false);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   // tenant_settings has its own `id` primary key, separate from `tenant_id`
@@ -4767,6 +4769,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
         if (d.sectionLocks) setSectionLocks(d.sectionLocks);
         if (d.enabledPayMethods) setEnabledPayMethods(d.enabledPayMethods);
         if (d.whatsappTemplate !== undefined && d.whatsappTemplate !== null) setWhatsappTemplate(d.whatsappTemplate);
+        if (d.whatsappEnabled !== undefined && d.whatsappEnabled !== null) setWhatsappEnabled(Boolean(d.whatsappEnabled));
         if (d.lang) setLang(d.lang);
       }
       setSettingsLoaded(true);
@@ -4779,12 +4782,12 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     if (!tenantId || !settingsLoaded) return;
     const rowId = settingsRowId || crypto.randomUUID();
     if (!settingsRowId) setSettingsRowId(rowId);
-    // Always writing all 6 tracked fields together (never a partial subset)
+    // Always writing all 7 tracked fields together (never a partial subset)
     // is the equivalent of Firestore's { merge: true } here.
-    db.from("tenant_settings").upsert(toSnakeCase({ id: rowId, tenantId, merchant, ownerPassword, sectionLocks, enabledPayMethods, whatsappTemplate, lang }))
+    db.from("tenant_settings").upsert(toSnakeCase({ id: rowId, tenantId, merchant, ownerPassword, sectionLocks, enabledPayMethods, whatsappTemplate, whatsappEnabled, lang }))
       .then(({ error }) => { if (error) console.error("settings save failed", error); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tenantId, settingsLoaded, merchant, ownerPassword, sectionLocks, enabledPayMethods, whatsappTemplate, lang]);
+  }, [tenantId, settingsLoaded, merchant, ownerPassword, sectionLocks, enabledPayMethods, whatsappTemplate, whatsappEnabled, lang]);
 
   const walkInLabel = lang === "ar" ? "عميل مباشر" : lang === "ur" ? "براہ راست گاہک" : "Walk-in";
 
@@ -5027,6 +5030,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
         sectionLocks={sectionLocks} setSectionLocks={setSectionLocks}
         enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods}
         whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate}
+        whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled}
         onLogout={onLogout}
         applyCustomerPayment={applyCustomerPayment} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber}
         zatcaConfig={zatcaConfig} zatcaInvoices={zatcaInvoices} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig}
