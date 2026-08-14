@@ -724,6 +724,14 @@ function PrintDocumentModal({ doc, onClose }) {
   const [whatsappError, setWhatsappError] = useState("");
   const [imageUrl, setImageUrl] = useState(null);
   const imagePrepRef = useRef(null);
+  // Set the instant Print or Close is clicked (see cancelBackgroundPrep
+  // below) — html2canvas is synchronous, main-thread work, so while it's
+  // rasterizing, EVERY click (including Print/Close) queues up and waits
+  // for it to finish. A cashier who isn't sharing this receipt shouldn't
+  // pay that cost, so the kickoff below is delayed and skipped if this
+  // flag is already set by the time it would run.
+  const cancelledRef = useRef(false);
+  const cancelBackgroundPrep = () => { cancelledRef.current = true; };
 
   // Bucket is still named "invoice-pdfs" (created back when this uploaded
   // PDFs) — kept as-is rather than provisioning a second bucket + RLS
@@ -751,10 +759,20 @@ function PrintDocumentModal({ doc, onClose }) {
     // that mode never renders a "واتساب" button for anyone to click, so
     // preparing an image for it would just be a wasted upload.
     if (!doc.customerPhone || silent) return;
-    prepareImageUrl().then(setImageUrl).catch((e) => {
-      console.error("background whatsapp image prep failed", e);
-      imagePrepRef.current = null; // let a manual click retry from scratch
-    });
+    // Delayed rather than fired immediately on mount: most "print and move
+    // to the next sale" cashiers click Print/Close within this window, so
+    // cancelBackgroundPrep() (see the buttons below) sets cancelledRef
+    // before this timer ever fires — the common case now costs nothing.
+    // Only a cashier who actually pauses on the receipt pays the (short,
+    // one-time) html2canvas cost.
+    const timer = setTimeout(() => {
+      if (cancelledRef.current) return;
+      prepareImageUrl().then((url) => { if (!cancelledRef.current) setImageUrl(url); }).catch((e) => {
+        console.error("background whatsapp image prep failed", e);
+        imagePrepRef.current = null; // let a manual click retry from scratch
+      });
+    }, 500);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -804,7 +822,7 @@ function PrintDocumentModal({ doc, onClose }) {
   if (silent) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4" onClick={() => { cancelBackgroundPrep(); onClose(); }}>
       <div className="flex w-full max-w-sm max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex-1 overflow-y-auto">
         <div ref={printAreaRef} className="print-area p-6 text-slate-900" style={{ fontFamily: "'Inter', sans-serif" }}>
@@ -893,11 +911,11 @@ function PrintDocumentModal({ doc, onClose }) {
           {!doc.customerPhone && <div className="text-center text-[11px] text-slate-400">{t("print_whatsappNoPhone")}</div>}
           <div className="flex gap-2">
             {/* Manual click always prints exactly one copy — "عدد النسخ" only governs the automatic (no-click) auto-print above. */}
-            <button onClick={() => printInNewWindow(1)} className="flex-1 rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("print_printBtn")}</button>
+            <button onClick={() => { cancelBackgroundPrep(); printInNewWindow(1); }} className="flex-1 rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("print_printBtn")}</button>
             <button onClick={shareOnWhatsApp} disabled={!doc.customerPhone || whatsappSending} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 py-2.5 font-semibold text-white hover:bg-emerald-700 disabled:opacity-40">
               {whatsappSending ? <Loader2 size={16} className="animate-spin" /> : <MessageCircle size={16} />} {whatsappSending ? t("print_whatsappSending") : t("print_whatsappBtn")}
             </button>
-            <button onClick={onClose} className="rounded-lg border border-stone-300 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-stone-50">{t("print_close")}</button>
+            <button onClick={() => { cancelBackgroundPrep(); onClose(); }} className="rounded-lg border border-stone-300 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-stone-50">{t("print_close")}</button>
           </div>
         </div>
       </div>
