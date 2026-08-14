@@ -3,7 +3,8 @@ import {
   Search, Plus, X, Check, ChevronRight, Shirt, Package, Users, ClipboardList,
   Truck, Tag, BarChart3, Wallet, ImageIcon, Ban, ArrowRight, Trash2, CreditCard,
   Banknote, Percent, Clock, Mail, AlertTriangle, CheckCircle2, Circle, Upload,
-  ReceiptText, Building2, FileText, Sparkles, Settings, Globe, Lock, Pencil, Paperclip
+  ReceiptText, Building2, FileText, Sparkles, Settings, Globe, Lock, Pencil, Paperclip,
+  MessageCircle
 } from "lucide-react";
 import QRCode from "qrcode";
 // auth/db here are supabase.auth / the Supabase client (see src/supabase.js).
@@ -12,6 +13,8 @@ import QRCode from "qrcode";
 // from a package the way Firebase's collection()/doc()/setDoc() worked.
 import { auth, db } from "./supabase";
 import { toSnakeCase, toCamelCase } from "./utils/transforms.js";
+import { normalizeSaudiMobile, isValidSaudiMobile, cleanPhoneForWhatsApp, fillWhatsAppTemplate, DEFAULT_WHATSAPP_TEMPLATE } from "./utils/phone.js";
+import { generateInvoicePdf } from "./utils/pdf.js";
 
 /* =========================================================================
    CONSTANTS
@@ -667,6 +670,53 @@ function PrintDocumentModal({ doc, onClose }) {
   // seeing the preview exactly as before.
   const silent = Boolean(doc.merchant?.autoPrint) && doc.merchant?.showPrintPreview === false;
 
+  // Rasterizes the very same .print-area node below (ref'd, not re-rendered
+  // offscreen) into a PDF and uploads it, so Arabic renders exactly as the
+  // browser already shapes it here — no separate font-embedding pipeline.
+  // Deliberately on-demand (only when the cashier actually clicks "واتساب"),
+  // not generated for every sale — most receipts are never shared, and this
+  // keeps the common case (print-only) exactly as fast as it was before.
+  const printAreaRef = useRef(null);
+  const [whatsappSending, setWhatsappSending] = useState(false);
+  const [whatsappError, setWhatsappError] = useState("");
+
+  const shareOnWhatsApp = async () => {
+    if (!doc.customerPhone || whatsappSending) return;
+    setWhatsappError("");
+    setWhatsappSending(true);
+    // Opened synchronously, inside the click handler's own call stack —
+    // by the time the PDF is generated and uploaded below (several awaits
+    // later), the browser no longer considers a fresh window.open() call
+    // "user-initiated" and popup-blocks it. Opening a blank tab right away
+    // and redirecting it once the wa.me URL is known keeps the original
+    // click's permission alive.
+    const waTab = window.open("", "_blank");
+    try {
+      const { data } = await auth.getUser();
+      const uid = data?.user?.id;
+      if (!uid) throw new Error("no_session");
+      const blob = await generateInvoicePdf(printAreaRef.current);
+      const path = `${uid}/${doc.invoiceCode}-${Math.random().toString(36).slice(2, 8)}.pdf`;
+      const { error: uploadErr } = await db.storage.from("invoice-pdfs").upload(path, blob, { contentType: "application/pdf" });
+      if (uploadErr) throw uploadErr;
+      const { data: pub } = db.storage.from("invoice-pdfs").getPublicUrl(path);
+      const message = fillWhatsAppTemplate(doc.whatsappTemplate, {
+        customer_name: doc.customerName || "",
+        invoice_id: doc.invoiceCode || "",
+        store_name: doc.merchant?.name || "",
+        invoice_url: pub?.publicUrl || "",
+        total_amount: doc.totals?.gross != null ? doc.totals.gross.toFixed(2) : "",
+      });
+      const waUrl = `https://wa.me/${cleanPhoneForWhatsApp(doc.customerPhone)}?text=${encodeURIComponent(message)}`;
+      if (waTab) waTab.location.href = waUrl; else window.open(waUrl, "_blank");
+    } catch (e) {
+      console.error("shareOnWhatsApp failed", e);
+      if (waTab) waTab.close();
+      setWhatsappError(t("print_whatsappError"));
+    }
+    setWhatsappSending(false);
+  };
+
   const autoPrintFiredRef = useRef(false);
   useEffect(() => {
     if (doc.merchant?.autoPrint && !autoPrintFiredRef.current) {
@@ -683,7 +733,7 @@ function PrintDocumentModal({ doc, onClose }) {
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4" onClick={onClose}>
       <div className="flex w-full max-w-sm max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
         <div className="flex-1 overflow-y-auto">
-        <div className="print-area p-6 text-slate-900" style={{ fontFamily: "'Inter', sans-serif" }}>
+        <div ref={printAreaRef} className="print-area p-6 text-slate-900" style={{ fontFamily: "'Inter', sans-serif" }}>
           <div className="mb-4 text-center text-lg font-bold">{doc.merchant.name || "—"}</div>
 
           {/* Arabic label on the right, English label on the left, shared value centered — explicit alignment, not dependent on ambient text direction */}
@@ -764,10 +814,17 @@ function PrintDocumentModal({ doc, onClose }) {
         </div>
         </div>
 
-        <div className="no-print flex shrink-0 gap-2 border-t border-stone-200 p-4 bg-white">
-          {/* Manual click always prints exactly one copy — "عدد النسخ" only governs the automatic (no-click) auto-print above. */}
-          <button onClick={() => printInNewWindow(1)} className="flex-1 rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("print_printBtn")}</button>
-          <button onClick={onClose} className="rounded-lg border border-stone-300 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-stone-50">{t("print_close")}</button>
+        <div className="no-print flex shrink-0 flex-col gap-2 border-t border-stone-200 p-4 bg-white">
+          {whatsappError && <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{whatsappError}</div>}
+          {!doc.customerPhone && <div className="text-center text-[11px] text-slate-400">{t("print_whatsappNoPhone")}</div>}
+          <div className="flex gap-2">
+            {/* Manual click always prints exactly one copy — "عدد النسخ" only governs the automatic (no-click) auto-print above. */}
+            <button onClick={() => printInNewWindow(1)} className="flex-1 rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("print_printBtn")}</button>
+            <button onClick={shareOnWhatsApp} disabled={!doc.customerPhone || whatsappSending} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 py-2.5 font-semibold text-white hover:bg-emerald-700 disabled:opacity-40">
+              <MessageCircle size={16} /> {whatsappSending ? t("print_whatsappSending") : t("print_whatsappBtn")}
+            </button>
+            <button onClick={onClose} className="rounded-lg border border-stone-300 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-stone-50">{t("print_close")}</button>
+          </div>
         </div>
       </div>
     </div>
@@ -893,7 +950,7 @@ const DICT = {
     addCustomer_title: "➕ Add New Customer", addCustomer_systemId: "System ID (auto, can be edited)",
     addCustomer_idTaken: "This number is already used by another customer — pick a different one.",
     addCustomer_mobileTaken: "This number is already registered for customer #{id} ({name}).",
-    addCustomer_mobileInvalid: "Mobile number must be 10 digits starting with 05.",
+    addCustomer_mobileInvalid: "Enter a valid mobile number (starting with 05 or 5).",
     addCustomer_name: "Customer Name", addCustomer_mobile: "Mobile Number",
     addCustomer_save: "Save Customer",
 
@@ -1006,6 +1063,7 @@ const DICT = {
     settings_merchantName: "Name (as registered in the Commercial Registry)", settings_merchantPhone: "Store Phone Number",
     settings_merchantAddress: "Store Location", settings_merchantTax: "Tax Number",
     settings_ownerOnly: "For Owner Only", settings_ownerOnlyHint: "Protect sensitive sections with a password only you know.",
+    whatsapp_title: "WhatsApp Message", whatsapp_hint: "Customize the message sent with the invoice PDF link when the cashier taps \"WhatsApp\" on a receipt. Leave empty to use the default message. Available tags:",
     owner_setMasterTitle: "Set a password for this section", owner_enterMasterTitle: "Enter the owner password",
     owner_setSectionTitle: "Set a password for \"{section}\"", owner_enterSectionTitle: "This section is locked — enter the password",
     owner_pinLabel: "Password (4 digits)", owner_pinConfirmLabel: "Confirm password",
@@ -1042,6 +1100,8 @@ const DICT = {
     print_deliverFirst: "Please deliver at least one item first, then the receipt can be printed.",
     print_printDeliveryReceipt: "Print Delivery Receipt", print_noItemsDelivered: "No items have been delivered from this invoice yet.",
     pay_cash: "Cash", pay_network: "External Network", pay_wallet: "Customer Balance", pay_credit: "Deferred Payment",
+    print_whatsappBtn: "WhatsApp", print_whatsappSending: "Sending...", print_whatsappNoPhone: "No phone number on file for this customer.",
+    print_whatsappError: "Couldn't share this invoice — please try again.",
   },
 
   ar: {
@@ -1110,7 +1170,7 @@ const DICT = {
     addCustomer_title: "➕ إضافة عميل جديد", addCustomer_systemId: "الرقم التسلسلي (تلقائي، يمكن تعديله)",
     addCustomer_idTaken: "هذا الرقم مستخدم مسبقًا لعميل آخر — اختر رقمًا آخر.",
     addCustomer_mobileTaken: "هذا الرقم مسجل مسبقًا للعميل #{id} ({name}).",
-    addCustomer_mobileInvalid: "رقم الجوال لازم يكون 10 أرقام ويبدأ بـ 05.",
+    addCustomer_mobileInvalid: "حط رقم جوال صحيح (يبدأ بـ 05 أو 5).",
     addCustomer_name: "اسم العميل", addCustomer_mobile: "رقم الجوال",
     addCustomer_openingBalance: "رصيد المحفظة الافتتاحي (ريال)", addCustomer_openingDebt: "الدين الافتتاحي / على الحساب (ريال)",
     addCustomer_save: "حفظ العميل",
@@ -1224,6 +1284,7 @@ const DICT = {
     settings_merchantName: "الاسم (كما هو مسجل في السجل التجاري)", settings_merchantPhone: "رقم هاتف المحل",
     settings_merchantAddress: "موقع المحل", settings_merchantTax: "الرقم الضريبي",
     settings_ownerOnly: "للمالك فقط", settings_ownerOnlyHint: "احمِ الأقسام الحساسة بكلمة مرور ما يعرفها إلا أنت.",
+    whatsapp_title: "رسالة الواتس", whatsapp_hint: "خصّص الرسالة اللي تنرسل مع رابط الفاتورة (PDF) لما الكاشير يضغط \"واتساب\" على الإيصال. سيبها فاضية عشان تستخدم الرسالة الافتراضية. الوسوم المتاحة:",
     owner_setMasterTitle: "حط كلمة مرور جديدة لهذي الخانة", owner_enterMasterTitle: "أدخل كلمة مرور المالك",
     owner_setSectionTitle: "حط كلمة مرور لقسم \"{section}\"", owner_enterSectionTitle: "هذا القسم مقفل — أدخل كلمة المرور",
     owner_pinLabel: "كلمة المرور (٤ أرقام)", owner_pinConfirmLabel: "تأكيد كلمة المرور",
@@ -1260,6 +1321,8 @@ const DICT = {
     print_deliverFirst: "الرجاء تسليم قطعة واحدة على الأقل أولًا حتى يمكن طباعة الإيصال.",
     print_printDeliveryReceipt: "طباعة إيصال الاستلام", print_noItemsDelivered: "لم يتم تسليم أي قطعة من هذه الفاتورة بعد.",
     pay_cash: "نقدًا", pay_network: "شبكة خارجية", pay_wallet: "رصيد العميل", pay_credit: "دفع آجل",
+    print_whatsappBtn: "واتساب", print_whatsappSending: "جارٍ الإرسال...", print_whatsappNoPhone: "لا يوجد رقم جوال مسجّل لهذا العميل.",
+    print_whatsappError: "تعذّرت مشاركة الفاتورة — حاول مرة أخرى.",
   },
 
   ur: {
@@ -1328,7 +1391,7 @@ const DICT = {
     addCustomer_title: "➕ نیا کسٹمر شامل کریں", addCustomer_systemId: "سسٹم نمبر (خودکار، تبدیل کیا جا سکتا ہے)",
     addCustomer_idTaken: "یہ نمبر پہلے سے کسی اور کسٹمر کے پاس ہے — دوسرا نمبر منتخب کریں۔",
     addCustomer_mobileTaken: "یہ نمبر پہلے سے کسٹمر #{id} ({name}) کے لیے رجسٹرڈ ہے۔",
-    addCustomer_mobileInvalid: "موبائل نمبر 10 ہندسوں کا ہونا چاہیے اور 05 سے شروع ہونا چاہیے۔",
+    addCustomer_mobileInvalid: "درست موبائل نمبر درج کریں (05 یا 5 سے شروع ہونا چاہیے)۔",
     addCustomer_name: "کسٹمر کا نام", addCustomer_mobile: "موبائل نمبر",
     addCustomer_openingBalance: "ابتدائی والٹ بیلنس (ریال)", addCustomer_openingDebt: "ابتدائی ادھار / کھاتہ (ریال)",
     addCustomer_save: "کسٹمر محفوظ کریں",
@@ -1442,6 +1505,7 @@ const DICT = {
     settings_merchantName: "نام (کمرشل رجسٹریشن میں درج شدہ)", settings_merchantPhone: "دکان کا فون نمبر",
     settings_merchantAddress: "دکان کا مقام", settings_merchantTax: "ٹیکس نمبر",
     settings_ownerOnly: "صرف مالک کے لیے", settings_ownerOnlyHint: "حساس حصوں کو ایسے پاس ورڈ سے محفوظ کریں جو صرف آپ جانتے ہوں۔",
+    whatsapp_title: "واٹس ایپ پیغام", whatsapp_hint: "جب کیشیئر رسید پر \"واٹس ایپ\" دبائے تو انوائس PDF لنک کے ساتھ بھیجا جانے والا پیغام حسبِ ضرورت بنائیں۔ خالی چھوڑنے پر ڈیفالٹ پیغام استعمال ہوگا۔ دستیاب ٹیگز:",
     owner_setMasterTitle: "اس حصے کے لیے نیا پاس ورڈ بنائیں", owner_enterMasterTitle: "مالک کا پاس ورڈ درج کریں",
     owner_setSectionTitle: "\"{section}\" کے لیے پاس ورڈ بنائیں", owner_enterSectionTitle: "یہ حصہ لاک ہے — پاس ورڈ درج کریں",
     owner_pinLabel: "پاس ورڈ (4 ہندسے)", owner_pinConfirmLabel: "پاس ورڈ کی تصدیق کریں",
@@ -1478,6 +1542,8 @@ const DICT = {
     print_deliverFirst: "پرنٹ کرنے سے پہلے کم از کم ایک شے ڈیلیور کرنا لازمی ہے۔",
     print_printDeliveryReceipt: "ڈیلیوری رسید پرنٹ کریں", print_noItemsDelivered: "اس آرڈر سے ابھی تک کوئی شے ڈیلیور نہیں ہوئی۔",
     pay_cash: "نقد", pay_network: "بیرونی نیٹ ورک", pay_wallet: "کسٹمر بیلنس", pay_credit: "ادھار",
+    print_whatsappBtn: "واٹس ایپ", print_whatsappSending: "بھیجا جا رہا ہے...", print_whatsappNoPhone: "اس کسٹمر کا کوئی فون نمبر درج نہیں ہے۔",
+    print_whatsappError: "انوائس شیئر نہیں ہو سکی — دوبارہ کوشش کریں۔",
   },
 };
 
@@ -1658,8 +1724,8 @@ function AddCustomerModal({ customers, onClose, onSave }) {
   const existingByMobile = mobileTrimmed && mobileTrimmed !== "-" ? customers.find((c) => c.mobile === mobileTrimmed) : null;
   const mobileTaken = Boolean(existingByMobile);
   // Empty is allowed (renders as "-" in the ledger, same as before) — the
-  // 05XXXXXXXX format is only enforced once the owner actually types something.
-  const mobileFormatInvalid = mobileTrimmed !== "" && !/^05\d{8}$/.test(mobileTrimmed);
+  // 9665XXXXXXXX format is only enforced once the owner actually types something.
+  const mobileFormatInvalid = mobileTrimmed !== "" && !isValidSaudiMobile(mobileTrimmed);
   const mobileInvalid = mobileTaken || mobileFormatInvalid;
 
   return (
@@ -1672,7 +1738,7 @@ function AddCustomerModal({ customers, onClose, onSave }) {
           customer ledger's name column wider than its allotted share. */}
       <Field label={t("addCustomer_name")}><input autoFocus value={name} onChange={(e) => setName(e.target.value.slice(0, 15))} maxLength={15} className={inputCls} /></Field>
       <Field label={t("addCustomer_mobile")}>
-        <input value={mobile} onChange={(e) => setMobile(e.target.value)} maxLength={10} dir="ltr" className={`${inputCls} ${mobileInvalid ? "border-rose-400" : ""}`} />
+        <input value={mobile} onChange={(e) => setMobile(normalizeSaudiMobile(e.target.value))} placeholder="05XXXXXXXX" maxLength={12} dir="ltr" className={`${inputCls} ${mobileInvalid ? "border-rose-400" : ""}`} />
         {mobileTaken && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("addCustomer_mobileTaken", { id: existingByMobile.id, name: existingByMobile.name })}</div>}
         {!mobileTaken && mobileFormatInvalid && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("addCustomer_mobileInvalid")}</div>}
       </Field>
@@ -1863,7 +1929,7 @@ function promosOverlap(aStart, aEnd, bStart, bEnd) {
   return aS <= bE && bS <= aE;
 }
 
-function POSView({ categories, products, addons, customers, addCustomer, onCreateInvoice, merchant, promotions, enabledPayMethods, setTab }) {
+function POSView({ categories, products, addons, customers, addCustomer, onCreateInvoice, merchant, promotions, enabledPayMethods, whatsappTemplate, setTab }) {
   const { t } = useLang();
   const [activeCat, setActiveCat] = useState("all");
   const [modalProduct, setModalProduct] = useState(null);
@@ -2001,6 +2067,7 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
     setPrintDoc({
       kind: (finalPayMethod === "Wallet Balance" || vatExempt) ? "receipt" : "tax",
       merchant, dateLabel: printDateLabel(nowIso), isoDateTime: nowIso, invoiceCode: invoice.code, customerName: customer?.name || "—",
+      customerPhone: customer?.mobile || null, whatsappTemplate,
       items: docItems, totals: { net, discount: finalDiscount, vat, gross, paid, remaining, pieceCount },
       payMethodLabel: payMethodLabelText,
       dueDate: creditAmount > 0 ? `${due.getFullYear()}/${String(due.getMonth() + 1).padStart(2, "0")}/${String(due.getDate()).padStart(2, "0")}` : null,
@@ -2200,7 +2267,7 @@ function LifecycleBar({ status }) {
   );
 }
 
-function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoice, merchant, zatcaRecord }) {
+function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoice, merchant, zatcaRecord, customerPhone, whatsappTemplate }) {
   const { t } = useLang();
   const status = invoiceOverallStatus(invoice);
   const [printDoc, setPrintDoc] = useState(null);
@@ -2215,6 +2282,7 @@ function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoi
     setPrintError("");
     setPrintDoc({
       kind: "delivery", merchant, dateLabel: printDateLabel(nowISO()), invoiceCode: invoice.code, customerName: invoice.customerName,
+      customerPhone: customerPhone || null, whatsappTemplate,
       deliveredItems: delivered.map((it) => ({ name: it.name, service: it.service, deliveredAt: it.deliveredAt || nowISO() })),
     });
   };
@@ -2329,7 +2397,7 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
   );
 }
 
-function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, merchant, zatcaInvoices = [] }) {
+function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, merchant, zatcaInvoices = [], whatsappTemplate }) {
   const { t } = useLang();
   const [openId, setOpenId] = useState(null);
   const [customerFilter, setCustomerFilter] = useState(null);
@@ -2341,6 +2409,7 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const openInvoice = invoices.find((i) => i.id === openId);
   const openInvoiceZatcaRecord = openInvoice ? zatcaInvoices.find((z) => z.invoiceId === openInvoice.id) : null;
+  const openInvoiceCustomerPhone = openInvoice ? customers.find((c) => c.id === openInvoice.customerId)?.mobile : null;
 
   const updateItemStatus = (invId, itemId, status) => {
     const inv = invoices.find((i) => i.id === invId);
@@ -2392,7 +2461,7 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
           </tbody>
         </table>
       </div>
-      {openInvoice && <InvoiceDetailModal invoice={openInvoice} onClose={() => setOpenId(null)} onUpdateItemStatus={updateItemStatus} onCloseInvoice={closeInvoice} merchant={merchant} zatcaRecord={openInvoiceZatcaRecord} />}
+      {openInvoice && <InvoiceDetailModal invoice={openInvoice} onClose={() => setOpenId(null)} onUpdateItemStatus={updateItemStatus} onCloseInvoice={closeInvoice} merchant={merchant} zatcaRecord={openInvoiceZatcaRecord} customerPhone={openInvoiceCustomerPhone} whatsappTemplate={whatsappTemplate} />}
     </div>
   );
 }
@@ -2643,7 +2712,7 @@ function CustomerDetailModal({ customer, invoices, transactions, onClose, onOpen
   );
 }
 
-function CustomersView({ customers, updateCustomer, addCustomer, invoices, addInvoice, transactions, addTransaction, merchant, applyCustomerPayment, nextDocNumber }) {
+function CustomersView({ customers, updateCustomer, addCustomer, invoices, addInvoice, transactions, addTransaction, merchant, applyCustomerPayment, nextDocNumber, whatsappTemplate }) {
   const { t } = useLang();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(null);
@@ -2708,6 +2777,7 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
         const vat = vatExempt ? 0 : duePayable - net;
         setPrintDoc({
           kind: vatExempt ? "receipt" : "tax", isTopUp: true, merchant, dateLabel: printDateLabel(now), isoDateTime: now, invoiceCode: code, customerName: customer.name,
+          customerPhone: customer.mobile || null, whatsappTemplate,
           items: [{ name: t("customerDetail_topupType"), price: duePayable, qty: 1, lineTotal: duePayable }],
           totals: { net, discount: discountAmount, vat, gross: duePayable, paid: duePayable, remaining: 0, pieceCount: 1 },
           payMethodLabel: payMethodPrintLabel(t, payMethod), dueDate: null,
@@ -4072,7 +4142,32 @@ function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disabl
   );
 }
 
-function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+const WHATSAPP_TAGS = ["customer_name", "invoice_id", "store_name", "invoice_url", "total_amount"];
+
+function WhatsAppSettingsPanel({ whatsappTemplate, setWhatsappTemplate }) {
+  const { t } = useLang();
+  return (
+    <div className="pt-3 mt-1 border-t border-stone-200">
+      <div className="mb-1 text-sm font-semibold text-slate-800">{t("whatsapp_title")}</div>
+      <p className="mb-2 text-xs text-slate-500">{t("whatsapp_hint")}</p>
+      <textarea
+        value={whatsappTemplate}
+        onChange={(e) => setWhatsappTemplate(e.target.value)}
+        placeholder={DEFAULT_WHATSAPP_TEMPLATE}
+        rows={5}
+        dir="rtl"
+        className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-teal-500"
+      />
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {WHATSAPP_TAGS.map((tag) => (
+          <code key={tag} className="rounded bg-stone-100 px-1.5 py-0.5 text-[11px] text-slate-600" dir="ltr">{`{${tag}}`}</code>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { t } = useLang();
   const [authenticated, setAuthenticated] = useState(false);
   const [showMasterPin, setShowMasterPin] = useState(false);
@@ -4139,6 +4234,8 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
             {payMethodError && <div className="mt-2 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{payMethodError}</div>}
           </div>
 
+          <WhatsAppSettingsPanel whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} />
+
           <ZatcaSettingsPanel zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />
 
           <button onClick={() => setAuthenticated(false)} className="mt-2 text-xs font-medium text-teal-700 hover:underline">{t("owner_lockPanel")}</button>
@@ -4172,7 +4269,7 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
   );
 }
 
-function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, onLogout, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, onLogout, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { lang, setLang, t } = useLang();
   const options = [
     { code: "ar", key: "settings_lang_ar" },
@@ -4233,7 +4330,7 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
         )}
       </div>
 
-      <OwnerOnlySettings ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />
+      <OwnerOnlySettings ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />
 
       <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
         <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800"><Lock size={16} className="text-teal-600" /> {t("settings_account")}</div>
@@ -4248,22 +4345,22 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
 /* =========================================================================
    ROOT APP
    ========================================================================= */
-function AppShell({ tab, setTab, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+function AppShell({ tab, setTab, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { dir } = useLang();
   return (
     <div dir={dir} className="flex h-screen w-full bg-stone-100 f-body">
       <Fonts />
       <Sidebar tab={tab} setTab={setTab} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} />
       <main className="flex-1 overflow-y-auto p-6">
-        {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promotions} enabledPayMethods={enabledPayMethods} setTab={setTab} />}
-        {tab === "invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} />}
-        {tab === "delivery_invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} isDelivery />}
-        {tab === "customers" && <CustomersView customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} invoices={invoices} addInvoice={addInvoice} transactions={customerTransactions} addTransaction={addTransaction} merchant={merchant} applyCustomerPayment={applyCustomerPayment} nextDocNumber={nextDocNumber} />}
+        {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promotions} enabledPayMethods={enabledPayMethods} whatsappTemplate={whatsappTemplate} setTab={setTab} />}
+        {tab === "invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} />}
+        {tab === "delivery_invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} isDelivery />}
+        {tab === "customers" && <CustomersView customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} invoices={invoices} addInvoice={addInvoice} transactions={customerTransactions} addTransaction={addTransaction} merchant={merchant} applyCustomerPayment={applyCustomerPayment} nextDocNumber={nextDocNumber} whatsappTemplate={whatsappTemplate} />}
         {tab === "inventory" && <InventoryView categories={categories} addCategory={addCategory} products={products} addProduct={addProduct} updateProduct={updateProduct} addons={addons} addAddon={addAddon} removeAddon={removeAddon} serviceTypes={serviceTypes} addServiceType={addServiceType} />}
         {tab === "purchases" && <PurchasesExpensesView suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={purchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={expenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
         {tab === "promotions" && <PromotionsView promotions={promotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
         {tab === "reports" && <ReportsView invoices={invoices} purchases={purchases} suppliers={suppliers} categories={categories} customers={customers} expenses={expenses} expenseCategories={expenseCategories} />}
-        {tab === "settings" && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
+        {tab === "settings" && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
       </main>
     </div>
   );
@@ -4551,6 +4648,10 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   const [ownerPassword, setOwnerPassword] = useState(null);
   const [sectionLocks, setSectionLocks] = useState({ customers: null, inventory: null, purchases: null, promotions: null, reports: null });
   const [enabledPayMethods, setEnabledPayMethods] = useState({ Cash: true, "External Network": true, "Wallet Balance": true, "Credit (On Account)": true, Split: true });
+  // Empty string means "use DEFAULT_WHATSAPP_TEMPLATE" (see src/utils/phone.js)
+  // rather than storing the default text itself, so a future change to the
+  // built-in default keeps applying to every tenant who never customized it.
+  const [whatsappTemplate, setWhatsappTemplate] = useState("");
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   // tenant_settings has its own `id` primary key, separate from `tenant_id`
@@ -4573,6 +4674,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
         if (d.ownerPassword !== undefined) setOwnerPassword(d.ownerPassword);
         if (d.sectionLocks) setSectionLocks(d.sectionLocks);
         if (d.enabledPayMethods) setEnabledPayMethods(d.enabledPayMethods);
+        if (d.whatsappTemplate !== undefined && d.whatsappTemplate !== null) setWhatsappTemplate(d.whatsappTemplate);
         if (d.lang) setLang(d.lang);
       }
       setSettingsLoaded(true);
@@ -4585,12 +4687,12 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     if (!tenantId || !settingsLoaded) return;
     const rowId = settingsRowId || crypto.randomUUID();
     if (!settingsRowId) setSettingsRowId(rowId);
-    // Always writing all 5 tracked fields together (never a partial subset)
+    // Always writing all 6 tracked fields together (never a partial subset)
     // is the equivalent of Firestore's { merge: true } here.
-    db.from("tenant_settings").upsert(toSnakeCase({ id: rowId, tenantId, merchant, ownerPassword, sectionLocks, enabledPayMethods, lang }))
+    db.from("tenant_settings").upsert(toSnakeCase({ id: rowId, tenantId, merchant, ownerPassword, sectionLocks, enabledPayMethods, whatsappTemplate, lang }))
       .then(({ error }) => { if (error) console.error("settings save failed", error); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tenantId, settingsLoaded, merchant, ownerPassword, sectionLocks, enabledPayMethods, lang]);
+  }, [tenantId, settingsLoaded, merchant, ownerPassword, sectionLocks, enabledPayMethods, whatsappTemplate, lang]);
 
   const walkInLabel = lang === "ar" ? "عميل مباشر" : lang === "ur" ? "براہ راست گاہک" : "Walk-in";
 
@@ -4832,6 +4934,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
         ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword}
         sectionLocks={sectionLocks} setSectionLocks={setSectionLocks}
         enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods}
+        whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate}
         onLogout={onLogout}
         applyCustomerPayment={applyCustomerPayment} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber}
         zatcaConfig={zatcaConfig} zatcaInvoices={zatcaInvoices} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig}
@@ -5627,7 +5730,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   const saveTenantEdit = async () => {
     const mobileNorm = editMobile.trim();
     const emailNorm = editEmail.trim().toLowerCase();
-    if (!/^05\d{8}$/.test(mobileNorm)) { setEditError("رقم الجوال لازم يكون 10 أرقام ويبدأ بـ 05."); return; }
+    if (!isValidSaudiMobile(mobileNorm)) { setEditError("رقم الجوال غير صحيح."); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) { setEditError("بريد إلكتروني غير صحيح."); return; }
     if (tenants.some((t) => t.id !== editingTenant.id && t.mobile === mobileNorm)) { setEditError("هذا الرقم مستخدم مسبقًا لعميل آخر."); return; }
     if (tenants.some((t) => t.id !== editingTenant.id && t.email === emailNorm)) { setEditError("هذا البريد مستخدم مسبقًا لعميل آخر."); return; }
@@ -5919,7 +6022,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
       {editingTenant && (
         <AdminModal title={`تعديل بيانات ${editingTenant.shopName}`} onClose={() => setEditingTenant(null)}>
           <label className="block text-xs text-gray-400 mb-1.5">رقم الجوال</label>
-          <input value={editMobile} onChange={(e) => { setEditMobile(e.target.value.replace(/\D/g, "").slice(0, 10)); setEditError(""); }} maxLength={10} dir="ltr" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-cyan-400 mb-4" />
+          <input value={editMobile} onChange={(e) => { setEditMobile(normalizeSaudiMobile(e.target.value)); setEditError(""); }} maxLength={12} dir="ltr" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-cyan-400 mb-4" />
           <label className="block text-xs text-gray-400 mb-1.5">البريد الإلكتروني</label>
           <input value={editEmail} onChange={(e) => { setEditEmail(e.target.value); setEditError(""); }} dir="ltr" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-cyan-400 mb-4" />
           {editError && <div className="mb-4 text-xs font-medium text-rose-400">{editError}</div>}
@@ -6514,8 +6617,8 @@ function SignupPage(props) {
 
           <div className="mb-6">
             <label className="block text-gray-300 text-sm font-semibold mb-3">رقم الجوال</label>
-            <input type="tel" inputMode="numeric" value={signupMobile} onChange={(e) => setSignupMobile(e.target.value.replace(/\D/g, '').slice(0, 10))} placeholder="05XXXXXXXX" maxLength={10} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" dir="ltr" />
-            <p className="text-gray-500 text-xs mt-1.5">10 أرقام تبدأ بـ 05</p>
+            <input type="tel" inputMode="numeric" value={signupMobile} onChange={(e) => setSignupMobile(normalizeSaudiMobile(e.target.value))} placeholder="05XXXXXXXX" maxLength={12} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" dir="ltr" />
+            <p className="text-gray-500 text-xs mt-1.5">يبدأ تلقائيًا بـ 966 — اكتب رقمك كالمعتاد (05... أو 5...)</p>
           </div>
 
           <div className="mb-6">
@@ -6762,7 +6865,7 @@ const LaundryPOS = () => {
       return;
     }
     if (!signupAgree) { setSignupError('لازم توافق على شروط الخدمة.'); return; }
-    if (!/^05\d{8}$/.test(signupMobile)) { setSignupError('رقم الجوال لازم يكون 10 أرقام ويبدأ بـ 05.'); return; }
+    if (!isValidSaudiMobile(signupMobile)) { setSignupError('رقم الجوال غير صحيح.'); return; }
     const emailNorm = signupEmail.trim().toLowerCase();
     if (!emailNorm || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) { setSignupError('حط بريد إلكتروني صحيح.'); return; }
     if (!signupPassword) { setSignupError('حط كلمة مرور.'); return; }
