@@ -14,7 +14,7 @@ import QRCode from "qrcode";
 import { auth, db } from "./supabase";
 import { toSnakeCase, toCamelCase } from "./utils/transforms.js";
 import { normalizeSaudiMobile, isValidSaudiMobile, cleanPhoneForWhatsApp, fillWhatsAppTemplate, DEFAULT_WHATSAPP_TEMPLATE } from "./utils/phone.js";
-import { generateInvoicePdf } from "./utils/pdf.js";
+import { generateInvoiceImage } from "./utils/invoiceImage.js";
 
 /* =========================================================================
    CONSTANTS
@@ -709,8 +709,10 @@ function PrintDocumentModal({ doc, onClose }) {
   const silent = Boolean(doc.merchant?.autoPrint) && doc.merchant?.showPrintPreview === false;
 
   // Rasterizes the very same .print-area node below (ref'd, not re-rendered
-  // offscreen) into a PDF and uploads it, so Arabic renders exactly as the
-  // browser already shapes it here — no separate font-embedding pipeline.
+  // offscreen) into a compressed JPEG and uploads it — no PDF step, so
+  // Arabic renders exactly as the browser already shapes it here (no font
+  // embedding) AND the customer sees the receipt as an inline WhatsApp
+  // thumbnail instead of having to open a separate PDF viewer.
   // Started in the background the moment this modal MOUNTS (see the effect
   // below), not when "واتساب" is clicked — a cashier normally spends a few
   // seconds looking at / printing the receipt first, so by the time they
@@ -720,34 +722,38 @@ function PrintDocumentModal({ doc, onClose }) {
   const printAreaRef = useRef(null);
   const [whatsappSending, setWhatsappSending] = useState(false);
   const [whatsappError, setWhatsappError] = useState("");
-  const [pdfUrl, setPdfUrl] = useState(null);
-  const pdfPrepRef = useRef(null);
+  const [imageUrl, setImageUrl] = useState(null);
+  const imagePrepRef = useRef(null);
 
-  const preparePdfUrl = () => {
-    if (pdfPrepRef.current) return pdfPrepRef.current;
+  // Bucket is still named "invoice-pdfs" (created back when this uploaded
+  // PDFs) — kept as-is rather than provisioning a second bucket + RLS
+  // policies for zero functional benefit; the bucket name is just an
+  // identifier, not a content-type constraint.
+  const prepareImageUrl = () => {
+    if (imagePrepRef.current) return imagePrepRef.current;
     const promise = (async () => {
       const { data } = await auth.getUser();
       const uid = data?.user?.id;
       if (!uid) throw new Error("no_session");
-      const blob = await generateInvoicePdf(printAreaRef.current);
-      const path = `${uid}/${doc.invoiceCode}-${Math.random().toString(36).slice(2, 8)}.pdf`;
-      const { error: uploadErr } = await db.storage.from("invoice-pdfs").upload(path, blob, { contentType: "application/pdf" });
+      const blob = await generateInvoiceImage(printAreaRef.current);
+      const path = `${uid}/${doc.invoiceCode}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+      const { error: uploadErr } = await db.storage.from("invoice-pdfs").upload(path, blob, { contentType: "image/jpeg" });
       if (uploadErr) throw uploadErr;
       const { data: pub } = db.storage.from("invoice-pdfs").getPublicUrl(path);
       return pub?.publicUrl || "";
     })();
-    pdfPrepRef.current = promise;
+    imagePrepRef.current = promise;
     return promise;
   };
 
   useEffect(() => {
     // Skipped entirely in silent auto-print mode (see `silent` below) —
     // that mode never renders a "واتساب" button for anyone to click, so
-    // preparing a PDF for it would just be a wasted upload.
+    // preparing an image for it would just be a wasted upload.
     if (!doc.customerPhone || silent) return;
-    preparePdfUrl().then(setPdfUrl).catch((e) => {
-      console.error("background whatsapp pdf prep failed", e);
-      pdfPrepRef.current = null; // let a manual click retry from scratch
+    prepareImageUrl().then(setImageUrl).catch((e) => {
+      console.error("background whatsapp image prep failed", e);
+      imagePrepRef.current = null; // let a manual click retry from scratch
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -757,17 +763,17 @@ function PrintDocumentModal({ doc, onClose }) {
     setWhatsappError("");
     setWhatsappSending(true);
     // Opened synchronously, inside this click's own call stack, whether or
-    // not the PDF is ready yet — needed both to stay popup-blocker-safe if
-    // we still have to await preparePdfUrl() below, and to give
+    // not the image is ready yet — needed both to stay popup-blocker-safe
+    // if we still have to await prepareImageUrl() below, and to give
     // openWhatsApp a stable tab to redirect (desktop-app attempt, then web
     // fallback) either way.
     const waTab = window.open("", "_blank");
     try {
-      let url = pdfUrl;
+      let url = imageUrl;
       if (url === null) {
         if (waTab) waTab.document.write(WHATSAPP_PREPARING_HTML);
-        url = await preparePdfUrl();
-        setPdfUrl(url);
+        url = await prepareImageUrl();
+        setImageUrl(url);
       }
       const message = fillWhatsAppTemplate(doc.whatsappTemplate, {
         customer_name: doc.customerName || "",
