@@ -2012,6 +2012,10 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
 
     setCart([]); setIsDelivery(false); setDeliveryFee(""); setAppliedCoupon(null); setCouponCode(""); setCouponError("");
     setPayMethod("External Network"); setSplitMethod1("Cash"); setSplitAmount1(""); setSplitMethod2("Wallet Balance");
+    // Force the cashier to explicitly pick a customer for every new sale —
+    // leaving the previous invoice's customer selected risks a piece being
+    // rung up under the wrong customer's ledger by mistake.
+    setCustomerId("");
     } finally {
       saleSubmittingRef.current = false;
       setSaleSubmitting(false);
