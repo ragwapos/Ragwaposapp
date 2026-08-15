@@ -1793,7 +1793,7 @@ function ProductModal({ product, addons, onClose, onConfirm }) {
                 min="1"
                 value={qty}
                 onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))}
-                className="f-mono w-12 border-0 bg-transparent text-center text-sm outline-none"
+                className="f-mono w-12 border-0 bg-transparent text-center text-sm outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
               <button onClick={() => setQty((q) => q + 1)} className="px-3 py-1 text-slate-600 hover:bg-stone-100">+</button>
             </div>
