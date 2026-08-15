@@ -257,6 +257,29 @@ function retentionShade(pct) {
 
 const uid = (p = "id") => `${p}_${Math.random().toString(36).slice(2, 9)}`;
 const sar = (n) => `${(Math.round((n + Number.EPSILON) * 100) / 100).toFixed(2)} SAR`;
+// 1-9 from either the main number row or the numpad. `e.key` alone handles
+// the main row (and the numpad too, but only while NumLock is on — with it
+// off, numpad keys report as Home/End/etc via `key` instead of a digit).
+// `e.code` is NumLock-independent, so checking it too keeps numpad shortcuts
+// working either way, matching the main POS keyboard shortcuts below.
+function digitFromKeyEvent(e) {
+  if (/^[1-9]$/.test(e.key)) return Number(e.key);
+  const m = /^(?:Digit|Numpad)([1-9])$/.exec(e.code);
+  return m ? Number(m[1]) : null;
+}
+// Shared by the POS screen's quick-access shortcuts and the Product Options
+// Modal's own shortcuts (see ProductModal) — a single window keydown
+// listener, added/removed as `active` toggles rather than left permanently
+// attached and self-filtering, so only one of the two is ever actually
+// listening at a time: the modal mounting flips the POS screen's `active`
+// to false in the same render that mounts the modal's own listener.
+function useKeydown(handler, active = true) {
+  useEffect(() => {
+    if (!active) return;
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [handler, active]);
+}
 // Every upload in this app (product image, purchase invoice attachment) is
 // read via FileReader.readAsDataURL and stored as a base64 string directly
 // in a Postgres text column — there's no object-storage backend, no server
@@ -1051,6 +1074,8 @@ const DICT = {
     products_errName: "Enter a product name.", products_errCategory: "Choose or add a category.",
     upload_tooLarge: "File is too large.", upload_badType: "Unsupported file type.",
     products_errService: "You must set the price of at least one service.",
+    products_quickAccess: "Quick-Access Shortcut", products_quickAccessNone: "None",
+    products_quickAccessTaken: "This number is already used by another product.",
     products_table_product: "Product", products_table_category: "Category", products_table_services: "Services",
     products_table_from: "From", products_table_cost: "Cost", products_table_status: "Status",
     products_table_empty: "No products yet. Add your first product from the form on the left.",
@@ -1272,6 +1297,8 @@ const DICT = {
     products_errName: "حط اسم المنتج.", products_errCategory: "اختر أو أضف فئة.",
     upload_tooLarge: "حجم الملف كبير جداً.", upload_badType: "نوع الملف غير مدعوم.",
     products_errService: "لازم تحط سعر خدمة واحدة على الأقل.",
+    products_quickAccess: "إضافة وصول سريع للمنتج", products_quickAccessNone: "بدون",
+    products_quickAccessTaken: "هذا الزر مستخدم لمنتج آخر.",
     products_table_product: "المنتج", products_table_category: "الفئة", products_table_services: "الخدمات",
     products_table_from: "يبدأ من", products_table_cost: "التكلفة", products_table_status: "الحالة",
     products_table_empty: "لا توجد منتجات بعد. أضف أول منتج من النموذج على اليسار.",
@@ -1493,6 +1520,8 @@ const DICT = {
     products_errName: "پروڈکٹ کا نام درج کریں۔", products_errCategory: "کیٹگری منتخب کریں یا شامل کریں۔",
     upload_tooLarge: "فائل بہت بڑی ہے۔", upload_badType: "فائل کی قسم معاون نہیں ہے۔",
     products_errService: "کم از کم ایک سروس کی قیمت درج کرنا لازمی ہے۔",
+    products_quickAccess: "پروڈکٹ کے لیے فوری رسائی شارٹ کٹ", products_quickAccessNone: "کوئی نہیں",
+    products_quickAccessTaken: "یہ نمبر پہلے سے کسی اور پروڈکٹ کے لیے استعمال ہو رہا ہے۔",
     products_table_product: "پروڈکٹ", products_table_category: "کیٹگری", products_table_services: "سروسز",
     products_table_from: "شروع قیمت", products_table_cost: "لاگت", products_table_status: "صورتحال",
     products_table_empty: "ابھی کوئی پروڈکٹ نہیں۔ بائیں طرف فارم سے پہلا پروڈکٹ شامل کریں۔",
@@ -1709,9 +1738,12 @@ function Sidebar({ tab, setTab, sectionLocks, setSectionLocks }) {
 function ProductModal({ product, addons, onClose, onConfirm }) {
   const { t } = useLang();
   const serviceEntries = Object.entries(product.services);
+  // Default state on open: first primary service selected, qty 1 — matches
+  // what the keyboard-first flow (below) needs to always start from.
   const [service, setService] = useState(serviceEntries[0]?.[0] || "");
   const [selectedAddons, setSelectedAddons] = useState([]);
   const [qty, setQty] = useState(1);
+  const qtyInputRef = useRef(null);
 
   const allAddons = [...addons, ...(product.productAddons || [])];
   const servicePrice = product.services[service] || 0;
@@ -1719,6 +1751,24 @@ function ProductModal({ product, addons, onClose, onConfirm }) {
   const lineTotal = (servicePrice + addonsTotal) * qty;
 
   const toggleAddon = (id) => setSelectedAddons((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+  const confirm = () => onConfirm({ cartId: uid("cart"), productId: product.id, name: product.name, image: product.image, service, servicePrice, addons: selectedAddons.map((id) => allAddons.find((a) => a.id === id)), qty, lineTotal });
+
+  // Modal-scoped shortcuts — mounting this modal already stops the POS
+  // screen's own listener (see POSView), so these are the only ones live
+  // while it's open: 1-9 jump straight to that primary service, Q jumps to
+  // (and selects) the quantity field for instant retyping, Enter confirms
+  // the sale exactly like the button below, Escape cancels with no change.
+  useKeydown((e) => {
+    if (e.key === "Escape") { e.preventDefault(); onClose(); return; }
+    if (e.key === "Enter") { e.preventDefault(); confirm(); return; }
+    if (e.key === "q" || e.key === "Q") {
+      e.preventDefault();
+      qtyInputRef.current?.select();
+      return;
+    }
+    const num = digitFromKeyEvent(e);
+    if (num && num <= serviceEntries.length) { e.preventDefault(); setService(serviceEntries[num - 1][0]); }
+  });
 
   return (
     <Modal title={product.name} onClose={onClose} width="max-w-xl">
@@ -1737,7 +1787,14 @@ function ProductModal({ product, addons, onClose, onConfirm }) {
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t("productModal_qty")}</span>
             <div className="flex items-center rounded-lg border border-stone-300">
               <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="px-3 py-1 text-slate-600 hover:bg-stone-100">−</button>
-              <span className="f-mono w-10 text-center text-sm">{qty}</span>
+              <input
+                ref={qtyInputRef}
+                type="number"
+                min="1"
+                value={qty}
+                onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))}
+                className="f-mono w-12 border-0 bg-transparent text-center text-sm outline-none"
+              />
               <button onClick={() => setQty((q) => q + 1)} className="px-3 py-1 text-slate-600 hover:bg-stone-100">+</button>
             </div>
           </div>
@@ -1747,9 +1804,10 @@ function ProductModal({ product, addons, onClose, onConfirm }) {
       <div className="mb-5">
         <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("productModal_coreService")}</div>
         <div className="grid grid-cols-3 gap-2">
-          {serviceEntries.map(([name, price]) => (
+          {serviceEntries.map(([name, price], i) => (
             <button key={name} onClick={() => setService(name)}
-              className={`rounded-lg border px-2 py-2.5 text-center transition ${service === name ? "border-teal-600 bg-teal-50 text-teal-800" : "border-stone-200 text-slate-600 hover:border-stone-300"}`}>
+              className={`relative rounded-lg border px-2 py-2.5 text-center transition ${service === name ? "border-teal-600 bg-teal-50 text-teal-800" : "border-stone-200 text-slate-600 hover:border-stone-300"}`}>
+              {i < 9 && <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-[9px] font-bold text-slate-600">{i + 1}</span>}
               <div className="text-xs font-medium">{name}</div>
               <div className="f-mono text-sm font-semibold mt-0.5">{sar(price)}</div>
             </button>
@@ -1778,7 +1836,7 @@ function ProductModal({ product, addons, onClose, onConfirm }) {
       </div>
 
       <button
-        onClick={() => onConfirm({ cartId: uid("cart"), productId: product.id, name: product.name, image: product.image, service, servicePrice, addons: selectedAddons.map((id) => allAddons.find((a) => a.id === id)), qty, lineTotal })}
+        onClick={confirm}
         className="flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 py-3 font-semibold text-white hover:bg-teal-700">
         <Check size={18} /> {t("productModal_confirm")}
       </button>
@@ -2042,6 +2100,23 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
   const visibleProducts = products.filter((p) => p.published && (activeCat === "all" || p.categoryId === activeCat));
   const cartTotal = cart.reduce((s, i) => s + i.lineTotal, 0);
 
+  // 1-9 opens the Product Options Modal for whichever product has that
+  // quick-access key assigned (products_quickAccess in the product form) —
+  // a global assignment, so it fires regardless of the active category tab.
+  // Suppressed whenever a modal is already open or the caller is typing
+  // into a text field (customer search, delivery fee, etc.) — mounting
+  // ProductModal itself flips `active` here to false, handing shortcuts
+  // over to its own listener (see useKeydown).
+  const posShortcutsActive = !modalProduct && !showAddCustomer && !printDoc;
+  useKeydown((e) => {
+    const tag = document.activeElement?.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+    const num = digitFromKeyEvent(e);
+    if (!num) return;
+    const match = products.find((p) => p.published && p.quickAccessKey === num);
+    if (match) { e.preventDefault(); setModalProduct(match); }
+  }, posShortcutsActive);
+
   const autoPromos = promotions.filter((p) => !p.couponOn && isPromoActive(p));
   const applicablePromos = appliedCoupon ? [...autoPromos, appliedCoupon] : autoPromos;
   const discountAmount = Math.min(cartTotal, applicablePromos.reduce((s, p) => s + promoDiscount(p, cartTotal), 0));
@@ -2197,7 +2272,10 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
           </div>
           <div className="grid flex-1 auto-rows-max grid-cols-2 gap-4 overflow-y-auto pr-1 sm:grid-cols-3 xl:grid-cols-4">
             {visibleProducts.map((p) => (
-              <button key={p.id} onClick={() => setModalProduct(p)} className="text-left rounded-xl border border-stone-200 bg-white overflow-hidden hover:shadow-md hover:border-teal-300 transition">
+              <button key={p.id} onClick={() => setModalProduct(p)} className="relative text-left rounded-xl border border-stone-200 bg-white overflow-hidden hover:shadow-md hover:border-teal-300 transition">
+                {p.quickAccessKey && (
+                  <span className="absolute top-1.5 right-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900 text-[11px] font-bold text-white shadow">{p.quickAccessKey}</span>
+                )}
                 {p.image ? (
                   <img src={p.image} alt={p.name} className="h-28 w-full object-cover" />
                 ) : (
@@ -2955,12 +3033,15 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
 /* =========================================================================
    MODULE 4 — INVENTORY
    ========================================================================= */
-function EditProductModal({ product, categories, addCategory, serviceTypes, addServiceType, updateProduct, onClose }) {
+function EditProductModal({ product, categories, addCategory, serviceTypes, addServiceType, updateProduct, products, onClose }) {
   const { t } = useLang();
   const [name, setName] = useState(product.name);
   const [categoryId, setCategoryId] = useState(product.categoryId);
   const [published, setPublished] = useState(product.published);
   const [imgPreview, setImgPreview] = useState(product.image);
+  // "" means no shortcut assigned — explicit-assignment-only, never auto-picked.
+  const [quickAccessKey, setQuickAccessKey] = useState(product.quickAccessKey ? String(product.quickAccessKey) : "");
+  const quickAccessTaken = quickAccessKey !== "" && products.some((p) => p.id !== product.id && p.quickAccessKey === Number(quickAccessKey));
   const fileRef = useRef(null);
   const [showAddService, setShowAddService] = useState(false);
   const [newServiceName, setNewServiceName] = useState("");
@@ -3009,8 +3090,9 @@ function EditProductModal({ product, categories, addCategory, serviceTypes, addS
     if (!name.trim()) { setFormError(t("products_errName")); return; }
     if (!categoryId) { setFormError(t("products_errCategory")); return; }
     if (Object.keys(filledServices).length === 0) { setFormError(t("products_errService")); return; }
+    if (quickAccessTaken) { setFormError(t("products_quickAccessTaken")); return; }
     const minPrice = Math.min(...Object.values(filledServices));
-    updateProduct(product.id, { name: name.trim(), categoryId, image: imgPreview, published, price: minPrice, services: filledServices, productAddons });
+    updateProduct(product.id, { name: name.trim(), categoryId, image: imgPreview, published, price: minPrice, services: filledServices, productAddons, quickAccessKey: quickAccessKey === "" ? null : Number(quickAccessKey) });
     onClose();
   };
 
@@ -3068,6 +3150,14 @@ function EditProductModal({ product, categories, addCategory, serviceTypes, addS
         </div>
       </div>
 
+      <Field label={t("products_quickAccess")}>
+        <select value={quickAccessKey} onChange={(e) => setQuickAccessKey(e.target.value)} className={`${inputCls} ${quickAccessTaken ? "border-rose-400" : ""}`}>
+          <option value="">{t("products_quickAccessNone")}</option>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => <option key={n} value={n}>{n}</option>)}
+        </select>
+        {quickAccessTaken && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("products_quickAccessTaken")}</div>}
+      </Field>
+
       <div className="mb-4"><Toggle checked={published} onChange={setPublished} label={published ? t("products_liveOnPos") : t("products_draft")} /></div>
       {formError && <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{formError}</div>}
       <button onClick={save} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("products_saveChanges")}</button>
@@ -3092,6 +3182,8 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
   const [productAddons, setProductAddons] = useState([]);
   const [pAddonName, setPAddonName] = useState("");
   const [pAddonPrice, setPAddonPrice] = useState("");
+  const [quickAccessKey, setQuickAccessKey] = useState("");
+  const quickAccessTaken = quickAccessKey !== "" && products.some((p) => p.quickAccessKey === Number(quickAccessKey));
 
   const addProductAddon = () => {
     if (!pAddonName.trim()) return;
@@ -3136,14 +3228,16 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
     if (!name.trim()) { setFormError(t("products_errName")); return; }
     if (!categoryId) { setFormError(t("products_errCategory")); return; }
     if (Object.keys(filledServices).length === 0) { setFormError(t("products_errService")); return; }
+    if (quickAccessTaken) { setFormError(t("products_quickAccessTaken")); return; }
 
     const minPrice = Math.min(...Object.values(filledServices));
     addProduct({
       name: name.trim(), categoryId, image: imgPreview || "",
       price: minPrice, cost: 0, noCost: true, published,
       services: filledServices, productAddons,
+      quickAccessKey: quickAccessKey === "" ? null : Number(quickAccessKey),
     });
-    setName(""); setServicePrices({}); setImgPreview(""); setPublished(true); setProductAddons([]);
+    setName(""); setServicePrices({}); setImgPreview(""); setPublished(true); setProductAddons([]); setQuickAccessKey("");
   };
 
   return (
@@ -3202,6 +3296,14 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
           </div>
         </div>
 
+        <Field label={t("products_quickAccess")}>
+          <select value={quickAccessKey} onChange={(e) => setQuickAccessKey(e.target.value)} className={`${inputCls} ${quickAccessTaken ? "border-rose-400" : ""}`}>
+            <option value="">{t("products_quickAccessNone")}</option>
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+          {quickAccessTaken && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("products_quickAccessTaken")}</div>}
+        </Field>
+
         <div className="mb-3"><Toggle checked={published} onChange={setPublished} label={published ? t("products_liveOnPos") : t("products_draft")} /></div>
         {formError && <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{formError}</div>}
         <button onClick={submit} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("products_save")}</button>
@@ -3254,6 +3356,7 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
           categories={categories} addCategory={addCategory}
           serviceTypes={serviceTypes} addServiceType={addServiceType}
           updateProduct={updateProduct}
+          products={products}
           onClose={() => setEditingProduct(null)}
         />
       )}
