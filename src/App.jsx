@@ -1761,7 +1761,11 @@ function ProductModal({ product, addons, onClose, onConfirm }) {
   useKeydown((e) => {
     if (e.key === "Escape") { e.preventDefault(); onClose(); return; }
     if (e.key === "Enter") { e.preventDefault(); confirm(); return; }
-    if (e.key === "q" || e.key === "Q") {
+    // e.code (not just e.key) so this fires off the same physical key
+    // regardless of the active keyboard language — "ض" sits on the same key
+    // as "Q" in the Arabic layout, and e.code identifies that key directly
+    // rather than whatever character the current layout happens to print.
+    if (e.key === "q" || e.key === "Q" || e.key === "ض" || e.code === "KeyQ") {
       e.preventDefault();
       qtyInputRef.current?.select();
       return;
