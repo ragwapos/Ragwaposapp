@@ -1778,7 +1778,7 @@ function ProductModal({ product, addons, onClose, onConfirm }) {
     <Modal title={product.name} onClose={onClose} width="max-w-xl">
       <div className="flex gap-5 mb-5">
         {product.image ? (
-          <img src={product.image} alt={product.name} className="h-36 w-36 rounded-xl object-cover ring-1 ring-stone-200" />
+          <img src={product.image} alt={product.name} loading="lazy" decoding="async" className="h-36 w-36 rounded-xl object-cover ring-1 ring-stone-200" />
         ) : (
           <div className="flex h-36 w-36 shrink-0 items-center justify-center rounded-xl border border-dashed border-stone-300 bg-stone-50">
             <ImageIcon size={28} className="text-stone-300" />
@@ -2281,7 +2281,7 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
                   <span className="absolute top-1.5 right-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900 text-[11px] font-bold text-white shadow">{p.quickAccessKey}</span>
                 )}
                 {p.image ? (
-                  <img src={p.image} alt={p.name} className="h-28 w-full object-cover" />
+                  <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="h-28 w-full object-cover" />
                 ) : (
                   <div className="flex h-28 w-full items-center justify-center bg-stone-50">
                     <ImageIcon size={24} className="text-stone-300" />
@@ -3105,7 +3105,7 @@ function EditProductModal({ product, categories, addCategory, serviceTypes, addS
       <Field label={t("products_image")}>
         <div className="flex items-center gap-3">
           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-dashed border-stone-300 bg-stone-50">
-            {imgPreview ? <img src={imgPreview} alt="" className="h-full w-full object-cover" /> : <ImageIcon size={20} className="text-stone-300" />}
+            {imgPreview ? <img src={imgPreview} alt={t("products_image")} className="h-full w-full object-cover" /> : <ImageIcon size={20} className="text-stone-300" />}
           </div>
           <button onClick={() => fileRef.current.click()} className="rounded-lg border border-stone-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-stone-50"><Upload size={13} className="inline mr-1" /> {t("products_upload")}</button>
           <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
@@ -3251,7 +3251,7 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
         <Field label={t("products_image")}>
           <div className="flex items-center gap-3">
             <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-dashed border-stone-300 bg-stone-50">
-              {imgPreview ? <img src={imgPreview} alt="" className="h-full w-full object-cover" /> : <ImageIcon size={20} className="text-stone-300" />}
+              {imgPreview ? <img src={imgPreview} alt={t("products_image")} className="h-full w-full object-cover" /> : <ImageIcon size={20} className="text-stone-300" />}
             </div>
             <button onClick={() => fileRef.current.click()} className="rounded-lg border border-stone-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-stone-50"><Upload size={13} className="inline mr-1" /> {t("products_upload")}</button>
             <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
@@ -3322,7 +3322,7 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
             <tbody className="divide-y divide-stone-100">
               {products.map((p) => (
                 <tr key={p.id} onClick={() => setEditingProduct(p)} className="cursor-pointer hover:bg-stone-50">
-                  <td className="px-4 py-3 w-56"><div className="flex items-center justify-center gap-2">{p.image ? <img src={p.image} alt="" className="h-8 w-8 shrink-0 rounded object-cover" /> : <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-stone-100"><ImageIcon size={14} className="text-stone-300" /></div>}<span className="truncate font-medium text-slate-900">{p.name}</span></div></td>
+                  <td className="px-4 py-3 w-56"><div className="flex items-center justify-center gap-2">{p.image ? <img src={p.image} alt="" loading="lazy" decoding="async" className="h-8 w-8 shrink-0 rounded object-cover" /> : <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-stone-100"><ImageIcon size={14} className="text-stone-300" /></div>}<span className="truncate font-medium text-slate-900">{p.name}</span></div></td>
                   <td className="px-4 py-3 text-center text-slate-600 truncate">{categories.find((c) => c.id === p.categoryId)?.name || "—"}</td>
                   <td className="px-4 py-3 text-center text-xs text-slate-500 truncate">{Object.keys(p.services).join(" · ")}</td>
                   <td className="px-4 py-3 f-mono text-slate-800 w-28" style={{ textAlign: "center" }}>{sarCompact(p.price)}</td>
