@@ -15,6 +15,7 @@ import { auth, db } from "./supabase";
 import { toSnakeCase, toCamelCase } from "./utils/transforms.js";
 import { normalizeSaudiMobile, isValidSaudiMobile, cleanPhoneForWhatsApp, fillWhatsAppTemplate, DEFAULT_WHATSAPP_TEMPLATE } from "./utils/phone.js";
 import { generateInvoiceImage } from "./utils/invoiceImage.js";
+import { useClarityTracking } from "./utils/clarity.js";
 
 /* =========================================================================
    CONSTANTS
@@ -7194,6 +7195,13 @@ const LaundryPOS = () => {
       setContactName(''); setContactMobile(''); setContactEmail(''); setContactMessage(''); setContactType('شراء نظام');
     }, 1500);
   };
+
+  // Clarity only ever runs on the public marketing/auth pages — never on the
+  // POS, reports, customer/supplier data, or the admin console. Anything
+  // outside this list (dashboard, admin, pending-approval, email
+  // verification) leaves `active` false, which pauses/never loads the tag.
+  const PUBLIC_TRACKED_PAGES = ['landing', 'login', 'signup'];
+  useClarityTracking(!showEmailVerification && PUBLIC_TRACKED_PAGES.includes(currentPage));
 
   if (!authResolved) {
     return (
