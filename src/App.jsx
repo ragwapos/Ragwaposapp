@@ -5296,11 +5296,16 @@ function TenantDataManagementView({ tenants }) {
   const [editingInvoice, setEditingInvoice] = useState(null);
 
   useEffect(() => {
-    if (!mgmtTenantId) {
-      setInvoices([]); setProducts([]); setCategories([]); setCustomers([]);
-      setExpenses([]); setExpenseCategories([]); setPurchases([]); setSettings({ enabledPayMethods: {} });
-      return;
-    }
+    // Reset on every switch (not just when cleared to ""). subscribeToTable's
+    // initial-fetch merge assumes any row in `prev` missing from the fresh
+    // fetch is a same-tenant optimistic update not yet echoed back — true
+    // within one tenant's session, but false here: switching mgmtTenantId
+    // means `prev` is the OLD tenant's rows, which share no ids with the new
+    // tenant's fetch, so without this reset every row would be kept as
+    // "optimistic" and merged into the new tenant's data instead of replaced.
+    setInvoices([]); setProducts([]); setCategories([]); setCustomers([]);
+    setExpenses([]); setExpenseCategories([]); setPurchases([]); setSettings({ enabledPayMethods: {} });
+    if (!mgmtTenantId) return;
     const unsubs = [
       subscribeToTable("invoices", "tenant_id", mgmtTenantId, setInvoices),
       subscribeToTable("products", "tenant_id", mgmtTenantId, setProducts),
