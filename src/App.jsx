@@ -6814,6 +6814,10 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
             </div>
           </div>
 
+          <div className="text-left mb-4 -mt-2">
+            <button onClick={() => setCurrentPage('forgotPassword')} className="text-cyan-400 hover:text-cyan-300 text-xs">نسيت كلمة المرور؟</button>
+          </div>
+
           {loginError && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{loginError}</div>}
 
           <button onClick={handleLogin} disabled={loginLoading} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-6">
@@ -6823,6 +6827,110 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
           <p className="text-center text-gray-400 text-sm">
             ليس لديك حساب؟ <button onClick={() => setCurrentPage('signup')} className="text-cyan-400 hover:text-cyan-300">إنشاء حساب</button>
           </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Sends the recovery email (Supabase's own default link-based flow —
+// clicking it redirects back here with a session already exchanged, which
+// onAuthStateChange picks up as a PASSWORD_RECOVERY event and routes to
+// ResetPasswordPage). Self-contained: reads/writes nothing from LaundryPOS's
+// own state, just `auth` directly, same as LandingPage/LoginPage.
+function ForgotPasswordPage({ setCurrentPage }) {
+  const [email, setEmail] = useState('');
+  const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async () => {
+    const emailNorm = email.trim().toLowerCase();
+    if (!emailNorm) { setError('حط بريدك الإلكتروني.'); return; }
+    setLoading(true); setError('');
+    const { error: err } = await auth.resetPasswordForEmail(emailNorm, { redirectTo: window.location.origin });
+    if (err) setError(authErrorMessage(err));
+    else setSent(true);
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <img src={LOGO_DATA_URI} alt="Ragwa" className="inline-block w-16 h-16 rounded-2xl object-contain mb-4 shadow-lg" />
+          <h1 className="text-3xl font-bold text-white mb-2">رغوة</h1>
+        </div>
+        <div className="bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
+          <h2 className="text-2xl font-bold text-center mb-1">استرجاع كلمة المرور</h2>
+          {sent ? (
+            <>
+              <p className="text-gray-400 text-center text-sm mb-8">تم إرسال رابط استرجاع كلمة المرور لبريدك — افتحه من نفس الجهاز اللي بتحط فيه كلمة المرور الجديدة.</p>
+              <button onClick={() => setCurrentPage('login')} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 rounded-lg transition">رجوع لتسجيل الدخول</button>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-400 text-center text-sm mb-8">حط بريدك الإلكتروني وبنرسل لك رابط لتعيين كلمة مرور جديدة.</p>
+              <div className="mb-6">
+                <label className="block text-gray-300 text-sm font-semibold mb-3">البريد الإلكتروني</label>
+                <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" dir="rtl" />
+              </div>
+              {error && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{error}</div>}
+              <button onClick={submit} disabled={loading} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-6">
+                {loading ? 'جارٍ الإرسال...' : 'إرسال رابط الاسترجاع'}
+              </button>
+              <p className="text-center text-gray-400 text-sm">
+                <button onClick={() => setCurrentPage('login')} className="text-cyan-400 hover:text-cyan-300">رجوع لتسجيل الدخول</button>
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Reached only via the PASSWORD_RECOVERY auth event (see the
+// onAuthStateChange listener in LaundryPOS) — a real recovery session
+// already exists at this point, so auth.updateUser() is all that's needed.
+function ResetPasswordPage({ onDone }) {
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const submit = async () => {
+    if (!password || password.length < 6) { setError('كلمة المرور لازم تكون 6 أحرف على الأقل.'); return; }
+    if (password !== confirm) { setError('كلمتا المرور غير متطابقتين.'); return; }
+    setLoading(true); setError('');
+    const { error: err } = await auth.updateUser({ password });
+    if (err) { setError(authErrorMessage(err)); setLoading(false); return; }
+    setLoading(false);
+    onDone();
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <img src={LOGO_DATA_URI} alt="Ragwa" className="inline-block w-16 h-16 rounded-2xl object-contain mb-4 shadow-lg" />
+          <h1 className="text-3xl font-bold text-white mb-2">رغوة</h1>
+        </div>
+        <div className="bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
+          <h2 className="text-2xl font-bold text-center mb-1">تعيين كلمة مرور جديدة</h2>
+          <p className="text-gray-400 text-center text-sm mb-8">حط كلمة المرور الجديدة اللي بتستخدمها من الحين.</p>
+          <div className="mb-6">
+            <label className="block text-gray-300 text-sm font-semibold mb-3">كلمة المرور الجديدة</label>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
+          </div>
+          <div className="mb-6">
+            <label className="block text-gray-300 text-sm font-semibold mb-3">تأكيد كلمة المرور</label>
+            <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
+          </div>
+          {error && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{error}</div>}
+          <button onClick={submit} disabled={loading} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition">
+            {loading ? 'جارٍ الحفظ...' : 'حفظ كلمة المرور'}
+          </button>
         </div>
       </div>
     </div>
@@ -7100,6 +7208,17 @@ const LaundryPOS = () => {
     const { data: { subscription } } = auth.onAuthStateChange(async (event, session) => {
       const user = session?.user;
       if (!user) { setAuthResolved(true); return; }
+      // Fires when the user lands back on the site via a password-recovery
+      // link (auth.resetPasswordForEmail) — Supabase already exchanges it
+      // for a real session by this point, so intercept BEFORE the normal
+      // resolveDestination routing (which would otherwise send them
+      // straight to their dashboard/pending screen instead of letting them
+      // actually set a new password).
+      if (event === 'PASSWORD_RECOVERY') {
+        setCurrentPage('resetPassword');
+        setAuthResolved(true);
+        return;
+      }
       try {
         const dest = await resolveDestination(user);
         if (dest.page === 'verify') {
@@ -7208,33 +7327,22 @@ const LaundryPOS = () => {
       // already exists. So this must be the ONLY place that creates the
       // account; calling auth.signUp() here too (the old code did, before
       // this fetch) silently broke the branded Resend email on every signup.
+      //
+      // It also now writes the registration_requests/tenants rows itself
+      // (service-role client, server-side) instead of this still-anonymous
+      // client doing those inserts — the anon-role INSERT policies that
+      // used to make that possible had to be wide open (no ownership
+      // check at all, since no session exists yet at this point), which
+      // meant literally anyone with the public anon key could POST
+      // directly to Supabase's REST API and insert arbitrary tenants /
+      // registration_requests rows with zero signup, zero verification.
+      // See supabase-close-anon-signup-inserts.sql.
       const resp = await fetch('/api/send-verification-email', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailNorm, password: signupPassword, shopName }),
+        body: JSON.stringify({ email: emailNorm, password: signupPassword, shopName, mobile: signupMobile, address }),
       });
       const result = await resp.json();
       if (!result.success) throw { message: result.error, code: result.code };
-      const user = result.user;
-
-      const approved = autoApprove;
-      const { error: reqErr } = await db.from('registration_requests').insert(toSnakeCase({
-        uid: user.id, shopName, mobile: signupMobile, email: emailNorm, address,
-        date: new Date().toISOString(), status: approved ? 'approved' : 'pending', rejectReason: '',
-      }));
-      if (reqErr) throw reqErr;
-      if (approved) {
-        // insert(), not upsert(): this id is a just-created auth user, so a
-        // conflicting row can never legitimately exist here — and upsert's
-        // INSERT ... ON CONFLICT DO UPDATE needs the UPDATE policy to pass
-        // too (in case the conflict branch is taken), not just INSERT's.
-        // tenants' UPDATE policy is scoped to auth.uid(), which this
-        // still-anon signup client doesn't have, so upsert() was rejected by
-        // RLS here even though no conflict could ever actually occur.
-        const { error: tenantErr } = await db.from('tenants').insert(toSnakeCase({
-          id: user.id, shopName, mobile: signupMobile, email: emailNorm, address, approvedDate: new Date().toISOString(),
-        }));
-        if (tenantErr) throw tenantErr;
-      }
 
       setPendingSignup({ email: emailNorm });
       setShowEmailVerification(true);
@@ -7349,6 +7457,10 @@ const LaundryPOS = () => {
       loginPassword={loginPassword} setLoginPassword={setLoginPassword}
       handleLogin={handleLogin} loginError={loginError} loginLoading={loginLoading}
     />
+  ) : currentPage === 'forgotPassword' ? (
+    <ForgotPasswordPage setCurrentPage={setCurrentPage} />
+  ) : currentPage === 'resetPassword' ? (
+    <ResetPasswordPage onDone={async () => { await auth.signOut(); setCurrentPage('login'); }} />
   ) : currentPage === 'signup' ? (
     <SignupPage
       setCurrentPage={setCurrentPage} signupShop={signupShop} setSignupShop={setSignupShop}

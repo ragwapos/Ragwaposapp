@@ -58,7 +58,7 @@ function emailHtml({ shopName, otp }) {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
 
-  const { email, password, shopName } = req.body || {};
+  const { email, password, shopName, mobile, address } = req.body || {};
   if (!email || !password) return res.status(400).json({ success: false, error: 'email and password are required' });
 
   try {
@@ -82,10 +82,34 @@ export default async function handler(req, res) {
     });
     if (sendErr) throw sendErr;
 
-    // generateLink is what actually creates the Supabase Auth user (type:
-    // 'signup' behaves like signUp() itself) — the caller never calls
-    // auth.signUp() separately, so it needs this user object back to know
-    // the new uid for its own registration_requests/tenants inserts.
+    // registration_requests/tenants used to be inserted by the still-
+    // anonymous client right after this call returned — that required an
+    // anon-role INSERT policy on both tables with no ownership check at
+    // all (no session exists yet client-side at that point), which meant
+    // anyone with the public anon key could insert arbitrary rows into
+    // either table directly, no signup required. Doing both inserts here
+    // instead, with the service-role client, closes that off entirely —
+    // see supabase-close-anon-signup-inserts.sql, which drops those two
+    // policies now that nothing needs them.
+    const uid = linkData.user.id;
+    const { data: cfgRow, error: cfgErr } = await supabaseAdmin.from('platform_config').select('auto_approve').eq('id', true).maybeSingle();
+    if (cfgErr) throw cfgErr;
+    const approved = cfgRow?.auto_approve ?? true;
+
+    const { error: reqErr } = await supabaseAdmin.from('registration_requests').insert({
+      uid, shop_name: shopName || '—', mobile: mobile || '—', email, address: address || '—',
+      date: new Date().toISOString(), status: approved ? 'approved' : 'pending', reject_reason: '',
+    });
+    if (reqErr) throw reqErr;
+
+    if (approved) {
+      const { error: tenantErr } = await supabaseAdmin.from('tenants').insert({
+        id: uid, shop_name: shopName || '—', mobile: mobile || '—', email, address: address || '—',
+        approved_date: new Date().toISOString(),
+      });
+      if (tenantErr) throw tenantErr;
+    }
+
     return res.status(200).json({ success: true, user: linkData.user });
   } catch (e) {
     console.error('send-verification-email error', e);

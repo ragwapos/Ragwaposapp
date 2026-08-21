@@ -80,7 +80,10 @@ export default async function handler(req, res) {
     try { zatcaData = JSON.parse(zatcaText); } catch { /* non-JSON error body */ }
 
     if (!zatcaRes.ok) {
-      const message = `ZATCA compliance request failed (HTTP ${zatcaRes.status}): ${zatcaData ? JSON.stringify(zatcaData) : zatcaText}`;
+      // Capped — this is the raw upstream ZATCA response body, and it's
+      // both stored and returned straight to the client; no reason to let
+      // an unusually large/unexpected error body through uncapped.
+      const message = `ZATCA compliance request failed (HTTP ${zatcaRes.status}): ${(zatcaData ? JSON.stringify(zatcaData) : zatcaText).slice(0, 500)}`;
       await supabaseAdmin.from('zatca_configurations').update({
         last_error_at: new Date().toISOString(),
         last_error_message: message,
