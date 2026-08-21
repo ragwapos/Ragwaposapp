@@ -3108,10 +3108,14 @@ function EditProductModal({ product, categories, addCategory, serviceTypes, addS
     if (Object.keys(filledServices).length === 0) { setFormError(t("products_errService")); return; }
     if (quickAccessTaken) { setFormError(t("products_quickAccessTaken")); return; }
     const minPrice = Math.min(...Object.values(filledServices));
-    updateProduct(product.id, { name: name.trim(), categoryId, image: imgPreview, published, price: minPrice, services: filledServices, productAddons, quickAccessKey: quickAccessKey === "" ? null : Number(quickAccessKey) });
-    // Old image only becomes safe to drop once the row itself points
-    // elsewhere — fire-and-forget, a failed cleanup just leaves an orphan.
-    if (product.image && product.image !== imgPreview) deleteTenantFile(product.image);
+    const writeDone = updateProduct(product.id, { name: name.trim(), categoryId, image: imgPreview, published, price: minPrice, services: filledServices, productAddons, quickAccessKey: quickAccessKey === "" ? null : Number(quickAccessKey) });
+    // Old image only becomes safe to drop once the row is CONFIRMED to
+    // point elsewhere — deleting it before that (e.g. right away, in
+    // parallel with the write) could leave a product pointing at a
+    // just-deleted file if this write happens to fail and rolls back.
+    if (product.image && product.image !== imgPreview) {
+      writeDone.then(({ error }) => { if (!error) deleteTenantFile(product.image); });
+    }
     onClose();
   };
 
@@ -3632,10 +3636,14 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
                     <td className="px-4 py-3 w-32 text-center text-slate-600">{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</td>
                     <td className="px-4 py-3 f-mono text-slate-500 w-40" style={{ textAlign: "center" }}>{e.date}</td>
                     <td className="px-4 py-3 text-slate-500">
-                      {e.receipt ? (
+                      {e.receipt?.startsWith("http") ? (
                         <a href={e.receipt} target="_blank" rel="noreferrer" download={e.receiptName || "receipt"} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
                           <ReceiptText size={13} />{e.receiptName || t("common_view")}
                         </a>
+                      ) : e.receipt ? (
+                        // Pre-upload legacy rows: just a filename typed/picked with no
+                        // real file behind it — inert text, not a dead link.
+                        <span>{e.receipt}</span>
                       ) : <span className="text-slate-300">—</span>}
                     </td>
                   </tr>
@@ -4039,10 +4047,14 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
                     <td className="px-4 py-3 w-48 text-center text-slate-600">{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</td>
                     <td className="px-4 py-3 f-mono text-slate-500 w-72" style={{ textAlign: "center" }}>{e.date}</td>
                     <td className="px-4 py-3 text-slate-500">
-                      {e.receipt ? (
+                      {e.receipt?.startsWith("http") ? (
                         <a href={e.receipt} target="_blank" rel="noreferrer" download={e.receiptName || "receipt"} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
                           <ReceiptText size={13} />{e.receiptName || t("common_view")}
                         </a>
+                      ) : e.receipt ? (
+                        // Pre-upload legacy rows: just a filename typed/picked with no
+                        // real file behind it — inert text, not a dead link.
+                        <span>{e.receipt}</span>
                       ) : <span className="text-slate-300">—</span>}
                     </td>
                   </tr>
@@ -4751,11 +4763,17 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     });
     return { id, ...data };
   };
+  // Returns the write's outcome (not fire-and-forget like the other
+  // optimistic updaters here) — EditProductModal.save() needs to know the
+  // row actually changed before it's safe to delete the OLD image from
+  // Storage; deleting it unconditionally could leave a product pointing at
+  // a now-missing file if this write happened to fail.
   const updateProduct = (productId, patch) => {
     let previous;
     setProductsState((prev) => prev.map((p) => { if (p.id === productId) previous = p; return p.id === productId ? { ...p, ...patch } : p; }));
-    db.from("products").update(toSnakeCase(patch)).eq("id", productId).then(({ error }) => {
+    return db.from("products").update(toSnakeCase(patch)).eq("id", productId).then(({ error }) => {
       if (error) { console.error("updateProduct failed", error); if (previous) setProductsState((prev) => prev.map((p) => (p.id === productId ? previous : p))); }
+      return { error };
     });
   };
   const addInvoice = (invoiceData) => {
@@ -7276,8 +7294,12 @@ const LaundryPOS = () => {
   // POS, reports, customer/supplier data, or the admin console. Anything
   // outside this list (dashboard, admin, pending-approval, email
   // verification) leaves `active` false, which pauses/never loads the tag.
+  // Also gated on `authResolved`: `currentPage` defaults to 'landing' before
+  // the session-restore check runs, so a returning already-authenticated
+  // tenant would otherwise have Clarity start()-ing for the instant before
+  // that check redirects them straight to the dashboard.
   const PUBLIC_TRACKED_PAGES = ['landing', 'login', 'signup'];
-  useClarityTracking(!showEmailVerification && PUBLIC_TRACKED_PAGES.includes(currentPage));
+  useClarityTracking(authResolved && !showEmailVerification && PUBLIC_TRACKED_PAGES.includes(currentPage));
 
   if (!authResolved) {
     return (
