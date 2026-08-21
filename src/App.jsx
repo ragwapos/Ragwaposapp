@@ -124,6 +124,12 @@ function subscribeToRow(table, filterColumn, filterValue, setState) {
 const authErrorMessage = (error) => {
   const code = error && error.code;
   switch (code) {
+    // Confirmed live: Supabase's admin.generateLink({type:'signup'}) actually
+    // returns code "email_exists" for a duplicate email (verified via a real
+    // request against the production API) — "user_already_exists" was never
+    // the real value, so this branch was silently dead and every duplicate-
+    // signup attempt fell through to the raw English Supabase message below.
+    case "email_exists":
     case "user_already_exists": return "هذا البريد مسجل مسبقًا — سجل دخول بدل إنشاء حساب جديد.";
     case "email_address_invalid": return "بريد إلكتروني غير صحيح.";
     case "weak_password": return "كلمة المرور ضعيفة — لازم 6 أحرف على الأقل.";
