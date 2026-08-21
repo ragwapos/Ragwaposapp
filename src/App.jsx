@@ -16,6 +16,7 @@ import { toSnakeCase, toCamelCase } from "./utils/transforms.js";
 import { normalizeSaudiMobile, isValidSaudiMobile, cleanPhoneForWhatsApp, fillWhatsAppTemplate, DEFAULT_WHATSAPP_TEMPLATE } from "./utils/phone.js";
 import { generateInvoiceImage } from "./utils/invoiceImage.js";
 import { useClarityTracking } from "./utils/clarity.js";
+import { uploadTenantFile, deleteTenantFile } from "./utils/storage.js";
 
 /* =========================================================================
    CONSTANTS
@@ -281,16 +282,12 @@ function useKeydown(handler, active = true) {
     return () => window.removeEventListener("keydown", handler);
   }, [handler, active]);
 }
-// Every upload in this app (product image, purchase invoice attachment) is
-// read via FileReader.readAsDataURL and stored as a base64 string directly
-// in a Postgres text column — there's no object-storage backend, no server
-// size limit, and no real content check (file.type is client-reported and
-// trivially spoofable, so this is a sanity check, not a security boundary).
-// Unbounded, this both bloats every row a plain `select("*")` fetches for
-// the whole tenant on every load, and lets arbitrary bytes get stored
-// behind a misleading name/type for a colleague to later download and
-// open. This narrows that window; it does not close it — a real fix means
-// moving to Supabase Storage with actual server-side validation.
+// Every upload in this app (product image, purchase invoice attachment,
+// expense receipt) goes through uploadTenantFile (src/utils/storage.js) —
+// straight to Supabase Storage, never through a Postgres column — and only
+// the resulting public URL string gets saved on the row. This check still
+// isn't a real security boundary (file.type is client-reported and
+// trivially spoofable), just a sanity/UX gate before spending an upload.
 const MAX_IMAGE_BYTES = 1.5 * 1024 * 1024;
 const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
@@ -1074,6 +1071,7 @@ const DICT = {
     products_editTitle: "Edit Product", products_saveChanges: "Save Changes",
     products_errName: "Enter a product name.", products_errCategory: "Choose or add a category.",
     upload_tooLarge: "File is too large.", upload_badType: "Unsupported file type.",
+    upload_failed: "Upload failed — check your connection and try again.", upload_uploading: "Uploading...",
     products_errService: "You must set the price of at least one service.",
     products_quickAccess: "Quick-Access Shortcut", products_quickAccessNone: "None",
     products_quickAccessTaken: "This number is already used by another product.",
@@ -1297,6 +1295,7 @@ const DICT = {
     products_editTitle: "تعديل المنتج", products_saveChanges: "حفظ التعديلات",
     products_errName: "حط اسم المنتج.", products_errCategory: "اختر أو أضف فئة.",
     upload_tooLarge: "حجم الملف كبير جداً.", upload_badType: "نوع الملف غير مدعوم.",
+    upload_failed: "فشل رفع الملف — تحقق من الاتصال وحاول مرة ثانية.", upload_uploading: "جارٍ الرفع...",
     products_errService: "لازم تحط سعر خدمة واحدة على الأقل.",
     products_quickAccess: "إضافة وصول سريع للمنتج", products_quickAccessNone: "بدون",
     products_quickAccessTaken: "هذا الزر مستخدم لمنتج آخر.",
@@ -1520,6 +1519,7 @@ const DICT = {
     products_editTitle: "پروڈکٹ میں ترمیم کریں", products_saveChanges: "تبدیلیاں محفوظ کریں",
     products_errName: "پروڈکٹ کا نام درج کریں۔", products_errCategory: "کیٹگری منتخب کریں یا شامل کریں۔",
     upload_tooLarge: "فائل بہت بڑی ہے۔", upload_badType: "فائل کی قسم معاون نہیں ہے۔",
+    upload_failed: "اپ لوڈ ناکام — کنکشن چیک کریں اور دوبارہ کوشش کریں۔", upload_uploading: "اپ لوڈ ہو رہا ہے...",
     products_errService: "کم از کم ایک سروس کی قیمت درج کرنا لازمی ہے۔",
     products_quickAccess: "پروڈکٹ کے لیے فوری رسائی شارٹ کٹ", products_quickAccessNone: "کوئی نہیں",
     products_quickAccessTaken: "یہ نمبر پہلے سے کسی اور پروڈکٹ کے لیے استعمال ہو رہا ہے۔",
@@ -3059,6 +3059,7 @@ function EditProductModal({ product, categories, addCategory, serviceTypes, addS
   const [productAddons, setProductAddons] = useState(product.productAddons || []);
   const [pAddonName, setPAddonName] = useState("");
   const [pAddonPrice, setPAddonPrice] = useState("");
+  const [imgUploading, setImgUploading] = useState(false);
 
   const addProductAddon = () => {
     if (!pAddonName.trim()) return;
@@ -3076,13 +3077,23 @@ function EditProductModal({ product, categories, addCategory, serviceTypes, addS
     addServiceType({ name: newServiceName.trim() });
     setNewServiceName(""); setShowAddService(false);
   };
-  const handleFile = (e) => {
+  const handleFile = async (e) => {
     const file = e.target.files?.[0]; if (!file) return;
     const err = validateUploadedFile(file, { maxBytes: MAX_IMAGE_BYTES, allowedTypes: ALLOWED_IMAGE_TYPES });
-    if (err) { setFormError(t(err)); e.target.value = ""; return; }
-    const reader = new FileReader();
-    reader.onload = () => setImgPreview(reader.result);
-    reader.readAsDataURL(file);
+    e.target.value = "";
+    if (err) { setFormError(t(err)); return; }
+    setFormError(""); setImgUploading(true);
+    try {
+      const { url } = await uploadTenantFile(file, "products");
+      // A re-pick before Save orphans whatever the previous pick uploaded
+      // (not product.image — that one's only replaced once Save succeeds).
+      if (imgPreview && imgPreview !== product.image) deleteTenantFile(imgPreview);
+      setImgPreview(url);
+    } catch {
+      setFormError(t("upload_failed"));
+    } finally {
+      setImgUploading(false);
+    }
   };
 
   const save = () => {
@@ -3098,6 +3109,9 @@ function EditProductModal({ product, categories, addCategory, serviceTypes, addS
     if (quickAccessTaken) { setFormError(t("products_quickAccessTaken")); return; }
     const minPrice = Math.min(...Object.values(filledServices));
     updateProduct(product.id, { name: name.trim(), categoryId, image: imgPreview, published, price: minPrice, services: filledServices, productAddons, quickAccessKey: quickAccessKey === "" ? null : Number(quickAccessKey) });
+    // Old image only becomes safe to drop once the row itself points
+    // elsewhere — fire-and-forget, a failed cleanup just leaves an orphan.
+    if (product.image && product.image !== imgPreview) deleteTenantFile(product.image);
     onClose();
   };
 
@@ -3108,7 +3122,9 @@ function EditProductModal({ product, categories, addCategory, serviceTypes, addS
           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-dashed border-stone-300 bg-stone-50">
             {imgPreview ? <img src={imgPreview} alt={t("products_image")} className="h-full w-full object-cover" /> : <ImageIcon size={20} className="text-stone-300" />}
           </div>
-          <button onClick={() => fileRef.current.click()} className="rounded-lg border border-stone-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-stone-50"><Upload size={13} className="inline mr-1" /> {t("products_upload")}</button>
+          <button disabled={imgUploading} onClick={() => fileRef.current.click()} className="rounded-lg border border-stone-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-stone-50 disabled:opacity-60">
+            {imgUploading ? <Loader2 size={13} className="inline mr-1 animate-spin" /> : <Upload size={13} className="inline mr-1" />} {imgUploading ? t("upload_uploading") : t("products_upload")}
+          </button>
           <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
         </div>
       </Field>
@@ -3165,7 +3181,7 @@ function EditProductModal({ product, categories, addCategory, serviceTypes, addS
 
       <div className="mb-4"><Toggle checked={published} onChange={setPublished} label={published ? t("products_liveOnPos") : t("products_draft")} /></div>
       {formError && <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{formError}</div>}
-      <button onClick={save} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("products_saveChanges")}</button>
+      <button disabled={imgUploading} onClick={save} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("products_saveChanges")}</button>
     </Modal>
   );
 }
@@ -3189,6 +3205,7 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
   const [pAddonPrice, setPAddonPrice] = useState("");
   const [quickAccessKey, setQuickAccessKey] = useState("");
   const quickAccessTaken = quickAccessKey !== "" && products.some((p) => p.quickAccessKey === Number(quickAccessKey));
+  const [imgUploading, setImgUploading] = useState(false);
 
   const addProductAddon = () => {
     if (!pAddonName.trim()) return;
@@ -3214,13 +3231,21 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
     setNewServiceName(""); setShowAddService(false);
   };
 
-  const handleFile = (e) => {
+  const handleFile = async (e) => {
     const file = e.target.files?.[0]; if (!file) return;
     const err = validateUploadedFile(file, { maxBytes: MAX_IMAGE_BYTES, allowedTypes: ALLOWED_IMAGE_TYPES });
-    if (err) { setFormError(t(err)); e.target.value = ""; return; }
-    const reader = new FileReader();
-    reader.onload = () => setImgPreview(reader.result);
-    reader.readAsDataURL(file);
+    e.target.value = "";
+    if (err) { setFormError(t(err)); return; }
+    setFormError(""); setImgUploading(true);
+    try {
+      const { url } = await uploadTenantFile(file, "products");
+      if (imgPreview) deleteTenantFile(imgPreview); // a re-pick before submit orphans the previous one
+      setImgPreview(url);
+    } catch {
+      setFormError(t("upload_failed"));
+    } finally {
+      setImgUploading(false);
+    }
   };
 
   const submit = () => {
@@ -3254,7 +3279,9 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
             <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-dashed border-stone-300 bg-stone-50">
               {imgPreview ? <img src={imgPreview} alt={t("products_image")} className="h-full w-full object-cover" /> : <ImageIcon size={20} className="text-stone-300" />}
             </div>
-            <button onClick={() => fileRef.current.click()} className="rounded-lg border border-stone-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-stone-50"><Upload size={13} className="inline mr-1" /> {t("products_upload")}</button>
+            <button disabled={imgUploading} onClick={() => fileRef.current.click()} className="rounded-lg border border-stone-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-stone-50 disabled:opacity-60">
+              {imgUploading ? <Loader2 size={13} className="inline mr-1 animate-spin" /> : <Upload size={13} className="inline mr-1" />} {imgUploading ? t("upload_uploading") : t("products_upload")}
+            </button>
             <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
           </div>
         </Field>
@@ -3311,7 +3338,7 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
 
         <div className="mb-3"><Toggle checked={published} onChange={setPublished} label={published ? t("products_liveOnPos") : t("products_draft")} /></div>
         {formError && <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{formError}</div>}
-        <button onClick={submit} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("products_save")}</button>
+        <button disabled={imgUploading} onClick={submit} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("products_save")}</button>
       </div>
 
       <div className="lg:col-span-2 space-y-6">
@@ -3382,6 +3409,7 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
   const [method, setMethod] = useState("Cash");
   const [attachment, setAttachment] = useState("");
   const [attachmentName, setAttachmentName] = useState("");
+  const [attachmentUploading, setAttachmentUploading] = useState(false);
   const purchaseFileRef = useRef(null);
   const [payBalanceFor, setPayBalanceFor] = useState(null);
   const [payAmount, setPayAmount] = useState("");
@@ -3407,14 +3435,22 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
     setEditingSupplier(null);
   };
 
-  const handlePurchaseFile = (e) => {
+  const handlePurchaseFile = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const err = validateUploadedFile(file, { maxBytes: MAX_ATTACHMENT_BYTES, allowedTypes: ALLOWED_ATTACHMENT_TYPES });
-    if (err) { setPurchaseError(t(err)); e.target.value = ""; return; }
-    const reader = new FileReader();
-    reader.onload = () => { setAttachment(reader.result); setAttachmentName(file.name); };
-    reader.readAsDataURL(file);
+    e.target.value = "";
+    if (err) { setPurchaseError(t(err)); return; }
+    setPurchaseError(""); setAttachmentUploading(true);
+    try {
+      const { url } = await uploadTenantFile(file, "purchases");
+      if (attachment) deleteTenantFile(attachment); // a re-pick before submit orphans the previous one
+      setAttachment(url); setAttachmentName(file.name);
+    } catch {
+      setPurchaseError(t("upload_failed"));
+    } finally {
+      setAttachmentUploading(false);
+    }
   };
 
   const recordPurchase = async () => {
@@ -3422,7 +3458,7 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
     // — each would otherwise independently succeed at the balance RPC (it's
     // safely atomic per-call) while the resulting purchase record could
     // still end up duplicated or, if a later step failed, missing entirely.
-    if (purchaseSubmittingRef.current || !supplierId || !amount) return;
+    if (purchaseSubmittingRef.current || attachmentUploading || !supplierId || !amount) return;
     const amt = Number(amount);
     setPurchaseError("");
     purchaseSubmittingRef.current = true;
@@ -3474,13 +3510,34 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
   const [taxFlag, setTaxFlag] = useState("Inclusive");
   const [expDate, setExpDate] = useState(new Date().toISOString().slice(0, 10));
   const [receipt, setReceipt] = useState("");
+  const [receiptName, setReceiptName] = useState("");
+  const [receiptUploading, setReceiptUploading] = useState(false);
+  const [expenseError, setExpenseError] = useState("");
   const fileRef = useRef(null);
+
+  const handleReceiptFile = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const err = validateUploadedFile(file, { maxBytes: MAX_ATTACHMENT_BYTES, allowedTypes: ALLOWED_ATTACHMENT_TYPES });
+    e.target.value = "";
+    if (err) { setExpenseError(t(err)); return; }
+    setExpenseError(""); setReceiptUploading(true);
+    try {
+      const { url } = await uploadTenantFile(file, "receipts");
+      if (receipt) deleteTenantFile(receipt); // a re-pick before submit orphans the previous one
+      setReceipt(url); setReceiptName(file.name);
+    } catch {
+      setExpenseError(t("upload_failed"));
+    } finally {
+      setReceiptUploading(false);
+    }
+  };
 
   const addExpCategory = (n) => { const c = addExpenseCategory({ name: n }); setExpCat(c.id); };
   const recordExpense = () => {
-    if (!expCat || !expAmount) return;
-    addExpense({ categoryId: expCat, amount: Number(expAmount), taxFlag, date: expDate, receipt });
-    setExpAmount(""); setReceipt("");
+    if (!expCat || !expAmount || receiptUploading) return;
+    addExpense({ categoryId: expCat, amount: Number(expAmount), taxFlag, date: expDate, receipt, receiptName });
+    setExpAmount(""); setReceipt(""); setReceiptName("");
   };
 
   return (
@@ -3510,11 +3567,14 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
               </div>
             </Field>
             <Field label={t("purchases_invoiceFile")}>
-              <button onClick={() => purchaseFileRef.current.click()} className="w-full rounded-lg border border-dashed border-stone-300 px-3 py-2 text-sm text-slate-500 hover:bg-stone-50"><Upload size={13} className="inline mr-1.5" />{attachmentName || t("purchases_uploadInvoice")}</button>
+              <button disabled={attachmentUploading} onClick={() => purchaseFileRef.current.click()} className="w-full rounded-lg border border-dashed border-stone-300 px-3 py-2 text-sm text-slate-500 hover:bg-stone-50 disabled:opacity-60">
+                {attachmentUploading ? <Loader2 size={13} className="inline mr-1.5 animate-spin" /> : <Upload size={13} className="inline mr-1.5" />}
+                {attachmentUploading ? t("upload_uploading") : (attachmentName || t("purchases_uploadInvoice"))}
+              </button>
               <input ref={purchaseFileRef} type="file" accept="image/*,.pdf" className="hidden" onChange={handlePurchaseFile} />
             </Field>
             {purchaseError && <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{purchaseError}</div>}
-            <button onClick={recordPurchase} disabled={purchaseSubmitting} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("purchases_savePurchase")}</button>
+            <button onClick={recordPurchase} disabled={purchaseSubmitting || attachmentUploading} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("purchases_savePurchase")}</button>
           </div>
 
           <div className="lg:col-span-2 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm h-fit">
@@ -3550,10 +3610,14 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
             </Field>
             <Field label={t("expenses_date")}><input type="date" value={expDate} onChange={(e) => setExpDate(e.target.value)} className={inputCls} /></Field>
             <Field label={t("expenses_receiptFile")}>
-              <button onClick={() => fileRef.current.click()} className="w-full rounded-lg border border-dashed border-stone-300 px-3 py-2 text-sm text-slate-500 hover:bg-stone-50"><Upload size={13} className="inline mr-1.5" />{receipt || t("expenses_uploadReceipt")}</button>
-              <input ref={fileRef} type="file" className="hidden" onChange={(e) => setReceipt(e.target.files?.[0]?.name || "")} />
+              <button disabled={receiptUploading} onClick={() => fileRef.current.click()} className="w-full rounded-lg border border-dashed border-stone-300 px-3 py-2 text-sm text-slate-500 hover:bg-stone-50 disabled:opacity-60">
+                {receiptUploading ? <Loader2 size={13} className="inline mr-1.5 animate-spin" /> : <Upload size={13} className="inline mr-1.5" />}
+                {receiptUploading ? t("upload_uploading") : (receiptName || t("expenses_uploadReceipt"))}
+              </button>
+              <input ref={fileRef} type="file" accept="image/*,.pdf" className="hidden" onChange={handleReceiptFile} />
             </Field>
-            <button onClick={recordExpense} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("expenses_save")}</button>
+            {expenseError && <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{expenseError}</div>}
+            <button onClick={recordExpense} disabled={receiptUploading} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("expenses_save")}</button>
           </div>
           <div className="lg:col-span-2 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm h-fit">
             <table className="w-full text-sm table-fixed">
@@ -3567,7 +3631,13 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
                     <td className="px-4 py-3 f-mono text-slate-800 w-40" style={{ textAlign: "center" }}>{sarCompact(e.amount)}</td>
                     <td className="px-4 py-3 w-32 text-center text-slate-600">{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</td>
                     <td className="px-4 py-3 f-mono text-slate-500 w-40" style={{ textAlign: "center" }}>{e.date}</td>
-                    <td className="px-4 py-3 text-slate-500 flex items-center gap-1"><ReceiptText size={13} />{e.receipt || "—"}</td>
+                    <td className="px-4 py-3 text-slate-500">
+                      {e.receipt ? (
+                        <a href={e.receipt} target="_blank" rel="noreferrer" download={e.receiptName || "receipt"} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
+                          <ReceiptText size={13} />{e.receiptName || t("common_view")}
+                        </a>
+                      ) : <span className="text-slate-300">—</span>}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -3968,7 +4038,13 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
                     <td className="px-4 py-3 f-mono text-slate-800 w-40" style={{ textAlign: "center" }}>{sar(e.amount)}</td>
                     <td className="px-4 py-3 w-48 text-center text-slate-600">{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</td>
                     <td className="px-4 py-3 f-mono text-slate-500 w-72" style={{ textAlign: "center" }}>{e.date}</td>
-                    <td className="px-4 py-3 text-slate-500">{e.receipt || "—"}</td>
+                    <td className="px-4 py-3 text-slate-500">
+                      {e.receipt ? (
+                        <a href={e.receipt} target="_blank" rel="noreferrer" download={e.receiptName || "receipt"} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
+                          <ReceiptText size={13} />{e.receiptName || t("common_view")}
+                        </a>
+                      ) : <span className="text-slate-300">—</span>}
+                    </td>
                   </tr>
                 ))}
                 {filteredExpenses.length === 0 && <tr><td colSpan={5} className="px-4 py-10 text-center text-slate-400">{t("reports_expensesEmpty")}</td></tr>}
