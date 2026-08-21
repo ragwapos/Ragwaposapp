@@ -5967,6 +5967,11 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   const [viewingInquiry, setViewingInquiry] = useState(null);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [adminError, setAdminError] = useState("");
+  // Shared banner for the settings tab's Supabase writes (maintenance
+  // toggle/message, auto-approve toggle) — these used to only log to
+  // console.error on failure (e.g. an RLS rejection), so an admin whose
+  // write silently failed had zero indication anything went wrong.
+  const [settingsError, setSettingsError] = useState("");
   const [editingTenant, setEditingTenant] = useState(null);
   const [editMobile, setEditMobile] = useState("");
   const [editEmail, setEditEmail] = useState("");
@@ -6122,17 +6127,30 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
     if (adminEmails.includes(email)) { setAdminError("هذا البريد مضاف مسبقًا."); return; }
     setAdminError("");
     const { error } = await db.from("platform_config").update({ admin_emails: [...adminEmails, email] }).eq("id", true);
-    if (error) console.error("addAdmin failed", error);
+    if (error) { console.error("addAdmin failed", error); setAdminError("فشلت الإضافة — حاول مرة ثانية."); return; }
     setNewAdminEmail("");
   };
   const removeAdmin = async (email) => {
     if (adminEmails.length <= 1) return;
     const { error } = await db.from("platform_config").update({ admin_emails: adminEmails.filter((e) => e !== email) }).eq("id", true);
-    if (error) console.error("removeAdmin failed", error);
+    if (error) { console.error("removeAdmin failed", error); setAdminError("فشلت الإزالة — حاول مرة ثانية."); return; }
+    // Revokes this email's actual RLS admin privilege (platform_admins),
+    // not just its spot in the admin_emails allow-list above — see
+    // api/admin-sync.js. Best-effort: if this fails, the email is still
+    // gone from admin_emails (client-side gate), so they lose dashboard
+    // access; only a lingering platform_admins row would remain, closeable
+    // by re-running "إزالة" or directly in Supabase.
+    const { data: { session } } = await auth.getSession();
+    if (session?.access_token) {
+      fetch('/api/admin-sync', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ action: 'revoke', targetEmail: email }),
+      }).catch((e) => console.error('admin-sync revoke failed', e));
+    }
   };
   const toggleAutoApprove = async (value) => {
     const { error } = await db.from("platform_config").update({ auto_approve: value }).eq("id", true);
-    if (error) console.error("toggleAutoApprove failed", error);
+    if (error) { console.error("toggleAutoApprove failed", error); setSettingsError("فشل الحفظ — حاول تسجيل الخروج والدخول مرة ثانية."); }
   };
   // Draft text field, only pushed to platform_config (and so out to every
   // visitor's MaintenanceBanner) when the admin actually hits save/toggle —
@@ -6141,11 +6159,13 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   useEffect(() => { setMaintenanceDraft(maintenanceMessage || ""); }, [maintenanceMessage]);
   const toggleMaintenance = async (value) => {
     const { error } = await db.from("platform_config").update({ maintenance_active: value }).eq("id", true);
-    if (error) console.error("toggleMaintenance failed", error);
+    if (error) { console.error("toggleMaintenance failed", error); setSettingsError("فشل الحفظ — حاول تسجيل الخروج والدخول مرة ثانية."); }
+    else setSettingsError("");
   };
   const saveMaintenanceMessage = async () => {
     const { error } = await db.from("platform_config").update({ maintenance_message: maintenanceDraft.trim() }).eq("id", true);
-    if (error) console.error("saveMaintenanceMessage failed", error);
+    if (error) { console.error("saveMaintenanceMessage failed", error); setSettingsError("فشل الحفظ — حاول تسجيل الخروج والدخول مرة ثانية."); }
+    else setSettingsError("");
   };
 
   const statusBadge = (status, map) => {
@@ -6298,6 +6318,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
         {tab === "settings" && (
           <div className="max-w-xl space-y-6">
             <h1 className="text-2xl font-bold">إعدادات الإدارة</h1>
+            {settingsError && <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{settingsError}</div>}
 
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
               <div className="flex items-center justify-between mb-1">
@@ -6439,7 +6460,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   const LANDING_TEXT = {
     ar: {
       brand: 'رغوة',
-      navContact: 'تواصل مع المبيعات',
+      navContact: 'تواصل مع فريقنا',
       navLogin: 'الدخول',
       heroTitle1: 'من الشتات',
       heroTitle2: 'إلى الثبات',
@@ -6498,8 +6519,8 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
         'راحة البال من أن كل شيء مسجل وآمن',
       ],
       footer: '© 2024 رغوة | جميع الحقوق محفوظة',
-      contactModalTitle: 'تواصل مع المبيعات',
-      contactSentMsg: 'تم إرسال طلبك، بيتواصل معك فريق المبيعات قريبًا.',
+      contactModalTitle: 'تواصل مع فريقنا',
+      contactSentMsg: 'تم إرسال طلبك، بيتواصل معك فريقنا قريبًا.',
       contactName: 'الاسم', contactMobile: 'رقم الجوال', contactEmail: 'البريد الإلكتروني',
       contactType: 'نوع الاستفسار', contactMessage: 'الرسالة', contactSend: 'إرسال',
       contactTypes: ['شراء نظام', 'سؤال تقني', 'عرض خاص'],
@@ -7109,6 +7130,12 @@ function SignupPage(props) {
   const formStartedAtRef = useRef(Date.now());
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
+      <div className="absolute top-6 right-6">
+        <button onClick={() => setCurrentPage('landing')} className="px-4 py-2 text-gray-300 hover:text-white transition">
+          ← العودة
+        </button>
+      </div>
+
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">إنشاء حساب</h1>
@@ -7252,6 +7279,20 @@ const LaundryPOS = () => {
     } else {
       await db.from('platform_config').upsert({ id: true, admin_emails: [emailNorm], auto_approve: true })
         .then(({ error }) => { if (error) console.error('platform_config bootstrap failed', error); });
+    }
+    // platform_admins (what RLS's is_admin() actually checks) is separate
+    // from admin_emails above and has zero client-writable RLS policies by
+    // design — only api/admin-sync.js (service role) can insert into it.
+    // Without this, an admin_emails entry with no matching platform_admins
+    // row sees the dashboard fine but every write in it (maintenance
+    // toggle, sales-inquiry status, ...) silently fails RLS with no
+    // visible error. See api/admin-sync.js for the full explanation.
+    const { data: { session } } = await auth.getSession();
+    if (session?.access_token) {
+      await fetch('/api/admin-sync', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ action: 'ensure' }),
+      }).catch((e) => console.error('admin-sync ensure failed', e));
     }
   };
 
