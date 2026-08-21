@@ -12,10 +12,12 @@
 -- into these tables directly anymore. src/App.jsx's handleSignup() no
 -- longer does its own db.from('registration_requests'/'tenants').insert().
 --
--- IMPORTANT: only run this AFTER the new api/send-verification-email.js
--- is deployed and a real signup has been tested end-to-end against it —
--- dropping these first would break signup for anyone still hitting the
--- old client code.
+-- Already applied to the live project — verified first with a real
+-- end-to-end signup test against the new server-side insert path (which
+-- also needed supabase-grant-service-role-access.sql; service_role had no
+-- grants on these tables at all until that ran), then confirmed the
+-- direct-REST-API exploit this fixes now gets rejected with a genuine RLS
+-- violation instead of succeeding.
 
 drop policy if exists "tenants_insert_public" on public.tenants;
 drop policy if exists "registration_requests_insert_public" on public.registration_requests;
