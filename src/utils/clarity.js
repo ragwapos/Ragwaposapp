@@ -13,7 +13,14 @@ export function useClarityTracking(active) {
     const projectId = import.meta.env.VITE_CLARITY_PROJECT_ID;
     if (!projectId) return;
 
-    if (!window.clarity) {
+    // Guard on the actual <script> tag, not just `window.clarity` — the
+    // snippet below sets that stub synchronously on first run regardless of
+    // whether the tag ends up appended once or twice, so checking only the
+    // stub can't by itself rule out a duplicate <script src> ever having
+    // been inserted (e.g. by a leftover tag from a prior mount this effect
+    // doesn't know about). This is the actual condition Clarity's own
+    // "CL001: Multiple Clarity tags detected" check cares about.
+    if (!window.clarity && !document.querySelector('script[src*="clarity.ms/tag/"]')) {
       (function (c, l, a, r, i) {
         c[a] = c[a] || function () { (c[a].q = c[a].q || []).push(arguments); };
         const t = l.createElement(r); t.async = 1; t.src = 'https://www.clarity.ms/tag/' + i;

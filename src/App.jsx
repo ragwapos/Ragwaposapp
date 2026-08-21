@@ -7532,15 +7532,24 @@ const LaundryPOS = () => {
   // sales_inquiries directly from this still-signed-out client — see
   // supabase-close-anon-sales-inquiries.sql for why that direct-insert
   // path was closed off.
-  const submitContact = async ({ website, formStartedAt } = {}) => {
-    const turnstileToken = await getTurnstileToken();
-    fetch('/api/submit-contact', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: contactName.trim() || '—', mobile: contactMobile.trim() || '—', email: contactEmail.trim() || '—',
-        type: contactType, message: contactMessage.trim(), website, formStartedAt, turnstileToken,
-      }),
-    }).catch((e) => console.error('submitContact failed', e));
+  const submitContact = ({ website, formStartedAt } = {}) => {
+    // Field values captured NOW, synchronously — the actual send (including
+    // the Turnstile round-trip below) is fire-and-forget, same as before
+    // Turnstile existed. Awaiting getTurnstileToken() before showing "sent"
+    // used to leave the visitor staring at an unresponsive form for however
+    // long the challenge took (a real regression this caused: the
+    // confirmation only appeared after the full Turnstile round-trip).
+    const payload = {
+      name: contactName.trim() || '—', mobile: contactMobile.trim() || '—', email: contactEmail.trim() || '—',
+      type: contactType, message: contactMessage.trim(), website, formStartedAt,
+    };
+    (async () => {
+      const turnstileToken = await getTurnstileToken();
+      fetch('/api/submit-contact', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...payload, turnstileToken }),
+      }).catch((e) => console.error('submitContact failed', e));
+    })();
     setContactSent(true);
     setTimeout(() => {
       setShowContact(false); setContactSent(false);
