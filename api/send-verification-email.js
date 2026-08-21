@@ -92,6 +92,22 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, error: 'invalid_request' });
   }
 
+  // Reserved/placeholder domains (RFC 2606 + the common "test.com") are
+  // never real inboxes — Resend rejects `to: x@example.com` outright. Catching
+  // that here, before generateLink() creates the Supabase Auth user, avoids
+  // both a wasted Auth write and — more importantly — the orphaned-user bug
+  // below: once the user is created, any later failure (Resend, DB) leaves
+  // it stranded with no registration_requests/tenants row, and that email
+  // can never sign up again (generateLink errors "already registered" on
+  // retry). This one check sidesteps the whole class for the case bots
+  // trigger constantly; the try/catch cleanup below covers the rest.
+  const FAKE_EMAIL_DOMAINS = new Set(['example.com', 'example.org', 'example.net', 'example.edu', 'test.com', 'localhost']);
+  const emailDomain = email.split('@')[1]?.toLowerCase();
+  if (FAKE_EMAIL_DOMAINS.has(emailDomain)) {
+    return res.status(400).json({ success: false, error: 'invalid_email' });
+  }
+
+  let createdUid = null;
   try {
     // generateLink is still what creates the Supabase Auth user (type:
     // 'signup' behaves like signUp() itself) — it just also happens to hand
@@ -102,6 +118,7 @@ export default async function handler(req, res) {
       type: 'signup', email, password,
     });
     if (linkErr) throw linkErr;
+    createdUid = linkData.user.id;
     const otp = linkData?.properties?.email_otp;
     if (!otp) throw new Error('No email_otp returned by Supabase');
 
@@ -122,20 +139,19 @@ export default async function handler(req, res) {
     // instead, with the service-role client, closes that off entirely —
     // see supabase-close-anon-signup-inserts.sql, which drops those two
     // policies now that nothing needs them.
-    const uid = linkData.user.id;
     const { data: cfgRow, error: cfgErr } = await supabaseAdmin.from('platform_config').select('auto_approve').eq('id', true).maybeSingle();
     if (cfgErr) throw cfgErr;
     const approved = cfgRow?.auto_approve ?? true;
 
     const { error: reqErr } = await supabaseAdmin.from('registration_requests').insert({
-      uid, shop_name: shopName || '—', mobile: mobile || '—', email, address: address || '—',
+      uid: createdUid, shop_name: shopName || '—', mobile: mobile || '—', email, address: address || '—',
       date: new Date().toISOString(), status: approved ? 'approved' : 'pending', reject_reason: '',
     });
     if (reqErr) throw reqErr;
 
     if (approved) {
       const { error: tenantErr } = await supabaseAdmin.from('tenants').insert({
-        id: uid, shop_name: shopName || '—', mobile: mobile || '—', email, address: address || '—',
+        id: createdUid, shop_name: shopName || '—', mobile: mobile || '—', email, address: address || '—',
         approved_date: new Date().toISOString(),
       });
       if (tenantErr) throw tenantErr;
@@ -143,6 +159,14 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ success: true, user: linkData.user });
   } catch (e) {
+    // If the Supabase Auth user was already created before this failed,
+    // it must be deleted — otherwise this email is permanently stuck:
+    // generateLink({type:'signup'}) errors "already registered" on any
+    // retry, with no registration_requests/tenants row ever created for it.
+    if (createdUid) {
+      try { await supabaseAdmin.auth.admin.deleteUser(createdUid); }
+      catch (cleanupErr) { console.error('send-verification-email: failed to roll back orphaned auth user', createdUid, cleanupErr); Sentry.captureException(cleanupErr); }
+    }
     console.error('send-verification-email error', e);
     Sentry.captureException(e);
     return res.status(200).json({ success: false, error: e.message || String(e), code: e.code });

@@ -130,6 +130,13 @@ const authErrorMessage = (error) => {
     case "invalid_credentials": return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
     case "over_request_rate_limit":
     case "over_email_send_rate_limit": return "محاولات كثيرة فاشلة — انتظر شوي وحاول مرة ثانية.";
+    // Not a Supabase auth code — these are api/send-verification-email.js's
+    // own error strings (no `code` field on that response), so `error.message`
+    // below would otherwise leak the raw machine string to the user.
+    case undefined:
+      if (error && error.message === "invalid_email") return "بريد إلكتروني غير صحيح.";
+      if (error && error.message === "invalid_request") return "تعذر إتمام الطلب — حاول مرة ثانية.";
+      return (error && typeof error.message === "string" && error.message) || "صار خطأ غير متوقع — حاول مرة ثانية.";
     // No matching Supabase auth code — this is most likely an error relayed
     // as-is from /api/send-verification-email (Resend/service-role failures
     // have their own message text, not a Supabase auth code), so show it
