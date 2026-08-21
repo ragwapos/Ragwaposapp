@@ -16,7 +16,7 @@ import { toSnakeCase, toCamelCase } from "./utils/transforms.js";
 import { normalizeSaudiMobile, isValidSaudiMobile, cleanPhoneForWhatsApp, fillWhatsAppTemplate, DEFAULT_WHATSAPP_TEMPLATE } from "./utils/phone.js";
 import { generateInvoiceImage } from "./utils/invoiceImage.js";
 import { useClarityTracking } from "./utils/clarity.js";
-import { uploadTenantFile, deleteTenantFile } from "./utils/storage.js";
+import { uploadTenantFile, deleteTenantFile, uploadPrivateFile, deletePrivateFile, openStoredDocument } from "./utils/storage.js";
 
 /* =========================================================================
    CONSTANTS
@@ -1986,9 +1986,9 @@ function SupplierDetailModal({ supplier, purchases, onClose, onPayBalance, onEdi
                 <td className="px-3 py-2 f-mono font-semibold text-slate-900">{sar(p.amount)}</td>
                 <td className="px-3 py-2">
                   {p.attachment ? (
-                    <a href={p.attachment} target="_blank" rel="noreferrer" download={p.attachmentName || "invoice"} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
+                    <button onClick={() => openStoredDocument(p.attachment)} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
                       <Paperclip size={13} />{t("common_view")}
-                    </a>
+                    </button>
                   ) : <span className="text-slate-300">—</span>}
                 </td>
               </tr>
@@ -3447,9 +3447,12 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
     if (err) { setPurchaseError(t(err)); return; }
     setPurchaseError(""); setAttachmentUploading(true);
     try {
-      const { url } = await uploadTenantFile(file, "purchases");
-      if (attachment) deleteTenantFile(attachment); // a re-pick before submit orphans the previous one
-      setAttachment(url); setAttachmentName(file.name);
+      // Private bucket: `attachment` holds a storage PATH, not a URL — a
+      // supplier invoice is a financial document, not something meant to
+      // be openable by anyone with the link the way a shared invoice is.
+      const { path } = await uploadPrivateFile(file, "purchases");
+      if (attachment) deletePrivateFile(attachment); // a re-pick before submit orphans the previous one
+      setAttachment(path); setAttachmentName(file.name);
     } catch {
       setPurchaseError(t("upload_failed"));
     } finally {
@@ -3527,9 +3530,11 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
     if (err) { setExpenseError(t(err)); return; }
     setExpenseError(""); setReceiptUploading(true);
     try {
-      const { url } = await uploadTenantFile(file, "receipts");
-      if (receipt) deleteTenantFile(receipt); // a re-pick before submit orphans the previous one
-      setReceipt(url); setReceiptName(file.name);
+      // Private bucket: `receipt` holds a storage PATH, not a URL — same
+      // reasoning as purchase attachments (see handlePurchaseFile above).
+      const { path } = await uploadPrivateFile(file, "receipts");
+      if (receipt) deletePrivateFile(receipt); // a re-pick before submit orphans the previous one
+      setReceipt(path); setReceiptName(file.name);
     } catch {
       setExpenseError(t("upload_failed"));
     } finally {
@@ -3636,13 +3641,14 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
                     <td className="px-4 py-3 w-32 text-center text-slate-600">{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</td>
                     <td className="px-4 py-3 f-mono text-slate-500 w-40" style={{ textAlign: "center" }}>{e.date}</td>
                     <td className="px-4 py-3 text-slate-500">
-                      {e.receipt?.startsWith("http") ? (
-                        <a href={e.receipt} target="_blank" rel="noreferrer" download={e.receiptName || "receipt"} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
+                      {e.receipt?.startsWith("http") || e.receipt?.startsWith("data:") || e.receipt?.includes("/") ? (
+                        <button onClick={() => openStoredDocument(e.receipt)} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
                           <ReceiptText size={13} />{e.receiptName || t("common_view")}
-                        </a>
+                        </button>
                       ) : e.receipt ? (
                         // Pre-upload legacy rows: just a filename typed/picked with no
-                        // real file behind it — inert text, not a dead link.
+                        // real file behind it (no "/" — a browser-reported File.name
+                        // never contains one) — inert text, not a dead link.
                         <span>{e.receipt}</span>
                       ) : <span className="text-slate-300">—</span>}
                     </td>
@@ -4008,9 +4014,9 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
                     <td className="px-4 py-3 w-28 text-center text-slate-600">{p.method === "Cash" ? t("common_cash") : t("purchases_credit")}</td>
                     <td className="px-4 py-3">
                       {p.attachment ? (
-                        <a href={p.attachment} target="_blank" rel="noreferrer" download={p.attachmentName || "invoice"} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
+                        <button onClick={() => openStoredDocument(p.attachment)} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
                           <Paperclip size={13} />{t("common_view")}
-                        </a>
+                        </button>
                       ) : <span className="text-slate-300">—</span>}
                     </td>
                   </tr>
@@ -4047,13 +4053,14 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
                     <td className="px-4 py-3 w-48 text-center text-slate-600">{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</td>
                     <td className="px-4 py-3 f-mono text-slate-500 w-72" style={{ textAlign: "center" }}>{e.date}</td>
                     <td className="px-4 py-3 text-slate-500">
-                      {e.receipt?.startsWith("http") ? (
-                        <a href={e.receipt} target="_blank" rel="noreferrer" download={e.receiptName || "receipt"} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
+                      {e.receipt?.startsWith("http") || e.receipt?.startsWith("data:") || e.receipt?.includes("/") ? (
+                        <button onClick={() => openStoredDocument(e.receipt)} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
                           <ReceiptText size={13} />{e.receiptName || t("common_view")}
-                        </a>
+                        </button>
                       ) : e.receipt ? (
                         // Pre-upload legacy rows: just a filename typed/picked with no
-                        // real file behind it — inert text, not a dead link.
+                        // real file behind it (no "/" — a browser-reported File.name
+                        // never contains one) — inert text, not a dead link.
                         <span>{e.receipt}</span>
                       ) : <span className="text-slate-300">—</span>}
                     </td>
