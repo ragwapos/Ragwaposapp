@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import * as asn1js from 'asn1js';
 import { verifyTenantSession } from './_auth.js';
+import { checkRateLimit } from './_rateLimit.js';
 
 // Server-side only, same pattern as send-verification-email.js: the tenant's
 // ZATCA private key and the AES key that encrypts it must never reach the
@@ -185,6 +186,12 @@ export default async function handler(req, res) {
 
   const authResult = await verifyTenantSession(req, supabaseAdmin, tenantId);
   if (!authResult.ok) return res.status(authResult.status).json({ success: false, error: authResult.error });
+
+  // Every call replaces the tenant's existing ZATCA keypair outright (see
+  // the upsert below) — a legitimate tenant only ever needs this a handful
+  // of times (initial setup, occasional re-key), so a tight limit here is
+  // pure abuse/self-thrash protection, not something normal use would hit.
+  if (!(await checkRateLimit(res, 'zatca-generate-keys', tenantId, 5, '1 h'))) return;
 
   try {
     const privateKeyBytes = secp256k1.utils.randomSecretKey();

@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { verifyTenantSession } from './_auth.js';
+import { checkRateLimit } from './_rateLimit.js';
 
 // Server-side only, same pattern as zatca-generate-keys.js — the tenant's
 // decrypted private key must never leave this function.
@@ -205,6 +206,11 @@ export default async function handler(req, res) {
 
   const authResult = await verifyTenantSession(req, supabaseAdmin, tenantId);
   if (!authResult.ok) return res.status(authResult.status).json({ success: false, error: authResult.error });
+
+  // Generous — this runs per real taxable sale, so it needs headroom for a
+  // genuinely busy shop. Purely a guard against a runaway loop/script, not
+  // something normal cashier usage could ever hit.
+  if (!(await checkRateLimit(res, 'zatca-sign-invoice', tenantId, 60, '1 m'))) return;
 
   try {
     const { data: config, error: cfgErr } = await supabaseAdmin

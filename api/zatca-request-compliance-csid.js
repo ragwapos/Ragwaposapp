@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { verifyTenantSession } from './_auth.js';
+import { checkRateLimit } from './_rateLimit.js';
 
 // Server-side only, same pattern as the other api/zatca-*.js files.
 const supabaseAdmin = createClient(
@@ -53,6 +54,13 @@ export default async function handler(req, res) {
 
   const authResult = await verifyTenantSession(req, supabaseAdmin, tenantId);
   if (!authResult.ok) return res.status(authResult.status).json({ success: false, error: authResult.error });
+
+  // otp is a bare 6-digit code (1M possibilities) checked against ZATCA's
+  // real API — without a limit here, an authenticated tenant session could
+  // brute-force it. A generous-but-bounded cap also protects against
+  // hammering ZATCA's actual compliance endpoint, which this is a one-time
+  // onboarding step against, not a per-sale action.
+  if (!(await checkRateLimit(res, 'zatca-request-compliance-csid', tenantId, 10, '1 h'))) return;
 
   try {
     const { data: config, error: cfgErr } = await supabaseAdmin

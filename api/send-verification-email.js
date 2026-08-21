@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { checkRateLimit, clientIp } from './_rateLimit.js';
 
 // Server-side only — SUPABASE_SERVICE_ROLE_KEY and RESEND_API_KEY must be
 // set as private Vercel env vars (NOT prefixed with VITE_, or they'd get
@@ -60,6 +61,14 @@ export default async function handler(req, res) {
 
   const { email, password, shopName, mobile, address } = req.body || {};
   if (!email || !password) return res.status(400).json({ success: false, error: 'email and password are required' });
+
+  // Unauthenticated by design (this is what creates the account) — the two
+  // buckets below cap both "one attacker, many target emails" (by IP) and
+  // "one target email, many IPs" (by email itself), so neither alone is a
+  // bypass. Each real call here does a real Supabase Auth write and a real
+  // billed Resend send, so this also caps the Financial-DoS exposure.
+  if (!(await checkRateLimit(res, 'send-verification-email:ip', clientIp(req), 8, '10 m'))) return;
+  if (!(await checkRateLimit(res, 'send-verification-email:email', email.toLowerCase(), 3, '1 h'))) return;
 
   try {
     // generateLink is still what creates the Supabase Auth user (type:
