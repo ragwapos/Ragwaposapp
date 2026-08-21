@@ -5944,7 +5944,7 @@ async function deleteTenantCascade(tenantId) {
   if (reqErr) throw reqErr;
 }
 
-function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEmails, autoApprove, onLogout }) {
+function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEmails, autoApprove, maintenanceActive, maintenanceMessage, onLogout }) {
   const [tab, setTab] = useState("home");
   const [reqTab, setReqTab] = useState("registrations");
   const [viewingRequest, setViewingRequest] = useState(null);
@@ -6120,6 +6120,19 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
     const { error } = await db.from("platform_config").update({ auto_approve: value }).eq("id", true);
     if (error) console.error("toggleAutoApprove failed", error);
   };
+  // Draft text field, only pushed to platform_config (and so out to every
+  // visitor's MaintenanceBanner) when the admin actually hits save/toggle —
+  // typing shouldn't broadcast a half-written message live.
+  const [maintenanceDraft, setMaintenanceDraft] = useState(maintenanceMessage || "");
+  useEffect(() => { setMaintenanceDraft(maintenanceMessage || ""); }, [maintenanceMessage]);
+  const toggleMaintenance = async (value) => {
+    const { error } = await db.from("platform_config").update({ maintenance_active: value }).eq("id", true);
+    if (error) console.error("toggleMaintenance failed", error);
+  };
+  const saveMaintenanceMessage = async () => {
+    const { error } = await db.from("platform_config").update({ maintenance_message: maintenanceDraft.trim() }).eq("id", true);
+    if (error) console.error("saveMaintenanceMessage failed", error);
+  };
 
   const statusBadge = (status, map) => {
     const cls = { pending: "bg-amber-500/20 text-amber-400", approved: "bg-green-500/20 text-green-400", rejected: "bg-rose-500/20 text-rose-400", new: "bg-blue-500/20 text-blue-400", read: "bg-slate-500/20 text-slate-300", replied: "bg-green-500/20 text-green-400" };
@@ -6282,6 +6295,24 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
                   ? "مفعّل: أي عميل جديد يسجل حساب ينقبل تلقائيًا ويصير عميل معتمد فورًا، بدون ما تحتاج توافق عليه."
                   : "متوقف: أي تسجيل جديد يروح لقائمة \"قيد الانتظار\" ولازم توافق عليه يدويًا من تبويب طلبات التسجيل قبل ما يصير عميل معتمد."}
               </p>
+            </div>
+
+            <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+              <div className="flex items-center justify-between mb-1">
+                <div className="font-semibold">إشعار صيانة / حادثة عام</div>
+                <Toggle checked={maintenanceActive} onChange={toggleMaintenance} />
+              </div>
+              <p className="text-xs text-gray-500 mb-3">
+                {maintenanceActive
+                  ? "مفعّل: يظهر كشريط تنبيه أعلى كل صفحة بالمنصة (الهبوط، تسجيل الدخول، ولوحات كل المحلات) لحد ما توقفه."
+                  : "متوقف: ما يظهر أي شريط تنبيه لأي زائر."}
+              </p>
+              <textarea
+                value={maintenanceDraft} onChange={(e) => setMaintenanceDraft(e.target.value)} rows={2}
+                placeholder="مثال: صيانة مجدولة الساعة 2 صباحًا، ممكن يتوقف النظام لدقائق."
+                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm mb-2 focus:border-cyan-400 outline-none"
+              />
+              <button onClick={saveMaintenanceMessage} className="text-xs font-medium text-cyan-400 hover:underline">حفظ نص الإشعار</button>
             </div>
 
             <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
@@ -6533,6 +6564,13 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
     contactName, setContactName, contactMobile, setContactMobile, contactEmail, setContactEmail,
     contactType, setContactType, contactMessage, setContactMessage, contactSent, submitContact,
     lang, setLang } = props;
+  // Anti-bot: `website` is a honeypot a real visitor never sees or fills
+  // (hidden below); `formStartedAtRef` marks when the modal actually
+  // opened, so the server can reject a submit that arrives faster than any
+  // human could type a message. Both go to api/submit-contact untouched.
+  const [contactWebsite, setContactWebsite] = useState('');
+  const formStartedAtRef = useRef(0);
+  useEffect(() => { if (showContact) formStartedAtRef.current = Date.now(); }, [showContact]);
   const t = LANDING_TEXT[lang];
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
 
@@ -6763,7 +6801,14 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
                     <label className="block text-gray-300 text-sm font-semibold mb-2">{t.contactMessage}</label>
                     <textarea value={contactMessage} onChange={(e) => setContactMessage(e.target.value)} rows={3} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
                   </div>
-                  <button onClick={submitContact} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 rounded-lg transition">
+                  {/* Honeypot — invisible to a real visitor (off-screen, not display:none,
+                      since some bots skip fields display:none hides), never tab-reachable. */}
+                  <input
+                    type="text" value={contactWebsite} onChange={(e) => setContactWebsite(e.target.value)}
+                    autoComplete="off" tabIndex={-1} aria-hidden="true"
+                    style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+                  />
+                  <button onClick={() => submitContact({ website: contactWebsite, formStartedAt: formStartedAtRef.current })} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 rounded-lg transition">
                     {t.contactSend}
                   </button>
                 </>
@@ -6937,6 +6982,23 @@ function ResetPasswordPage({ onDone }) {
   );
 }
 
+// Platform-wide incident/maintenance notice — shown above everything else
+// (public pages and the app alike) whenever an admin turns it on. Plain
+// dismiss (not tied to platform_config), so it comes back on reload/next
+// visit for as long as the admin leaves it active, but doesn't nag someone
+// who's already seen it and kept working this session.
+function MaintenanceBanner({ active, message }) {
+  const [dismissed, setDismissed] = useState(false);
+  useEffect(() => { if (active) setDismissed(false); }, [active, message]);
+  if (!active || dismissed) return null;
+  return (
+    <div dir="rtl" className="sticky top-0 z-[100] flex items-center justify-between gap-3 bg-amber-500 px-4 py-2 text-sm font-medium text-amber-950">
+      <span>⚠️ {message || 'النظام حاليًا بصيانة مجدولة — بعض الميزات قد لا تعمل مؤقتًا.'}</span>
+      <button onClick={() => setDismissed(true)} className="shrink-0 text-amber-950/70 hover:text-amber-950">✕</button>
+    </div>
+  );
+}
+
 function EmailVerificationPage({ email, onVerified, onBack }) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -7026,6 +7088,11 @@ function SignupPage(props) {
   const { setCurrentPage, signupShop, setSignupShop, signupEmail, setSignupEmail,
     signupMobile, setSignupMobile, signupAddress, setSignupAddress, signupPassword, setSignupPassword,
     signupAgree, setSignupAgree, handleSignup, signupError, signupLoading } = props;
+  // Same honeypot + minimum-fill-time anti-bot pattern as the landing
+  // page's contact form (see LandingPage) — checked server-side in
+  // api/send-verification-email.js.
+  const [signupWebsite, setSignupWebsite] = useState('');
+  const formStartedAtRef = useRef(Date.now());
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -7068,7 +7135,12 @@ function SignupPage(props) {
 
           {signupError && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{signupError}</div>}
 
-          <button onClick={handleSignup} disabled={signupLoading || !signupAgree} className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-6">
+          <input
+            type="text" value={signupWebsite} onChange={(e) => setSignupWebsite(e.target.value)}
+            autoComplete="off" tabIndex={-1} aria-hidden="true"
+            style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+          />
+          <button onClick={() => handleSignup({ website: signupWebsite, formStartedAt: formStartedAtRef.current })} disabled={signupLoading || !signupAgree} className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-6">
             {signupLoading ? 'جارٍ الإنشاء...' : 'إنشاء الحساب'}
           </button>
 
@@ -7098,11 +7170,19 @@ const LaundryPOS = () => {
   // still missing / rejected by RLS pre-bootstrap).
   const [adminEmails, setAdminEmails] = useState(ADMIN_EMAILS_DEFAULT);
   const [autoApprove, setAutoApprove] = useState(true);
+  // Platform-wide maintenance banner — set by an admin (AdminDashboard),
+  // shown to every visitor on every page (public and inside the app) via
+  // MaintenanceBanner below. Live-synced same as the other platform_config
+  // fields, so it appears/disappears with no reload needed on either side.
+  const [maintenanceActive, setMaintenanceActive] = useState(false);
+  const [maintenanceMessage, setMaintenanceMessage] = useState('');
   useEffect(() => {
     const applyRow = (d) => {
       if (!d) return;
       if (Array.isArray(d.adminEmails) && d.adminEmails.length > 0) setAdminEmails(d.adminEmails);
       if (typeof d.autoApprove === 'boolean') setAutoApprove(d.autoApprove);
+      if (typeof d.maintenanceActive === 'boolean') setMaintenanceActive(d.maintenanceActive);
+      if (typeof d.maintenanceMessage === 'string') setMaintenanceMessage(d.maintenanceMessage);
     };
     const unsub = subscribeToRow('platform_config', null, null, applyRow);
     return () => unsub();
@@ -7297,7 +7377,7 @@ const LaundryPOS = () => {
     setLoginLoading(false);
   };
 
-  const handleSignup = async () => {
+  const handleSignup = async ({ website, formStartedAt } = {}) => {
     setSignupError('');
     if (isAdminEmail(signupEmail)) {
       setSignupLoading(true);
@@ -7339,7 +7419,7 @@ const LaundryPOS = () => {
       // See supabase-close-anon-signup-inserts.sql.
       const resp = await fetch('/api/send-verification-email', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailNorm, password: signupPassword, shopName, mobile: signupMobile, address }),
+        body: JSON.stringify({ email: emailNorm, password: signupPassword, shopName, mobile: signupMobile, address, website, formStartedAt }),
       });
       const result = await resp.json();
       if (!result.success) throw { message: result.error, code: result.code };
@@ -7390,14 +7470,20 @@ const LaundryPOS = () => {
     return () => { unsubReq(); unsubTen(); unsubInq(); };
   }, [currentPage]);
 
-  // Public contact form on the landing page — no login required, so this
-  // must work for a signed-out visitor (see the RLS policy: sales_inquiries
-  // allows an open insert for the anon role).
-  const submitContact = () => {
-    db.from('sales_inquiries').insert({
-      name: contactName.trim() || '—', mobile: contactMobile.trim() || '—', email: contactEmail.trim() || '—',
-      type: contactType, message: contactMessage.trim(), date: new Date().toISOString(), status: 'new', note: '',
-    }).then(({ error }) => { if (error) console.error('submitContact failed', error); });
+  // Public contact form on the landing page — no login required. Goes
+  // through api/submit-contact now (rate-limited + honeypot + minimum-
+  // fill-time checked server-side) instead of inserting into
+  // sales_inquiries directly from this still-signed-out client — see
+  // supabase-close-anon-sales-inquiries.sql for why that direct-insert
+  // path was closed off.
+  const submitContact = ({ website, formStartedAt } = {}) => {
+    fetch('/api/submit-contact', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: contactName.trim() || '—', mobile: contactMobile.trim() || '—', email: contactEmail.trim() || '—',
+        type: contactType, message: contactMessage.trim(), website, formStartedAt,
+      }),
+    }).catch((e) => console.error('submitContact failed', e));
     setContactSent(true);
     setTimeout(() => {
       setShowContact(false); setContactSent(false);
@@ -7424,7 +7510,10 @@ const LaundryPOS = () => {
     );
   }
 
-  return showEmailVerification && pendingSignup ? (
+  return (
+    <>
+      <MaintenanceBanner active={maintenanceActive} message={maintenanceMessage} />
+      {showEmailVerification && pendingSignup ? (
     <EmailVerificationPage
       email={pendingSignup.email}
       onVerified={completeSignupAfterVerification}
@@ -7478,10 +7567,14 @@ const LaundryPOS = () => {
       tenants={tenants}
       adminEmails={adminEmails}
       autoApprove={autoApprove}
+      maintenanceActive={maintenanceActive}
+      maintenanceMessage={maintenanceMessage}
       onLogout={handleLogout}
     />
   ) : (
     <LaundryOpsApp tenantId={tenantId} onLogout={handleLogout} initialLang={siteLang} />
+  )}
+    </>
   );
 };
 

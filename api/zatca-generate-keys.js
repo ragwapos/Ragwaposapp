@@ -3,6 +3,8 @@ import { secp256k1 } from '@noble/curves/secp256k1.js';
 import * as asn1js from 'asn1js';
 import { verifyTenantSession } from './_auth.js';
 import { checkRateLimit } from './_rateLimit.js';
+import { Sentry } from './_sentry.js';
+import { applyCors } from './_cors.js';
 
 // Server-side only, same pattern as send-verification-email.js: the tenant's
 // ZATCA private key and the AES key that encrypts it must never reach the
@@ -177,6 +179,7 @@ function buildCsr({ privateKeyBytes, publicKeyBytes, subject, zatcaFields }) {
 }
 
 export default async function handler(req, res) {
+  if (applyCors(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
 
   const { tenantId, organizationName, vatNumber, address, businessCategory, egsSerial } = req.body || {};
@@ -233,6 +236,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, publicKey: publicKeyHex, csr: csrPem });
   } catch (e) {
     console.error('zatca-generate-keys error', e);
+    Sentry.captureException(e);
     return res.status(200).json({ success: false, error: e.message || String(e) });
   }
 }

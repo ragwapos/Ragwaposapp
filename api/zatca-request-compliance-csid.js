@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { verifyTenantSession } from './_auth.js';
 import { checkRateLimit } from './_rateLimit.js';
+import { Sentry } from './_sentry.js';
+import { applyCors } from './_cors.js';
 
 // Server-side only, same pattern as the other api/zatca-*.js files.
 const supabaseAdmin = createClient(
@@ -46,6 +48,7 @@ async function encryptSecret(plaintext) {
 }
 
 export default async function handler(req, res) {
+  if (applyCors(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
 
   const { tenantId, otp } = req.body || {};
@@ -120,6 +123,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   } catch (e) {
     console.error('zatca-request-compliance-csid error', e);
+    Sentry.captureException(e);
     return res.status(200).json({ success: false, error: e.message || String(e) });
   }
 }

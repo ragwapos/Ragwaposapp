@@ -1,6 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
 import { checkRateLimit, clientIp } from './_rateLimit.js';
+import { Sentry } from './_sentry.js';
+import { applyCors } from './_cors.js';
 
 // Server-side only — SUPABASE_SERVICE_ROLE_KEY and RESEND_API_KEY must be
 // set as private Vercel env vars (NOT prefixed with VITE_, or they'd get
@@ -57,10 +59,22 @@ function emailHtml({ shopName, otp }) {
 }
 
 export default async function handler(req, res) {
+  if (applyCors(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
 
-  const { email, password, shopName, mobile, address } = req.body || {};
+  const { email, password, shopName, mobile, address, website, formStartedAt } = req.body || {};
   if (!email || !password) return res.status(400).json({ success: false, error: 'email and password are required' });
+
+  // Honeypot + minimum-fill-time — same anti-bot pattern as submit-contact.js.
+  // Real Supabase Auth writes/Resend sends are too costly to skip these two
+  // free, pre-rate-limit checks. A tripped check still returns a generic
+  // 400 (not `success:true` like the contact form) — a genuine signup
+  // attempt needs to actually know something went wrong and retry, unlike
+  // an anonymous inquiry a bot has no reason to resubmit either way.
+  if (website) return res.status(400).json({ success: false, error: 'invalid_request' });
+  if (!formStartedAt || Date.now() - Number(formStartedAt) < 2000) {
+    return res.status(400).json({ success: false, error: 'invalid_request' });
+  }
 
   // Unauthenticated by design (this is what creates the account) — the two
   // buckets below cap both "one attacker, many target emails" (by IP) and
@@ -122,6 +136,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, user: linkData.user });
   } catch (e) {
     console.error('send-verification-email error', e);
+    Sentry.captureException(e);
     return res.status(200).json({ success: false, error: e.message || String(e), code: e.code });
   }
 }

@@ -3,6 +3,8 @@ import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { verifyTenantSession } from './_auth.js';
 import { checkRateLimit } from './_rateLimit.js';
+import { Sentry } from './_sentry.js';
+import { applyCors } from './_cors.js';
 
 // Server-side only, same pattern as zatca-generate-keys.js — the tenant's
 // decrypted private key must never leave this function.
@@ -197,6 +199,7 @@ function buildInvoiceXml({ invoice, merchant, uuid, previousInvoiceHashB64, net,
 }
 
 export default async function handler(req, res) {
+  if (applyCors(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
 
   const { tenantId, invoice, merchant, previousInvoiceHash } = req.body || {};
@@ -286,6 +289,7 @@ export default async function handler(req, res) {
     });
   } catch (e) {
     console.error('zatca-sign-invoice error', e);
+    Sentry.captureException(e);
     return res.status(200).json({ success: false, error: e.message || String(e) });
   }
 }
