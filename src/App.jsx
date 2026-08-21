@@ -17,6 +17,7 @@ import { normalizeSaudiMobile, isValidSaudiMobile, cleanPhoneForWhatsApp, fillWh
 import { generateInvoiceImage } from "./utils/invoiceImage.js";
 import { useClarityTracking } from "./utils/clarity.js";
 import { uploadTenantFile, deleteTenantFile, uploadPrivateFile, deletePrivateFile, openStoredDocument } from "./utils/storage.js";
+import { getTurnstileToken } from "./utils/turnstile.js";
 
 /* =========================================================================
    CONSTANTS
@@ -7417,9 +7418,10 @@ const LaundryPOS = () => {
       // directly to Supabase's REST API and insert arbitrary tenants /
       // registration_requests rows with zero signup, zero verification.
       // See supabase-close-anon-signup-inserts.sql.
+      const turnstileToken = await getTurnstileToken();
       const resp = await fetch('/api/send-verification-email', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailNorm, password: signupPassword, shopName, mobile: signupMobile, address, website, formStartedAt }),
+        body: JSON.stringify({ email: emailNorm, password: signupPassword, shopName, mobile: signupMobile, address, website, formStartedAt, turnstileToken }),
       });
       const result = await resp.json();
       if (!result.success) throw { message: result.error, code: result.code };
@@ -7476,12 +7478,13 @@ const LaundryPOS = () => {
   // sales_inquiries directly from this still-signed-out client — see
   // supabase-close-anon-sales-inquiries.sql for why that direct-insert
   // path was closed off.
-  const submitContact = ({ website, formStartedAt } = {}) => {
+  const submitContact = async ({ website, formStartedAt } = {}) => {
+    const turnstileToken = await getTurnstileToken();
     fetch('/api/submit-contact', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: contactName.trim() || '—', mobile: contactMobile.trim() || '—', email: contactEmail.trim() || '—',
-        type: contactType, message: contactMessage.trim(), website, formStartedAt,
+        type: contactType, message: contactMessage.trim(), website, formStartedAt, turnstileToken,
       }),
     }).catch((e) => console.error('submitContact failed', e));
     setContactSent(true);

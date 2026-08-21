@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js';
 import { checkRateLimit, clientIp } from './_rateLimit.js';
 import { Sentry } from './_sentry.js';
 import { applyCors } from './_cors.js';
+import { verifyTurnstile } from './_turnstile.js';
 
 // Server-side only, same pattern as send-verification-email.js. This used
 // to be a direct client-side insert (db.from('sales_inquiries').insert()),
@@ -19,7 +20,7 @@ export default async function handler(req, res) {
   if (applyCors(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
 
-  const { name, mobile, email, type, message, website, formStartedAt } = req.body || {};
+  const { name, mobile, email, type, message, website, formStartedAt, turnstileToken } = req.body || {};
   if (!message || !message.trim()) return res.status(400).json({ success: false, error: 'message is required' });
 
   // Honeypot: a real visitor never sees or fills this field (hidden via
@@ -33,6 +34,14 @@ export default async function handler(req, res) {
   if (!formStartedAt || elapsed < 2000) return res.status(200).json({ success: true });
 
   if (!(await checkRateLimit(res, 'submit-contact:ip', clientIp(req), 5, '10 m'))) return;
+
+  // Turnstile is the real bot barrier — honeypot/timing above only catch
+  // unsophisticated scripts. Same "pretend success" response as the other
+  // checks here, so a script that skips straight to POSTing this endpoint
+  // (bypassing the widget entirely) can't tell which check it failed.
+  if (!(await verifyTurnstile(turnstileToken, clientIp(req)))) {
+    return res.status(200).json({ success: true });
+  }
 
   try {
     const { error } = await supabaseAdmin.from('sales_inquiries').insert({

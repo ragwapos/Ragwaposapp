@@ -3,6 +3,7 @@ import { Resend } from 'resend';
 import { checkRateLimit, clientIp } from './_rateLimit.js';
 import { Sentry } from './_sentry.js';
 import { applyCors } from './_cors.js';
+import { verifyTurnstile } from './_turnstile.js';
 
 // Server-side only — SUPABASE_SERVICE_ROLE_KEY and RESEND_API_KEY must be
 // set as private Vercel env vars (NOT prefixed with VITE_, or they'd get
@@ -62,7 +63,7 @@ export default async function handler(req, res) {
   if (applyCors(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
 
-  const { email, password, shopName, mobile, address, website, formStartedAt } = req.body || {};
+  const { email, password, shopName, mobile, address, website, formStartedAt, turnstileToken } = req.body || {};
   if (!email || !password) return res.status(400).json({ success: false, error: 'email and password are required' });
 
   // Honeypot + minimum-fill-time — same anti-bot pattern as submit-contact.js.
@@ -83,6 +84,13 @@ export default async function handler(req, res) {
   // billed Resend send, so this also caps the Financial-DoS exposure.
   if (!(await checkRateLimit(res, 'send-verification-email:ip', clientIp(req), 8, '10 m'))) return;
   if (!(await checkRateLimit(res, 'send-verification-email:email', email.toLowerCase(), 3, '1 h'))) return;
+
+  // Turnstile is the real bot barrier here — this endpoint does a real
+  // Supabase Auth write and a real billed Resend send per call, so it's
+  // worth the network round-trip before either happens.
+  if (!(await verifyTurnstile(turnstileToken, clientIp(req)))) {
+    return res.status(400).json({ success: false, error: 'invalid_request' });
+  }
 
   try {
     // generateLink is still what creates the Supabase Auth user (type:
