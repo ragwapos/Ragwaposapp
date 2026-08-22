@@ -1050,6 +1050,7 @@ const DICT = {
 
     invoices_liveDashboard: "Live Orders Dashboard", invoices_deliveryDashboard: "Delivery Orders Dashboard",
     invoices_invoiceId: "Invoice ID", invoices_customer: "Customer", invoices_items: "Items", invoices_deliveryFee: "Delivery Fee",
+    invoices_total: "Total", invoices_allStatuses: "All",
     invoices_noActive: "No active invoices. All caught up.", invoices_noActiveDelivery: "No active delivery orders.",
     invoices_clearFilter: "Clear Filter",
     invoiceDetail_title: "Invoice", invoiceDetail_deliveryOrder: "Delivery Order", invoiceDetail_fee: "Fee:",
@@ -1282,6 +1283,7 @@ const DICT = {
 
     invoices_liveDashboard: "لوحة الطلبات الحية", invoices_deliveryDashboard: "لوحة طلبات التوصيل",
     invoices_invoiceId: "رقم الفاتورة", invoices_customer: "العميل", invoices_items: "القطع", invoices_deliveryFee: "سعر التوصيل",
+    invoices_total: "الإجمالي", invoices_allStatuses: "الكل",
     invoices_noActive: "لا توجد فواتير نشطة. كل شيء منجز.", invoices_noActiveDelivery: "لا توجد طلبات توصيل نشطة.",
     invoices_clearFilter: "حذف الفلترة",
     invoiceDetail_title: "فاتورة", invoiceDetail_deliveryOrder: "طلب توصيل", invoiceDetail_fee: "السعر:",
@@ -1515,6 +1517,7 @@ const DICT = {
 
     invoices_liveDashboard: "جاری آرڈرز کی فہرست", invoices_deliveryDashboard: "جاری ڈیلیوری آرڈرز کی فہرست",
     invoices_invoiceId: "آرڈر نمبر", invoices_customer: "کسٹمر", invoices_items: "اشیاء", invoices_deliveryFee: "ڈیلیوری چارجز",
+    invoices_total: "کل رقم", invoices_allStatuses: "تمام",
     invoices_noActive: "کوئی جاری آرڈر نہیں۔ سب کچھ مکمل ہے۔", invoices_noActiveDelivery: "کوئی جاری ڈیلیوری آرڈر نہیں۔",
     invoices_clearFilter: "فلٹر ہٹائیں",
     invoiceDetail_title: "آرڈر", invoiceDetail_deliveryOrder: "ڈیلیوری آرڈر", invoiceDetail_fee: "چارجز:",
@@ -2629,20 +2632,20 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
           className={`${inputCls} pl-8`}
         />
         {open && (
-          <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-stone-200 bg-white shadow-lg">
+          <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-app-border bg-app-surface shadow-app-md">
             {results.map((c) => (
               <button key={c.id} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { onSelect(c); setOpen(false); setQuery(""); }}
-                className="block w-full px-3 py-2 text-left text-sm hover:bg-stone-50">
-                <span className="f-mono text-slate-400 mr-1.5">#{c.id}</span>{c.name}<span className="text-slate-400"> · {c.mobile}</span>
+                className="block w-full px-3 py-2 text-left text-sm hover:bg-app-bg">
+                <span className="f-mono text-app-text-subtle mr-1.5">#{c.id}</span>{c.name}<span className="text-app-text-subtle"> · {c.mobile}</span>
               </button>
             ))}
-            {results.length === 0 && <div className="px-3 py-2 text-sm text-slate-400">{t("pos_noMatchingCustomers")}</div>}
+            {results.length === 0 && <div className="px-3 py-2 text-sm text-app-text-subtle">{t("pos_noMatchingCustomers")}</div>}
           </div>
         )}
       </div>
       {hasActiveSearch && (
         <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={clearFilter} title={t("invoices_clearFilter")}
-          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-100">
+          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-danger-300 bg-danger-50 px-3 py-2 text-sm font-medium text-danger-600 hover:bg-danger-100">
           <Trash2 size={15} /> {t("invoices_clearFilter")}
         </button>
       )}
@@ -2650,15 +2653,25 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
   );
 }
 
+const INVOICE_STATUS_TONE = {
+  Received: "bg-stone-100 text-stone-600",
+  Washing: "bg-info-50 text-info-700",
+  Pressing: "bg-warning-50 text-warning-700",
+  Ready: "bg-success-50 text-success-700",
+  Delivered: "bg-navy-800/10 text-navy-800",
+};
+
 function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, merchant, zatcaInvoices = [], whatsappTemplate, whatsappEnabled }) {
   const { t } = useLang();
   const [openId, setOpenId] = useState(null);
   const [customerFilter, setCustomerFilter] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const statusChips = STAGES.filter((s) => s !== "Delivered");
   // Newest at the top, oldest at the bottom — applies whether the list is
   // showing everyone or filtered down to one customer, and stays correct
   // after clearing the filter since this is recomputed fresh every render.
   const active = invoices
-    .filter((i) => !i.closed && Boolean(i.isDelivery) === isDelivery && (!customerFilter || i.customerId === customerFilter.id))
+    .filter((i) => !i.closed && Boolean(i.isDelivery) === isDelivery && (!customerFilter || i.customerId === customerFilter.id) && (statusFilter === "all" || invoiceOverallStatus(i) === statusFilter))
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   const openInvoice = invoices.find((i) => i.id === openId);
   const openInvoiceZatcaRecord = openInvoice ? zatcaInvoices.find((z) => z.invoiceId === openInvoice.id) : null;
@@ -2681,36 +2694,44 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="f-display text-xl font-semibold text-slate-900">{isDelivery ? t("invoices_deliveryDashboard") : t("invoices_liveDashboard")}</div>
+        <div className="f-display text-xl font-semibold text-app-text">{isDelivery ? t("invoices_deliveryDashboard") : t("invoices_liveDashboard")}</div>
         <InvoiceCustomerFilter customers={customers} selected={customerFilter} onSelect={setCustomerFilter} />
       </div>
-      <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+      <div className="mb-4 flex flex-wrap gap-2">
+        <button onClick={() => setStatusFilter("all")} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${statusFilter === "all" ? "bg-brand-600 text-white shadow-app-xs" : "bg-app-surface border border-app-border text-app-text-muted hover:border-app-border-strong"}`}>{t("invoices_allStatuses")}</button>
+        {statusChips.map((s) => (
+          <button key={s} onClick={() => setStatusFilter(s)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${statusFilter === s ? "bg-brand-600 text-white shadow-app-xs" : "bg-app-surface border border-app-border text-app-text-muted hover:border-app-border-strong"}`}>{stageLabel(t, s)}</button>
+        ))}
+      </div>
+      <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
         <table className="w-full text-sm table-fixed">
-          <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
             <tr>
               <th className="px-4 py-3 w-40 text-center">{t("invoices_invoiceId")}</th>
               <th className="px-4 py-3 w-56 text-center">{t("invoices_customer")}</th>
               <th className="px-4 py-3 w-20 text-center">{t("invoices_items")}</th>
               {isDelivery && <th className="px-4 py-3 w-40 text-center">{t("invoices_deliveryFee")}</th>}
+              <th className="px-4 py-3 w-32 text-center">{t("invoices_total")}</th>
               <th className="px-4 py-3">{t("common_status")}</th>
               <th className="px-4 py-3 w-10"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-stone-100">
+          <tbody className="divide-y divide-app-border">
             {active.map((inv) => {
               const status = invoiceOverallStatus(inv);
               return (
-                <tr key={inv.id} className="hover:bg-stone-50 cursor-pointer" onClick={() => setOpenId(inv.id)}>
-                  <td className="px-4 py-3 f-mono text-slate-700 w-40" style={{ textAlign: "center" }}>{inv.code}</td>
-                  <td className="px-4 py-3 text-slate-800 truncate w-56 text-center">{inv.customerName}</td>
-                  <td className="px-4 py-3 text-slate-600 w-20" style={{ textAlign: "center" }}>{inv.items.length}</td>
-                  {isDelivery && <td className="px-4 py-3 f-mono text-teal-700 w-40" style={{ textAlign: "center" }}>{sarCompact(inv.deliveryFee || 0)}</td>}
-                  <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${status === "Ready" ? "bg-teal-100 text-teal-700" : status === "Received" ? "bg-stone-100 text-stone-600" : "bg-amber-100 text-amber-700"}`}>{stageLabel(t, status)}</span></td>
-                  <td className="px-4 py-3 text-right text-slate-300 w-10"><ChevronRight size={16} /></td>
+                <tr key={inv.id} className="hover:bg-app-bg cursor-pointer" onClick={() => setOpenId(inv.id)}>
+                  <td className="px-4 py-3 f-mono text-app-text-muted w-40" style={{ textAlign: "center" }}>{inv.code}</td>
+                  <td className="px-4 py-3 text-app-text truncate w-56 text-center">{inv.customerName}</td>
+                  <td className="px-4 py-3 text-app-text-muted w-20" style={{ textAlign: "center" }}>{inv.items.length}</td>
+                  {isDelivery && <td className="px-4 py-3 f-mono text-brand-700 w-40" style={{ textAlign: "center" }}>{sarCompact(inv.deliveryFee || 0)}</td>}
+                  <td className="px-4 py-3 f-mono text-app-text w-32" style={{ textAlign: "center" }}>{sarCompact(inv.total)}</td>
+                  <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${INVOICE_STATUS_TONE[status] || "bg-stone-100 text-stone-600"}`}>{stageLabel(t, status)}</span></td>
+                  <td className="px-4 py-3 text-right text-app-text-subtle w-10"><ChevronRight size={16} /></td>
                 </tr>
               );
             })}
-            {active.length === 0 && <tr><td colSpan={isDelivery ? 6 : 5} className="px-4 py-10 text-center text-slate-400">{isDelivery ? t("invoices_noActiveDelivery") : t("invoices_noActive")}</td></tr>}
+            {active.length === 0 && <tr><td colSpan={isDelivery ? 7 : 6} className="px-4 py-10 text-center text-app-text-subtle">{isDelivery ? t("invoices_noActiveDelivery") : t("invoices_noActive")}</td></tr>}
           </tbody>
         </table>
       </div>
