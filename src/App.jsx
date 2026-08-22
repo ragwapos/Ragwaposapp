@@ -997,10 +997,17 @@ const stageLabel = (t, stage) => t(STAGE_KEYS[stage] || stage);
 const DICT = {
   en: {
     app_name: "Ragwa", app_tagline: "The Leading Laundry Assistant",
+    nav_home: "Home",
     nav_pos: "Point of Sale", nav_invoices: "Active Invoices", nav_delivery: "Active Delivery Invoices",
     nav_customers: "Customer Ledger", nav_products: "Products", nav_purchases: "Purchases & Expenses",
     nav_promotions: "Promotions", nav_reports: "Reports", nav_settings: "Settings",
     sidebar_footer: "Dynamic state · no hardcoded catalogs",
+
+    home_welcomeBack: "Welcome back", home_salesToday: "Today's Sales", home_ordersToday: "Today's Orders",
+    home_readyOrders: "Ready Orders", home_deliveryActive: "Delivery In Progress",
+    home_recentOrders: "Recent Orders", home_viewAll: "View All", home_noOrders: "No orders yet",
+    home_quickActions: "Quick Actions", home_quickPos: "New Sale", home_quickInvoices: "Active Invoices",
+    home_quickCustomers: "Customers",
 
     common_save: "Save", common_cancel: "Cancel", common_add: "Add", common_close: "Close",
     common_notes: "Notes", common_category: "Category", common_paymentMethod: "Payment Method",
@@ -1220,10 +1227,17 @@ const DICT = {
 
   ar: {
     app_name: "رغوة", app_tagline: "المساعد الأول للمغاسل",
+    nav_home: "الرئيسية",
     nav_pos: "نقطة البيع", nav_invoices: "الفواتير النشطة", nav_delivery: "فواتير التوصيل النشطة",
     nav_customers: "سجل العملاء", nav_products: "المنتجات", nav_purchases: "المشتريات والمصروفات",
     nav_promotions: "العروض", nav_reports: "التقارير", nav_settings: "الإعدادات",
     sidebar_footer: "بيانات ديناميكية · بدون كتالوجات ثابتة",
+
+    home_welcomeBack: "أهلاً بك", home_salesToday: "مبيعات اليوم", home_ordersToday: "طلبات اليوم",
+    home_readyOrders: "طلبات جاهزة", home_deliveryActive: "توصيل قيد التنفيذ",
+    home_recentOrders: "أحدث الطلبات", home_viewAll: "عرض الكل", home_noOrders: "لا توجد طلبات بعد",
+    home_quickActions: "إجراءات سريعة", home_quickPos: "بيع جديد", home_quickInvoices: "الفواتير النشطة",
+    home_quickCustomers: "العملاء",
 
     common_save: "حفظ", common_cancel: "إلغاء", common_add: "إضافة", common_close: "إغلاق",
     common_notes: "ملاحظات", common_category: "الفئة", common_paymentMethod: "طريقة الدفع",
@@ -1444,10 +1458,17 @@ const DICT = {
 
   ur: {
     app_name: "رغوہ", app_tagline: "لانڈری کا سب سے بہترین اسسٹنٹ",
+    nav_home: "ہوم",
     nav_pos: "پوائنٹ آف سیل", nav_invoices: "جاری آرڈرز", nav_delivery: "جاری ڈیلیوری آرڈرز",
     nav_customers: "کسٹمر لیجر", nav_products: "پروڈکٹس", nav_purchases: "خریداری اور اخراجات",
     nav_promotions: "پرموشنز", nav_reports: "رپورٹس", nav_settings: "سیٹنگز",
     sidebar_footer: "متحرک ڈیٹا · کوئی فکسڈ کیٹلاگ نہیں",
+
+    home_welcomeBack: "خوش آمدید", home_salesToday: "آج کی فروخت", home_ordersToday: "آج کے آرڈرز",
+    home_readyOrders: "تیار آرڈرز", home_deliveryActive: "جاری ڈیلیوری",
+    home_recentOrders: "حالیہ آرڈرز", home_viewAll: "سب دیکھیں", home_noOrders: "ابھی کوئی آرڈر نہیں",
+    home_quickActions: "فوری اقدامات", home_quickPos: "نئی فروخت", home_quickInvoices: "جاری آرڈرز",
+    home_quickCustomers: "کسٹمرز",
 
     common_save: "محفوظ کریں", common_cancel: "منسوخ کریں", common_add: "شامل کریں", common_close: "بند کریں",
     common_notes: "نوٹس", common_category: "کیٹگری", common_paymentMethod: "ادائیگی کا طریقہ",
@@ -1690,7 +1711,7 @@ const NAV = [
   { key: "settings", labelKey: "nav_settings", icon: Settings },
 ];
 
-function Sidebar({ tab, setTab, sectionLocks, setSectionLocks }) {
+function Sidebar({ tab, setTab, sectionLocks, setSectionLocks, merchant }) {
   const { t } = useLang();
   const [pendingNav, setPendingNav] = useState(null);
 
@@ -1700,14 +1721,14 @@ function Sidebar({ tab, setTab, sectionLocks, setSectionLocks }) {
   };
 
   return (
-    <div className="flex h-full w-60 shrink-0 flex-col bg-slate-900 text-stone-200 f-body">
-      <div className="flex items-center gap-3 px-5 py-6">
+    <div className="flex h-full w-60 shrink-0 flex-col bg-navy-900 text-stone-200 f-body">
+      <button onClick={() => setTab("home")} className="flex items-center gap-3 px-5 py-6 text-left hover:bg-navy-800/60 transition">
         <img src={LOGO_DATA_URI} alt="Ragwa" className="h-11 w-11 shrink-0 object-contain drop-shadow-md" />
         <div>
           <div className="f-display text-2xl font-bold tracking-tight text-white leading-none">{t("app_name")}</div>
-          <div className="text-[11px] font-semibold uppercase tracking-widest text-teal-400 mt-1">{t("app_tagline")}</div>
+          <div className="text-[11px] font-semibold uppercase tracking-widest text-brand-400 mt-1">{t("app_tagline")}</div>
         </div>
-      </div>
+      </button>
       <nav className="flex-1 space-y-1 px-3">
         {NAV.map((n, i) => {
           const Icon = n.icon;
@@ -1715,16 +1736,19 @@ function Sidebar({ tab, setTab, sectionLocks, setSectionLocks }) {
           const locked = Boolean(sectionLocks[n.key]);
           return (
             <button key={n.key} onClick={() => handleNavClick(n.key)}
-              className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${active ? "bg-teal-600 text-white shadow" : "text-stone-300 hover:bg-slate-800 hover:text-white"}`}>
-              <span className={`f-mono text-[10px] w-4 ${active ? "text-teal-100" : "text-slate-500"}`}>{String(i + 1).padStart(2, "0")}</span>
+              className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${active ? "bg-brand-600 text-white shadow" : "text-stone-300 hover:bg-navy-800 hover:text-white"}`}>
+              <span className={`f-mono text-[10px] w-4 ${active ? "text-brand-100" : "text-slate-500"}`}>{String(i + 1).padStart(2, "0")}</span>
               <Icon size={16} />
               <span className="flex-1 text-left font-medium">{t(n.labelKey)}</span>
-              {locked && <Lock size={12} className={active ? "text-teal-100" : "text-amber-400"} />}
+              {locked && <Lock size={12} className={active ? "text-brand-100" : "text-amber-400"} />}
             </button>
           );
         })}
       </nav>
-      <div className="px-5 py-4 text-[11px] text-slate-500 border-t border-slate-800">{t("sidebar_footer")}</div>
+      <div className="px-5 py-4 border-t border-navy-800">
+        <div className="truncate text-sm font-semibold text-white">{merchant?.name || t("app_name")}</div>
+        <div className="text-[11px] text-slate-500">{t("sidebar_footer")}</div>
+      </div>
 
       {pendingNav && (
         <PinPromptModal
@@ -4666,6 +4690,93 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
   );
 }
 
+function HomeDashboardView({ invoices, merchant, setTab }) {
+  const { t } = useLang();
+
+  const isToday = (iso) => {
+    const d = new Date(iso), n = new Date();
+    return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+  };
+  const todayInvoices = invoices.filter((i) => isToday(i.createdAt));
+  const salesToday = todayInvoices.reduce((s, i) => s + invoiceRevenue(i).amount, 0);
+  const ordersToday = todayInvoices.length;
+  const readyCount = invoices.filter((i) => !i.closed && invoiceOverallStatus(i) === "Ready").length;
+  const deliveryActive = invoices.filter((i) => !i.closed && i.isDelivery).length;
+
+  const recent = [...invoices].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 6);
+
+  const kpis = [
+    { label: t("home_salesToday"), value: sarCompact(salesToday), icon: Wallet, tint: "bg-brand-50 text-brand-700" },
+    { label: t("home_ordersToday"), value: ordersToday, icon: ClipboardList, tint: "bg-info-50 text-info-700" },
+    { label: t("home_readyOrders"), value: readyCount, icon: CheckCircle2, tint: "bg-success-50 text-success-700" },
+    { label: t("home_deliveryActive"), value: deliveryActive, icon: Truck, tint: "bg-warning-50 text-warning-700" },
+  ];
+
+  return (
+    <div>
+      <div className="mb-6 f-display text-2xl font-semibold text-slate-900">
+        {t("home_welcomeBack")}{merchant?.name ? `, ${merchant.name}` : ""}
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        {kpis.map((k) => {
+          const Icon = k.icon;
+          return (
+            <div key={k.label} className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+              <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-lg ${k.tint}`}><Icon size={18} /></div>
+              <div className="f-display text-2xl font-bold text-slate-900">{k.value}</div>
+              <div className="text-sm text-slate-500">{k.label}</div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 rounded-xl border border-stone-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-stone-100">
+            <div className="f-display text-base font-semibold text-slate-900">{t("home_recentOrders")}</div>
+            <button onClick={() => setTab("invoices")} className="text-sm font-medium text-teal-700 hover:text-teal-800">{t("home_viewAll")}</button>
+          </div>
+          <div className="divide-y divide-stone-100">
+            {recent.length === 0 && <div className="px-5 py-10 text-center text-slate-400">{t("home_noOrders")}</div>}
+            {recent.map((inv) => {
+              const status = invoiceOverallStatus(inv);
+              return (
+                <button key={inv.id} onClick={() => setTab(inv.isDelivery ? "delivery_invoices" : "invoices")}
+                  className="flex w-full items-center justify-between px-5 py-3 text-left hover:bg-stone-50">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="f-mono text-xs text-slate-500 shrink-0">{inv.code}</span>
+                    <span className="truncate text-sm text-slate-800">{inv.customerName}</span>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <span className="f-mono text-sm text-slate-700">{sarCompact(inv.total)}</span>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${status === "Ready" ? "bg-teal-100 text-teal-700" : status === "Received" ? "bg-stone-100 text-stone-600" : "bg-amber-100 text-amber-700"}`}>{stageLabel(t, status)}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 f-display text-base font-semibold text-slate-900">{t("home_quickActions")}</div>
+          <div className="space-y-2">
+            <button onClick={() => setTab("pos")} className="flex w-full items-center gap-3 rounded-lg bg-brand-600 px-4 py-3 text-sm font-semibold text-white hover:bg-brand-700">
+              <Shirt size={16} /> {t("home_quickPos")}
+            </button>
+            <button onClick={() => setTab("invoices")} className="flex w-full items-center gap-3 rounded-lg border border-stone-200 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-stone-50">
+              <ClipboardList size={16} /> {t("home_quickInvoices")}
+            </button>
+            <button onClick={() => setTab("customers")} className="flex w-full items-center gap-3 rounded-lg border border-stone-200 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-stone-50">
+              <Users size={16} /> {t("home_quickCustomers")}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* =========================================================================
    ROOT APP
    ========================================================================= */
@@ -4674,8 +4785,9 @@ function AppShell({ tab, setTab, categories, addCategory, products, addProduct, 
   return (
     <div dir={dir} className="flex h-screen w-full bg-stone-100 f-body">
       <Fonts />
-      <Sidebar tab={tab} setTab={setTab} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} />
+      <Sidebar tab={tab} setTab={setTab} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} merchant={merchant} />
       <main className="flex-1 overflow-y-auto p-6">
+        {tab === "home" && <HomeDashboardView invoices={invoices} merchant={merchant} setTab={setTab} />}
         {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promotions} enabledPayMethods={enabledPayMethods} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} setTab={setTab} />}
         {tab === "invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} />}
         {tab === "delivery_invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} isDelivery />}
@@ -4691,7 +4803,7 @@ function AppShell({ tab, setTab, categories, addCategory, products, addProduct, 
 }
 
 function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
-  const [tab, setTab] = useState("pos");
+  const [tab, setTab] = useState("home");
   // Starts from whatever language the visitor picked on the landing page;
   // a saved tenant_settings.lang (once one exists) still overrides this on
   // load below, so a returning user's own explicit choice always wins.
