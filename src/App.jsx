@@ -4,7 +4,8 @@ import {
   Truck, Tag, BarChart3, Wallet, ImageIcon, Ban, ArrowRight, Trash2, CreditCard,
   Banknote, Percent, Clock, Mail, AlertTriangle, CheckCircle2, Circle, Upload,
   ReceiptText, Building2, FileText, Sparkles, Settings, Globe, Lock, Pencil, Paperclip,
-  MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin, Home, SplitSquareHorizontal
+  MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin, Home, SplitSquareHorizontal,
+  Phone, User
 } from "lucide-react";
 import QRCode from "qrcode";
 // auth/db here are supabase.auth / the Supabase client (see src/supabase.js).
@@ -1118,11 +1119,19 @@ const DICT = {
     purchases_savePurchase: "Save Purchase", purchases_table_supplier: "Supplier", purchases_table_agent: "Agent",
     purchases_table_contact: "Contact", purchases_table_liability: "Liability", purchases_payBalance: "Pay Balance",
     purchases_invoiceFile: "Supplier Invoice File", purchases_uploadInvoice: "Upload invoice",
+    purchases_pageTitle: "Purchases & Expenses", purchases_pageSubtitle: "Track supplier invoices and operating expenses",
+    purchases_kpiCount: "Purchases Recorded", purchases_kpiSuppliers: "Suppliers", purchases_kpiDue: "Due to Suppliers",
+    purchases_addPurchaseBtn: "Purchase Invoice", purchases_searchSuppliers: "Search suppliers...",
+    purchases_settled: "Settled", purchases_noSuppliers: "No suppliers yet.",
+    purchases_recentTitle: "Recent Purchases", purchases_noPurchases: "No purchases recorded yet.",
     expenses_addExpense: "Add Expense", expenses_taxStatus: "Tax Status", expenses_taxInclusive: "Tax Inclusive",
     expenses_taxExempt: "Exempt", expenses_date: "Date", expenses_receiptFile: "Receipt / File",
     expenses_uploadReceipt: "Upload receipt", expenses_save: "Save Expense",
     expenses_table_category: "Category", expenses_table_amount: "Amount", expenses_table_tax: "Tax",
     expenses_table_date: "Date", expenses_table_receipt: "Receipt",
+    expenses_kpiExempt: "Tax Exempt", expenses_kpiTaxable: "Taxable", expenses_kpiTotal: "Total Expenses",
+    expenses_addExpenseBtn: "New Expense", expenses_searchPlaceholder: "Search expenses...",
+    expenses_noExpenses: "No expenses recorded yet.",
     addSupplier_title: "➕ Add New Supplier", addSupplier_editTitle: "✏️ Edit Supplier", addSupplier_company: "Company Name", addSupplier_agent: "Agent Name",
     addSupplier_contact: "Contact Number", addSupplier_taxNumber: "Tax Number (optional)", addSupplier_save: "Save Supplier",
     addSupplier_taxExempt: "Supplier is Tax Exempt", addSupplier_exemptionNumber: "Tax Exemption Number",
@@ -1352,11 +1361,19 @@ const DICT = {
     purchases_savePurchase: "حفظ الفاتورة", purchases_table_supplier: "المورد", purchases_table_agent: "الوكيل",
     purchases_table_contact: "التواصل", purchases_table_liability: "المستحق", purchases_payBalance: "سداد الرصيد",
     purchases_invoiceFile: "فاتورة المورد", purchases_uploadInvoice: "رفع الفاتورة",
+    purchases_pageTitle: "المشتريات والمصروفات", purchases_pageSubtitle: "متابعة فواتير الموردين والمصروفات التشغيلية",
+    purchases_kpiCount: "عمليات شراء مسجلة", purchases_kpiSuppliers: "عدد الموردين", purchases_kpiDue: "مستحق للموردين",
+    purchases_addPurchaseBtn: "فاتورة شراء", purchases_searchSuppliers: "ابحث عن مورد...",
+    purchases_settled: "مسدد", purchases_noSuppliers: "لا يوجد موردون بعد.",
+    purchases_recentTitle: "آخر عمليات الشراء", purchases_noPurchases: "لا توجد مشتريات مسجلة بعد.",
     expenses_addExpense: "إضافة مصروف", expenses_taxStatus: "حالة الضريبة", expenses_taxInclusive: "شامل الضريبة",
     expenses_taxExempt: "معفى", expenses_date: "التاريخ", expenses_receiptFile: "الإيصال / الملف",
     expenses_uploadReceipt: "رفع الإيصال", expenses_save: "حفظ المصروف",
     expenses_table_category: "الفئة", expenses_table_amount: "المبلغ", expenses_table_tax: "الضريبة",
     expenses_table_date: "التاريخ", expenses_table_receipt: "الإيصال",
+    expenses_kpiExempt: "معفاة", expenses_kpiTaxable: "خاضعة للضريبة", expenses_kpiTotal: "إجمالي المصروفات",
+    expenses_addExpenseBtn: "مصروف جديد", expenses_searchPlaceholder: "ابحث عن مصروف...",
+    expenses_noExpenses: "لا توجد مصروفات مسجلة بعد.",
     addSupplier_title: "➕ إضافة مورد جديد", addSupplier_editTitle: "✏️ تعديل المورد", addSupplier_company: "اسم الشركة", addSupplier_agent: "اسم الوكيل",
     addSupplier_contact: "رقم التواصل", addSupplier_taxNumber: "الرقم الضريبي (اختياري)", addSupplier_save: "حفظ المورد",
     addSupplier_taxExempt: "المورد معفى من الضريبة", addSupplier_exemptionNumber: "رقم الإعفاء الضريبي",
@@ -1586,11 +1603,19 @@ const DICT = {
     purchases_savePurchase: "خریداری محفوظ کریں", purchases_table_supplier: "سپلائر", purchases_table_agent: "ایجنٹ",
     purchases_table_contact: "رابطہ", purchases_table_liability: "واجبات", purchases_payBalance: "بیلنس ادا کریں",
     purchases_invoiceFile: "سپلائر انوائس فائل", purchases_uploadInvoice: "انوائس اپ لوڈ کریں",
+    purchases_pageTitle: "خریداری اور اخراجات", purchases_pageSubtitle: "سپلائر انوائسز اور آپریٹنگ اخراجات ٹریک کریں",
+    purchases_kpiCount: "درج شدہ خریداریاں", purchases_kpiSuppliers: "سپلائرز کی تعداد", purchases_kpiDue: "سپلائرز کو واجب الادا",
+    purchases_addPurchaseBtn: "خریداری انوائس", purchases_searchSuppliers: "سپلائر تلاش کریں...",
+    purchases_settled: "ادا شدہ", purchases_noSuppliers: "ابھی کوئی سپلائر نہیں۔",
+    purchases_recentTitle: "حالیہ خریداریاں", purchases_noPurchases: "ابھی کوئی خریداری درج نہیں ہوئی۔",
     expenses_addExpense: "خرچہ شامل کریں", expenses_taxStatus: "ٹیکس کی صورتحال", expenses_taxInclusive: "ٹیکس شامل",
     expenses_taxExempt: "ٹیکس فری", expenses_date: "تاریخ", expenses_receiptFile: "رسید / فائل",
     expenses_uploadReceipt: "رسید اپ لوڈ کریں", expenses_save: "خرچہ محفوظ کریں",
     expenses_table_category: "کیٹگری", expenses_table_amount: "رقم", expenses_table_tax: "ٹیکس",
     expenses_table_date: "تاریخ", expenses_table_receipt: "رسید",
+    expenses_kpiExempt: "ٹیکس فری", expenses_kpiTaxable: "ٹیکس ایبل", expenses_kpiTotal: "کل اخراجات",
+    expenses_addExpenseBtn: "نیا خرچہ", expenses_searchPlaceholder: "خرچہ تلاش کریں...",
+    expenses_noExpenses: "ابھی کوئی خرچہ درج نہیں ہوا۔",
     addSupplier_title: "➕ نیا سپلائر شامل کریں", addSupplier_editTitle: "✏️ سپلائر میں ترمیم کریں", addSupplier_company: "کمپنی کا نام", addSupplier_agent: "ایجنٹ کا نام",
     addSupplier_contact: "رابطہ نمبر", addSupplier_taxNumber: "ٹیکس نمبر (اختیاری)", addSupplier_save: "سپلائر محفوظ کریں",
     addSupplier_taxExempt: "سپلائر ٹیکس سے مستثنیٰ ہے", addSupplier_exemptionNumber: "ٹیکس چھوٹ نمبر",
@@ -1986,10 +2011,49 @@ function AddSupplierModal({ onClose, onSave, editing }) {
       )}
       <button
         onClick={() => { if (!company.trim()) return; onSave({ company: company.trim(), agent: agent.trim() || "-", contact: contact.trim() || "-", taxNumber: taxNumber.trim(), taxExempt, exemptionNumber: taxExempt ? exemptionNumber.trim() : "" }); }}
-        className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">
+        className="w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600">
         {t("addSupplier_save")}
       </button>
     </Modal>
+  );
+}
+
+// Inline "add new supplier" card rendered INSIDE the record-purchase modal —
+// distinct from AddSupplierModal above (a full modal, used only for editing
+// an existing supplier from SupplierDetailModal). Same fields/validation as
+// AddSupplierModal, just laid out inline instead of stacking a modal-on-modal.
+function SupplierQuickAddFields({ onSave, onCancel }) {
+  const { t } = useLang();
+  const [company, setCompany] = useState("");
+  const [agent, setAgent] = useState("");
+  const [contact, setContact] = useState("");
+  const [taxNumber, setTaxNumber] = useState("");
+  const [taxExempt, setTaxExempt] = useState(false);
+  const [exemptionNumber, setExemptionNumber] = useState("");
+  return (
+    <div className="mb-4 space-y-3 rounded-lg border border-brand-200 bg-brand-50/40 p-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wide text-brand-800">{t("purchases_newSupplier")}</span>
+        <button type="button" onClick={onCancel} className="text-xs font-medium text-app-text-muted hover:text-app-text">{t("common_cancel")}</button>
+      </div>
+      <input autoFocus value={company} onChange={(e) => setCompany(e.target.value)} placeholder={t("addSupplier_company")} className={inputCls} />
+      <input value={agent} onChange={(e) => setAgent(e.target.value.slice(0, 15))} maxLength={15} placeholder={t("addSupplier_agent")} className={inputCls} />
+      <input value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t("addSupplier_contact")} className={inputCls} />
+      <input value={taxNumber} onChange={(e) => setTaxNumber(e.target.value)} placeholder={t("addSupplier_taxNumber")} className={`${inputCls} f-mono`} />
+      <Toggle checked={taxExempt} onChange={setTaxExempt} label={t("addSupplier_taxExempt")} />
+      {/* Distinct from the regular tax number above: this is what makes a
+          purchase count toward the Tax Return's exempt-purchases box (#5)
+          instead of the standard-rated box — see AddSupplierModal. */}
+      {taxExempt && (
+        <input value={exemptionNumber} onChange={(e) => setExemptionNumber(e.target.value)} placeholder={t("addSupplier_exemptionNumber")} className={`${inputCls} f-mono`} />
+      )}
+      <button
+        type="button"
+        onClick={() => { if (!company.trim()) return; onSave({ company: company.trim(), agent: agent.trim() || "-", contact: contact.trim() || "-", taxNumber: taxNumber.trim(), taxExempt, exemptionNumber: taxExempt ? exemptionNumber.trim() : "" }); }}
+        className="w-full rounded-lg bg-brand-500 py-2 text-sm font-semibold text-white hover:bg-brand-600">
+        {t("addSupplier_save")}
+      </button>
+    </div>
   );
 }
 
@@ -2003,66 +2067,66 @@ function SupplierDetailModal({ supplier, purchases, onClose, onPayBalance, onEdi
       title={
         <span className="flex items-center gap-2">
           {supplier.company}
-          <button onClick={onEdit} className="rounded-full p-1 text-slate-400 hover:bg-stone-100 hover:text-teal-700"><Pencil size={15} /></button>
+          <button onClick={onEdit} className="rounded-full p-1 text-app-text-subtle hover:bg-app-bg hover:text-brand-700"><Pencil size={15} /></button>
         </span>
       }
       onClose={onClose} width="max-w-2xl">
       <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-          <div className="text-xs text-slate-500">{t("supplierDetail_agent")}</div>
-          <div className="font-semibold text-slate-800 text-sm">{supplier.agent}</div>
+        <div className="rounded-lg border border-app-border bg-app-bg p-3">
+          <div className="text-xs text-app-text-muted">{t("supplierDetail_agent")}</div>
+          <div className="font-semibold text-app-text text-sm">{supplier.agent}</div>
         </div>
-        <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-          <div className="text-xs text-slate-500">{t("supplierDetail_contact")}</div>
-          <div className="f-mono font-semibold text-slate-800 text-sm">{supplier.contact}</div>
+        <div className="rounded-lg border border-app-border bg-app-bg p-3">
+          <div className="text-xs text-app-text-muted">{t("supplierDetail_contact")}</div>
+          <div className="f-mono font-semibold text-app-text text-sm">{supplier.contact}</div>
         </div>
-        <div className="rounded-lg border border-rose-200 bg-rose-50 p-3">
-          <div className="text-xs text-rose-700">{t("supplierDetail_liability")}</div>
-          <div className="f-mono font-semibold text-rose-800">{sar(supplier.balance)}</div>
+        <div className="rounded-lg border border-danger-200 bg-danger-50 p-3">
+          <div className="text-xs text-danger-700">{t("supplierDetail_liability")}</div>
+          <div className="f-mono font-semibold text-danger-800">{sar(supplier.balance)}</div>
         </div>
-        <div className="rounded-lg border border-teal-200 bg-teal-50 p-3">
-          <div className="text-xs text-teal-700">{t("supplierDetail_totalPurchased")}</div>
-          <div className="f-mono font-semibold text-teal-800">{sar(totalSpent)}</div>
+        <div className="rounded-lg border border-brand-200 bg-brand-50 p-3">
+          <div className="text-xs text-brand-700">{t("supplierDetail_totalPurchased")}</div>
+          <div className="f-mono font-semibold text-brand-800">{sar(totalSpent)}</div>
         </div>
-        <div className="rounded-lg border border-stone-200 bg-stone-50 p-3">
-          <div className="text-xs text-slate-500">{t("supplierDetail_taxNumber")}</div>
-          <div className="f-mono font-semibold text-slate-800 text-sm">{supplier.taxNumber ? supplier.taxNumber : t("supplierDetail_noTaxNumber")}</div>
+        <div className="rounded-lg border border-app-border bg-app-bg p-3">
+          <div className="text-xs text-app-text-muted">{t("supplierDetail_taxNumber")}</div>
+          <div className="f-mono font-semibold text-app-text text-sm">{supplier.taxNumber ? supplier.taxNumber : t("supplierDetail_noTaxNumber")}</div>
         </div>
         {supplier.taxExempt && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
-            <div className="text-xs text-amber-700">{t("addSupplier_exemptionNumber")}</div>
-            <div className="f-mono font-semibold text-amber-800 text-sm">{supplier.exemptionNumber || "—"}</div>
+          <div className="rounded-lg border border-warning-200 bg-warning-50 p-3">
+            <div className="text-xs text-warning-700">{t("addSupplier_exemptionNumber")}</div>
+            <div className="f-mono font-semibold text-warning-800 text-sm">{supplier.exemptionNumber || "—"}</div>
           </div>
         )}
       </div>
 
       {supplier.balance > 0 && (
-        <button onClick={() => onPayBalance(supplier)} className="mb-5 w-full rounded-lg bg-slate-900 py-2.5 font-semibold text-white hover:bg-slate-800">{t("supplierDetail_payBalance")}</button>
+        <button onClick={() => onPayBalance(supplier)} className="mb-5 w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600">{t("supplierDetail_payBalance")}</button>
       )}
 
-      <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("supplierDetail_history")}</div>
-      <div className="overflow-hidden rounded-xl border border-stone-200">
+      <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-app-text-muted">{t("supplierDetail_history")}</div>
+      <div className="overflow-hidden rounded-xl border border-app-border">
         <table className="w-full text-sm">
-          <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
             <tr><th className="px-3 py-2">{t("supplierDetail_poId")}</th><th className="px-3 py-2">{t("common_date")}</th><th className="px-3 py-2">{t("supplierDetail_method")}</th><th className="px-3 py-2">{t("supplierDetail_amount")}</th><th className="px-3 py-2">{t("supplierDetail_invoice")}</th></tr>
           </thead>
-          <tbody className="divide-y divide-stone-100">
+          <tbody className="divide-y divide-app-border">
             {supplierPurchases.map((p) => (
-              <tr key={p.id} className="hover:bg-stone-50">
-                <td className="px-3 py-2 f-mono text-slate-600">{p.code}</td>
-                <td className="px-3 py-2 f-mono text-xs text-slate-500">{fmtDate(p.date)}</td>
-                <td className="px-3 py-2 text-slate-600">{p.method}</td>
-                <td className="px-3 py-2 f-mono font-semibold text-slate-900">{sar(p.amount)}</td>
+              <tr key={p.id} className="hover:bg-app-bg">
+                <td className="px-3 py-2 f-mono text-app-text-muted">{p.code}</td>
+                <td className="px-3 py-2 f-mono text-xs text-app-text-subtle">{fmtDate(p.date)}</td>
+                <td className="px-3 py-2 text-app-text-muted">{p.method}</td>
+                <td className="px-3 py-2 f-mono font-semibold text-app-text">{sar(p.amount)}</td>
                 <td className="px-3 py-2">
                   {p.attachment ? (
-                    <button onClick={() => openStoredDocument(p.attachment)} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
+                    <button onClick={() => openStoredDocument(p.attachment)} className="inline-flex items-center gap-1 text-brand-600 hover:underline">
                       <Paperclip size={13} />{t("common_view")}
                     </button>
-                  ) : <span className="text-slate-300">—</span>}
+                  ) : <span className="text-app-text-subtle">—</span>}
                 </td>
               </tr>
             ))}
-            {supplierPurchases.length === 0 && <tr><td colSpan={5} className="px-3 py-6 text-center text-slate-400">{t("supplierDetail_empty")}</td></tr>}
+            {supplierPurchases.length === 0 && <tr><td colSpan={5} className="px-3 py-6 text-center text-app-text-subtle">{t("supplierDetail_empty")}</td></tr>}
           </tbody>
         </table>
       </div>
@@ -3519,6 +3583,23 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
 /* =========================================================================
    MODULE 5 — PURCHASES & EXPENSES
    ========================================================================= */
+// KPI card used only by PurchasesExpensesView — unlike the shared `KPI`
+// component (still on the old stone/white palette, used only by the
+// not-yet-redesigned ReportsView) this one is tokenized and supports an
+// optional accent icon, matching the approved reference for this screen.
+function PurchasesStatCard({ label, value, icon: Icon, tone }) {
+  const tones = { info: "bg-info-50 text-info-600", warning: "bg-warning-50 text-warning-600" };
+  return (
+    <div className="flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
+      <div>
+        <div className="text-xs font-semibold text-app-text-muted">{label}</div>
+        <div className="f-mono mt-1.5 text-xl font-bold text-app-text">{value}</div>
+      </div>
+      {Icon && <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${tones[tone] || ""}`}><Icon size={18} /></span>}
+    </div>
+  );
+}
+
 function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, adjustSupplierBalance, nextDocNumber }) {
   const { t } = useLang();
   const [tab, setTab] = useState("purchases");
@@ -3543,6 +3624,8 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
   const [showAddSupplier, setShowAddSupplier] = useState(false);
   const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [editingSupplier, setEditingSupplier] = useState(null);
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [supplierQuery, setSupplierQuery] = useState("");
 
   const saveNewSupplier = (data) => {
     const sup = addSupplier({ ...data, balance: 0 });
@@ -3594,6 +3677,7 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
       }
       addPurchase({ code: `PO-${await nextDocNumber("PO")}`, supplierId, amount: amt, method, date: nowISO(), attachment, attachmentName });
       setAmount(""); setAttachment(""); setAttachmentName("");
+      setShowPurchaseModal(false);
     } catch (e) {
       console.error("recordPurchase failed", e);
       setPurchaseError(t("common_operationFailed"));
@@ -3636,6 +3720,8 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
   const [receiptName, setReceiptName] = useState("");
   const [receiptUploading, setReceiptUploading] = useState(false);
   const [expenseError, setExpenseError] = useState("");
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [expenseQuery, setExpenseQuery] = useState("");
   const fileRef = useRef(null);
 
   const handleReceiptFile = async (e) => {
@@ -3663,125 +3749,194 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
     if (!expCat || !expAmount || receiptUploading) return;
     addExpense({ categoryId: expCat, amount: Number(expAmount), taxFlag, date: expDate, receipt, receiptName });
     setExpAmount(""); setReceipt(""); setReceiptName("");
+    setShowExpenseModal(false);
   };
+
+  const totalDue = suppliers.reduce((s, x) => s + (x.balance || 0), 0);
+  const exemptTotal = expenses.filter((e) => e.taxFlag === "Exempt").reduce((s, e) => s + e.amount, 0);
+  const taxableTotal = expenses.filter((e) => e.taxFlag === "Inclusive").reduce((s, e) => s + e.amount, 0);
+  const expensesTotal = exemptTotal + taxableTotal;
+  const supplierQueryNorm = supplierQuery.trim().toLowerCase();
+  const filteredSuppliers = suppliers.filter((s) => !supplierQueryNorm || [s.company, s.agent, s.contact].some((v) => (v || "").toLowerCase().includes(supplierQueryNorm)));
+  const recentPurchases = [...purchases].sort((a, b) => new Date(b.date) - new Date(a.date));
+  const expenseQueryNorm = expenseQuery.trim().toLowerCase();
+  const filteredExpenses = expenses.filter((e) => {
+    if (!expenseQueryNorm) return true;
+    const catName = (expenseCategories.find((c) => c.id === e.categoryId)?.name || "").toLowerCase();
+    return catName.includes(expenseQueryNorm) || (e.date || "").includes(expenseQueryNorm);
+  }).sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return (
     <div>
-      <div className="mb-4 flex gap-2">
-        <button onClick={() => setTab("purchases")} className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === "purchases" ? "bg-slate-900 text-white" : "bg-white border border-stone-200 text-slate-600"}`}>{t("purchases_suppliersTab")}</button>
-        <button onClick={() => setTab("expenses")} className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === "expenses" ? "bg-slate-900 text-white" : "bg-white border border-stone-200 text-slate-600"}`}>{t("purchases_expensesTab")}</button>
+      <div className="mb-5">
+        <div className="f-display text-xl font-semibold text-app-text">{t("purchases_pageTitle")}</div>
+        <div className="text-sm text-app-text-muted">{t("purchases_pageSubtitle")}</div>
+      </div>
+
+      <div className="mb-6 inline-flex rounded-full border border-app-border bg-app-bg p-1">
+        <button onClick={() => setTab("purchases")} className={`rounded-full px-4 py-2 text-sm transition ${tab === "purchases" ? "bg-app-surface font-semibold text-app-text shadow-app-xs" : "font-medium text-app-text-muted"}`}>{t("purchases_suppliersTab")}</button>
+        <button onClick={() => setTab("expenses")} className={`rounded-full px-4 py-2 text-sm transition ${tab === "expenses" ? "bg-app-surface font-semibold text-app-text shadow-app-xs" : "font-medium text-app-text-muted"}`}>{t("purchases_expensesTab")}</button>
       </div>
 
       {tab === "purchases" ? (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm h-fit">
-            <div className="mb-4 flex items-center justify-between">
-              <div className="f-display font-semibold text-slate-900">{t("purchases_recordPurchase")}</div>
-              <button onClick={() => setShowAddSupplier(true)} className="text-xs font-medium text-teal-700 hover:underline">{t("purchases_newSupplier")}</button>
-            </div>
-            <Field label={t("purchases_supplier")}>
-              <select value={supplierId} onChange={(e) => setSupplierId(e.target.value)} className={inputCls}>
-                {suppliers.map((s) => <option key={s.id} value={s.id}>{s.company}</option>)}
-              </select>
-            </Field>
-            <Field label={t("common_amount")}><input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputCls} /></Field>
-            <Field label={t("purchases_payment")}>
-              <div className="flex gap-2">
-                <button onClick={() => setMethod("Cash")} className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${method === "Cash" ? "border-teal-600 bg-teal-50 text-teal-700" : "border-stone-300 text-slate-600"}`}>{t("common_cash")}</button>
-                <button onClick={() => setMethod("Credit (On Account)")} className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${method !== "Cash" ? "border-teal-600 bg-teal-50 text-teal-700" : "border-stone-300 text-slate-600"}`}>{t("purchases_credit")}</button>
-              </div>
-            </Field>
-            <Field label={t("purchases_invoiceFile")}>
-              <button disabled={attachmentUploading} onClick={() => purchaseFileRef.current.click()} className="w-full rounded-lg border border-dashed border-stone-300 px-3 py-2 text-sm text-slate-500 hover:bg-stone-50 disabled:opacity-60">
-                {attachmentUploading ? <Loader2 size={13} className="inline mr-1.5 animate-spin" /> : <Upload size={13} className="inline mr-1.5" />}
-                {attachmentUploading ? t("upload_uploading") : (attachmentName || t("purchases_uploadInvoice"))}
-              </button>
-              <input ref={purchaseFileRef} type="file" accept="image/*,.pdf" className="hidden" onChange={handlePurchaseFile} />
-            </Field>
-            {purchaseError && <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{purchaseError}</div>}
-            <button onClick={recordPurchase} disabled={purchaseSubmitting || attachmentUploading} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("purchases_savePurchase")}</button>
+        <div>
+          <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <PurchasesStatCard label={t("purchases_kpiCount")} value={purchases.length} />
+            <PurchasesStatCard label={t("purchases_kpiSuppliers")} value={suppliers.length} icon={Users} tone="info" />
+            <PurchasesStatCard label={t("purchases_kpiDue")} value={sar(totalDue)} icon={Wallet} tone="warning" />
           </div>
 
-          <div className="lg:col-span-2 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm h-fit">
-            <table className="w-full text-sm table-fixed">
-              <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <tr><th className="px-4 py-3 w-44 text-center">{t("purchases_table_supplier")}</th><th className="px-4 py-3 w-44 text-center">{t("purchases_table_agent")}</th><th className="px-4 py-3 w-32 text-center">{t("purchases_table_contact")}</th><th className="px-4 py-3 w-32 text-center">{t("purchases_table_liability")}</th><th className="px-4 py-3 w-36"></th></tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100">
-                {suppliers.map((s) => (
-                  <tr key={s.id} onClick={() => setSelectedSupplier(s)} className="cursor-pointer hover:bg-stone-50">
-                    <td className="px-4 py-3 w-44 text-center font-medium text-slate-900 truncate"><Building2 size={13} className="inline mr-1.5 text-slate-400" />{s.company}</td>
-                    <td className="px-4 py-3 w-44 text-center text-slate-600 truncate">{s.agent}</td>
-                    <td className="px-4 py-3 f-mono text-slate-600 w-32 truncate" style={{ textAlign: "center" }}>{s.contact}</td>
-                    <td className="px-4 py-3 f-mono text-rose-600 w-32" style={{ textAlign: "center" }}>{sarCompact(s.balance)}</td>
-                    <td className="px-4 py-3 text-center w-36">{s.balance > 0 && <button onClick={(e) => { e.stopPropagation(); openPayBalance(s); }} className="rounded-lg border border-stone-300 px-2 py-1 text-[11px] font-medium text-slate-700 hover:bg-stone-50">{t("purchases_payBalance")}</button>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <button onClick={() => setShowPurchaseModal(true)} className="flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"><Plus size={16} />{t("purchases_addPurchaseBtn")}</button>
+            <div className="relative min-w-[200px] flex-1">
+              <Search size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-text-subtle" />
+              <input value={supplierQuery} onChange={(e) => setSupplierQuery(e.target.value)} placeholder={t("purchases_searchSuppliers")} className={`${inputCls} pr-9`} />
+            </div>
+          </div>
+
+          <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredSuppliers.map((s) => (
+              <button key={s.id} onClick={() => setSelectedSupplier(s)} className="rounded-xl border border-app-border bg-app-surface p-4 text-right shadow-app-xs transition hover:border-brand-300 hover:shadow-app-md">
+                <div className="mb-3 flex items-center justify-between gap-2">
+                  {s.balance > 0 ? (
+                    <span className="shrink-0 rounded-full border border-danger-200 bg-danger-50 px-2.5 py-1 text-xs font-bold text-danger-700">{sarCompact(s.balance)}</span>
+                  ) : (
+                    <span className="shrink-0 rounded-full border border-success-200 bg-success-50 px-2.5 py-1 text-xs font-bold text-success-700">{t("purchases_settled")}</span>
+                  )}
+                  <span className="truncate font-semibold text-app-text">{s.company}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2 text-xs text-app-text-muted">
+                  <span className="flex items-center gap-1 f-mono"><Phone size={12} />{s.contact}</span>
+                  <span className="flex items-center gap-1 truncate"><User size={12} />{s.agent}</span>
+                </div>
+              </button>
+            ))}
+            {filteredSuppliers.length === 0 && <div className="col-span-full py-10 text-center text-app-text-subtle">{t("purchases_noSuppliers")}</div>}
+          </div>
+
+          <div className="mb-2 text-sm font-semibold text-app-text">{t("purchases_recentTitle")}</div>
+          <div className="space-y-2">
+            {recentPurchases.map((p) => {
+              const supplier = suppliers.find((s) => s.id === p.supplierId);
+              return (
+                <div key={p.id} onClick={() => p.attachment && openStoredDocument(p.attachment)} className={`flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-3 ${p.attachment ? "cursor-pointer hover:bg-app-bg" : ""}`}>
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-app-bg text-app-text-muted"><ReceiptText size={16} /></span>
+                    <div>
+                      <div className="text-sm font-medium text-app-text">{supplier?.company || "—"}</div>
+                      <div className="f-mono text-xs text-app-text-subtle">{p.code} · {fmtDate(p.date)}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="f-mono font-semibold text-app-text">{sarCompact(p.amount)}</div>
+                    <span className={`mt-0.5 inline-block rounded-full border px-2 py-0.5 text-[11px] font-medium ${p.method === "Cash" ? "border-app-border-strong text-app-text-muted" : "border-warning-200 bg-warning-50 text-warning-700"}`}>{p.method === "Cash" ? t("common_cash") : t("purchases_credit")}</span>
+                  </div>
+                </div>
+              );
+            })}
+            {recentPurchases.length === 0 && <div className="py-8 text-center text-app-text-subtle">{t("purchases_noPurchases")}</div>}
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm h-fit">
-            <div className="mb-4 f-display font-semibold text-slate-900">{t("expenses_addExpense")}</div>
-            <Field label={t("common_category")}><EmptyDropdownAdd label={t("common_category")} items={expenseCategories} valueId={expCat} onSelect={setExpCat} onAdd={addExpCategory} /></Field>
-            <Field label={t("common_amount")}><input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} className={inputCls} /></Field>
-            <Field label={t("expenses_taxStatus")}>
-              <div className="flex gap-2">
-                <button onClick={() => setTaxFlag("Inclusive")} className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${taxFlag === "Inclusive" ? "border-teal-600 bg-teal-50 text-teal-700" : "border-stone-300 text-slate-600"}`}>{t("expenses_taxInclusive")}</button>
-                <button onClick={() => setTaxFlag("Exempt")} className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${taxFlag === "Exempt" ? "border-teal-600 bg-teal-50 text-teal-700" : "border-stone-300 text-slate-600"}`}>{t("expenses_taxExempt")}</button>
-              </div>
-            </Field>
-            <Field label={t("expenses_date")}><input type="date" value={expDate} onChange={(e) => setExpDate(e.target.value)} className={inputCls} /></Field>
-            <Field label={t("expenses_receiptFile")}>
-              <button disabled={receiptUploading} onClick={() => fileRef.current.click()} className="w-full rounded-lg border border-dashed border-stone-300 px-3 py-2 text-sm text-slate-500 hover:bg-stone-50 disabled:opacity-60">
-                {receiptUploading ? <Loader2 size={13} className="inline mr-1.5 animate-spin" /> : <Upload size={13} className="inline mr-1.5" />}
-                {receiptUploading ? t("upload_uploading") : (receiptName || t("expenses_uploadReceipt"))}
-              </button>
-              <input ref={fileRef} type="file" accept="image/*,.pdf" className="hidden" onChange={handleReceiptFile} />
-            </Field>
-            {expenseError && <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{expenseError}</div>}
-            <button onClick={recordExpense} disabled={receiptUploading} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("expenses_save")}</button>
+        <div>
+          <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <PurchasesStatCard label={t("expenses_kpiExempt")} value={sar(exemptTotal)} />
+            <PurchasesStatCard label={t("expenses_kpiTaxable")} value={sar(taxableTotal)} icon={ReceiptText} tone="info" />
+            <PurchasesStatCard label={t("expenses_kpiTotal")} value={sar(expensesTotal)} icon={Wallet} tone="warning" />
           </div>
-          <div className="lg:col-span-2 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm h-fit">
-            <table className="w-full text-sm table-fixed">
-              <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                <tr><th className="px-4 py-3 w-56 text-center">{t("expenses_table_category")}</th><th className="px-4 py-3 w-40 text-center">{t("expenses_table_amount")}</th><th className="px-4 py-3 w-32 text-center">{t("expenses_table_tax")}</th><th className="px-4 py-3 w-40 text-center">{t("expenses_table_date")}</th><th className="px-4 py-3">{t("expenses_table_receipt")}</th></tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100">
-                {expenses.map((e) => (
-                  <tr key={e.id} className="hover:bg-stone-50">
-                    <td className="px-4 py-3 w-56 text-center font-medium text-slate-900 truncate">{expenseCategories.find((c) => c.id === e.categoryId)?.name}</td>
-                    <td className="px-4 py-3 f-mono text-slate-800 w-40" style={{ textAlign: "center" }}>{sarCompact(e.amount)}</td>
-                    <td className="px-4 py-3 w-32 text-center text-slate-600">{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</td>
-                    <td className="px-4 py-3 f-mono text-slate-500 w-40" style={{ textAlign: "center" }}>{e.date}</td>
-                    <td className="px-4 py-3 text-slate-500">
-                      {e.receipt?.startsWith("http") || e.receipt?.startsWith("data:") || e.receipt?.includes("/") ? (
-                        <button onClick={() => openStoredDocument(e.receipt)} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
-                          <ReceiptText size={13} />{e.receiptName || t("common_view")}
-                        </button>
-                      ) : e.receipt ? (
-                        // Pre-upload legacy rows: just a filename typed/picked with no
-                        // real file behind it (no "/" — a browser-reported File.name
-                        // never contains one) — inert text, not a dead link.
-                        <span>{e.receipt}</span>
-                      ) : <span className="text-slate-300">—</span>}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <button onClick={() => setShowExpenseModal(true)} className="flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"><Plus size={16} />{t("expenses_addExpenseBtn")}</button>
+            <div className="relative min-w-[200px] flex-1">
+              <Search size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-text-subtle" />
+              <input value={expenseQuery} onChange={(e) => setExpenseQuery(e.target.value)} placeholder={t("expenses_searchPlaceholder")} className={`${inputCls} pr-9`} />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            {filteredExpenses.map((e) => {
+              const cat = expenseCategories.find((c) => c.id === e.categoryId);
+              const hasReceipt = e.receipt?.startsWith("http") || e.receipt?.startsWith("data:") || e.receipt?.includes("/");
+              return (
+                <div key={e.id} onClick={() => hasReceipt && openStoredDocument(e.receipt)} className={`flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-3 ${hasReceipt ? "cursor-pointer hover:bg-app-bg" : ""}`}>
+                  <div className="flex items-center gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-app-bg text-app-text-muted"><FileText size={16} /></span>
+                    <div>
+                      <div className="text-sm font-medium text-app-text">{cat?.name || "—"}</div>
+                      <div className="f-mono text-xs text-app-text-subtle">{fmtDate(e.date)}</div>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="f-mono font-semibold text-app-text">{sarCompact(e.amount)}</div>
+                    <span className={`mt-0.5 inline-block rounded-full border px-2 py-0.5 text-[11px] font-medium ${e.taxFlag === "Inclusive" ? "border-app-border-strong text-app-text-muted" : "border-warning-200 bg-warning-50 text-warning-700"}`}>{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</span>
+                  </div>
+                </div>
+              );
+            })}
+            {filteredExpenses.length === 0 && <div className="py-8 text-center text-app-text-subtle">{t("expenses_noExpenses")}</div>}
           </div>
         </div>
       )}
 
+      {showPurchaseModal && (
+        <Modal title={t("purchases_recordPurchase")} onClose={() => { setShowPurchaseModal(false); setShowAddSupplier(false); setPurchaseError(""); }}>
+          {showAddSupplier ? (
+            <SupplierQuickAddFields onSave={saveNewSupplier} onCancel={() => setShowAddSupplier(false)} />
+          ) : (
+            <Field label={t("purchases_supplier")}>
+              <div className="flex gap-2">
+                <select value={supplierId} onChange={(e) => setSupplierId(e.target.value)} className={inputCls}>
+                  {suppliers.map((s) => <option key={s.id} value={s.id}>{s.company}</option>)}
+                </select>
+                <button type="button" onClick={() => setShowAddSupplier(true)} title={t("purchases_newSupplier")} className="shrink-0 rounded-lg border border-brand-300 bg-brand-50 px-3 py-2 text-brand-700 hover:bg-brand-100"><Plus size={16} /></button>
+              </div>
+            </Field>
+          )}
+          <Field label={t("common_amount")}><input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className={inputCls} /></Field>
+          <Field label={t("purchases_payment")}>
+            <div className="flex gap-2">
+              <button onClick={() => setMethod("Cash")} className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${method === "Cash" ? "border-brand-500 bg-brand-50 text-brand-700" : "border-app-border-strong text-app-text-muted"}`}>{t("common_cash")}</button>
+              <button onClick={() => setMethod("Credit (On Account)")} className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${method !== "Cash" ? "border-brand-500 bg-brand-50 text-brand-700" : "border-app-border-strong text-app-text-muted"}`}>{t("purchases_credit")}</button>
+            </div>
+          </Field>
+          <Field label={t("purchases_invoiceFile")}>
+            <button disabled={attachmentUploading} onClick={() => purchaseFileRef.current.click()} className="w-full rounded-lg border border-dashed border-app-border-strong px-3 py-2 text-sm text-app-text-muted hover:bg-app-bg disabled:opacity-60">
+              {attachmentUploading ? <Loader2 size={13} className="inline mr-1.5 animate-spin" /> : <Upload size={13} className="inline mr-1.5" />}
+              {attachmentUploading ? t("upload_uploading") : (attachmentName || t("purchases_uploadInvoice"))}
+            </button>
+            <input ref={purchaseFileRef} type="file" accept="image/*,.pdf" className="hidden" onChange={handlePurchaseFile} />
+          </Field>
+          {purchaseError && <div className="mb-3 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{purchaseError}</div>}
+          <button onClick={recordPurchase} disabled={purchaseSubmitting || attachmentUploading} className="w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600 disabled:opacity-60">{t("purchases_savePurchase")}</button>
+        </Modal>
+      )}
+
+      {showExpenseModal && (
+        <Modal title={t("expenses_addExpense")} onClose={() => setShowExpenseModal(false)}>
+          <Field label={t("common_category")}><EmptyDropdownAdd label={t("common_category")} items={expenseCategories} valueId={expCat} onSelect={setExpCat} onAdd={addExpCategory} /></Field>
+          <Field label={t("common_amount")}><input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} className={inputCls} /></Field>
+          <div className="mb-4">
+            <Toggle checked={taxFlag === "Exempt"} onChange={(v) => setTaxFlag(v ? "Exempt" : "Inclusive")} label={t("expenses_taxExempt")} />
+          </div>
+          <Field label={t("expenses_date")}><input type="date" value={expDate} onChange={(e) => setExpDate(e.target.value)} className={inputCls} /></Field>
+          <Field label={t("expenses_receiptFile")}>
+            <button disabled={receiptUploading} onClick={() => fileRef.current.click()} className="w-full rounded-lg border border-dashed border-app-border-strong px-3 py-2 text-sm text-app-text-muted hover:bg-app-bg disabled:opacity-60">
+              {receiptUploading ? <Loader2 size={13} className="inline mr-1.5 animate-spin" /> : <Upload size={13} className="inline mr-1.5" />}
+              {receiptUploading ? t("upload_uploading") : (receiptName || t("expenses_uploadReceipt"))}
+            </button>
+            <input ref={fileRef} type="file" accept="image/*,.pdf" className="hidden" onChange={handleReceiptFile} />
+          </Field>
+          {expenseError && <div className="mb-3 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{expenseError}</div>}
+          <button onClick={recordExpense} disabled={receiptUploading} className="w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600 disabled:opacity-60">{t("expenses_save")}</button>
+        </Modal>
+      )}
+
       {payBalanceFor && (
         <Modal title={`${t("payBalance_title")} · ${payBalanceFor.company}`} onClose={() => setPayBalanceFor(null)}>
-          <div className="mb-4 text-sm text-slate-500">{t("payBalance_liability")} <span className="f-mono text-rose-600 font-semibold">{sar(payBalanceFor.balance)}</span></div>
+          <div className="mb-4 text-sm text-app-text-muted">{t("payBalance_liability")} <span className="f-mono text-danger-600 font-semibold">{sar(payBalanceFor.balance)}</span></div>
           <Field label={t("common_amount")}><input type="number" value={payAmount} onChange={(e) => { setPayAmount(e.target.value); setPayBalanceError(""); }} className={inputCls} /></Field>
-          {payBalanceError && <div className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{payBalanceError}</div>}
-          <button onClick={payBalance} disabled={payBalanceSubmitting} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("payBalance_confirm")}</button>
+          {payBalanceError && <div className="mb-3 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs text-danger-700">{payBalanceError}</div>}
+          <button onClick={payBalance} disabled={payBalanceSubmitting} className="w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600 disabled:opacity-60">{t("payBalance_confirm")}</button>
         </Modal>
       )}
       {selectedSupplier && (
@@ -3793,7 +3948,6 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
           onEdit={() => { setEditingSupplier(suppliers.find((s) => s.id === selectedSupplier.id) || selectedSupplier); setSelectedSupplier(null); }}
         />
       )}
-      {showAddSupplier && <AddSupplierModal onClose={() => setShowAddSupplier(false)} onSave={saveNewSupplier} />}
       {editingSupplier && <AddSupplierModal editing={editingSupplier} onClose={() => setEditingSupplier(null)} onSave={saveEditedSupplier} />}
     </div>
   );
