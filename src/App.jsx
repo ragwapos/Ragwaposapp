@@ -1343,7 +1343,6 @@ const DICT = {
     addCustomer_mobileTaken: "هذا الرقم مسجل مسبقًا للعميل #{id} ({name}).",
     addCustomer_mobileInvalid: "حط رقم جوال صحيح (يبدأ بـ 05 أو 5).",
     addCustomer_name: "اسم العميل", addCustomer_mobile: "رقم الجوال",
-    addCustomer_openingBalance: "رصيد المحفظة الافتتاحي (ريال)", addCustomer_openingDebt: "الدين الافتتاحي / على الحساب (ريال)",
     addCustomer_save: "حفظ العميل",
 
     topup_title: "شحن المحفظة", topup_amount: "مبلغ الشحن (ريال)", topup_discountMode: "نوع الخصم",
@@ -1600,7 +1599,6 @@ const DICT = {
     addCustomer_mobileTaken: "یہ نمبر پہلے سے کسٹمر #{id} ({name}) کے لیے رجسٹرڈ ہے۔",
     addCustomer_mobileInvalid: "درست موبائل نمبر درج کریں (05 یا 5 سے شروع ہونا چاہیے)۔",
     addCustomer_name: "کسٹمر کا نام", addCustomer_mobile: "موبائل نمبر",
-    addCustomer_openingBalance: "ابتدائی والٹ بیلنس (ریال)", addCustomer_openingDebt: "ابتدائی ادھار / کھاتہ (ریال)",
     addCustomer_save: "کسٹمر محفوظ کریں",
 
     topup_title: "والٹ ری چارج", topup_amount: "ری چارج رقم (ریال)", topup_discountMode: "رعایت کی قسم",
