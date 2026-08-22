@@ -4057,26 +4057,39 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
     downloadCSV(rows, `vat-return-${vatYear}-${vatMode === "quarterly" ? `Q${vatQuarter}` : `M${vatMonth}`}.csv`);
   };
 
+  // Local, presentation-only KPI card — kept private to ReportsView so this
+  // redesign never touches the shared (still-legacy-styled) KPI component
+  // that other screens might start relying on later.
+  const kpiAccents = { slate: "text-app-text", teal: "text-brand-700", rose: "text-danger-600", amber: "text-warning-600" };
+  const kpi = (label, value, accent = "slate") => (
+    <div className="rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
+      <div className="text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{label}</div>
+      <div className={`f-mono mt-1.5 text-2xl font-semibold ${kpiAccents[accent]}`}>{value}</div>
+    </div>
+  );
+
+  const tabBtnCls = (active) => `rounded-full px-4 py-2 text-sm font-medium transition ${active ? "bg-brand-600 text-white shadow-app-xs" : "bg-app-surface border border-app-border text-app-text-muted hover:border-app-border-strong"}`;
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap gap-2">
-        <button onClick={() => setTab("sales")} className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === "sales" ? "bg-slate-900 text-white" : "bg-white border border-stone-200 text-slate-600"}`}>{t("reports_salesTab")}</button>
-        <button onClick={() => setTab("procurement")} className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === "procurement" ? "bg-slate-900 text-white" : "bg-white border border-stone-200 text-slate-600"}`}>{t("reports_procurementTab")}</button>
-        <button onClick={() => setTab("expenses")} className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === "expenses" ? "bg-slate-900 text-white" : "bg-white border border-stone-200 text-slate-600"}`}>{t("reports_expensesTab")}</button>
-        <button onClick={() => setTab("pl")} className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === "pl" ? "bg-slate-900 text-white" : "bg-white border border-stone-200 text-slate-600"}`}>{t("reports_plTab")}</button>
-        <button onClick={() => setTab("vat")} className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === "vat" ? "bg-slate-900 text-white" : "bg-white border border-stone-200 text-slate-600"}`}>{t("reports_vatTab")}</button>
+        <button onClick={() => setTab("sales")} className={tabBtnCls(tab === "sales")}>{t("reports_salesTab")}</button>
+        <button onClick={() => setTab("procurement")} className={tabBtnCls(tab === "procurement")}>{t("reports_procurementTab")}</button>
+        <button onClick={() => setTab("expenses")} className={tabBtnCls(tab === "expenses")}>{t("reports_expensesTab")}</button>
+        <button onClick={() => setTab("pl")} className={tabBtnCls(tab === "pl")}>{t("reports_plTab")}</button>
+        <button onClick={() => setTab("vat")} className={tabBtnCls(tab === "vat")}>{t("reports_vatTab")}</button>
       </div>
 
       {tab === "sales" && (
         <>
           <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            <KPI label={t("reports_kpi_invoices")} value={salesRows.length} />
-            <KPI label={t("reports_kpi_grossSales")} value={sar(gross)} accent="teal" />
-            <KPI label={t("reports_kpi_vatCollected")} value={sar(vat)} accent="amber" />
-            <KPI label={t("reports_kpi_netRevenue")} value={sar(net)} accent="teal" />
-            <KPI label={t("reports_kpi_outstandingDebt")} value={sar(debt)} accent="rose" />
+            {kpi(t("reports_kpi_invoices"), salesRows.length)}
+            {kpi(t("reports_kpi_grossSales"), sar(gross), "teal")}
+            {kpi(t("reports_kpi_vatCollected"), sar(vat), "amber")}
+            {kpi(t("reports_kpi_netRevenue"), sar(net), "teal")}
+            {kpi(t("reports_kpi_outstandingDebt"), sar(debt), "rose")}
           </div>
-          <div className="mb-4 flex flex-wrap gap-3 rounded-xl border border-stone-200 bg-white p-4">
+          <div className="mb-4 flex flex-wrap gap-3 rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
             <input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} className={`${inputCls} w-auto`} />
             <input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} className={`${inputCls} w-auto`} />
             <select value={method} onChange={(e) => setMethod(e.target.value)} className={`${inputCls} w-auto`}>
@@ -4084,23 +4097,23 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
               {PAY_METHODS.filter((m) => m.value !== "Wallet Balance").map((m) => <option key={m.value} value={m.value}>{t(m.key)}</option>)}
             </select>
           </div>
-          <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
             <table className="w-full text-sm table-fixed">
-              <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
                 <tr><th className="px-4 py-3 w-40 text-center">{t("reports_table_invoice")}</th><th className="px-4 py-3 w-56 text-center">{t("reports_table_client")}</th><th className="px-4 py-3 text-center">{t("reports_table_method")}</th><th className="px-4 py-3 w-28 text-center">{t("reports_table_net")}</th><th className="px-4 py-3 w-28 text-center">{t("reports_table_vat")}</th><th className="px-4 py-3 w-28 text-center">{t("reports_table_gross")}</th></tr>
               </thead>
-              <tbody className="divide-y divide-stone-100">
+              <tbody className="divide-y divide-app-border">
                 {salesRows.map((r) => (
-                  <tr key={r.inv.id} className="hover:bg-stone-50">
-                    <td className="px-4 py-3 f-mono text-slate-600 w-40" style={{ textAlign: "center" }}>{r.inv.code}</td>
-                    <td className="px-4 py-3 w-56 text-center text-slate-800 truncate">{r.inv.customerName}</td>
-                    <td className="px-4 py-3 text-center text-slate-600">{method === "all" ? splitBreakdownLabel(t, r.inv) : payMethodLabel(t, method)}</td>
+                  <tr key={r.inv.id} className="hover:bg-app-bg">
+                    <td className="px-4 py-3 f-mono text-app-text-muted w-40" style={{ textAlign: "center" }}>{r.inv.code}</td>
+                    <td className="px-4 py-3 w-56 text-center text-app-text truncate">{r.inv.customerName}</td>
+                    <td className="px-4 py-3 text-center text-app-text-muted">{method === "all" ? splitBreakdownLabel(t, r.inv) : payMethodLabel(t, method)}</td>
                     <td className="px-4 py-3 f-mono w-28" style={{ textAlign: "center" }}>{sar(r.net)}</td>
-                    <td className="px-4 py-3 f-mono text-amber-600 w-28" style={{ textAlign: "center" }}>{sar(r.vat)}</td>
-                    <td className="px-4 py-3 f-mono font-semibold text-slate-900 w-28" style={{ textAlign: "center" }}>{sar(r.amount)}</td>
+                    <td className="px-4 py-3 f-mono text-warning-600 w-28" style={{ textAlign: "center" }}>{sar(r.vat)}</td>
+                    <td className="px-4 py-3 f-mono font-semibold text-app-text w-28" style={{ textAlign: "center" }}>{sar(r.amount)}</td>
                   </tr>
                 ))}
-                {salesRows.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-slate-400">{t("reports_salesEmpty")}</td></tr>}
+                {salesRows.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-app-text-subtle">{t("reports_salesEmpty")}</td></tr>}
               </tbody>
             </table>
           </div>
@@ -4110,34 +4123,34 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
       {tab === "procurement" && (
         <>
           <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <KPI label={t("reports_kpi_purchases")} value={purchases.length} />
-            <KPI label={t("reports_kpi_grossOutflow")} value={sar(pGross)} accent="rose" />
-            <KPI label={t("reports_kpi_inputVat")} value={sar(pVat)} accent="amber" />
-            <KPI label={t("reports_kpi_netCost")} value={sar(pNet)} accent="teal" />
+            {kpi(t("reports_kpi_purchases"), purchases.length)}
+            {kpi(t("reports_kpi_grossOutflow"), sar(pGross), "rose")}
+            {kpi(t("reports_kpi_inputVat"), sar(pVat), "amber")}
+            {kpi(t("reports_kpi_netCost"), sar(pNet), "teal")}
           </div>
-          <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
             <table className="w-full text-sm table-fixed">
-              <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
                 <tr><th className="px-4 py-3 w-40 text-center">{t("reports_table_poId")}</th><th className="px-4 py-3 w-56 text-center">{t("reports_table_supplier")}</th><th className="px-4 py-3 w-36 text-center">{t("reports_table_value")}</th><th className="px-4 py-3 w-72 text-center">{t("reports_table_created")}</th><th className="px-4 py-3 w-28 text-center">{t("customerDetail_method")}</th><th className="px-4 py-3">{t("supplierDetail_invoice")}</th></tr>
               </thead>
-              <tbody className="divide-y divide-stone-100">
+              <tbody className="divide-y divide-app-border">
                 {purchases.map((p) => (
-                  <tr key={p.id} className="hover:bg-stone-50">
-                    <td className="px-4 py-3 f-mono text-slate-600 w-40" style={{ textAlign: "center" }}>{p.code}</td>
-                    <td className="px-4 py-3 w-56 text-center text-slate-800 truncate">{suppliers.find((s) => s.id === p.supplierId)?.company}</td>
-                    <td className="px-4 py-3 f-mono font-semibold text-slate-900 w-36" style={{ textAlign: "center" }}>{sar(p.amount)}</td>
-                    <td className="px-4 py-3 f-mono text-slate-500 w-72" style={{ textAlign: "center" }}>{fmtDate(p.date)}</td>
-                    <td className="px-4 py-3 w-28 text-center text-slate-600">{p.method === "Cash" ? t("common_cash") : t("purchases_credit")}</td>
+                  <tr key={p.id} className="hover:bg-app-bg">
+                    <td className="px-4 py-3 f-mono text-app-text-muted w-40" style={{ textAlign: "center" }}>{p.code}</td>
+                    <td className="px-4 py-3 w-56 text-center text-app-text truncate">{suppliers.find((s) => s.id === p.supplierId)?.company}</td>
+                    <td className="px-4 py-3 f-mono font-semibold text-app-text w-36" style={{ textAlign: "center" }}>{sar(p.amount)}</td>
+                    <td className="px-4 py-3 f-mono text-app-text-muted w-72" style={{ textAlign: "center" }}>{fmtDate(p.date)}</td>
+                    <td className="px-4 py-3 w-28 text-center text-app-text-muted">{p.method === "Cash" ? t("common_cash") : t("purchases_credit")}</td>
                     <td className="px-4 py-3">
                       {p.attachment ? (
-                        <button onClick={() => openStoredDocument(p.attachment)} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
+                        <button onClick={() => openStoredDocument(p.attachment)} className="inline-flex items-center gap-1 text-brand-600 hover:underline">
                           <Paperclip size={13} />{t("common_view")}
                         </button>
-                      ) : <span className="text-slate-300">—</span>}
+                      ) : <span className="text-app-text-subtle">—</span>}
                     </td>
                   </tr>
                 ))}
-                {purchases.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-slate-400">{t("reports_procurementEmpty")}</td></tr>}
+                {purchases.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-app-text-subtle">{t("reports_procurementEmpty")}</td></tr>}
               </tbody>
             </table>
           </div>
@@ -4147,30 +4160,30 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
       {tab === "expenses" && (
         <>
           <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <KPI label={t("reports_kpi_totalExpenses")} value={sar(eGross)} accent="rose" />
-            <KPI label={t("reports_kpi_expenseVat")} value={sar(eVat)} accent="amber" />
-            <KPI label={t("reports_kpi_expenseNet")} value={sar(eNet)} accent="teal" />
-            <KPI label={t("reports_kpi_invoices")} value={filteredExpenses.length} />
+            {kpi(t("reports_kpi_totalExpenses"), sar(eGross), "rose")}
+            {kpi(t("reports_kpi_expenseVat"), sar(eVat), "amber")}
+            {kpi(t("reports_kpi_expenseNet"), sar(eNet), "teal")}
+            {kpi(t("reports_kpi_invoices"), filteredExpenses.length)}
           </div>
-          <div className="mb-4 flex flex-wrap gap-3 rounded-xl border border-stone-200 bg-white p-4">
+          <div className="mb-4 flex flex-wrap gap-3 rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
             <input type="date" value={expStart} onChange={(e) => setExpStart(e.target.value)} className={`${inputCls} w-auto`} />
             <input type="date" value={expEnd} onChange={(e) => setExpEnd(e.target.value)} className={`${inputCls} w-auto`} />
           </div>
-          <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
             <table className="w-full text-sm table-fixed">
-              <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
                 <tr><th className="px-4 py-3 w-56 text-center">{t("expenses_table_category")}</th><th className="px-4 py-3 w-40 text-center">{t("expenses_table_amount")}</th><th className="px-4 py-3 w-48 text-center">{t("expenses_table_tax")}</th><th className="px-4 py-3 w-72 text-center">{t("expenses_table_date")}</th><th className="px-4 py-3">{t("expenses_table_receipt")}</th></tr>
               </thead>
-              <tbody className="divide-y divide-stone-100">
+              <tbody className="divide-y divide-app-border">
                 {filteredExpenses.map((e) => (
-                  <tr key={e.id} className="hover:bg-stone-50">
-                    <td className="px-4 py-3 w-56 text-center font-medium text-slate-900 truncate">{expenseCategories.find((c) => c.id === e.categoryId)?.name || "—"}</td>
-                    <td className="px-4 py-3 f-mono text-slate-800 w-40" style={{ textAlign: "center" }}>{sar(e.amount)}</td>
-                    <td className="px-4 py-3 w-48 text-center text-slate-600">{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</td>
-                    <td className="px-4 py-3 f-mono text-slate-500 w-72" style={{ textAlign: "center" }}>{e.date}</td>
-                    <td className="px-4 py-3 text-slate-500">
+                  <tr key={e.id} className="hover:bg-app-bg">
+                    <td className="px-4 py-3 w-56 text-center font-medium text-app-text truncate">{expenseCategories.find((c) => c.id === e.categoryId)?.name || "—"}</td>
+                    <td className="px-4 py-3 f-mono text-app-text w-40" style={{ textAlign: "center" }}>{sar(e.amount)}</td>
+                    <td className="px-4 py-3 w-48 text-center text-app-text-muted">{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</td>
+                    <td className="px-4 py-3 f-mono text-app-text-muted w-72" style={{ textAlign: "center" }}>{e.date}</td>
+                    <td className="px-4 py-3 text-app-text-muted">
                       {e.receipt?.startsWith("http") || e.receipt?.startsWith("data:") || e.receipt?.includes("/") ? (
-                        <button onClick={() => openStoredDocument(e.receipt)} className="inline-flex items-center gap-1 text-teal-600 hover:underline">
+                        <button onClick={() => openStoredDocument(e.receipt)} className="inline-flex items-center gap-1 text-brand-600 hover:underline">
                           <ReceiptText size={13} />{e.receiptName || t("common_view")}
                         </button>
                       ) : e.receipt ? (
@@ -4178,11 +4191,11 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
                         // real file behind it (no "/" — a browser-reported File.name
                         // never contains one) — inert text, not a dead link.
                         <span>{e.receipt}</span>
-                      ) : <span className="text-slate-300">—</span>}
+                      ) : <span className="text-app-text-subtle">—</span>}
                     </td>
                   </tr>
                 ))}
-                {filteredExpenses.length === 0 && <tr><td colSpan={5} className="px-4 py-10 text-center text-slate-400">{t("reports_expensesEmpty")}</td></tr>}
+                {filteredExpenses.length === 0 && <tr><td colSpan={5} className="px-4 py-10 text-center text-app-text-subtle">{t("reports_expensesEmpty")}</td></tr>}
               </tbody>
             </table>
           </div>
@@ -4191,105 +4204,105 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
 
       {tab === "pl" && (
         <>
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("reports_pl_allTimeTitle")}</div>
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("reports_pl_allTimeTitle")}</div>
           <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <KPI label={t("reports_pl_revenue")} value={sar(revenueAllTime)} accent="teal" />
-            <KPI label={t("reports_pl_costs")} value={sar(costsAllTime)} accent="rose" />
-            <KPI label={resultAllTime >= 0 ? t("reports_pl_profit") : t("reports_pl_loss")} value={sar(Math.abs(resultAllTime))} accent={resultAllTime >= 0 ? "teal" : "rose"} />
+            {kpi(t("reports_pl_revenue"), sar(revenueAllTime), "teal")}
+            {kpi(t("reports_pl_costs"), sar(costsAllTime), "rose")}
+            {kpi(resultAllTime >= 0 ? t("reports_pl_profit") : t("reports_pl_loss"), sar(Math.abs(resultAllTime)), resultAllTime >= 0 ? "teal" : "rose")}
           </div>
 
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("reports_pl_periodTitle")}</div>
-          <div className="mb-4 flex flex-wrap gap-3 rounded-xl border border-stone-200 bg-white p-4">
+          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("reports_pl_periodTitle")}</div>
+          <div className="mb-4 flex flex-wrap gap-3 rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
             <input type="datetime-local" value={plStart} onChange={(e) => setPlStart(e.target.value)} className={`${inputCls} w-auto`} />
             <input type="datetime-local" value={plEnd} onChange={(e) => setPlEnd(e.target.value)} className={`${inputCls} w-auto`} />
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            <KPI label={t("reports_pl_revenue")} value={sar(revenuePeriod)} accent="teal" />
-            <KPI label={t("reports_pl_costs")} value={sar(costsPeriod)} accent="rose" />
-            <KPI label={resultPeriod >= 0 ? t("reports_pl_profit") : t("reports_pl_loss")} value={sar(Math.abs(resultPeriod))} accent={resultPeriod >= 0 ? "teal" : "rose"} />
-            <KPI label={t("reports_pl_margin")} value={`${marginPeriod.toFixed(1)}%`} accent={resultPeriod >= 0 ? "teal" : "rose"} />
+            {kpi(t("reports_pl_revenue"), sar(revenuePeriod), "teal")}
+            {kpi(t("reports_pl_costs"), sar(costsPeriod), "rose")}
+            {kpi(resultPeriod >= 0 ? t("reports_pl_profit") : t("reports_pl_loss"), sar(Math.abs(resultPeriod)), resultPeriod >= 0 ? "teal" : "rose")}
+            {kpi(t("reports_pl_margin"), `${marginPeriod.toFixed(1)}%`, resultPeriod >= 0 ? "teal" : "rose")}
           </div>
         </>
       )}
 
       {tab === "vat" && (
         <>
-          <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-stone-200 bg-white p-4">
+          <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
             <div>
-              <div className="mb-1 text-xs font-semibold text-slate-500">{t("reports_vat_periodMode")}</div>
+              <div className="mb-1 text-xs font-semibold text-app-text-muted">{t("reports_vat_periodMode")}</div>
               <div className="flex gap-2">
-                <button onClick={() => setVatMode("quarterly")} className={`rounded-lg border px-3 py-2 text-sm font-medium ${vatMode === "quarterly" ? "border-teal-600 bg-teal-50 text-teal-700" : "border-stone-300 text-slate-600"}`}>{t("reports_vat_quarterly")}</button>
-                <button onClick={() => setVatMode("monthly")} className={`rounded-lg border px-3 py-2 text-sm font-medium ${vatMode === "monthly" ? "border-teal-600 bg-teal-50 text-teal-700" : "border-stone-300 text-slate-600"}`}>{t("reports_vat_monthly")}</button>
+                <button onClick={() => setVatMode("quarterly")} className={`rounded-lg border px-3 py-2 text-sm font-medium ${vatMode === "quarterly" ? "border-brand-600 bg-brand-50 text-brand-700" : "border-app-border-strong text-app-text-muted"}`}>{t("reports_vat_quarterly")}</button>
+                <button onClick={() => setVatMode("monthly")} className={`rounded-lg border px-3 py-2 text-sm font-medium ${vatMode === "monthly" ? "border-brand-600 bg-brand-50 text-brand-700" : "border-app-border-strong text-app-text-muted"}`}>{t("reports_vat_monthly")}</button>
               </div>
             </div>
             <div>
-              <div className="mb-1 text-xs font-semibold text-slate-500">{t("reports_vat_year")}</div>
+              <div className="mb-1 text-xs font-semibold text-app-text-muted">{t("reports_vat_year")}</div>
               <input type="number" value={vatYear} onChange={(e) => setVatYear(Number(e.target.value))} className={`${inputCls} w-24`} />
             </div>
             {vatMode === "quarterly" ? (
               <div>
-                <div className="mb-1 text-xs font-semibold text-slate-500">{t("reports_vat_quarter")}</div>
+                <div className="mb-1 text-xs font-semibold text-app-text-muted">{t("reports_vat_quarter")}</div>
                 <select value={vatQuarter} onChange={(e) => setVatQuarter(Number(e.target.value))} className={`${inputCls} w-28`}>
                   <option value={1}>Q1</option><option value={2}>Q2</option><option value={3}>Q3</option><option value={4}>Q4</option>
                 </select>
               </div>
             ) : (
               <div>
-                <div className="mb-1 text-xs font-semibold text-slate-500">{t("reports_vat_month")}</div>
+                <div className="mb-1 text-xs font-semibold text-app-text-muted">{t("reports_vat_month")}</div>
                 <select value={vatMonth} onChange={(e) => setVatMonth(Number(e.target.value))} className={`${inputCls} w-28`}>
                   {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => <option key={m} value={m}>{m}</option>)}
                 </select>
               </div>
             )}
             <div className="ms-auto flex gap-2">
-              <button onClick={exportVatCsv} className="rounded-lg border border-teal-300 bg-teal-50 px-3 py-2 text-xs font-medium text-teal-700 hover:bg-teal-100">{t("reports_vat_exportCsv")}</button>
-              <button onClick={() => window.print()} className="rounded-lg border border-stone-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-stone-50">{t("reports_vat_printPdf")}</button>
+              <button onClick={exportVatCsv} className="rounded-lg border border-brand-300 bg-brand-50 px-3 py-2 text-xs font-medium text-brand-700 hover:bg-brand-100">{t("reports_vat_exportCsv")}</button>
+              <button onClick={() => window.print()} className="rounded-lg border border-app-border-strong px-3 py-2 text-xs font-medium text-app-text-muted hover:bg-app-bg">{t("reports_vat_printPdf")}</button>
             </div>
           </div>
 
           <div className="print-area">
-            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("reports_vat_salesTable")}</div>
-            <div className="mb-6 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("reports_vat_salesTable")}</div>
+            <div className="mb-6 overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
               <table className="w-full text-sm table-fixed">
-                <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
                   <tr><th className="px-4 py-3 w-10 text-center">#</th><th className="px-4 py-3 text-center">{t("common_category")}</th><th className="px-4 py-3 w-56 text-center">{t("reports_vat_taxableAmount")}</th><th className="px-4 py-3 w-40 text-center">{t("reports_vat_vatAmount")}</th></tr>
                 </thead>
-                <tbody className="divide-y divide-stone-100">
+                <tbody className="divide-y divide-app-border">
                   <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>1</td><td className="px-4 py-3 text-center">{t("reports_vat_box1_sales")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(salesBox1Taxable)} t={t} /></td><td className="px-4 py-3 w-40 text-center"><CopyableNumber value={round2(salesBox1Vat)} t={t} /></td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>2</td><td className="px-4 py-3 text-center">{t("reports_vat_box2_sales")}</td><td className="px-4 py-3 f-mono text-slate-400 w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>3</td><td className="px-4 py-3 text-center">{t("reports_vat_box3_sales")}</td><td className="px-4 py-3 f-mono text-slate-400 w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>4</td><td className="px-4 py-3 text-center">{t("reports_vat_box4_sales")}</td><td className="px-4 py-3 f-mono text-slate-400 w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>5</td><td className="px-4 py-3 text-center">{t("reports_vat_box5_sales")}</td><td className="px-4 py-3 f-mono text-slate-400 w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr className="bg-stone-50 font-semibold"><td className="px-4 py-3 text-center" colSpan={2}>{t("reports_vat_totalSales")} / {t("reports_vat_totalOutputVat")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(totalSalesValue)} t={t} /></td><td className="px-4 py-3 w-40 text-center"><CopyableNumber value={round2(totalOutputVat)} t={t} /></td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>2</td><td className="px-4 py-3 text-center">{t("reports_vat_box2_sales")}</td><td className="px-4 py-3 f-mono text-app-text-subtle w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>3</td><td className="px-4 py-3 text-center">{t("reports_vat_box3_sales")}</td><td className="px-4 py-3 f-mono text-app-text-subtle w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>4</td><td className="px-4 py-3 text-center">{t("reports_vat_box4_sales")}</td><td className="px-4 py-3 f-mono text-app-text-subtle w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>5</td><td className="px-4 py-3 text-center">{t("reports_vat_box5_sales")}</td><td className="px-4 py-3 f-mono text-app-text-subtle w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr className="bg-app-bg font-semibold"><td className="px-4 py-3 text-center" colSpan={2}>{t("reports_vat_totalSales")} / {t("reports_vat_totalOutputVat")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(totalSalesValue)} t={t} /></td><td className="px-4 py-3 w-40 text-center"><CopyableNumber value={round2(totalOutputVat)} t={t} /></td></tr>
                 </tbody>
               </table>
-              <div className="border-t border-stone-100 px-4 py-2 text-[11px] text-slate-400">{t("reports_vat_notTracked")}</div>
+              <div className="border-t border-app-border px-4 py-2 text-[11px] text-app-text-subtle">{t("reports_vat_notTracked")}</div>
             </div>
 
-            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("reports_vat_purchasesTable")}</div>
-            <div className="mb-6 overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("reports_vat_purchasesTable")}</div>
+            <div className="mb-6 overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
               <table className="w-full text-sm table-fixed">
-                <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
                   <tr><th className="px-4 py-3 w-10 text-center">#</th><th className="px-4 py-3 text-center">{t("common_category")}</th><th className="px-4 py-3 w-56 text-center">{t("reports_vat_taxableAmount")}</th><th className="px-4 py-3 w-40 text-center">{t("reports_vat_vatAmount")}</th></tr>
                 </thead>
-                <tbody className="divide-y divide-stone-100">
+                <tbody className="divide-y divide-app-border">
                   <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>1</td><td className="px-4 py-3 text-center">{t("reports_vat_box1_purch")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(purchBox1Taxable)} t={t} /></td><td className="px-4 py-3 w-40 text-center"><CopyableNumber value={round2(purchBox1Vat)} t={t} /></td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>2</td><td className="px-4 py-3 text-center">{t("reports_vat_box2_purch")}</td><td className="px-4 py-3 f-mono text-slate-400 w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>3</td><td className="px-4 py-3 text-center">{t("reports_vat_box3_purch")}</td><td className="px-4 py-3 f-mono text-slate-400 w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>4</td><td className="px-4 py-3 text-center">{t("reports_vat_box4_purch")}</td><td className="px-4 py-3 f-mono text-slate-400 w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>5</td><td className="px-4 py-3 text-center">{t("reports_vat_box5_purch")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(purchBox5Exempt)} t={t} /></td><td className="px-4 py-3 f-mono text-slate-400 w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr className="bg-stone-50 font-semibold"><td className="px-4 py-3 text-center" colSpan={2}>{t("reports_vat_totalPurchases")} / {t("reports_vat_totalInputVat")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(totalPurchasesValue)} t={t} /></td><td className="px-4 py-3 w-40 text-center"><CopyableNumber value={round2(totalInputVat)} t={t} /></td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>2</td><td className="px-4 py-3 text-center">{t("reports_vat_box2_purch")}</td><td className="px-4 py-3 f-mono text-app-text-subtle w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>3</td><td className="px-4 py-3 text-center">{t("reports_vat_box3_purch")}</td><td className="px-4 py-3 f-mono text-app-text-subtle w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>4</td><td className="px-4 py-3 text-center">{t("reports_vat_box4_purch")}</td><td className="px-4 py-3 f-mono text-app-text-subtle w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>5</td><td className="px-4 py-3 text-center">{t("reports_vat_box5_purch")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(purchBox5Exempt)} t={t} /></td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
+                  <tr className="bg-app-bg font-semibold"><td className="px-4 py-3 text-center" colSpan={2}>{t("reports_vat_totalPurchases")} / {t("reports_vat_totalInputVat")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(totalPurchasesValue)} t={t} /></td><td className="px-4 py-3 w-40 text-center"><CopyableNumber value={round2(totalInputVat)} t={t} /></td></tr>
                 </tbody>
               </table>
-              <div className="border-t border-stone-100 px-4 py-2 text-[11px] text-slate-400">{t("reports_vat_notTracked")}</div>
+              <div className="border-t border-app-border px-4 py-2 text-[11px] text-app-text-subtle">{t("reports_vat_notTracked")}</div>
             </div>
 
-            <div className="rounded-xl border border-teal-200 bg-teal-50/60 p-5">
-              <div className="mb-3 f-display font-semibold text-slate-900">{t("reports_vat_netTitle")}</div>
+            <div className="rounded-xl border border-brand-200 bg-brand-50/60 p-5">
+              <div className="mb-3 f-display font-semibold text-app-text">{t("reports_vat_netTitle")}</div>
               <div className="mb-1 flex justify-between text-sm"><span>{t("reports_vat_totalOutputVat")}</span><CopyableNumber value={round2(totalOutputVat)} t={t} /></div>
               <div className="mb-3 flex justify-between text-sm"><span>{t("reports_vat_totalInputVat")}</span><CopyableNumber value={round2(totalInputVat)} t={t} /></div>
-              <hr className="mb-3 border-teal-200" />
-              <div className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold ${netVatDue >= 0 ? "bg-rose-100 text-rose-800" : "bg-teal-100 text-teal-800"}`}>
+              <hr className="mb-3 border-brand-200" />
+              <div className={`flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold ${netVatDue >= 0 ? "border border-danger-200 bg-danger-50 text-danger-700" : "border border-brand-200 bg-brand-50 text-brand-700"}`}>
                 <span>{netVatDue >= 0 ? t("reports_vat_dueToAuthority") : t("reports_vat_dueRefund")}</span>
                 <span className="f-mono text-lg">{sar(Math.abs(netVatDue))}</span>
               </div>
