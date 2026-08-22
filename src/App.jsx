@@ -7211,8 +7211,8 @@ function TermsPage({ onBack }) {
   const blockCopy = (e) => e.preventDefault();
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-start justify-center p-4 py-10">
-      <div className="absolute top-6 right-6">
-        <button onClick={onBack} className="px-4 py-2 text-gray-300 hover:text-white transition">← العودة</button>
+      <div className="fixed top-6 right-6 z-10">
+        <button onClick={onBack} className="px-4 py-2 rounded-lg bg-slate-900/80 backdrop-blur border border-slate-700 text-gray-300 hover:text-white transition shadow-lg">← العودة</button>
       </div>
       <div className="w-full max-w-3xl mt-16">
         <div className="text-center mb-8">
