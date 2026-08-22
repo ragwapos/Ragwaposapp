@@ -4,7 +4,7 @@ import {
   Truck, Tag, BarChart3, Wallet, ImageIcon, Ban, ArrowRight, Trash2, CreditCard,
   Banknote, Percent, Clock, Mail, AlertTriangle, CheckCircle2, Circle, Upload,
   ReceiptText, Building2, FileText, Sparkles, Settings, Globe, Lock, Pencil, Paperclip,
-  MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin
+  MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin, Home
 } from "lucide-react";
 import QRCode from "qrcode";
 // auth/db here are supabase.auth / the Supabase client (see src/supabase.js).
@@ -1745,6 +1745,13 @@ function Sidebar({ tab, setTab, sectionLocks, setSectionLocks, merchant }) {
           );
         })}
       </nav>
+      <div className="border-t border-navy-800 px-3 pt-1">
+        <button onClick={() => setTab("home")}
+          className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${tab === "home" ? "text-white" : "text-white/50 hover:text-white"}`}>
+          <Home size={16} />
+          <span>{t("nav_home")}</span>
+        </button>
+      </div>
       <div className="px-5 py-4 border-t border-navy-800">
         <div className="truncate text-sm font-semibold text-white">{merchant?.name || t("app_name")}</div>
         <div className="text-[11px] text-slate-500">{t("sidebar_footer")}</div>
