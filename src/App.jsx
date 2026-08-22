@@ -4,7 +4,7 @@ import {
   Truck, Tag, BarChart3, Wallet, ImageIcon, Ban, ArrowRight, Trash2, CreditCard,
   Banknote, Percent, Clock, Mail, AlertTriangle, CheckCircle2, Circle, Upload,
   ReceiptText, Building2, FileText, Sparkles, Settings, Globe, Lock, Pencil, Paperclip,
-  MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin, Home
+  MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin, Home, SplitSquareHorizontal
 } from "lucide-react";
 import QRCode from "qrcode";
 // auth/db here are supabase.auth / the Supabase client (see src/supabase.js).
@@ -399,11 +399,11 @@ const Fonts = () => (
 
 function Modal({ title, onClose, children, width = "max-w-lg" }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 f-body" onClick={onClose}>
-      <div className={`w-full ${width} max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl`} onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between border-b border-stone-200 px-6 py-4 sticky top-0 bg-white rounded-t-2xl">
-          <h3 className="f-display text-lg font-semibold text-slate-900">{title}</h3>
-          <button onClick={onClose} className="rounded-full p-1.5 text-slate-400 hover:bg-stone-100 hover:text-slate-700">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/60 p-4 f-body" onClick={onClose}>
+      <div className={`w-full ${width} max-h-[90vh] overflow-y-auto rounded-2xl bg-app-surface shadow-app-lg`} onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between border-b border-app-border px-6 py-4 sticky top-0 bg-app-surface rounded-t-2xl">
+          <h3 className="f-display text-lg font-semibold text-app-text">{title}</h3>
+          <button onClick={onClose} className="rounded-full p-1.5 text-app-text-subtle hover:bg-app-bg hover:text-app-text">
             <X size={18} />
           </button>
         </div>
@@ -839,8 +839,8 @@ function PrintDocumentModal({ doc, onClose }) {
   if (silent) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 p-4" onClick={() => { cancelBackgroundPrep(); onClose(); }}>
-      <div className="flex w-full max-w-sm max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-navy-950/60 p-4" onClick={() => { cancelBackgroundPrep(); onClose(); }}>
+      <div className="flex w-full max-w-sm max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-app-surface shadow-app-lg" onClick={(e) => e.stopPropagation()}>
         <div className="flex-1 overflow-y-auto">
         <div ref={printAreaRef} className="print-area p-6 text-slate-900" style={{ fontFamily: "'Inter', sans-serif" }}>
           <div className="mb-4 text-center text-lg font-bold">{doc.merchant.name || "—"}</div>
@@ -923,18 +923,18 @@ function PrintDocumentModal({ doc, onClose }) {
         </div>
         </div>
 
-        <div className="no-print flex shrink-0 flex-col gap-2 border-t border-stone-200 p-4 bg-white">
-          {doc.whatsappEnabled && whatsappError && <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{whatsappError}</div>}
-          {doc.whatsappEnabled && !doc.customerPhone && <div className="text-center text-[11px] text-slate-400">{t("print_whatsappNoPhone")}</div>}
+        <div className="no-print flex shrink-0 flex-col gap-2 border-t border-app-border p-4 bg-app-surface">
+          {doc.whatsappEnabled && whatsappError && <div className="rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{whatsappError}</div>}
+          {doc.whatsappEnabled && !doc.customerPhone && <div className="text-center text-[11px] text-app-text-subtle">{t("print_whatsappNoPhone")}</div>}
           <div className="flex gap-2">
             {/* Manual click always prints exactly one copy — "عدد النسخ" only governs the automatic (no-click) auto-print above. */}
-            <button onClick={() => { cancelBackgroundPrep(); printInNewWindow(1); }} className="flex-1 rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("print_printBtn")}</button>
+            <button onClick={() => { cancelBackgroundPrep(); printInNewWindow(1); }} className="flex-1 rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600">{t("print_printBtn")}</button>
             {doc.whatsappEnabled && (
               <button onClick={shareOnWhatsApp} disabled={!doc.customerPhone || whatsappSending} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 py-2.5 font-semibold text-white hover:bg-emerald-700 disabled:opacity-40">
                 {whatsappSending ? <Loader2 size={16} className="animate-spin" /> : <MessageCircle size={16} />} {whatsappSending ? t("print_whatsappSending") : t("print_whatsappBtn")}
               </button>
             )}
-            <button onClick={() => { cancelBackgroundPrep(); onClose(); }} className="rounded-lg border border-stone-300 px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-stone-50">{t("print_close")}</button>
+            <button onClick={() => { cancelBackgroundPrep(); onClose(); }} className="rounded-lg border border-app-border-strong px-4 py-2.5 text-sm font-medium text-app-text-muted hover:bg-app-bg">{t("print_close")}</button>
           </div>
         </div>
       </div>
@@ -1031,7 +1031,8 @@ const DICT = {
     pos_deliveryFeeLabel: "Delivery Fee (based on customer location):", pos_deliveryFeePlaceholder: "Enter fee manually",
     pos_deliveryFee: "Delivery Fee", pos_total: "Total", pos_completeSale: "Complete Sale",
     pos_searchCustomerPlaceholder: "Search by name / mobile / #ID...", pos_noMatchingCustomers: "No matching customers",
-    pos_wallet: "Wallet", pos_debt: "Debt",
+    pos_wallet: "Wallet", pos_debt: "Debt", pos_customerRequired: "A customer must be selected before checkout",
+    pos_searchProductsPlaceholder: "Search for an item...",
     pos_discount: "Discount", pos_coupon: "Coupon Code", pos_applyCoupon: "Apply", pos_removeCoupon: "Remove",
     pos_invalidCoupon: "Invalid or expired code.", pos_autoDiscountApplied: "Discount applied automatically",
     pos_walletInsufficient: "Wallet balance is not enough to complete this sale.",
@@ -1261,7 +1262,8 @@ const DICT = {
     pos_deliveryFeeLabel: "سعر التوصيل (حسب موقع العميل):", pos_deliveryFeePlaceholder: "حدد السعر يدويًا",
     pos_deliveryFee: "سعر التوصيل", pos_total: "الإجمالي", pos_completeSale: "إتمام البيع",
     pos_searchCustomerPlaceholder: "ابحث بالاسم / الجوال / #الرقم...", pos_noMatchingCustomers: "لا يوجد عملاء مطابقين",
-    pos_wallet: "المحفظة", pos_debt: "الدين",
+    pos_wallet: "المحفظة", pos_debt: "الدين", pos_customerRequired: "لازم تختار عميل قبل إتمام البيع",
+    pos_searchProductsPlaceholder: "ابحث عن قطعة...",
     pos_discount: "الخصم", pos_coupon: "كود الخصم", pos_applyCoupon: "تطبيق", pos_removeCoupon: "إزالة",
     pos_invalidCoupon: "الكود غير صحيح أو منتهي.", pos_autoDiscountApplied: "تم تطبيق الخصم تلقائيًا",
     pos_walletInsufficient: "رصيد المحفظة لا يكفي لإتمام هذه العملية.",
@@ -1492,7 +1494,8 @@ const DICT = {
     pos_deliveryFeeLabel: "ڈیلیوری چارجز (کسٹمر کے مقام کے مطابق):", pos_deliveryFeePlaceholder: "چارجز خود درج کریں",
     pos_deliveryFee: "ڈیلیوری چارجز", pos_total: "کل رقم", pos_completeSale: "سیل مکمل کریں",
     pos_searchCustomerPlaceholder: "نام / موبائل / #نمبر سے تلاش کریں...", pos_noMatchingCustomers: "کوئی کسٹمر نہیں ملا",
-    pos_wallet: "والٹ", pos_debt: "ادھار",
+    pos_wallet: "والٹ", pos_debt: "ادھار", pos_customerRequired: "چیک آؤٹ سے پہلے کسٹمر منتخب کرنا ضروری ہے",
+    pos_searchProductsPlaceholder: "آئٹم تلاش کریں...",
     pos_discount: "رعایت", pos_coupon: "کوپن کوڈ", pos_applyCoupon: "لاگو کریں", pos_removeCoupon: "ہٹا دیں",
     pos_invalidCoupon: "کوڈ غلط ہے یا میعاد ختم ہو چکی ہے۔", pos_autoDiscountApplied: "رعایت خودکار طور پر لاگو ہو گئی",
     pos_walletInsufficient: "یہ سیل مکمل کرنے کے لیے والٹ بیلنس ناکافی ہے۔",
@@ -1824,19 +1827,19 @@ function ProductModal({ product, addons, onClose, onConfirm }) {
     <Modal title={product.name} onClose={onClose} width="max-w-xl">
       <div className="flex gap-5 mb-5">
         {product.image ? (
-          <img src={product.image} alt={product.name} loading="lazy" decoding="async" className="h-36 w-36 rounded-xl object-cover ring-1 ring-stone-200" />
+          <img src={product.image} alt={product.name} loading="lazy" decoding="async" className="h-36 w-36 rounded-xl object-cover ring-1 ring-app-border" />
         ) : (
-          <div className="flex h-36 w-36 shrink-0 items-center justify-center rounded-xl border border-dashed border-stone-300 bg-stone-50">
-            <ImageIcon size={28} className="text-stone-300" />
+          <div className="flex h-36 w-36 shrink-0 items-center justify-center rounded-xl border border-dashed border-app-border-strong bg-app-bg">
+            <ImageIcon size={28} className="text-app-text-subtle" />
           </div>
         )}
         <div className="flex-1">
-          <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t("productModal_startingFrom")}</div>
-          <div className="f-mono text-2xl font-semibold text-slate-900">{sar(product.price)}</div>
+          <div className="text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("productModal_startingFrom")}</div>
+          <div className="f-mono text-2xl font-semibold text-app-text">{sar(product.price)}</div>
           <div className="mt-3 flex items-center gap-3">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">{t("productModal_qty")}</span>
-            <div className="flex items-center rounded-lg border border-stone-300">
-              <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="px-3 py-1 text-slate-600 hover:bg-stone-100">−</button>
+            <span className="text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("productModal_qty")}</span>
+            <div className="flex items-center rounded-lg border border-app-border-strong">
+              <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="px-3 py-1 text-app-text-muted hover:bg-app-bg">−</button>
               <input
                 ref={qtyInputRef}
                 type="number"
@@ -1845,19 +1848,19 @@ function ProductModal({ product, addons, onClose, onConfirm }) {
                 onChange={(e) => setQty(Math.max(1, Number(e.target.value) || 1))}
                 className="f-mono w-12 border-0 bg-transparent text-center text-sm outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
-              <button onClick={() => setQty((q) => q + 1)} className="px-3 py-1 text-slate-600 hover:bg-stone-100">+</button>
+              <button onClick={() => setQty((q) => q + 1)} className="px-3 py-1 text-app-text-muted hover:bg-app-bg">+</button>
             </div>
           </div>
         </div>
       </div>
 
       <div className="mb-5">
-        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("productModal_coreService")}</div>
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-app-text-muted">{t("productModal_coreService")}</div>
         <div className="grid grid-cols-3 gap-2">
           {serviceEntries.map(([name, price], i) => (
             <button key={name} onClick={() => setService(name)}
-              className={`relative rounded-lg border px-2 py-2.5 text-center transition ${service === name ? "border-teal-600 bg-teal-50 text-teal-800" : "border-stone-200 text-slate-600 hover:border-stone-300"}`}>
-              {i < 9 && <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-slate-200 text-[9px] font-bold text-slate-600">{i + 1}</span>}
+              className={`relative rounded-lg border px-2 py-2.5 text-center transition ${service === name ? "border-brand-600 bg-brand-50 text-brand-800" : "border-app-border text-app-text-muted hover:border-app-border-strong"}`}>
+              {i < 9 && <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-app-border text-[9px] font-bold text-app-text-muted">{i + 1}</span>}
               <div className="text-xs font-medium">{name}</div>
               <div className="f-mono text-sm font-semibold mt-0.5">{sar(price)}</div>
             </button>
@@ -1866,13 +1869,13 @@ function ProductModal({ product, addons, onClose, onConfirm }) {
       </div>
 
       <div className="mb-5">
-        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">{t("productModal_addons")}</div>
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-app-text-muted">{t("productModal_addons")}</div>
         <div className="flex flex-wrap gap-2">
           {allAddons.map((a) => {
             const on = selectedAddons.includes(a.id);
             return (
               <button key={a.id} onClick={() => toggleAddon(a.id)}
-                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${on ? "border-amber-500 bg-amber-50 text-amber-800" : "border-stone-200 text-slate-600 hover:border-stone-300"}`}>
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${on ? "border-warning-500 bg-warning-50 text-warning-700" : "border-app-border text-app-text-muted hover:border-app-border-strong"}`}>
                 {a.name} {a.price > 0 ? `+${sar(a.price)}` : ""}
               </button>
             );
@@ -1880,14 +1883,14 @@ function ProductModal({ product, addons, onClose, onConfirm }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between rounded-xl bg-stone-50 border border-stone-200 px-4 py-3 mb-5">
-        <span className="text-sm font-medium text-slate-600">{t("productModal_itemTotal")}</span>
-        <span className="f-mono text-xl font-bold text-teal-700">{sar(lineTotal)}</span>
+      <div className="flex items-center justify-between rounded-xl bg-app-bg border border-app-border px-4 py-3 mb-5">
+        <span className="text-sm font-medium text-app-text-muted">{t("productModal_itemTotal")}</span>
+        <span className="f-mono text-xl font-bold text-brand-700">{sar(lineTotal)}</span>
       </div>
 
       <button
         onClick={confirm}
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 py-3 font-semibold text-white hover:bg-teal-700">
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-500 py-3 font-semibold text-white hover:bg-brand-600">
         <Check size={18} /> {t("productModal_confirm")}
       </button>
     </Modal>
@@ -1915,20 +1918,20 @@ function AddCustomerModal({ customers, onClose, onSave }) {
   return (
     <Modal title={t("addCustomer_title")} onClose={onClose}>
       <Field label={t("addCustomer_systemId")}>
-        <input type="number" min="1" value={id} onChange={(e) => setId(e.target.value)} className={`${inputCls} ${idTaken ? "border-rose-400" : ""}`} />
-        {idTaken && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("addCustomer_idTaken")}</div>}
+        <input type="number" min="1" value={id} onChange={(e) => setId(e.target.value)} className={`${inputCls} ${idTaken ? "border-danger-400" : ""}`} />
+        {idTaken && <div className="mt-1.5 text-xs font-semibold text-danger-600">{t("addCustomer_idTaken")}</div>}
       </Field>
       {/* Capped at 15 chars so a long name can't be the thing that forces the
           customer ledger's name column wider than its allotted share. */}
       <Field label={t("addCustomer_name")}><input autoFocus value={name} onChange={(e) => setName(e.target.value.slice(0, 15))} maxLength={15} className={inputCls} /></Field>
       <Field label={t("addCustomer_mobile")}>
-        <input value={mobile} onChange={(e) => setMobile(normalizeSaudiMobile(e.target.value))} placeholder="05XXXXXXXX" maxLength={12} dir="ltr" className={`${inputCls} ${mobileTaken ? "border-rose-400" : ""}`} />
-        {mobileTaken && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("addCustomer_mobileTaken", { id: existingByMobile.id, name: existingByMobile.name })}</div>}
+        <input value={mobile} onChange={(e) => setMobile(normalizeSaudiMobile(e.target.value))} placeholder="05XXXXXXXX" maxLength={12} dir="ltr" className={`${inputCls} ${mobileTaken ? "border-danger-400" : ""}`} />
+        {mobileTaken && <div className="mt-1.5 text-xs font-semibold text-danger-600">{t("addCustomer_mobileTaken", { id: existingByMobile.id, name: existingByMobile.name })}</div>}
       </Field>
       <button
         disabled={!name.trim() || idInvalid || mobileInvalid}
         onClick={() => onSave({ id: Number(id), name: name.trim(), mobile: mobileTrimmed || "-", walletBalance: 0, debt: 0 })}
-        className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:bg-stone-300">
+        className="w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600 disabled:bg-app-border-strong">
         {t("addCustomer_save")}
       </button>
     </Modal>
@@ -2053,6 +2056,13 @@ const PAY_METHODS = [
   { value: "Credit (On Account)", key: "common_creditOnAccount" },
 ];
 const POS_PAY_METHODS = [...PAY_METHODS, { value: "Split", key: "common_splitPayment" }];
+const PAY_METHOD_ICONS = {
+  "Cash": Banknote,
+  "External Network": CreditCard,
+  "Wallet Balance": Wallet,
+  "Credit (On Account)": Clock,
+  "Split": SplitSquareHorizontal,
+};
 
 function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
   const { t } = useLang();
@@ -2115,6 +2125,7 @@ function promosOverlap(aStart, aEnd, bStart, bEnd) {
 function POSView({ categories, products, addons, customers, addCustomer, onCreateInvoice, merchant, promotions, enabledPayMethods, whatsappTemplate, whatsappEnabled, setTab }) {
   const { t } = useLang();
   const [activeCat, setActiveCat] = useState("all");
+  const [productQuery, setProductQuery] = useState("");
   const [modalProduct, setModalProduct] = useState(null);
   const [cart, setCart] = useState([]);
   const [customerId, setCustomerId] = useState("");
@@ -2147,7 +2158,7 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
   }, [enabledPayMethods]);
 
   const nonEmptyCategories = categories.filter((c) => products.some((p) => p.published && p.categoryId === c.id));
-  const visibleProducts = products.filter((p) => p.published && (activeCat === "all" || p.categoryId === activeCat));
+  const visibleProducts = products.filter((p) => p.published && (activeCat === "all" || p.categoryId === activeCat) && (!productQuery.trim() || p.name.toLowerCase().includes(productQuery.trim().toLowerCase())));
   const cartTotal = cart.reduce((s, i) => s + i.lineTotal, 0);
 
   // 1-9 opens the Product Options Modal for whichever product has that
@@ -2314,6 +2325,10 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
 
       <div className="flex flex-1 gap-5 min-h-0">
         <div className="flex-1 flex flex-col min-w-0">
+          <div className="relative mb-3">
+            <Search size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-text-subtle" />
+            <input value={productQuery} onChange={(e) => setProductQuery(e.target.value)} placeholder={t("pos_searchProductsPlaceholder")} className={`${inputCls} pr-9`} />
+          </div>
           <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
             <button onClick={() => setActiveCat("all")} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${activeCat === "all" ? "bg-brand-600 text-white shadow-app-xs" : "bg-app-surface border border-app-border text-app-text-muted hover:border-app-border-strong"}`}>{t("pos_allItems")}</button>
             {nonEmptyCategories.map((c) => (
@@ -2345,6 +2360,16 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
 
         <div className="w-80 shrink-0 flex flex-col rounded-xl border border-app-border bg-app-surface shadow-app-sm">
           <div className="border-b border-app-border px-4 py-3 f-display font-semibold text-app-text">{t("pos_checkout")}</div>
+          <div className="border-b border-app-border p-4 space-y-2">
+            <Field label={t("common_customer")}>
+              <CustomerPicker customers={customers} customerId={customerId} onSelect={setCustomerId} onAddNew={() => setShowAddCustomer(true)} />
+            </Field>
+            {customer ? (
+              <div className="text-xs text-app-text-muted">{t("pos_wallet")}: <span className="f-mono">{sar(customer.walletBalance)}</span> · {t("pos_debt")}: <span className="f-mono text-danger-600">{sar(customer.debt)}</span></div>
+            ) : (
+              <div className="text-xs font-medium text-danger-600">{t("pos_customerRequired")}</div>
+            )}
+          </div>
           <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2">
             {cart.length === 0 && <div className="text-center text-sm text-app-text-subtle py-10">{t("pos_cartEmpty")}</div>}
             {cart.map((i) => (
@@ -2361,14 +2386,19 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
             ))}
           </div>
           <div className="border-t border-app-border p-4 space-y-3">
-            <Field label={t("common_customer")}>
-              <CustomerPicker customers={customers} customerId={customerId} onSelect={setCustomerId} onAddNew={() => setShowAddCustomer(true)} />
-            </Field>
-            {customer && <div className="text-xs text-app-text-muted -mt-2">{t("pos_wallet")}: <span className="f-mono">{sar(customer.walletBalance)}</span> · {t("pos_debt")}: <span className="f-mono text-danger-600">{sar(customer.debt)}</span></div>}
             <Field label={t("common_paymentMethod")}>
-              <select value={payMethod} onChange={(e) => setPayMethod(e.target.value)} className={inputCls}>
-                {availablePosPayMethods.map((m) => <option key={m.value} value={m.value}>{t(m.key)}</option>)}
-              </select>
+              <div className="grid grid-cols-2 gap-2">
+                {availablePosPayMethods.map((m) => {
+                  const Icon = PAY_METHOD_ICONS[m.value] || CreditCard;
+                  const active = payMethod === m.value;
+                  return (
+                    <button key={m.value} type="button" onClick={() => setPayMethod(m.value)}
+                      className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-medium transition ${active ? "border-brand-600 bg-brand-50 text-brand-800" : "border-app-border text-app-text-muted hover:border-app-border-strong"}`}>
+                      <Icon size={15} /> {t(m.key)}
+                    </button>
+                  );
+                })}
+              </div>
             </Field>
             {walletInsufficient && <div className="rounded-lg bg-danger-50 border border-danger-200 px-3 py-2 text-xs font-medium text-danger-700">{t("pos_walletInsufficient")}</div>}
 
