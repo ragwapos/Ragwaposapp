@@ -1134,14 +1134,15 @@ const DICT = {
     payBalance_title: "Pay Balance", payBalance_liability: "Outstanding liability:", payBalance_confirm: "Confirm Payment",
     payBalance_exceedsError: "Amount exceeds the maximum outstanding balance ({amount})",
 
-    promotions_title: "Markdown Matrix", promotions_addDiscount: "➕ Add Discount",
-    promotions_table_name: "Name", promotions_table_type: "Type", promotions_table_coupon: "Coupon",
+    promotions_title: "Promotions", promotions_subtitle: "Percentage and fixed discounts, plus coupon codes for your laundry's customers.", promotions_addDiscount: "Add Discount",
+    promotions_table_name: "Name", promotions_table_type: "Type", promotions_table_value: "Value", promotions_table_coupon: "Coupon",
     promotions_table_start: "Start", promotions_table_end: "End", promotions_table_status: "Status",
     promotions_empty: "No promotions yet.", promotions_edit: "Edit", promotions_cancel: "Cancel", promotions_cancelled: "Cancelled",
-    promoModal_title: "➕ Add Discount", promoModal_editTitle: "✏️ Edit Discount", promoModal_name: "Discount Name", promoModal_requiresCoupon: "Requires Coupon?",
+    promotions_scheduled: "Scheduled", promotions_typePercent: "Percentage", promotions_typeFixed: "Fixed",
+    promoModal_title: "Add Discount", promoModal_editTitle: "Edit Discount", promoModal_name: "Discount Name", promoModal_requiresCoupon: "Requires Coupon?",
     promoModal_couponRequired: "Coupon required", promoModal_appliesAuto: "Applies automatically",
-    promoModal_couponCode: "Coupon Code", promoModal_evalType: "Evaluation Type", promoModal_percentage: "Percentage %",
-    promoModal_fixed: "Fixed SAR", promoModal_discountPercent: "Discount (%)", promoModal_discountAmount: "Discount (SAR)",
+    promoModal_couponCode: "Coupon Code", promoModal_evalType: "Discount Type", promoModal_percentage: "Percentage %",
+    promoModal_fixed: "Fixed", promoModal_discountPercent: "Discount (%)", promoModal_discountAmount: "Discount (SAR)",
     promoModal_start: "Start", promoModal_end: "End", promoModal_save: "Save Discount", promoModal_saveEdit: "Save Changes",
     promoModal_overlapError: "There is already an active discount running during this period — overlapping discount periods are not allowed.",
     promoModal_valueError: "Enter a value greater than 0 (percentage discounts can't exceed 100%).",
@@ -1368,14 +1369,15 @@ const DICT = {
     payBalance_title: "سداد الرصيد", payBalance_liability: "المبلغ المستحق:", payBalance_confirm: "تأكيد السداد",
     payBalance_exceedsError: "المبلغ يتجاوز الحد الأقصى المستحق ({amount})",
 
-    promotions_title: "قائمة العروض", promotions_addDiscount: "➕ إضافة خصم",
-    promotions_table_name: "الاسم", promotions_table_type: "النوع", promotions_table_coupon: "الكوبون",
+    promotions_title: "العروض", promotions_subtitle: "خصومات نسبية وثابتة وأكواد كوبونات لعملاء المغسلة", promotions_addDiscount: "إضافة خصم",
+    promotions_table_name: "الاسم", promotions_table_type: "النوع", promotions_table_value: "القيمة", promotions_table_coupon: "الكوبون",
     promotions_table_start: "البداية", promotions_table_end: "النهاية", promotions_table_status: "الحالة",
     promotions_empty: "لا توجد عروض بعد.", promotions_edit: "تعديل", promotions_cancel: "إلغاء", promotions_cancelled: "ملغى",
-    promoModal_title: "➕ إضافة خصم", promoModal_editTitle: "✏️ تعديل الخصم", promoModal_name: "اسم الخصم", promoModal_requiresCoupon: "يتطلب كوبون؟",
+    promotions_scheduled: "مجدول", promotions_typePercent: "نسبة", promotions_typeFixed: "ثابت",
+    promoModal_title: "إضافة خصم", promoModal_editTitle: "تعديل الخصم", promoModal_name: "اسم الخصم", promoModal_requiresCoupon: "يتطلب كوبون؟",
     promoModal_couponRequired: "الكوبون مطلوب", promoModal_appliesAuto: "يُطبّق تلقائيًا",
-    promoModal_couponCode: "رمز الكوبون", promoModal_evalType: "نوع الاحتساب", promoModal_percentage: "نسبة %",
-    promoModal_fixed: "مبلغ ثابت", promoModal_discountPercent: "الخصم (%)", promoModal_discountAmount: "الخصم (ريال)",
+    promoModal_couponCode: "رمز الكوبون", promoModal_evalType: "نوع الخصم", promoModal_percentage: "نسبة %",
+    promoModal_fixed: "ثابت", promoModal_discountPercent: "الخصم (%)", promoModal_discountAmount: "الخصم (ريال)",
     promoModal_start: "البداية", promoModal_end: "النهاية", promoModal_save: "حفظ الخصم", promoModal_saveEdit: "حفظ التعديلات",
     promoModal_overlapError: "يوجد خصم آخر نشط بالفعل خلال هذه الفترة — لا يُسمح بتداخل فترات الخصومات.",
     promoModal_valueError: "أدخل قيمة أكبر من صفر (الخصم كنسبة مئوية ما يتجاوز 100%).",
@@ -1602,14 +1604,15 @@ const DICT = {
     payBalance_title: "بیلنس ادا کریں", payBalance_liability: "واجب الادا رقم:", payBalance_confirm: "ادائیگی کی تصدیق کریں",
     payBalance_exceedsError: "رقم زیادہ سے زیادہ واجب الادا حد ({amount}) سے تجاوز کر گئی ہے",
 
-    promotions_title: "رعایتوں کی فہرست", promotions_addDiscount: "➕ رعایت شامل کریں",
-    promotions_table_name: "نام", promotions_table_type: "قسم", promotions_table_coupon: "کوپن",
+    promotions_title: "پرموشنز", promotions_subtitle: "گاہکوں کے لیے فیصد اور فکسڈ رعایتیں اور کوپن کوڈز۔", promotions_addDiscount: "رعایت شامل کریں",
+    promotions_table_name: "نام", promotions_table_type: "قسم", promotions_table_value: "قیمت", promotions_table_coupon: "کوپن",
     promotions_table_start: "آغاز", promotions_table_end: "اختتام", promotions_table_status: "صورتحال",
     promotions_empty: "ابھی کوئی رعایت موجود نہیں۔", promotions_edit: "ترمیم", promotions_cancel: "منسوخ کریں", promotions_cancelled: "منسوخ شدہ",
-    promoModal_title: "➕ رعایت شامل کریں", promoModal_editTitle: "✏️ رعایت میں ترمیم کریں", promoModal_name: "رعایت کا نام", promoModal_requiresCoupon: "کوپن درکار ہے؟",
+    promotions_scheduled: "شیڈول", promotions_typePercent: "فیصد", promotions_typeFixed: "فکسڈ",
+    promoModal_title: "رعایت شامل کریں", promoModal_editTitle: "رعایت میں ترمیم کریں", promoModal_name: "رعایت کا نام", promoModal_requiresCoupon: "کوپن درکار ہے؟",
     promoModal_couponRequired: "کوپن لازمی ہے", promoModal_appliesAuto: "خودکار لاگو ہوگی",
-    promoModal_couponCode: "کوپن کوڈ", promoModal_evalType: "حساب کی قسم", promoModal_percentage: "فیصد %",
-    promoModal_fixed: "فکسڈ ریال", promoModal_discountPercent: "رعایت (%)", promoModal_discountAmount: "رعایت (ریال)",
+    promoModal_couponCode: "کوپن کوڈ", promoModal_evalType: "رعایت کی قسم", promoModal_percentage: "فیصد %",
+    promoModal_fixed: "فکسڈ", promoModal_discountPercent: "رعایت (%)", promoModal_discountAmount: "رعایت (ریال)",
     promoModal_start: "آغاز", promoModal_end: "اختتام", promoModal_save: "رعایت محفوظ کریں", promoModal_saveEdit: "تبدیلیاں محفوظ کریں",
     promoModal_overlapError: "اس مدت کے دوران پہلے سے ایک فعال رعایت موجود ہے — رعایتوں کی مدت میں تداخل کی اجازت نہیں ہے۔",
     promoModal_valueError: "صفر سے بڑی ایک قیمت درج کریں (فیصد رعایت 100% سے زیادہ نہیں ہو سکتی)۔",
@@ -3838,12 +3841,15 @@ function PromotionModal({ onClose, onSave, promotions, editing }) {
   return (
     <Modal title={editing ? t("promoModal_editTitle") : t("promoModal_title")} onClose={onClose}>
       <Field label={t("promoModal_name")}><input value={name} onChange={(e) => setName(e.target.value.slice(0, 15))} maxLength={15} className={inputCls} /></Field>
-      <Field label={t("promoModal_requiresCoupon")}><Toggle checked={couponOn} onChange={setCouponOn} label={couponOn ? t("promoModal_couponRequired") : t("promoModal_appliesAuto")} /></Field>
+      <div className="mb-4 flex items-center justify-between">
+        <span className="text-sm font-medium text-app-text">{t("promoModal_requiresCoupon")}</span>
+        <Toggle checked={couponOn} onChange={setCouponOn} />
+      </div>
       {couponOn && <Field label={t("promoModal_couponCode")}><input value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} className={`${inputCls} f-mono tracking-widest`} /></Field>}
       <Field label={t("promoModal_evalType")}>
         <div className="flex gap-2">
-          <button onClick={() => setIsPercent(true)} className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${isPercent ? "border-teal-600 bg-teal-50 text-teal-700" : "border-stone-300 text-slate-600"}`}>{t("promoModal_percentage")}</button>
-          <button onClick={() => setIsPercent(false)} className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${!isPercent ? "border-teal-600 bg-teal-50 text-teal-700" : "border-stone-300 text-slate-600"}`}>{t("promoModal_fixed")}</button>
+          <button onClick={() => setIsPercent(false)} className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${!isPercent ? "border-brand-600 bg-brand-50 text-brand-700" : "border-app-border-strong text-app-text-muted"}`}>{t("promoModal_fixed")}</button>
+          <button onClick={() => setIsPercent(true)} className={`flex-1 rounded-lg border px-3 py-2 text-sm font-medium ${isPercent ? "border-brand-600 bg-brand-50 text-brand-700" : "border-app-border-strong text-app-text-muted"}`}>{t("promoModal_percentage")}</button>
         </div>
       </Field>
       <Field label={isPercent ? t("promoModal_discountPercent") : t("promoModal_discountAmount")}><input type="number" min="0" max={isPercent ? 100 : undefined} value={value} onChange={(e) => setValue(e.target.value)} className={inputCls} /></Field>
@@ -3851,53 +3857,85 @@ function PromotionModal({ onClose, onSave, promotions, editing }) {
         <Field label={t("promoModal_start")}><input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} className={inputCls} /></Field>
         <Field label={t("promoModal_end")}><input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} className={inputCls} /></Field>
       </div>
-      {error && <div className="mb-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700">{error}</div>}
-      <button onClick={handleSave} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{editing ? t("promoModal_saveEdit") : t("promoModal_save")}</button>
+      {error && <div className="mb-3 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs text-danger-700">{error}</div>}
+      <button onClick={handleSave} className="w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600">{editing ? t("promoModal_saveEdit") : t("promoModal_save")}</button>
     </Modal>
   );
 }
+
+// Purely presentational status for the table pill below — mirrors
+// isPromoActive()'s two failure cases (not started yet / past its end date)
+// but keeps them apart for display instead of collapsing both to "inactive".
+// Does not feed back into isPromoActive/promoDiscount, so POS behavior is
+// unaffected by anything here.
+function promotionDisplayStatus(p) {
+  if (p.active === false) return "expired";
+  const now = Date.now();
+  if (p.startDate && now < new Date(p.startDate).getTime()) return "scheduled";
+  if (p.endDate && now > new Date(p.endDate).getTime()) return "expired";
+  return "active";
+}
+
+const PROMOTION_STATUS_TONE = {
+  active: "bg-success-50 text-success-700",
+  scheduled: "bg-info-50 text-info-700",
+  expired: "bg-stone-100 text-stone-500",
+};
 
 function PromotionsView({ promotions, addPromotion, updatePromotion }) {
   const { t } = useLang();
   const [showModal, setShowModal] = useState(false);
   const [editingPromo, setEditingPromo] = useState(null);
-  const now = Date.now();
 
   const cancelPromotion = (p) => updatePromotion(p.id, { active: false });
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <div className="f-display text-xl font-semibold text-slate-900">{t("promotions_title")}</div>
-        <button onClick={() => setShowModal(true)} className="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white hover:bg-teal-700"><Plus size={15} /> {t("promotions_addDiscount")}</button>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="f-display text-xl font-semibold text-app-text">{t("promotions_title")}</div>
+          <p className="mt-1 text-sm text-app-text-muted">{t("promotions_subtitle")}</p>
+        </div>
+        <button onClick={() => setShowModal(true)} className="flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-2 text-sm font-medium text-white hover:bg-brand-600"><Plus size={15} /> {t("promotions_addDiscount")}</button>
       </div>
-      <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
         <table className="w-full text-sm table-fixed">
-          <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <tr><th className="px-4 py-3 w-56 text-center">{t("promotions_table_name")}</th><th className="px-4 py-3 w-28 text-center">{t("promotions_table_type")}</th><th className="px-4 py-3 w-28 text-center">{t("promotions_table_coupon")}</th><th className="px-4 py-3 w-64 text-center">{t("promotions_table_start")}</th><th className="px-4 py-3 w-64 text-center">{t("promotions_table_end")}</th><th className="px-4 py-3">{t("promotions_table_status")}</th><th className="px-4 py-3"></th></tr>
+          <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
+            <tr>
+              <th className="px-4 py-3 w-48 text-center">{t("promotions_table_name")}</th>
+              <th className="px-4 py-3 w-32 text-center">{t("promotions_table_coupon")}</th>
+              <th className="px-4 py-3 w-24 text-center">{t("promotions_table_type")}</th>
+              <th className="px-4 py-3 w-28 text-center">{t("promotions_table_value")}</th>
+              <th className="px-4 py-3 w-36 text-center">{t("promotions_table_start")}</th>
+              <th className="px-4 py-3 w-36 text-center">{t("promotions_table_end")}</th>
+              <th className="px-4 py-3">{t("promotions_table_status")}</th>
+              <th className="px-4 py-3 w-10"></th>
+            </tr>
           </thead>
-          <tbody className="divide-y divide-stone-100">
+          <tbody className="divide-y divide-app-border">
             {promotions.map((p) => {
               const cancelled = p.active === false;
-              const live = !cancelled && (p.endDate ? now < new Date(p.endDate).getTime() : true);
+              const status = promotionDisplayStatus(p);
+              const statusLabel = status === "scheduled" ? t("promotions_scheduled") : status === "expired" ? t("common_expired") : t("common_active");
               return (
-                <tr key={p.id} className="hover:bg-stone-50">
-                  <td className="px-4 py-3 w-56 text-center font-medium text-slate-900 truncate">{p.name}</td>
-                  <td className="px-4 py-3 w-28 text-center text-slate-600 f-mono">{p.isPercent ? `${p.value}%` : sar(p.value)}</td>
-                  <td className="px-4 py-3 w-28 text-center">{p.couponOn ? <span className="f-mono rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-700">{p.coupon}</span> : <span className="text-slate-400 text-xs">{t("common_no")}</span>}</td>
-                  <td className="px-4 py-3 f-mono text-xs text-slate-500 w-64" style={{ textAlign: "center" }}>{p.startDate ? fmtDate(p.startDate) : "—"}</td>
-                  <td className="px-4 py-3 f-mono text-xs text-slate-500 w-64" style={{ textAlign: "center" }}>{p.endDate ? fmtDate(p.endDate) : "—"}</td>
-                  <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${cancelled ? "bg-rose-100 text-rose-600" : live ? "bg-teal-100 text-teal-700" : "bg-stone-100 text-stone-500"}`}>{cancelled ? t("promotions_cancelled") : live ? t("common_active") : t("common_expired")}</span></td>
+                <tr key={p.id} className="hover:bg-app-bg">
+                  <td className="px-4 py-3 w-48 text-center font-medium text-app-text truncate">{p.name}</td>
+                  <td className="px-4 py-3 w-32 text-center">{p.couponOn ? <span className="f-mono text-xs tracking-wide text-app-text-muted">{p.coupon}</span> : <span className="text-app-text-subtle text-xs">—</span>}</td>
+                  <td className="px-4 py-3 w-24 text-center text-app-text-muted">{p.isPercent ? t("promotions_typePercent") : t("promotions_typeFixed")}</td>
+                  <td className="px-4 py-3 w-28 text-center f-mono font-medium text-app-text">{p.isPercent ? `${p.value}%` : sar(p.value)}</td>
+                  <td className="px-4 py-3 f-mono text-xs text-app-text-muted w-36" style={{ textAlign: "center" }}>{p.startDate ? fmtDate(p.startDate) : "—"}</td>
+                  <td className="px-4 py-3 f-mono text-xs text-app-text-muted w-36" style={{ textAlign: "center" }}>{p.endDate ? fmtDate(p.endDate) : "—"}</td>
+                  <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${PROMOTION_STATUS_TONE[status]}`}>{statusLabel}</span></td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => setEditingPromo(p)} className="rounded-lg border border-stone-300 px-2.5 py-1.5 text-xs font-medium text-slate-700 hover:bg-stone-50"><Pencil size={12} className="inline mr-1" />{t("promotions_edit")}</button>
-                      {!cancelled && <button onClick={() => cancelPromotion(p)} className="rounded-lg border border-rose-300 px-2.5 py-1.5 text-xs font-medium text-rose-600 hover:bg-rose-50"><Ban size={12} className="inline mr-1" />{t("promotions_cancel")}</button>}
+                      <button onClick={() => setEditingPromo(p)} className="rounded-lg border border-app-border-strong px-2.5 py-1.5 text-xs font-medium text-app-text-muted hover:bg-app-bg"><Pencil size={12} className="inline mr-1" />{t("promotions_edit")}</button>
+                      {!cancelled && <button onClick={() => cancelPromotion(p)} className="rounded-lg border border-danger-300 bg-danger-50 px-2.5 py-1.5 text-xs font-medium text-danger-600 hover:bg-danger-100"><Ban size={12} className="inline mr-1" />{t("promotions_cancel")}</button>}
                     </div>
                   </td>
                 </tr>
               );
             })}
-            {promotions.length === 0 && <tr><td colSpan={7} className="px-4 py-10 text-center text-slate-400">{t("promotions_empty")}</td></tr>}
+            {promotions.length === 0 && <tr><td colSpan={8} className="px-4 py-10 text-center text-app-text-subtle">{t("promotions_empty")}</td></tr>}
           </tbody>
         </table>
       </div>
