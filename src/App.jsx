@@ -321,6 +321,12 @@ const sarCompact = (n, maxDigits = 4) => {
   const digits = String(Math.round(Math.abs(n)));
   return digits.length > maxDigits ? `${digits.slice(0, maxDigits)}+ SAR` : sar(n);
 };
+// Dashboard-only flourish: the approved reference renders the Home KPI
+// row's big numbers in Eastern Arabic-Indic digits while every other real
+// screen (tables, totals, phone numbers) stays Western — so this is scoped
+// to that one row for Arabic, not a app-wide numeral switch.
+const ARABIC_INDIC_DIGITS = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+const toArabicIndicDigits = (input) => String(input).replace(/[0-9]/g, (d) => ARABIC_INDIC_DIGITS[d]);
 const nowISO = () => new Date().toISOString();
 // Owner/section PINs are hashed before storage (Web Crypto, no extra
 // dependency) so a tenant_settings row leak or network capture doesn't hand
@@ -1023,6 +1029,7 @@ const DICT = {
 
     productModal_startingFrom: "Starting From", productModal_qty: "Qty", productModal_coreService: "Core Service",
     productModal_addons: "Optional Add-ons", productModal_itemTotal: "Item Total", productModal_confirm: "Confirm & Add to Cart",
+    productModal_notes: "Notes", productModal_notesPlaceholder: "e.g. a stain on the cuff, needs extra care...",
 
     pos_allItems: "All Items", pos_checkout: "Checkout", pos_cartEmpty: "Cart is empty",
     pos_noProductsInCategory: "No products in this category yet.",
@@ -1254,6 +1261,7 @@ const DICT = {
 
     productModal_startingFrom: "يبدأ من", productModal_qty: "الكمية", productModal_coreService: "الخدمة الأساسية",
     productModal_addons: "إضافات اختيارية", productModal_itemTotal: "إجمالي القطعة", productModal_confirm: "تأكيد وإضافة للسلة",
+    productModal_notes: "ملاحظات", productModal_notesPlaceholder: "مثال: بقعة على الكم، تحتاج عناية إضافية...",
 
     pos_allItems: "كل المنتجات", pos_checkout: "الفاتورة", pos_cartEmpty: "السلة فارغة",
     pos_noProductsInCategory: "لا توجد منتجات في هذه الفئة بعد.",
@@ -1486,6 +1494,7 @@ const DICT = {
 
     productModal_startingFrom: "شروع قیمت", productModal_qty: "تعداد", productModal_coreService: "بنیادی سروس",
     productModal_addons: "اضافی سہولیات", productModal_itemTotal: "کل رقم", productModal_confirm: "تصدیق کریں اور کارٹ میں شامل کریں",
+    productModal_notes: "نوٹس", productModal_notesPlaceholder: "مثلاً: آستین پر داغ، اضافی خیال رکھیں...",
 
     pos_allItems: "تمام اشیاء", pos_checkout: "چیک آؤٹ", pos_cartEmpty: "کارٹ خالی ہے",
     pos_noProductsInCategory: "اس کیٹگری میں ابھی کوئی پروڈکٹ نہیں ہے۔",
@@ -1740,7 +1749,6 @@ function Sidebar({ tab, setTab, sectionLocks, setSectionLocks, merchant }) {
           return (
             <button key={n.key} onClick={() => handleNavClick(n.key)}
               className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${active ? "bg-brand-600 text-white shadow" : "text-stone-300 hover:bg-navy-800 hover:text-white"}`}>
-              <span className={`f-mono text-[10px] w-4 ${active ? "text-brand-100" : "text-slate-500"}`}>{String(i + 1).padStart(2, "0")}</span>
               <Icon size={16} />
               <span className="flex-1 text-left font-medium">{t(n.labelKey)}</span>
               {locked && <Lock size={12} className={active ? "text-brand-100" : "text-amber-400"} />}
@@ -1792,6 +1800,7 @@ function ProductModal({ product, addons, onClose, onConfirm }) {
   const [service, setService] = useState(serviceEntries[0]?.[0] || "");
   const [selectedAddons, setSelectedAddons] = useState([]);
   const [qty, setQty] = useState(1);
+  const [notes, setNotes] = useState("");
   const qtyInputRef = useRef(null);
 
   const allAddons = [...addons, ...(product.productAddons || [])];
@@ -1800,7 +1809,7 @@ function ProductModal({ product, addons, onClose, onConfirm }) {
   const lineTotal = (servicePrice + addonsTotal) * qty;
 
   const toggleAddon = (id) => setSelectedAddons((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
-  const confirm = () => onConfirm({ cartId: uid("cart"), productId: product.id, name: product.name, image: product.image, service, servicePrice, addons: selectedAddons.map((id) => allAddons.find((a) => a.id === id)), qty, lineTotal });
+  const confirm = () => onConfirm({ cartId: uid("cart"), productId: product.id, name: product.name, image: product.image, service, servicePrice, addons: selectedAddons.map((id) => allAddons.find((a) => a.id === id)), qty, lineTotal, notes: notes.trim() });
 
   // Modal-scoped shortcuts — mounting this modal already stops the POS
   // screen's own listener (see POSView), so these are the only ones live
@@ -1808,6 +1817,9 @@ function ProductModal({ product, addons, onClose, onConfirm }) {
   // (and selects) the quantity field for instant retyping, Enter confirms
   // the sale exactly like the button below, Escape cancels with no change.
   useKeydown((e) => {
+    // Typing a multi-line note needs its own Enter/digits/letters untouched
+    // by the quantity/service/confirm shortcuts below.
+    if (document.activeElement?.tagName === "TEXTAREA") return;
     if (e.key === "Escape") { e.preventDefault(); onClose(); return; }
     if (e.key === "Enter") { e.preventDefault(); confirm(); return; }
     // e.code (not just e.key) so this fires off the same physical key
@@ -1881,6 +1893,12 @@ function ProductModal({ product, addons, onClose, onConfirm }) {
             );
           })}
         </div>
+      </div>
+
+      <div className="mb-5">
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-app-text-muted">{t("productModal_notes")}</div>
+        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder={t("productModal_notesPlaceholder")}
+          className="w-full rounded-lg border border-app-border-strong px-3 py-2 text-sm text-app-text focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-100 resize-none" />
       </div>
 
       <div className="flex items-center justify-between rounded-xl bg-app-bg border border-app-border px-4 py-3 mb-5">
@@ -2378,6 +2396,7 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
                   <div>
                     <div className="text-sm font-medium text-app-text">{i.qty}× {i.name}</div>
                     <div className="text-xs text-app-text-muted">{i.service}{i.addons.length ? ` · ${i.addons.map((a) => a.name).join(", ")}` : ""}</div>
+                    {i.notes && <div className="text-xs text-warning-700">📝 {i.notes}</div>}
                   </div>
                   <button onClick={() => removeFromCart(i.cartId)} className="text-app-text-subtle hover:text-danger-500"><Trash2 size={14} /></button>
                 </div>
@@ -2550,6 +2569,7 @@ function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoi
             <div className="min-w-0">
               <div className="text-sm font-medium text-slate-900 truncate">{it.name}</div>
               <div className="text-xs text-slate-500">{it.service}{it.urgent ? ` · ${t("invoiceDetail_urgent")}` : ""}{it.deliveredAt ? ` · ${fmtDateSec(it.deliveredAt)}` : ""}</div>
+              {it.notes && <div className="text-xs text-amber-700">📝 {it.notes}</div>}
             </div>
             <select value={it.status} onChange={(e) => onUpdateItemStatus(invoice.id, it.itemId, e.target.value)}
               className={`f-mono text-xs rounded-lg border px-2 py-1.5 ${it.status === "Delivered" ? "border-teal-300 bg-teal-50 text-teal-700" : "border-stone-300 text-slate-700"}`}>
@@ -4728,7 +4748,8 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
 }
 
 function HomeDashboardView({ invoices, merchant, setTab }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const fmtKpi = (v) => (lang === "ar" ? toArabicIndicDigits(v) : String(v));
 
   const isToday = (iso) => {
     const d = new Date(iso), n = new Date();
@@ -4743,10 +4764,10 @@ function HomeDashboardView({ invoices, merchant, setTab }) {
   const recent = [...invoices].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 6);
 
   const kpis = [
-    { label: t("home_salesToday"), value: sarCompact(salesToday), icon: Wallet, tint: "bg-brand-50 text-brand-700" },
-    { label: t("home_ordersToday"), value: ordersToday, icon: ClipboardList, tint: "bg-info-50 text-info-700" },
-    { label: t("home_readyOrders"), value: readyCount, icon: CheckCircle2, tint: "bg-success-50 text-success-700" },
-    { label: t("home_deliveryActive"), value: deliveryActive, icon: Truck, tint: "bg-warning-50 text-warning-700" },
+    { label: t("home_salesToday"), value: fmtKpi(sarCompact(salesToday)), icon: Wallet, tint: "bg-brand-50 text-brand-700" },
+    { label: t("home_ordersToday"), value: fmtKpi(ordersToday), icon: ClipboardList, tint: "bg-info-50 text-info-700" },
+    { label: t("home_readyOrders"), value: fmtKpi(readyCount), icon: CheckCircle2, tint: "bg-success-50 text-success-700" },
+    { label: t("home_deliveryActive"), value: fmtKpi(deliveryActive), icon: Truck, tint: "bg-warning-50 text-warning-700" },
   ];
 
   return (
@@ -5374,7 +5395,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     const invoice = {
       code, customerId, customerName: customer?.name || walkInLabel, payMethod, splitPayments, total: grandTotal, discount, isDelivery, deliveryFee, createdAt: nowISO(), closed: false,
       vatExempt: !merchant.taxNumber || !merchant.taxNumber.trim(),
-      items: items.map((it) => ({ itemId: uid("item"), name: it.name, service: it.service, addons: it.addons, price: it.servicePrice + it.addons.reduce((s, a) => s + a.price, 0), qty: it.qty, lineTotal: it.lineTotal, status: "Received", urgent: false, deliveredAt: null })),
+      items: items.map((it) => ({ itemId: uid("item"), name: it.name, service: it.service, addons: it.addons, price: it.servicePrice + it.addons.reduce((s, a) => s + a.price, 0), qty: it.qty, lineTotal: it.lineTotal, notes: it.notes || "", status: "Received", urgent: false, deliveredAt: null })),
     };
     const savedInvoice = addInvoice(invoice);
     // The real invoice above already saved successfully regardless of what
