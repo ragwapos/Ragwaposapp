@@ -1118,6 +1118,11 @@ const DICT = {
     products_addonsCatalog: "Optional Add-ons Catalog", products_addonNamePlaceholder: "Add-on name (e.g. Starch)",
     products_addonPricePlaceholder: "Price", products_noAddons: "No add-ons yet.",
     products_ownAddons: "Add-ons for this product only", products_noOwnAddons: "No product-specific add-ons yet.",
+    products_kpiServiceTypes: "Service Types", products_kpiCategories: "Categories", products_kpiTotal: "Total Products",
+    products_searchPlaceholder: "Search for a product...", products_all: "All",
+    products_emptyState: "No products yet. Click \"New Product\" to add your first one.",
+    products_noResults: "No products match your search.",
+    products_subtitle: "Manage laundry items, categories, services and pricing.",
 
     purchases_suppliersTab: "Suppliers & Purchases", purchases_expensesTab: "Expenses",
     purchases_recordPurchase: "Record Purchase", purchases_newSupplier: "+ New Supplier",
@@ -1359,6 +1364,11 @@ const DICT = {
     products_addonsCatalog: "كتالوج الإضافات الاختيارية", products_addonNamePlaceholder: "اسم الإضافة (مثال: نشا)",
     products_addonPricePlaceholder: "السعر", products_noAddons: "لا توجد إضافات بعد.",
     products_ownAddons: "إضافات خاصة بهذا المنتج فقط", products_noOwnAddons: "لا توجد إضافات خاصة بهذا المنتج بعد.",
+    products_kpiServiceTypes: "أنواع الخدمات", products_kpiCategories: "الفئات", products_kpiTotal: "إجمالي المنتجات",
+    products_searchPlaceholder: "ابحث عن منتج...", products_all: "الكل",
+    products_emptyState: "لا توجد منتجات بعد. اضغط \"منتج جديد\" لإضافة أول منتج.",
+    products_noResults: "لا توجد منتجات مطابقة لبحثك.",
+    products_subtitle: "إدارة قطع الغسيل، الفئات، الخدمات والأسعار.",
 
     purchases_suppliersTab: "الموردون والمشتريات", purchases_expensesTab: "المصروفات",
     purchases_recordPurchase: "تسجيل مشترى", purchases_newSupplier: "+ مورد جديد",
@@ -1600,6 +1610,11 @@ const DICT = {
     products_addonsCatalog: "اضافی سہولیات کی فہرست", products_addonNamePlaceholder: "سہولت کا نام (مثلاً نشاستہ)",
     products_addonPricePlaceholder: "قیمت", products_noAddons: "ابھی کوئی اضافی سہولت موجود نہیں۔",
     products_ownAddons: "صرف اس پروڈکٹ کے لیے اضافی سہولیات", products_noOwnAddons: "ابھی اس پروڈکٹ کی اپنی کوئی اضافی سہولت نہیں۔",
+    products_kpiServiceTypes: "سروس کی اقسام", products_kpiCategories: "کیٹگریز", products_kpiTotal: "کل پروڈکٹس",
+    products_searchPlaceholder: "پروڈکٹ تلاش کریں...", products_all: "تمام",
+    products_emptyState: "ابھی کوئی پروڈکٹ نہیں۔ پہلا پروڈکٹ شامل کرنے کے لیے \"نیا پروڈکٹ\" دبائیں۔",
+    products_noResults: "آپ کی تلاش سے مماثل کوئی پروڈکٹ نہیں۔",
+    products_subtitle: "لانڈری آئٹمز، کیٹگریز، سروسز اور قیمتوں کا نظم کریں۔",
 
     purchases_suppliersTab: "سپلائرز اور خریداری", purchases_expensesTab: "اخراجات",
     purchases_recordPurchase: "خریداری درج کریں", purchases_newSupplier: "+ نیا سپلائر",
@@ -3245,25 +3260,25 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
 /* =========================================================================
    MODULE 4 — INVENTORY
    ========================================================================= */
-function EditProductModal({ product, categories, addCategory, serviceTypes, addServiceType, updateProduct, products, onClose }) {
+function ProductFormModal({ editing, categories, addCategory, serviceTypes, addServiceType, addProduct, updateProduct, products, onClose }) {
   const { t } = useLang();
-  const [name, setName] = useState(product.name);
-  const [categoryId, setCategoryId] = useState(product.categoryId);
-  const [published, setPublished] = useState(product.published);
-  const [imgPreview, setImgPreview] = useState(product.image);
+  const [name, setName] = useState(editing?.name || "");
+  const [categoryId, setCategoryId] = useState(editing?.categoryId || categories[0]?.id || "");
+  const [published, setPublished] = useState(editing ? editing.published : true);
+  const [imgPreview, setImgPreview] = useState(editing?.image || "");
   // "" means no shortcut assigned — explicit-assignment-only, never auto-picked.
-  const [quickAccessKey, setQuickAccessKey] = useState(product.quickAccessKey ? String(product.quickAccessKey) : "");
-  const quickAccessTaken = quickAccessKey !== "" && products.some((p) => p.id !== product.id && p.quickAccessKey === Number(quickAccessKey));
+  const [quickAccessKey, setQuickAccessKey] = useState(editing?.quickAccessKey ? String(editing.quickAccessKey) : "");
+  const quickAccessTaken = quickAccessKey !== "" && products.some((p) => p.id !== editing?.id && p.quickAccessKey === Number(quickAccessKey));
   const fileRef = useRef(null);
   const [showAddService, setShowAddService] = useState(false);
   const [newServiceName, setNewServiceName] = useState("");
   const [formError, setFormError] = useState("");
   const [servicePrices, setServicePrices] = useState(() => {
     const init = {};
-    serviceTypes.forEach((st) => { if (product.services[st.name] !== undefined) init[st.id] = String(product.services[st.name]); });
+    if (editing) serviceTypes.forEach((st) => { if (editing.services[st.name] !== undefined) init[st.id] = String(editing.services[st.name]); });
     return init;
   });
-  const [productAddons, setProductAddons] = useState(product.productAddons || []);
+  const [productAddons, setProductAddons] = useState(editing?.productAddons || []);
   const [pAddonName, setPAddonName] = useState("");
   const [pAddonPrice, setPAddonPrice] = useState("");
   const [imgUploading, setImgUploading] = useState(false);
@@ -3292,9 +3307,9 @@ function EditProductModal({ product, categories, addCategory, serviceTypes, addS
     setFormError(""); setImgUploading(true);
     try {
       const { url } = await uploadTenantFile(file, "products");
-      // A re-pick before Save orphans whatever the previous pick uploaded
-      // (not product.image — that one's only replaced once Save succeeds).
-      if (imgPreview && imgPreview !== product.image) deleteTenantFile(imgPreview);
+      // A re-pick before Save orphans whatever the previous pick uploaded —
+      // but never the originally saved image, which is only dropped once Save succeeds.
+      if (imgPreview && imgPreview !== editing?.image) deleteTenantFile(imgPreview);
       setImgPreview(url);
     } catch {
       setFormError(t("upload_failed"));
@@ -3315,115 +3330,105 @@ function EditProductModal({ product, categories, addCategory, serviceTypes, addS
     if (Object.keys(filledServices).length === 0) { setFormError(t("products_errService")); return; }
     if (quickAccessTaken) { setFormError(t("products_quickAccessTaken")); return; }
     const minPrice = Math.min(...Object.values(filledServices));
-    const writeDone = updateProduct(product.id, { name: name.trim(), categoryId, image: imgPreview, published, price: minPrice, services: filledServices, productAddons, quickAccessKey: quickAccessKey === "" ? null : Number(quickAccessKey) });
-    // Old image only becomes safe to drop once the row is CONFIRMED to
-    // point elsewhere — deleting it before that (e.g. right away, in
-    // parallel with the write) could leave a product pointing at a
-    // just-deleted file if this write happens to fail and rolls back.
-    if (product.image && product.image !== imgPreview) {
-      writeDone.then(({ error }) => { if (!error) deleteTenantFile(product.image); });
+    const payload = {
+      name: name.trim(), categoryId, image: imgPreview || "", published,
+      price: minPrice, services: filledServices, productAddons,
+      quickAccessKey: quickAccessKey === "" ? null : Number(quickAccessKey),
+    };
+    if (editing) {
+      const writeDone = updateProduct(editing.id, payload);
+      // Old image only becomes safe to drop once the row is CONFIRMED to
+      // point elsewhere — deleting it before that (e.g. right away, in
+      // parallel with the write) could leave a product pointing at a
+      // just-deleted file if this write happens to fail and rolls back.
+      if (editing.image && editing.image !== imgPreview) {
+        writeDone.then(({ error }) => { if (!error) deleteTenantFile(editing.image); });
+      }
+    } else {
+      addProduct({ ...payload, cost: 0, noCost: true });
     }
     onClose();
   };
 
   return (
-    <Modal title={t("products_editTitle")} onClose={onClose}>
-      <Field label={t("products_image")}>
+    <Modal title={editing ? t("products_editTitle") : t("products_newProduct")} onClose={onClose} width="max-w-xl">
+      <Field label={t("products_name")}>
         <div className="flex items-center gap-3">
-          <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-dashed border-stone-300 bg-stone-50">
-            {imgPreview ? <img src={imgPreview} alt={t("products_image")} className="h-full w-full object-cover" /> : <ImageIcon size={20} className="text-stone-300" />}
-          </div>
-          <button disabled={imgUploading} onClick={() => fileRef.current.click()} className="rounded-lg border border-stone-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-stone-50 disabled:opacity-60">
-            {imgUploading ? <Loader2 size={13} className="inline mr-1 animate-spin" /> : <Upload size={13} className="inline mr-1" />} {imgUploading ? t("upload_uploading") : t("products_upload")}
+          <input value={name} onChange={(e) => setName(e.target.value)} className={`${inputCls} flex-1`} />
+          <button type="button" disabled={imgUploading} onClick={() => fileRef.current.click()} title={t("products_upload")}
+            className="relative flex h-[42px] w-[42px] shrink-0 items-center justify-center overflow-hidden rounded-lg border border-dashed border-app-border-strong bg-app-bg hover:bg-app-border/40 disabled:opacity-60">
+            {imgUploading ? <Loader2 size={16} className="animate-spin text-app-text-subtle" />
+              : imgPreview ? <img src={imgPreview} alt={t("products_image")} className="h-full w-full object-cover" />
+              : <ImageIcon size={16} className="text-app-text-subtle" />}
           </button>
           <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
         </div>
       </Field>
-      <Field label={t("products_name")}><input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} /></Field>
       <Field label={t("common_category")}><EmptyDropdownAdd label={t("common_category")} items={categories} valueId={categoryId} onSelect={setCategoryId} onAdd={handleAddCategory} /></Field>
 
       <div className="mb-4">
-        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t("products_servicePrices")} <span className="normal-case text-slate-400">{t("products_servicePricesHint")}</span></span>
+        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("products_servicePrices")} <span className="normal-case text-app-text-subtle">{t("products_servicePricesHint")}</span></span>
         <div className="space-y-2">
           {serviceTypes.map((st) => (
             <div key={st.id} className="flex items-center gap-2">
-              <span className="w-32 shrink-0 text-sm text-slate-600">{st.name}</span>
+              <span className="w-32 shrink-0 text-sm text-app-text-muted">{st.name}</span>
               <input type="number" min="0" placeholder="—" value={servicePrices[st.id] ?? ""} onChange={(e) => setServicePrices((p) => ({ ...p, [st.id]: e.target.value }))} className={inputCls} />
             </div>
           ))}
-          {serviceTypes.length === 0 && <div className="text-sm text-slate-400">{t("products_noServiceTypes")}</div>}
+          {serviceTypes.length === 0 && <div className="text-sm text-app-text-subtle">{t("products_noServiceTypes")}</div>}
           {showAddService ? (
             <div className="flex gap-2">
               <input autoFocus value={newServiceName} onChange={(e) => setNewServiceName(e.target.value)} placeholder={t("products_newServiceName")} className={inputCls} />
-              <button onClick={handleAddServiceType} className="shrink-0 rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white hover:bg-teal-700">{t("common_save")}</button>
-              <button onClick={() => setShowAddService(false)} className="shrink-0 rounded-lg border border-stone-300 px-3 py-2 text-sm text-slate-600 hover:bg-stone-50">{t("common_cancel")}</button>
+              <button onClick={handleAddServiceType} className="shrink-0 rounded-lg bg-brand-500 px-3 py-2 text-sm font-medium text-white hover:bg-brand-600">{t("common_save")}</button>
+              <button onClick={() => setShowAddService(false)} className="shrink-0 rounded-lg border border-app-border-strong px-3 py-2 text-sm text-app-text-muted hover:bg-app-bg">{t("common_cancel")}</button>
             </div>
           ) : (
-            <button onClick={() => setShowAddService(true)} className="flex items-center gap-1 text-xs font-medium text-teal-700 hover:underline"><Plus size={13} /> {t("products_addServiceType")}</button>
+            <button type="button" onClick={() => setShowAddService(true)} className="flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline"><Plus size={13} /> {t("products_addServiceType")}</button>
           )}
         </div>
       </div>
 
       <div className="mb-4">
-        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t("products_ownAddons")}</span>
+        <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("products_ownAddons")}</span>
         <div className="mb-2 flex flex-wrap gap-2">
           {productAddons.map((a) => (
-            <span key={a.id} className="flex items-center gap-1.5 rounded-full border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs font-medium text-slate-700">
+            <span key={a.id} className="flex items-center gap-1.5 rounded-full border border-app-border bg-app-bg px-3 py-1.5 text-xs font-medium text-app-text-muted">
               {a.name} {a.price > 0 ? `+${sar(a.price)}` : ""}
-              <button onClick={() => removeProductAddon(a.id)} className="text-stone-400 hover:text-rose-500"><X size={12} /></button>
+              <button type="button" onClick={() => removeProductAddon(a.id)} className="text-app-text-subtle hover:text-danger-500"><X size={12} /></button>
             </span>
           ))}
-          {productAddons.length === 0 && <span className="text-sm text-slate-400">{t("products_noOwnAddons")}</span>}
+          {productAddons.length === 0 && <span className="text-sm text-app-text-subtle">{t("products_noOwnAddons")}</span>}
         </div>
         <div className="flex gap-2">
           <input value={pAddonName} onChange={(e) => setPAddonName(e.target.value)} placeholder={t("products_addonNamePlaceholder")} className={inputCls} />
           <input type="number" value={pAddonPrice} onChange={(e) => setPAddonPrice(e.target.value)} placeholder={t("products_addonPricePlaceholder")} className={`${inputCls} w-28`} />
-          <button onClick={addProductAddon} className="shrink-0 rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white hover:bg-teal-700">{t("common_add")}</button>
+          <button type="button" onClick={addProductAddon} className="shrink-0 rounded-lg bg-brand-500 px-3 py-2 text-sm font-medium text-white hover:bg-brand-600">{t("common_add")}</button>
         </div>
       </div>
 
       <Field label={t("products_quickAccess")}>
-        <select value={quickAccessKey} onChange={(e) => setQuickAccessKey(e.target.value)} className={`${inputCls} ${quickAccessTaken ? "border-rose-400" : ""}`}>
+        <select value={quickAccessKey} onChange={(e) => setQuickAccessKey(e.target.value)} className={`${inputCls} ${quickAccessTaken ? "border-danger-400" : ""}`}>
           <option value="">{t("products_quickAccessNone")}</option>
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => <option key={n} value={n}>{n}</option>)}
         </select>
-        {quickAccessTaken && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("products_quickAccessTaken")}</div>}
+        {quickAccessTaken && <div className="mt-1.5 text-xs font-semibold text-danger-600">{t("products_quickAccessTaken")}</div>}
       </Field>
 
       <div className="mb-4"><Toggle checked={published} onChange={setPublished} label={published ? t("products_liveOnPos") : t("products_draft")} /></div>
-      {formError && <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{formError}</div>}
-      <button disabled={imgUploading} onClick={save} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("products_saveChanges")}</button>
+      {formError && <div className="mb-3 rounded-lg bg-danger-50 border border-danger-200 px-3 py-2 text-xs font-medium text-danger-700">{formError}</div>}
+      <button disabled={imgUploading} onClick={save} className="w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600 disabled:opacity-60">{editing ? t("products_saveChanges") : t("products_save")}</button>
     </Modal>
   );
 }
 
 function InventoryView({ categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType }) {
   const { t } = useLang();
-  const [name, setName] = useState("");
-  const [servicePrices, setServicePrices] = useState({});
-  const [categoryId, setCategoryId] = useState(categories[0]?.id || "");
-  const [published, setPublished] = useState(true);
-  const [imgPreview, setImgPreview] = useState("");
-  const fileRef = useRef(null);
+  const [query, setQuery] = useState("");
+  const [activeCat, setActiveCat] = useState("all");
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
   const [addonName, setAddonName] = useState("");
   const [addonPrice, setAddonPrice] = useState("");
-  const [showAddService, setShowAddService] = useState(false);
-  const [newServiceName, setNewServiceName] = useState("");
-  const [formError, setFormError] = useState("");
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [productAddons, setProductAddons] = useState([]);
-  const [pAddonName, setPAddonName] = useState("");
-  const [pAddonPrice, setPAddonPrice] = useState("");
-  const [quickAccessKey, setQuickAccessKey] = useState("");
-  const quickAccessTaken = quickAccessKey !== "" && products.some((p) => p.quickAccessKey === Number(quickAccessKey));
-  const [imgUploading, setImgUploading] = useState(false);
-
-  const addProductAddon = () => {
-    if (!pAddonName.trim()) return;
-    setProductAddons((prev) => [...prev, { id: uid("padd"), name: pAddonName.trim(), price: Number(pAddonPrice || 0) }]);
-    setPAddonName(""); setPAddonPrice("");
-  };
-  const removeProductAddon = (id) => setProductAddons((prev) => prev.filter((a) => a.id !== id));
 
   const handleAddAddon = () => {
     if (!addonName.trim()) return;
@@ -3431,174 +3436,132 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
     setAddonName(""); setAddonPrice("");
   };
 
-  const handleAddCategory = (n) => {
-    const cat = addCategory(n);
-    setCategoryId(cat.id);
-  };
+  const filteredProducts = products.filter((p) =>
+    (activeCat === "all" || p.categoryId === activeCat) &&
+    (!query.trim() || p.name.toLowerCase().includes(query.trim().toLowerCase()))
+  );
 
-  const handleAddServiceType = () => {
-    if (!newServiceName.trim()) return;
-    addServiceType({ name: newServiceName.trim() });
-    setNewServiceName(""); setShowAddService(false);
-  };
-
-  const handleFile = async (e) => {
-    const file = e.target.files?.[0]; if (!file) return;
-    const err = validateUploadedFile(file, { maxBytes: MAX_IMAGE_BYTES, allowedTypes: ALLOWED_IMAGE_TYPES });
-    e.target.value = "";
-    if (err) { setFormError(t(err)); return; }
-    setFormError(""); setImgUploading(true);
-    try {
-      const { url } = await uploadTenantFile(file, "products");
-      if (imgPreview) deleteTenantFile(imgPreview); // a re-pick before submit orphans the previous one
-      setImgPreview(url);
-    } catch {
-      setFormError(t("upload_failed"));
-    } finally {
-      setImgUploading(false);
-    }
-  };
-
-  const submit = () => {
-    setFormError("");
-    const filledServices = {};
-    serviceTypes.forEach((st) => {
-      const v = servicePrices[st.id];
-      if (v !== undefined && v !== "") filledServices[st.name] = Number(v);
-    });
-    if (!name.trim()) { setFormError(t("products_errName")); return; }
-    if (!categoryId) { setFormError(t("products_errCategory")); return; }
-    if (Object.keys(filledServices).length === 0) { setFormError(t("products_errService")); return; }
-    if (quickAccessTaken) { setFormError(t("products_quickAccessTaken")); return; }
-
-    const minPrice = Math.min(...Object.values(filledServices));
-    addProduct({
-      name: name.trim(), categoryId, image: imgPreview || "",
-      price: minPrice, cost: 0, noCost: true, published,
-      services: filledServices, productAddons,
-      quickAccessKey: quickAccessKey === "" ? null : Number(quickAccessKey),
-    });
-    setName(""); setServicePrices({}); setImgPreview(""); setPublished(true); setProductAddons([]); setQuickAccessKey("");
-  };
+  const kpis = [
+    { label: t("products_kpiServiceTypes"), value: serviceTypes.length, icon: Sparkles, tint: "bg-info-50 text-info-700" },
+    { label: t("products_kpiCategories"), value: categories.length, icon: Tag, tint: "bg-warning-50 text-warning-700" },
+    { label: t("products_kpiTotal"), value: products.length, icon: Package, tint: "bg-brand-50 text-brand-700" },
+  ];
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <div className="lg:col-span-1 rounded-xl border border-stone-200 bg-white p-5 shadow-sm h-fit">
-        <div className="mb-4 f-display font-semibold text-slate-900">{t("products_newProduct")}</div>
-        <Field label={t("products_image")}>
-          <div className="flex items-center gap-3">
-            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-lg border border-dashed border-stone-300 bg-stone-50">
-              {imgPreview ? <img src={imgPreview} alt={t("products_image")} className="h-full w-full object-cover" /> : <ImageIcon size={20} className="text-stone-300" />}
+    <div>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="f-display text-xl font-semibold text-app-text">{t("nav_products")}</div>
+          <div className="mt-0.5 text-sm text-app-text-muted">{t("products_subtitle")}</div>
+        </div>
+        <button onClick={() => setShowAddModal(true)} className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 shadow-app-xs">
+          <Plus size={16} /> {t("products_newProduct")}
+        </button>
+      </div>
+
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {kpis.map((k) => {
+          const Icon = k.icon;
+          return (
+            <div key={k.label} className="rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
+              <div className="mb-3 flex items-center justify-between">
+                <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${k.tint}`}><Icon size={16} /></div>
+                <span className="text-sm text-app-text-muted">{k.label}</span>
+              </div>
+              <div className="f-display text-2xl font-bold text-app-text text-right">{k.value}</div>
             </div>
-            <button disabled={imgUploading} onClick={() => fileRef.current.click()} className="rounded-lg border border-stone-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-stone-50 disabled:opacity-60">
-              {imgUploading ? <Loader2 size={13} className="inline mr-1 animate-spin" /> : <Upload size={13} className="inline mr-1" />} {imgUploading ? t("upload_uploading") : t("products_upload")}
-            </button>
-            <input ref={fileRef} type="file" accept="image/*" onChange={handleFile} className="hidden" />
-          </div>
-        </Field>
-        <Field label={t("products_name")}><input value={name} onChange={(e) => setName(e.target.value)} className={inputCls} /></Field>
-        <Field label={t("common_category")}><EmptyDropdownAdd label={t("common_category")} items={categories} valueId={categoryId} onSelect={setCategoryId} onAdd={handleAddCategory} /></Field>
-
-        <div className="mb-4">
-          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t("products_servicePrices")} <span className="normal-case text-slate-400">{t("products_servicePricesHint")}</span></span>
-          <div className="space-y-2">
-            {serviceTypes.map((st) => (
-              <div key={st.id} className="flex items-center gap-2">
-                <span className="w-32 shrink-0 text-sm text-slate-600">{st.name}</span>
-                <input type="number" min="0" placeholder="—" value={servicePrices[st.id] ?? ""} onChange={(e) => setServicePrices((p) => ({ ...p, [st.id]: e.target.value }))} className={inputCls} />
-              </div>
-            ))}
-            {serviceTypes.length === 0 && <div className="text-sm text-slate-400">{t("products_noServiceTypes")}</div>}
-            {showAddService ? (
-              <div className="flex gap-2">
-                <input autoFocus value={newServiceName} onChange={(e) => setNewServiceName(e.target.value)} placeholder={t("products_newServiceName")} className={inputCls} />
-                <button onClick={handleAddServiceType} className="shrink-0 rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white hover:bg-teal-700">{t("common_save")}</button>
-                <button onClick={() => setShowAddService(false)} className="shrink-0 rounded-lg border border-stone-300 px-3 py-2 text-sm text-slate-600 hover:bg-stone-50">{t("common_cancel")}</button>
-              </div>
-            ) : (
-              <button onClick={() => setShowAddService(true)} className="flex items-center gap-1 text-xs font-medium text-teal-700 hover:underline"><Plus size={13} /> {t("products_addServiceType")}</button>
-            )}
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t("products_ownAddons")}</span>
-          <div className="mb-2 flex flex-wrap gap-2">
-            {productAddons.map((a) => (
-              <span key={a.id} className="flex items-center gap-1.5 rounded-full border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs font-medium text-slate-700">
-                {a.name} {a.price > 0 ? `+${sar(a.price)}` : ""}
-                <button onClick={() => removeProductAddon(a.id)} className="text-stone-400 hover:text-rose-500"><X size={12} /></button>
-              </span>
-            ))}
-            {productAddons.length === 0 && <span className="text-sm text-slate-400">{t("products_noOwnAddons")}</span>}
-          </div>
-          <div className="flex gap-2">
-            <input value={pAddonName} onChange={(e) => setPAddonName(e.target.value)} placeholder={t("products_addonNamePlaceholder")} className={inputCls} />
-            <input type="number" value={pAddonPrice} onChange={(e) => setPAddonPrice(e.target.value)} placeholder={t("products_addonPricePlaceholder")} className={`${inputCls} w-28`} />
-            <button onClick={addProductAddon} className="shrink-0 rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white hover:bg-teal-700">{t("common_add")}</button>
-          </div>
-        </div>
-
-        <Field label={t("products_quickAccess")}>
-          <select value={quickAccessKey} onChange={(e) => setQuickAccessKey(e.target.value)} className={`${inputCls} ${quickAccessTaken ? "border-rose-400" : ""}`}>
-            <option value="">{t("products_quickAccessNone")}</option>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => <option key={n} value={n}>{n}</option>)}
-          </select>
-          {quickAccessTaken && <div className="mt-1.5 text-xs font-semibold text-rose-600">{t("products_quickAccessTaken")}</div>}
-        </Field>
-
-        <div className="mb-3"><Toggle checked={published} onChange={setPublished} label={published ? t("products_liveOnPos") : t("products_draft")} /></div>
-        {formError && <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{formError}</div>}
-        <button disabled={imgUploading} onClick={submit} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("products_save")}</button>
+          );
+        })}
       </div>
 
-      <div className="lg:col-span-2 space-y-6">
-        <div className="overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm h-fit">
-          <table className="w-full text-sm table-fixed">
-            <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-              <tr><th className="px-4 py-3 w-56 text-center">{t("products_table_product")}</th><th className="px-4 py-3 text-center">{t("products_table_category")}</th><th className="px-4 py-3 text-center">{t("products_table_services")}</th><th className="px-4 py-3 w-28 text-center">{t("products_table_from")}</th><th className="px-4 py-3">{t("products_table_status")}</th><th className="px-4 py-3 w-10"></th></tr>
-            </thead>
-            <tbody className="divide-y divide-stone-100">
-              {products.map((p) => (
-                <tr key={p.id} onClick={() => setEditingProduct(p)} className="cursor-pointer hover:bg-stone-50">
-                  <td className="px-4 py-3 w-56"><div className="flex items-center justify-center gap-2">{p.image ? <img src={p.image} alt="" loading="lazy" decoding="async" className="h-8 w-8 shrink-0 rounded object-cover" /> : <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-stone-100"><ImageIcon size={14} className="text-stone-300" /></div>}<span className="truncate font-medium text-slate-900">{p.name}</span></div></td>
-                  <td className="px-4 py-3 text-center text-slate-600 truncate">{categories.find((c) => c.id === p.categoryId)?.name || "—"}</td>
-                  <td className="px-4 py-3 text-center text-xs text-slate-500 truncate">{Object.keys(p.services).join(" · ")}</td>
-                  <td className="px-4 py-3 f-mono text-slate-800 w-28" style={{ textAlign: "center" }}>{sarCompact(p.price)}</td>
-                  <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${p.published ? "bg-teal-100 text-teal-700" : "bg-stone-100 text-stone-500"}`}>{p.published ? t("common_live") : t("common_draft")}</span></td>
-                  <td className="px-4 py-3 text-right text-slate-300 w-10"><ChevronRight size={16} /></td>
-                </tr>
-              ))}
-              {products.length === 0 && <tr><td colSpan={6} className="px-4 py-8 text-center text-slate-400">{t("products_table_empty")}</td></tr>}
-            </tbody>
-          </table>
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative sm:w-72 shrink-0">
+          <Search size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-text-subtle" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("products_searchPlaceholder")} className={`${inputCls} pr-9`} />
         </div>
-
-        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-          <div className="mb-3 f-display font-semibold text-slate-900">{t("products_addonsCatalog")}</div>
-          <div className="mb-4 flex flex-wrap gap-2">
-            {addons.map((a) => (
-              <span key={a.id} className="flex items-center gap-1.5 rounded-full border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs font-medium text-slate-700">
-                {a.name} {a.price > 0 ? `+${sar(a.price)}` : ""}
-                <button onClick={() => removeAddon(a.id)} className="text-stone-400 hover:text-rose-500"><X size={12} /></button>
-              </span>
-            ))}
-            {addons.length === 0 && <span className="text-sm text-slate-400">{t("products_noAddons")}</span>}
-          </div>
-          <div className="flex gap-2">
-            <input value={addonName} onChange={(e) => setAddonName(e.target.value)} placeholder={t("products_addonNamePlaceholder")} className={inputCls} />
-            <input type="number" value={addonPrice} onChange={(e) => setAddonPrice(e.target.value)} placeholder={t("products_addonPricePlaceholder")} className={`${inputCls} w-28`} />
-            <button onClick={handleAddAddon} className="shrink-0 rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white hover:bg-teal-700">{t("common_add")}</button>
-          </div>
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          <button onClick={() => setActiveCat("all")} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${activeCat === "all" ? "bg-brand-600 text-white shadow-app-xs" : "bg-app-surface border border-app-border text-app-text-muted hover:border-app-border-strong"}`}>{t("products_all")}</button>
+          {categories.map((c) => (
+            <button key={c.id} onClick={() => setActiveCat(c.id)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${activeCat === c.id ? "bg-brand-600 text-white shadow-app-xs" : "bg-app-surface border border-app-border text-app-text-muted hover:border-app-border-strong"}`}>{c.name}</button>
+          ))}
         </div>
       </div>
 
-      {editingProduct && (
-        <EditProductModal
-          product={editingProduct}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+        {filteredProducts.map((p) => {
+          const cat = categories.find((c) => c.id === p.categoryId);
+          return (
+            <div key={p.id} onClick={() => setEditingProduct(p)}
+              className="group relative cursor-pointer overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-xs transition hover:border-brand-300 hover:shadow-app-md">
+              {p.quickAccessKey && (
+                <span className="absolute top-2 right-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-navy-900 text-[11px] font-bold text-white shadow">{p.quickAccessKey}</span>
+              )}
+              {p.image ? (
+                <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="h-32 w-full object-cover" />
+              ) : (
+                <div className="flex h-32 w-full items-center justify-center bg-app-bg">
+                  <ImageIcon size={26} className="text-app-text-subtle" />
+                </div>
+              )}
+              <div className="p-3">
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <span className="shrink-0 rounded-full border border-app-border bg-app-bg px-2.5 py-1 text-[11px] font-medium text-app-text-muted">{cat?.name || "—"}</span>
+                  <span className="truncate text-sm font-semibold text-app-text">{p.name}</span>
+                </div>
+                <div className="mb-2 truncate text-xs text-app-text-muted">{Object.keys(p.services).join(" · ")}</div>
+                <div className="flex items-center justify-between border-t border-app-border pt-2">
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Toggle checked={p.published} onChange={(v) => updateProduct(p.id, { published: v })} />
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[10px] text-app-text-subtle">{t("products_table_from")}</div>
+                    <div className="f-mono text-sm font-bold text-brand-700">{sar(p.price)}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {filteredProducts.length === 0 && (
+          <div className="col-span-full py-16 text-center text-app-text-subtle">
+            {products.length === 0 ? t("products_emptyState") : t("products_noResults")}
+          </div>
+        )}
+      </div>
+
+      <div className="mt-6 rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+        <div className="mb-3 f-display font-semibold text-app-text">{t("products_addonsCatalog")}</div>
+        <div className="mb-4 flex flex-wrap gap-2">
+          {addons.map((a) => (
+            <span key={a.id} className="flex items-center gap-1.5 rounded-full border border-app-border bg-app-bg px-3 py-1.5 text-xs font-medium text-app-text-muted">
+              {a.name} {a.price > 0 ? `+${sar(a.price)}` : ""}
+              <button onClick={() => removeAddon(a.id)} className="text-app-text-subtle hover:text-danger-500"><X size={12} /></button>
+            </span>
+          ))}
+          {addons.length === 0 && <span className="text-sm text-app-text-subtle">{t("products_noAddons")}</span>}
+        </div>
+        <div className="flex max-w-md gap-2">
+          <input value={addonName} onChange={(e) => setAddonName(e.target.value)} placeholder={t("products_addonNamePlaceholder")} className={inputCls} />
+          <input type="number" value={addonPrice} onChange={(e) => setAddonPrice(e.target.value)} placeholder={t("products_addonPricePlaceholder")} className={`${inputCls} w-28`} />
+          <button onClick={handleAddAddon} className="shrink-0 rounded-lg bg-brand-500 px-3 py-2 text-sm font-medium text-white hover:bg-brand-600">{t("common_add")}</button>
+        </div>
+      </div>
+
+      {showAddModal && (
+        <ProductFormModal
           categories={categories} addCategory={addCategory}
           serviceTypes={serviceTypes} addServiceType={addServiceType}
-          updateProduct={updateProduct}
+          addProduct={addProduct} updateProduct={updateProduct}
+          products={products}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
+      {editingProduct && (
+        <ProductFormModal
+          editing={editingProduct}
+          categories={categories} addCategory={addCategory}
+          serviceTypes={serviceTypes} addServiceType={addServiceType}
+          addProduct={addProduct} updateProduct={updateProduct}
           products={products}
           onClose={() => setEditingProduct(null)}
         />
@@ -5067,7 +5030,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     return { id, ...data };
   };
   // Returns the write's outcome (not fire-and-forget like the other
-  // optimistic updaters here) — EditProductModal.save() needs to know the
+  // optimistic updaters here) — ProductFormModal.save() needs to know the
   // row actually changed before it's safe to delete the OLD image from
   // Storage; deleting it unconditionally could leave a product pointing at
   // a now-missing file if this write happened to fail.
