@@ -35,13 +35,18 @@ export default async function handler(req, res) {
 
   if (!(await checkRateLimit(res, 'submit-contact:ip', clientIp(req), 5, '10 m'))) return;
 
-  // Turnstile is the real bot barrier — honeypot/timing above only catch
-  // unsophisticated scripts. Same "pretend success" response as the other
-  // checks here, so a script that skips straight to POSTing this endpoint
-  // (bypassing the widget entirely) can't tell which check it failed.
-  if (!(await verifyTurnstile(turnstileToken, clientIp(req)))) {
-    return res.status(200).json({ success: true });
-  }
+  // Turnstile is advisory here, NOT a hard gate — unlike signup, a failed
+  // Turnstile check on a real visitor (ad-blocker, uBlock/Brave shields,
+  // corporate proxy blocking challenges.cloudflare.com, a slow/flaky
+  // network) must not silently drop a real inquiry. It first shipped as a
+  // hard gate returning the same fake success:true as the honeypot/timing
+  // checks above — which is exactly right for an actual bot, but for a
+  // legitimate visitor it meant "sent!" on screen while the message never
+  // reached the database or the admin at all, with nothing in any log to
+  // explain why. Honeypot + timing + the rate limit above already do the
+  // real bot-filtering job here (verified live) — this just tags the row
+  // for triage instead of throwing the message away.
+  const turnstilePassed = await verifyTurnstile(turnstileToken, clientIp(req));
 
   try {
     const { error } = await supabaseAdmin.from('sales_inquiries').insert({
@@ -52,7 +57,7 @@ export default async function handler(req, res) {
       message: message.trim().slice(0, 5000),
       date: new Date().toISOString(),
       status: 'new',
-      note: '',
+      note: turnstilePassed ? '' : 'turnstile_failed',
     });
     if (error) throw error;
     return res.status(200).json({ success: true });
