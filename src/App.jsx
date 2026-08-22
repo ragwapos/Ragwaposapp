@@ -1059,8 +1059,15 @@ const DICT = {
     invoiceDetail_urgent: "Urgent",
 
     customers_title: "Customer Ledger", customers_addCustomer: "Add Customer",
+    customers_subtitle: "Wallet balances and outstanding debts for the shop's customers",
+    customers_totalDebt: "Total Outstanding Debt", customers_totalWallet: "Total Wallet Balances",
     customers_searchPlaceholder: "Search by name, mobile, or #ID...", customers_id: "ID", customers_name: "Name",
     customers_mobile: "Mobile", customers_wallet: "Wallet", customers_debt: "Debt", customers_noneYet: "No customers yet.",
+    customers_lastOrder: "Last Order", customers_details: "Details", customers_neverOrdered: "Never ordered",
+    customers_today: "Today", customers_yesterday: "Yesterday", customers_daysAgo: "{n} days ago",
+    customers_weekAgo: "A week ago", customers_weeksAgo: "{n} weeks ago",
+    customers_monthAgo: "A month ago", customers_monthsAgo: "{n} months ago",
+    customers_yearAgo: "A year ago", customers_yearsAgo: "{n} years ago",
     customerDetail_mobile: "Mobile", customerDetail_walletBalance: "Wallet Balance", customerDetail_debt: "Debt / On Account",
     customerDetail_totalInvoices: "Total Invoices", customerDetail_addBalance: "Add Balance (with Discount)",
     customerDetail_settleDebt: "Settle / Close Debt", customerDetail_invoiceHistory: "Invoice History",
@@ -1292,8 +1299,15 @@ const DICT = {
     invoiceDetail_urgent: "مستعجل",
 
     customers_title: "سجل العملاء", customers_addCustomer: "إضافة عميل",
+    customers_subtitle: "أرصدة المحافظ والديون المستحقة لعملاء المغسلة",
+    customers_totalDebt: "إجمالي الديون المستحقة", customers_totalWallet: "إجمالي أرصدة المحافظ",
     customers_searchPlaceholder: "ابحث بالاسم أو الجوال أو #الرقم...", customers_id: "الرقم", customers_name: "الاسم",
     customers_mobile: "الجوال", customers_wallet: "المحفظة", customers_debt: "الدين", customers_noneYet: "لا يوجد عملاء بعد.",
+    customers_lastOrder: "آخر طلب", customers_details: "تفاصيل", customers_neverOrdered: "لم يطلب بعد",
+    customers_today: "اليوم", customers_yesterday: "أمس", customers_daysAgo: "قبل {n} أيام",
+    customers_weekAgo: "قبل أسبوع", customers_weeksAgo: "قبل {n} أسابيع",
+    customers_monthAgo: "قبل شهر", customers_monthsAgo: "قبل {n} أشهر",
+    customers_yearAgo: "قبل سنة", customers_yearsAgo: "قبل {n} سنوات",
     customerDetail_mobile: "الجوال", customerDetail_walletBalance: "رصيد المحفظة", customerDetail_debt: "الدين / على الحساب",
     customerDetail_totalInvoices: "إجمالي الفواتير", customerDetail_addBalance: "إضافة رصيد (مع خصم)",
     customerDetail_settleDebt: "تسوية / إغلاق الدين", customerDetail_invoiceHistory: "سجل الفواتير",
@@ -1526,8 +1540,15 @@ const DICT = {
     invoiceDetail_urgent: "فوری",
 
     customers_title: "کسٹمر لیجر", customers_addCustomer: "کسٹمر شامل کریں",
+    customers_subtitle: "لانڈری کے کسٹمرز کے والٹ بیلنس اور واجب الادا ادھار",
+    customers_totalDebt: "کل واجب الادا ادھار", customers_totalWallet: "کل والٹ بیلنس",
     customers_searchPlaceholder: "نام، موبائل، یا #نمبر سے تلاش کریں...", customers_id: "نمبر", customers_name: "نام",
     customers_mobile: "موبائل", customers_wallet: "والٹ", customers_debt: "ادھار", customers_noneYet: "ابھی کوئی کسٹمر نہیں۔",
+    customers_lastOrder: "آخری آرڈر", customers_details: "تفصیلات", customers_neverOrdered: "ابھی تک کوئی آرڈر نہیں",
+    customers_today: "آج", customers_yesterday: "کل", customers_daysAgo: "{n} دن پہلے",
+    customers_weekAgo: "ایک ہفتہ پہلے", customers_weeksAgo: "{n} ہفتے پہلے",
+    customers_monthAgo: "ایک مہینہ پہلے", customers_monthsAgo: "{n} مہینے پہلے",
+    customers_yearAgo: "ایک سال پہلے", customers_yearsAgo: "{n} سال پہلے",
     customerDetail_mobile: "موبائل", customerDetail_walletBalance: "والٹ بیلنس", customerDetail_debt: "ادھار / کھاتہ",
     customerDetail_totalInvoices: "کل آرڈرز", customerDetail_addBalance: "بیلنس شامل کریں (رعایت کے ساتھ)",
     customerDetail_settleDebt: "ادھار ادا کریں / بند کریں", customerDetail_invoiceHistory: "آرڈرز کی تاریخ",
@@ -2986,6 +3007,30 @@ function CustomerDetailModal({ customer, invoices, transactions, onClose, onOpen
   );
 }
 
+// "آخر طلب" / "Last Order" column — relative-time label computed from a
+// customer's most recent non-topup invoice (a wallet top-up isn't a laundry
+// order, so it's excluded the same way it's excluded from Sales Reports
+// revenue — see applyTopUp's isTopup comment below). Falls back to an
+// absolute year/month/week count once the gap is too old for "N days ago"
+// to read naturally; Western digits throughout per this screen's numeral
+// rule (Arabic-Indic is reserved for the Home dashboard KPI row only).
+function lastOrderRelativeLabel(t, iso) {
+  const diffDays = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000));
+  if (diffDays === 0) return t("customers_today");
+  if (diffDays === 1) return t("customers_yesterday");
+  if (diffDays < 7) return t("customers_daysAgo", { n: diffDays });
+  if (diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7);
+    return weeks === 1 ? t("customers_weekAgo") : t("customers_weeksAgo", { n: weeks });
+  }
+  if (diffDays < 365) {
+    const months = Math.floor(diffDays / 30);
+    return months === 1 ? t("customers_monthAgo") : t("customers_monthsAgo", { n: months });
+  }
+  const years = Math.floor(diffDays / 365);
+  return years === 1 ? t("customers_yearAgo") : t("customers_yearsAgo", { n: years });
+}
+
 function CustomersView({ customers, updateCustomer, addCustomer, invoices, addInvoice, transactions, addTransaction, merchant, applyCustomerPayment, nextDocNumber, whatsappTemplate, whatsappEnabled }) {
   const { t } = useLang();
   const [query, setQuery] = useState("");
@@ -3003,6 +3048,24 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
     (c.mobile.includes(query) || String(c.id).includes(query) || c.name.toLowerCase().includes(query.toLowerCase()))
   );
   const selectedLive = selected ? customers.find((c) => c.id === selected.id) : null;
+
+  // KPI row aggregates — plain sums over the same real customer.walletBalance
+  // / customer.debt fields the table itself renders, nothing computed
+  // server-side or duplicated elsewhere.
+  const totalWalletBalance = useMemo(() => customers.reduce((s, c) => s + Number(c.walletBalance || 0), 0), [customers]);
+  const totalDebt = useMemo(() => customers.reduce((s, c) => s + Number(c.debt || 0), 0), [customers]);
+
+  // One pass over invoices (not one pass per customer row) to find each
+  // customer's latest real order date for the "Last Order" column.
+  const lastOrderByCustomer = useMemo(() => {
+    const map = new Map();
+    for (const inv of invoices) {
+      if (inv.isTopup || !inv.customerId) continue;
+      const prev = map.get(inv.customerId);
+      if (!prev || new Date(inv.createdAt) > new Date(prev)) map.set(inv.customerId, inv.createdAt);
+    }
+    return map;
+  }, [invoices]);
 
   const applyTopUp = async ({ topUp, duePayable, notes, mode, discountAmount, payMethod }) => {
     const customer = topUpFor;
@@ -3091,13 +3154,36 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
 
   return (
     <div>
-      <div className="mb-4 flex items-center justify-between">
-        <div className="f-display text-xl font-semibold text-slate-900">{t("customers_title")}</div>
-        <button onClick={() => setShowAddCustomer(true)} className="flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-2 text-sm font-medium text-white hover:bg-teal-700"><Plus size={15} /> {t("customers_addCustomer")}</button>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="f-display text-xl font-semibold text-app-text">{t("customers_title")}</div>
+          <div className="text-sm text-app-text-muted">{t("customers_subtitle")}</div>
+        </div>
+        <button onClick={() => setShowAddCustomer(true)} className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-2 text-sm font-medium text-white hover:bg-brand-600"><Plus size={15} /> {t("customers_addCustomer")}</button>
       </div>
+
+      {/* Two aggregate cards over the same customer.walletBalance/debt fields
+          the table below renders — see the useMemo sums above. */}
+      <div className="mb-6 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
+          <div>
+            <div className="text-sm text-app-text-muted">{t("customers_totalDebt")}</div>
+            <div className="f-mono text-2xl font-bold text-app-text">{sarCompact(totalDebt)}</div>
+          </div>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-warning-50 text-warning-600"><AlertTriangle size={18} /></div>
+        </div>
+        <div className="flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
+          <div>
+            <div className="text-sm text-app-text-muted">{t("customers_totalWallet")}</div>
+            <div className="f-mono text-2xl font-bold text-app-text">{sarCompact(totalWalletBalance)}</div>
+          </div>
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success-50 text-success-600"><Wallet size={18} /></div>
+        </div>
+      </div>
+
       <div className="relative mb-4 max-w-sm">
-        <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("customers_searchPlaceholder")} className={`${inputCls} pl-9`} />
+        <Search size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-text-subtle" />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("customers_searchPlaceholder")} className={`${inputCls} pr-9`} />
       </div>
       {/* max-w-4xl on the card itself (not just the table) — this page, like
           every other dashboard view, has no outer max-width wrapper, so
@@ -3107,28 +3193,33 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
           wallet/debt to 4 digits via sarCompact) with real breathing room —
           and every header/cell is centered in its column rather than hugging
           an edge, so header and data read as one aligned block per column. */}
-      <div className="max-w-4xl overflow-hidden rounded-xl border border-stone-200 bg-white shadow-sm">
+      <div className="max-w-4xl overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
         <table className="w-full text-sm table-fixed">
-          <thead className="bg-stone-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
-            <tr><th className="px-4 py-3 w-24 text-center">{t("customers_id")}</th><th className="px-4 py-3 w-56 text-center">{t("customers_name")}</th><th className="px-4 py-3 w-40 text-center">{t("customers_mobile")}</th><th className="px-4 py-3 w-40 text-center">{t("customers_wallet")}</th><th className="px-4 py-3 w-40 text-center">{t("customers_debt")}</th><th className="px-4 py-3 w-12"></th></tr>
+          <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
+            <tr><th className="px-4 py-3 w-56 text-center">{t("customers_name")}</th><th className="px-4 py-3 w-40 text-center">{t("customers_mobile")}</th><th className="px-4 py-3 w-40 text-center">{t("customers_wallet")}</th><th className="px-4 py-3 w-40 text-center">{t("customers_debt")}</th><th className="px-4 py-3 w-32 text-center">{t("customers_lastOrder")}</th><th className="px-4 py-3 w-24"></th></tr>
           </thead>
-          <tbody className="divide-y divide-stone-100">
-            {filtered.map((c) => (
-              <tr key={c.id} onClick={() => setSelected(c)} className="cursor-pointer hover:bg-stone-50">
-                {/* inline textAlign, not just the text-center class: .f-mono
-                    itself sets text-align via a (class+element) CSS rule,
-                    which beats a same-specificity Tailwind utility class —
-                    an inline style always wins regardless, so this is the
-                    one reliable way to center an f-mono cell specifically. */}
-                <td className="px-4 py-3 f-mono text-slate-500 w-24" style={{ textAlign: "center" }}>#{c.id}</td>
-                <td className="px-4 py-3 font-medium text-slate-900 truncate w-56 text-center">{c.name}</td>
-                <td className="px-4 py-3 f-mono text-slate-600 w-40" style={{ textAlign: "center" }}>{c.mobile}</td>
-                <td className="px-4 py-3 f-mono text-teal-700 w-40" style={{ textAlign: "center" }}>{sarCompact(c.walletBalance)}</td>
-                <td className="px-4 py-3 f-mono text-rose-600 w-40" style={{ textAlign: "center" }}>{sarCompact(c.debt)}</td>
-                <td className="px-4 py-3 text-right text-slate-300 w-12"><ChevronRight size={16} /></td>
-              </tr>
-            ))}
-            {filtered.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-slate-400">{t("customers_noneYet")}</td></tr>}
+          <tbody className="divide-y divide-app-border">
+            {filtered.map((c) => {
+              const lastOrderIso = lastOrderByCustomer.get(c.id);
+              return (
+                <tr key={c.id} onClick={() => setSelected(c)} className="cursor-pointer hover:bg-app-bg">
+                  <td className="px-4 py-3 font-medium text-app-text truncate w-56 text-center">{c.name}</td>
+                  <td className="px-4 py-3 f-mono text-app-text-muted w-40" style={{ textAlign: "center" }}>{c.mobile}</td>
+                  {/* inline textAlign, not just the text-center class: .f-mono
+                      itself sets text-align via a (class+element) CSS rule,
+                      which beats a same-specificity Tailwind utility class —
+                      an inline style always wins regardless, so this is the
+                      one reliable way to center an f-mono cell specifically. */}
+                  <td className={`px-4 py-3 f-mono w-40 ${c.walletBalance > 0 ? "font-semibold text-success-600" : "text-app-text-subtle"}`} style={{ textAlign: "center" }}>{sarCompact(c.walletBalance)}</td>
+                  <td className={`px-4 py-3 f-mono w-40 ${c.debt > 0 ? "font-semibold text-danger-600" : "text-app-text-subtle"}`} style={{ textAlign: "center" }}>{sarCompact(c.debt)}</td>
+                  <td className="px-4 py-3 text-app-text-muted w-32 text-center">{lastOrderIso ? lastOrderRelativeLabel(t, lastOrderIso) : t("customers_neverOrdered")}</td>
+                  <td className="px-4 py-3 w-24 text-center">
+                    <button onClick={(e) => { e.stopPropagation(); setSelected(c); }} className="rounded-lg border border-app-border-strong px-3 py-1.5 text-xs font-medium text-app-text-muted hover:bg-app-bg">{t("customers_details")}</button>
+                  </td>
+                </tr>
+              );
+            })}
+            {filtered.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-app-text-subtle">{t("customers_noneYet")}</td></tr>}
           </tbody>
         </table>
       </div>
