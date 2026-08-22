@@ -2078,10 +2078,10 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
           className={`${inputCls} pl-8`}
         />
         {open && (
-          <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-stone-200 bg-white shadow-lg">
+          <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-app-border bg-app-surface shadow-app-md">
             {results.map((c) => (
               <button key={c.id} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { onSelect(c.id); setOpen(false); setQuery(""); }}
-                className="block w-full px-3 py-2 text-left text-sm hover:bg-stone-50">
+                className="block w-full px-3 py-2 text-left text-sm hover:bg-app-bg">
                 <span className="f-mono text-slate-400 mr-1.5">#{c.id}</span>{c.name}<span className="text-slate-400"> · {c.mobile}</span>
               </button>
             ))}
@@ -2089,7 +2089,7 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
           </div>
         )}
       </div>
-      <button type="button" onClick={onAddNew} title={t("addCustomer_title")} className="shrink-0 rounded-lg border border-teal-300 bg-teal-50 px-3 py-2 text-teal-700 hover:bg-teal-100"><Plus size={16} /></button>
+      <button type="button" onClick={onAddNew} title={t("addCustomer_title")} className="shrink-0 rounded-lg border border-brand-300 bg-brand-50 px-3 py-2 text-brand-700 hover:bg-brand-100"><Plus size={16} /></button>
     </div>
   );
 }
@@ -2295,18 +2295,18 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
         <Package size={40} className="mb-3 text-stone-300" />
         <div className="f-display text-lg font-semibold text-slate-800">{t("pos_noProductsTitle")}</div>
         <div className="mt-1 max-w-sm text-sm text-slate-500">{t("pos_noProductsSubtitle")}</div>
-        <button onClick={() => setTab("inventory")} className="mt-3 text-sm font-semibold text-teal-700 hover:underline">{t("nav_products")}</button>
+        <button onClick={() => setTab("inventory")} className="mt-3 text-sm font-semibold text-brand-700 hover:underline">{t("nav_products")}</button>
       </div>
     );
   }
 
   return (
     <div className="flex h-full flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-teal-200 bg-teal-50/60 px-4 py-3 shadow-sm">
+      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-brand-200 bg-brand-50/60 px-4 py-3 shadow-app-xs">
         <Toggle checked={isDelivery} onChange={setIsDelivery} label={isDelivery ? t("pos_deliveryOrder") : t("pos_pickupOrder")} />
         {isDelivery && (
           <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-teal-800">{t("pos_deliveryFeeLabel")}</span>
+            <span className="text-xs font-medium text-brand-800">{t("pos_deliveryFeeLabel")}</span>
             <input type="number" min="0" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} placeholder={t("pos_deliveryFeePlaceholder")} className={`${inputCls} w-40`} />
           </div>
         )}
@@ -2315,65 +2315,65 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
       <div className="flex flex-1 gap-5 min-h-0">
         <div className="flex-1 flex flex-col min-w-0">
           <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
-            <button onClick={() => setActiveCat("all")} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${activeCat === "all" ? "bg-slate-900 text-white" : "bg-white border border-stone-200 text-slate-600 hover:border-stone-300"}`}>{t("pos_allItems")}</button>
+            <button onClick={() => setActiveCat("all")} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${activeCat === "all" ? "bg-brand-600 text-white shadow-app-xs" : "bg-app-surface border border-app-border text-app-text-muted hover:border-app-border-strong"}`}>{t("pos_allItems")}</button>
             {nonEmptyCategories.map((c) => (
-              <button key={c.id} onClick={() => setActiveCat(c.id)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${activeCat === c.id ? "bg-slate-900 text-white" : "bg-white border border-stone-200 text-slate-600 hover:border-stone-300"}`}>{c.name}</button>
+              <button key={c.id} onClick={() => setActiveCat(c.id)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${activeCat === c.id ? "bg-brand-600 text-white shadow-app-xs" : "bg-app-surface border border-app-border text-app-text-muted hover:border-app-border-strong"}`}>{c.name}</button>
             ))}
           </div>
           <div className="grid flex-1 auto-rows-max grid-cols-2 gap-4 overflow-y-auto pr-1 sm:grid-cols-3 xl:grid-cols-4">
             {visibleProducts.map((p) => (
-              <button key={p.id} onClick={() => setModalProduct(p)} className="relative text-left rounded-xl border border-stone-200 bg-white overflow-hidden hover:shadow-md hover:border-teal-300 transition">
+              <button key={p.id} onClick={() => setModalProduct(p)} className="relative text-left rounded-xl border border-app-border bg-app-surface overflow-hidden hover:shadow-app-md hover:border-brand-300 transition">
                 {p.quickAccessKey && (
-                  <span className="absolute top-1.5 right-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900 text-[11px] font-bold text-white shadow">{p.quickAccessKey}</span>
+                  <span className="absolute top-1.5 right-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-navy-900 text-[11px] font-bold text-white shadow">{p.quickAccessKey}</span>
                 )}
                 {p.image ? (
                   <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="h-28 w-full object-cover" />
                 ) : (
-                  <div className="flex h-28 w-full items-center justify-center bg-stone-50">
-                    <ImageIcon size={24} className="text-stone-300" />
+                  <div className="flex h-28 w-full items-center justify-center bg-app-bg">
+                    <ImageIcon size={24} className="text-app-text-subtle" />
                   </div>
                 )}
                 <div className="p-3">
-                  <div className="text-sm font-semibold text-slate-900">{p.name}</div>
-                  <div className="f-mono text-teal-700 font-semibold text-sm mt-0.5">{sar(p.price)}</div>
+                  <div className="text-sm font-semibold text-app-text">{p.name}</div>
+                  <div className="f-mono text-brand-700 font-semibold text-sm mt-0.5">{sar(p.price)}</div>
                 </div>
               </button>
             ))}
-            {visibleProducts.length === 0 && <div className="col-span-full text-center text-slate-400 py-16">{t("pos_noProductsInCategory")}</div>}
+            {visibleProducts.length === 0 && <div className="col-span-full text-center text-app-text-subtle py-16">{t("pos_noProductsInCategory")}</div>}
           </div>
         </div>
 
-        <div className="w-80 shrink-0 flex flex-col rounded-xl border border-stone-200 bg-white shadow-sm">
-          <div className="border-b border-stone-200 px-4 py-3 f-display font-semibold text-slate-900">{t("pos_checkout")}</div>
+        <div className="w-80 shrink-0 flex flex-col rounded-xl border border-app-border bg-app-surface shadow-app-sm">
+          <div className="border-b border-app-border px-4 py-3 f-display font-semibold text-app-text">{t("pos_checkout")}</div>
           <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2">
-            {cart.length === 0 && <div className="text-center text-sm text-slate-400 py-10">{t("pos_cartEmpty")}</div>}
+            {cart.length === 0 && <div className="text-center text-sm text-app-text-subtle py-10">{t("pos_cartEmpty")}</div>}
             {cart.map((i) => (
-              <div key={i.cartId} className="rounded-lg border border-stone-200 p-2.5">
+              <div key={i.cartId} className="rounded-lg border border-app-border p-2.5">
                 <div className="flex items-start justify-between">
                   <div>
-                    <div className="text-sm font-medium text-slate-900">{i.qty}× {i.name}</div>
-                    <div className="text-xs text-slate-500">{i.service}{i.addons.length ? ` · ${i.addons.map((a) => a.name).join(", ")}` : ""}</div>
+                    <div className="text-sm font-medium text-app-text">{i.qty}× {i.name}</div>
+                    <div className="text-xs text-app-text-muted">{i.service}{i.addons.length ? ` · ${i.addons.map((a) => a.name).join(", ")}` : ""}</div>
                   </div>
-                  <button onClick={() => removeFromCart(i.cartId)} className="text-slate-300 hover:text-rose-500"><Trash2 size={14} /></button>
+                  <button onClick={() => removeFromCart(i.cartId)} className="text-app-text-subtle hover:text-danger-500"><Trash2 size={14} /></button>
                 </div>
-                <div className="f-mono text-right text-sm font-semibold text-slate-800 mt-1">{sar(i.lineTotal)}</div>
+                <div className="f-mono text-right text-sm font-semibold text-app-text mt-1">{sar(i.lineTotal)}</div>
               </div>
             ))}
           </div>
-          <div className="border-t border-stone-200 p-4 space-y-3">
+          <div className="border-t border-app-border p-4 space-y-3">
             <Field label={t("common_customer")}>
               <CustomerPicker customers={customers} customerId={customerId} onSelect={setCustomerId} onAddNew={() => setShowAddCustomer(true)} />
             </Field>
-            {customer && <div className="text-xs text-slate-500 -mt-2">{t("pos_wallet")}: <span className="f-mono">{sar(customer.walletBalance)}</span> · {t("pos_debt")}: <span className="f-mono text-rose-600">{sar(customer.debt)}</span></div>}
+            {customer && <div className="text-xs text-app-text-muted -mt-2">{t("pos_wallet")}: <span className="f-mono">{sar(customer.walletBalance)}</span> · {t("pos_debt")}: <span className="f-mono text-danger-600">{sar(customer.debt)}</span></div>}
             <Field label={t("common_paymentMethod")}>
               <select value={payMethod} onChange={(e) => setPayMethod(e.target.value)} className={inputCls}>
                 {availablePosPayMethods.map((m) => <option key={m.value} value={m.value}>{t(m.key)}</option>)}
               </select>
             </Field>
-            {walletInsufficient && <div className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{t("pos_walletInsufficient")}</div>}
+            {walletInsufficient && <div className="rounded-lg bg-danger-50 border border-danger-200 px-3 py-2 text-xs font-medium text-danger-700">{t("pos_walletInsufficient")}</div>}
 
             {isSplit && (
-              <div className="space-y-2 rounded-lg border border-stone-200 bg-stone-50 p-3">
+              <div className="space-y-2 rounded-lg border border-app-border bg-app-bg p-3">
                 <Field label={t("pos_splitMethod1")}>
                   <select value={splitMethod1} onChange={(e) => setSplitMethod1(e.target.value)} className={inputCls}>
                     {availableSplitMethods.map((m) => <option key={m.value} value={m.value}>{t(m.key)}</option>)}
@@ -2382,52 +2382,52 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
                 <Field label={t("pos_splitAmount1")}>
                   <input type="number" min="0" value={splitAmount1} onChange={(e) => setSplitAmount1(e.target.value)} className={inputCls} />
                 </Field>
-                {splitAmountInvalid && <div className="text-xs font-medium text-rose-600">{t("pos_splitErrorAmount")}</div>}
+                {splitAmountInvalid && <div className="text-xs font-medium text-danger-600">{t("pos_splitErrorAmount")}</div>}
                 <Field label={t("pos_splitMethod2")}>
                   <select value={splitMethod2} onChange={(e) => setSplitMethod2(e.target.value)} className={inputCls}>
                     {availableSplitMethods.map((m) => <option key={m.value} value={m.value}>{t(m.key)}</option>)}
                   </select>
                 </Field>
                 <Field label={t("pos_splitRemaining")}>
-                  <input type="text" readOnly value={sar(splitAmt2)} className={`${inputCls} f-mono bg-stone-100 text-slate-500`} />
+                  <input type="text" readOnly value={sar(splitAmt2)} className={`${inputCls} f-mono bg-app-border/40 text-app-text-muted`} />
                 </Field>
-                {splitWalletInsufficient && <div className="text-xs font-medium text-rose-600">{t("pos_splitErrorWallet")}</div>}
+                {splitWalletInsufficient && <div className="text-xs font-medium text-danger-600">{t("pos_splitErrorWallet")}</div>}
               </div>
             )}
 
             {cart.length > 0 && (
               appliedCoupon ? (
-                <div className="flex items-center justify-between rounded-lg border border-teal-300 bg-teal-50 px-3 py-2 text-xs">
-                  <span className="f-mono font-semibold text-teal-800">{appliedCoupon.coupon}</span>
-                  <button onClick={removeCoupon} className="font-medium text-teal-700 hover:underline">{t("pos_removeCoupon")}</button>
+                <div className="flex items-center justify-between rounded-lg border border-brand-300 bg-brand-50 px-3 py-2 text-xs">
+                  <span className="f-mono font-semibold text-brand-800">{appliedCoupon.coupon}</span>
+                  <button onClick={removeCoupon} className="font-medium text-brand-700 hover:underline">{t("pos_removeCoupon")}</button>
                 </div>
               ) : (
                 <div>
                   <div className="flex gap-2">
                     <input value={couponCode} onChange={(e) => { setCouponCode(e.target.value); setCouponError(""); }} placeholder={t("pos_coupon")} className={`${inputCls} f-mono tracking-wide`} />
-                    <button onClick={applyCoupon} disabled={!couponCode.trim()} className="shrink-0 rounded-lg border border-teal-300 bg-teal-50 px-3 py-2 text-xs font-medium text-teal-700 hover:bg-teal-100 disabled:opacity-40">{t("pos_applyCoupon")}</button>
+                    <button onClick={applyCoupon} disabled={!couponCode.trim()} className="shrink-0 rounded-lg border border-brand-300 bg-brand-50 px-3 py-2 text-xs font-medium text-brand-700 hover:bg-brand-100 disabled:opacity-40">{t("pos_applyCoupon")}</button>
                   </div>
-                  {couponError && <div className="mt-1 text-xs font-medium text-rose-600">{couponError}</div>}
+                  {couponError && <div className="mt-1 text-xs font-medium text-danger-600">{couponError}</div>}
                 </div>
               )
             )}
-            {autoPromos.length > 0 && <div className="text-[11px] font-medium text-teal-700">✓ {t("pos_autoDiscountApplied")}</div>}
+            {autoPromos.length > 0 && <div className="text-[11px] font-medium text-brand-700">✓ {t("pos_autoDiscountApplied")}</div>}
 
             {discountAmount > 0 && (
-              <div className="flex items-center justify-between text-xs text-teal-700">
+              <div className="flex items-center justify-between text-xs text-brand-700">
                 <span>{t("pos_discount")}</span><span className="f-mono">-{sar(discountAmount)}</span>
               </div>
             )}
             {isDelivery && (
-              <div className="flex items-center justify-between text-xs text-teal-700">
+              <div className="flex items-center justify-between text-xs text-brand-700">
                 <span>{t("pos_deliveryFee")}</span><span className="f-mono">{sar(Number(deliveryFee || 0))}</span>
               </div>
             )}
-            <div className="flex items-center justify-between text-sm font-medium text-slate-600">
-              <span>{t("pos_total")}</span><span className="f-mono text-lg font-bold text-slate-900">{sar(grandTotal)}</span>
+            <div className="flex items-center justify-between text-sm font-medium text-app-text-muted">
+              <span>{t("pos_total")}</span><span className="f-mono text-lg font-bold text-app-text">{sar(grandTotal)}</span>
             </div>
-            {saleError && <div className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{saleError}</div>}
-            <button onClick={complete} disabled={cart.length === 0 || !customerChosen || !deliveryFeeValid || saleBlocked || saleSubmitting} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:bg-stone-300">{t("pos_completeSale")}</button>
+            {saleError && <div className="rounded-lg bg-danger-50 border border-danger-200 px-3 py-2 text-xs font-medium text-danger-700">{saleError}</div>}
+            <button onClick={complete} disabled={cart.length === 0 || !customerChosen || !deliveryFeeValid || saleBlocked || saleSubmitting} className="w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600 disabled:bg-app-border-strong">{t("pos_completeSale")}</button>
           </div>
         </div>
       </div>
