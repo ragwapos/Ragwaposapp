@@ -1201,7 +1201,9 @@ const DICT = {
     owner_pinWrong: "Incorrect password.", owner_lockPanel: "🔒 Lock this section again",
     owner_payMethodsTitle: "Payment Methods Shown at POS", owner_payMethodsHint: "Turn off any payment method the staff should not see or use at checkout.",
     owner_atLeastOnePayMethod: "At least one payment method must stay enabled.",
+    owner_sectionLockTitle: "Lock Sections From Staff", owner_sectionLockHint: "Turn on a section to require the owner PIN before staff can open it.",
     zatca_title: "ZATCA Integration (Phase 2)", zatca_hint: "When enabled, new invoices are verified with ZATCA automatically.",
+    zatca_connected: "Connected", zatca_notConnected: "Not connected",
     zatca_enableToggle: "Enable ZATCA Integration", zatca_otpLabel: "OTP Code", zatca_otpPlaceholder: "6-digit code",
     zatca_otpInvalid: "Code must be 6 digits.", zatca_connect: "🔗 Connect to ZATCA", zatca_cancel: "Cancel",
     zatca_disableConfirm: "Disable ZATCA integration? New invoices will go back to normal.",
@@ -1435,7 +1437,9 @@ const DICT = {
     owner_pinWrong: "كلمة المرور غير صحيحة.", owner_lockPanel: "🔒 إغلاق هذا القسم مرة ثانية",
     owner_payMethodsTitle: "طرق الدفع الظاهرة بصفحة البيع", owner_payMethodsHint: "أطفئ أي طريقة دفع ما تبي الموظف يشوفها أو يستخدمها وقت البيع.",
     owner_atLeastOnePayMethod: "لازم تبقى طريقة دفع واحدة على الأقل مفعّلة.",
+    owner_sectionLockTitle: "إغلاق الأقسام عن الموظفين", owner_sectionLockHint: "فعّل أي قسم عشان يطلب رمز المالك قبل ما يقدر الموظف يفتحه.",
     zatca_title: "الربط مع هيئة الزكاة والضريبة (المرحلة الثانية)", zatca_hint: "عند التفعيل، يتم توثيق الفواتير الجديدة مع الهيئة تلقائيًا.",
+    zatca_connected: "متصل", zatca_notConnected: "غير متصل",
     zatca_enableToggle: "تفعيل الربط مع الهيئة", zatca_otpLabel: "رمز التحقق (OTP)", zatca_otpPlaceholder: "٦ أرقام",
     zatca_otpInvalid: "الرمز يجب أن يكون 6 أرقام.", zatca_connect: "🔗 ربط مع الهيئة", zatca_cancel: "إلغاء",
     zatca_disableConfirm: "هل تريد تعطيل الربط مع الهيئة؟ الفواتير الجديدة ستعود للوضع العادي.",
@@ -1669,7 +1673,9 @@ const DICT = {
     owner_pinWrong: "پاس ورڈ غلط ہے۔", owner_lockPanel: "🔒 اس حصے کو دوبارہ لاک کریں",
     owner_payMethodsTitle: "POS پر دکھائے جانے والے ادائیگی کے طریقے", owner_payMethodsHint: "کوئی بھی ایسا طریقہ بند کر دیں جو عملے کو چیک آؤٹ پر نظر نہیں آنا چاہیے۔",
     owner_atLeastOnePayMethod: "کم از کم ایک ادائیگی کا طریقہ فعال رہنا ضروری ہے۔",
+    owner_sectionLockTitle: "عملے سے حصے مقفل کریں", owner_sectionLockHint: "کسی حصے کو فعال کریں تاکہ عملہ اسے کھولنے سے پہلے مالک کا پن درج کرے۔",
     zatca_title: "زکوٰۃ اتھارٹی کے ساتھ ربط (فیز 2)", zatca_hint: "فعال ہونے پر، نئے انوائسز خودکار طور پر اتھارٹی سے تصدیق شدہ ہوں گے۔",
+    zatca_connected: "منسلک", zatca_notConnected: "غیر منسلک",
     zatca_enableToggle: "زکوٰۃ ربط فعال کریں", zatca_otpLabel: "OTP کوڈ", zatca_otpPlaceholder: "6 ہندسوں کا کوڈ",
     zatca_otpInvalid: "کوڈ 6 ہندسوں کا ہونا چاہیے۔", zatca_connect: "🔗 اتھارٹی سے ربط کریں", zatca_cancel: "منسوخ کریں",
     zatca_disableConfirm: "زکوٰۃ ربط غیر فعال کریں؟ نئے انوائسز معمول کی حالت میں واپس چلے جائیں گے۔",
@@ -4433,19 +4439,26 @@ function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disabl
   const certLabelKey = { PENDING: "zatca_certPending", ACTIVE: "zatca_certActive", EXPIRED: "zatca_certExpired", REVOKED: "zatca_certRevoked" }[zatcaConfig?.certificateStatus] || "zatca_certPending";
 
   return (
-    <div className="pt-3 mt-1 border-t border-stone-200">
-      <div className="flex items-center justify-between rounded-lg border border-stone-200 px-3 py-2.5">
+    <div className="rounded-lg border border-app-border bg-app-bg/60 p-4">
+      <div className="flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-3 py-2.5">
         <div>
-          <div className="text-sm font-semibold text-slate-800">{t("zatca_title")}</div>
-          <div className="text-[11px] text-slate-500">{t("zatca_hint")}</div>
+          <div className="flex flex-wrap items-center gap-2">
+            <FileText size={14} className="text-brand-600 shrink-0" />
+            <span className="text-sm font-semibold text-app-text">{t("zatca_title")}</span>
+            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${isEnabled ? "bg-success-50 text-success-700" : "border border-app-border bg-app-bg text-app-text-subtle"}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${isEnabled ? "bg-success-500" : "bg-app-text-subtle"}`} />
+              {t(isEnabled ? "zatca_connected" : "zatca_notConnected")}
+            </span>
+          </div>
+          <div className="mt-0.5 text-[11px] text-app-text-subtle">{t("zatca_hint")}</div>
         </div>
         <Toggle checked={isEnabled} onChange={handleToggle} />
       </div>
 
       {showOtpInput && !isEnabled && !zatcaConfig?.csr && (
-        <div className="mt-2 rounded-lg border border-stone-200 p-3">
-          <div className="mb-2 text-xs font-semibold text-slate-700">{t("zatca_generateCsr")}</div>
-          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t("zatca_businessCategory")}</label>
+        <div className="mt-2 rounded-lg border border-app-border bg-app-surface p-3">
+          <div className="mb-2 text-xs font-semibold text-app-text">{t("zatca_generateCsr")}</div>
+          <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("zatca_businessCategory")}</label>
           <input
             value={businessCategory}
             onChange={(e) => setBusinessCategory(e.target.value)}
@@ -4453,25 +4466,25 @@ function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disabl
             className={inputCls}
           />
           <div className="mt-2 flex gap-2">
-            <button onClick={handleGenerateCsr} disabled={busy} className="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("zatca_generateCsrButton")}</button>
-            <button onClick={() => { setShowOtpInput(false); setError(""); }} className="rounded-lg border border-stone-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-stone-50">{t("zatca_cancel")}</button>
+            <button onClick={handleGenerateCsr} disabled={busy} className="flex-1 rounded-lg bg-brand-500 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60">{t("zatca_generateCsrButton")}</button>
+            <button onClick={() => { setShowOtpInput(false); setError(""); }} className="rounded-lg border border-app-border-strong px-3 py-2 text-sm font-medium text-app-text-muted hover:bg-app-bg">{t("zatca_cancel")}</button>
           </div>
         </div>
       )}
 
       {showOtpInput && !isEnabled && zatcaConfig?.csr && (
         <div className="mt-2 space-y-2">
-          <div className="rounded-lg border border-stone-200 p-3">
+          <div className="rounded-lg border border-app-border bg-app-surface p-3">
             <div className="mb-1.5 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t("zatca_csrLabel")}</span>
-              <button onClick={copyCsr} className="text-[11px] font-medium text-teal-700 hover:underline">{csrCopied ? t("zatca_copied") : t("zatca_copyCsr")}</button>
+              <span className="text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("zatca_csrLabel")}</span>
+              <button onClick={copyCsr} className="text-[11px] font-medium text-brand-700 hover:underline">{csrCopied ? t("zatca_copied") : t("zatca_copyCsr")}</button>
             </div>
             <textarea readOnly value={zatcaConfig.csr} rows={4} className={`${inputCls} f-mono text-[10px] leading-tight`} onClick={(e) => e.target.select()} />
-            <p className="mt-1.5 text-[11px] text-slate-500">{t("zatca_csrHint")}</p>
+            <p className="mt-1.5 text-[11px] text-app-text-subtle">{t("zatca_csrHint")}</p>
           </div>
 
-          <div className="rounded-lg border border-stone-200 p-3">
-            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t("zatca_connectStep")}</label>
+          <div className="rounded-lg border border-app-border bg-app-surface p-3">
+            <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("zatca_connectStep")}</label>
             <input
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
@@ -4480,8 +4493,8 @@ function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disabl
               className={`${inputCls} f-mono tracking-widest`}
             />
             <div className="mt-2 flex gap-2">
-              <button onClick={handleConnect} disabled={busy} className="flex-1 rounded-lg bg-teal-600 py-2 text-sm font-semibold text-white hover:bg-teal-700 disabled:opacity-60">{t("zatca_connect")}</button>
-              <button onClick={() => { setShowOtpInput(false); setOtp(""); setError(""); }} className="rounded-lg border border-stone-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-stone-50">{t("zatca_cancel")}</button>
+              <button onClick={handleConnect} disabled={busy} className="flex-1 rounded-lg bg-brand-500 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60">{t("zatca_connect")}</button>
+              <button onClick={() => { setShowOtpInput(false); setOtp(""); setError(""); }} className="rounded-lg border border-app-border-strong px-3 py-2 text-sm font-medium text-app-text-muted hover:bg-app-bg">{t("zatca_cancel")}</button>
             </div>
           </div>
         </div>
@@ -4490,48 +4503,48 @@ function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disabl
       {isEnabled && (
         <div className="mt-2 space-y-2">
           <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-lg border border-stone-200 bg-stone-50 p-2.5">
-              <div className="text-[11px] text-slate-500">{t("zatca_certificateStatus")}</div>
-              <div className="text-sm font-semibold text-slate-800">{t(certLabelKey)}</div>
+            <div className="rounded-lg border border-app-border bg-app-surface p-2.5">
+              <div className="text-[11px] text-app-text-subtle">{t("zatca_certificateStatus")}</div>
+              <div className="text-sm font-semibold text-app-text">{t(certLabelKey)}</div>
             </div>
-            <div className="rounded-lg border border-stone-200 bg-stone-50 p-2.5">
-              <div className="text-[11px] text-slate-500">{t("zatca_lastSync")}</div>
-              <div className="text-sm font-semibold text-slate-800">{zatcaConfig.lastSyncAt ? fmtDate(zatcaConfig.lastSyncAt) : t("zatca_neverSynced")}</div>
+            <div className="rounded-lg border border-app-border bg-app-surface p-2.5">
+              <div className="text-[11px] text-app-text-subtle">{t("zatca_lastSync")}</div>
+              <div className="text-sm font-semibold text-app-text">{zatcaConfig.lastSyncAt ? fmtDate(zatcaConfig.lastSyncAt) : t("zatca_neverSynced")}</div>
             </div>
           </div>
 
-          <div className="rounded-lg border border-stone-200 p-2.5">
-            <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{t("zatca_stats")}</div>
+          <div className="rounded-lg border border-app-border bg-app-surface p-2.5">
+            <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-app-text-subtle">{t("zatca_stats")}</div>
             <div className="grid grid-cols-3 gap-2 text-center">
-              <div><div className="f-mono text-lg font-semibold text-teal-700">{zatcaConfig.invoicesClearedCount || 0}</div><div className="text-[11px] text-slate-500">{t("zatca_cleared")}</div></div>
-              <div><div className="f-mono text-lg font-semibold text-slate-700">{zatcaConfig.invoicesReportedCount || 0}</div><div className="text-[11px] text-slate-500">{t("zatca_reported")}</div></div>
-              <div><div className="f-mono text-lg font-semibold text-rose-600">{zatcaConfig.failedInvoices || 0}</div><div className="text-[11px] text-slate-500">{t("zatca_failed")}</div></div>
+              <div><div className="f-mono text-lg font-semibold text-brand-700">{zatcaConfig.invoicesClearedCount || 0}</div><div className="text-[11px] text-app-text-subtle">{t("zatca_cleared")}</div></div>
+              <div><div className="f-mono text-lg font-semibold text-app-text">{zatcaConfig.invoicesReportedCount || 0}</div><div className="text-[11px] text-app-text-subtle">{t("zatca_reported")}</div></div>
+              <div><div className="f-mono text-lg font-semibold text-danger-600">{zatcaConfig.failedInvoices || 0}</div><div className="text-[11px] text-app-text-subtle">{t("zatca_failed")}</div></div>
             </div>
           </div>
 
           {zatcaConfig.lastErrorMessage && (
-            <div className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><strong>{t("zatca_lastError")}:</strong> {zatcaConfig.lastErrorMessage}</div>
+            <div className="rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs text-danger-700"><strong>{t("zatca_lastError")}:</strong> {zatcaConfig.lastErrorMessage}</div>
           )}
 
           <div className="flex gap-2">
-            <button onClick={handleTest} className="flex-1 rounded-lg border border-stone-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-stone-50">{t("zatca_testConnection")}</button>
-            <button onClick={() => setConfirmAction("reset")} disabled={busy} className="flex-1 rounded-lg border border-rose-300 px-3 py-2 text-xs font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-60">{t("zatca_reset")}</button>
+            <button onClick={handleTest} className="flex-1 rounded-lg border border-app-border-strong px-3 py-2 text-xs font-medium text-app-text-muted hover:bg-app-bg">{t("zatca_testConnection")}</button>
+            <button onClick={() => setConfirmAction("reset")} disabled={busy} className="flex-1 rounded-lg border border-danger-300 px-3 py-2 text-xs font-medium text-danger-600 hover:bg-danger-50 disabled:opacity-60">{t("zatca_reset")}</button>
           </div>
         </div>
       )}
 
       {confirmAction && (
-        <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
-          <div className="mb-2 text-xs font-medium text-amber-800">{t(confirmAction === "disable" ? "zatca_disableConfirm" : "zatca_resetConfirm")}</div>
+        <div className="mt-2 rounded-lg border border-warning-200 bg-warning-50 p-3">
+          <div className="mb-2 text-xs font-medium text-warning-700">{t(confirmAction === "disable" ? "zatca_disableConfirm" : "zatca_resetConfirm")}</div>
           <div className="flex gap-2">
-            <button onClick={runConfirmedAction} disabled={busy} className="flex-1 rounded-lg bg-rose-600 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-60">{t("common_yes")}</button>
-            <button onClick={() => setConfirmAction(null)} className="rounded-lg border border-stone-300 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-stone-50">{t("zatca_cancel")}</button>
+            <button onClick={runConfirmedAction} disabled={busy} className="flex-1 rounded-lg bg-danger-600 py-2 text-xs font-semibold text-white hover:bg-danger-700 disabled:opacity-60">{t("common_yes")}</button>
+            <button onClick={() => setConfirmAction(null)} className="rounded-lg border border-app-border-strong px-3 py-2 text-xs font-medium text-app-text-muted hover:bg-app-bg">{t("zatca_cancel")}</button>
           </div>
         </div>
       )}
 
-      {error && <div className="mt-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">{error}</div>}
-      {notice && <div className="mt-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-medium text-teal-700">{notice}</div>}
+      {error && <div className="mt-2 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{error}</div>}
+      {notice && <div className="mt-2 rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-xs font-medium text-success-700">{notice}</div>}
     </div>
   );
 }
@@ -4563,11 +4576,14 @@ function WhatsAppSettingsPanel({ whatsappEnabled, setWhatsappEnabled, whatsappTe
   };
 
   return (
-    <div className="pt-3 mt-1 border-t border-stone-200">
+    <div className="rounded-lg border border-app-border bg-app-bg/60 p-4">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-sm font-semibold text-slate-800">{t("whatsapp_title")}</div>
-          <p className="text-xs text-slate-500">{t("whatsapp_hint")}</p>
+          <div className="flex items-center gap-2">
+            <MessageCircle size={14} className="text-brand-600 shrink-0" />
+            <span className="text-sm font-semibold text-app-text">{t("whatsapp_title")}</span>
+          </div>
+          <p className="mt-0.5 text-xs text-app-text-subtle">{t("whatsapp_hint")}</p>
         </div>
         <Toggle checked={whatsappEnabled} onChange={setWhatsappEnabled} />
       </div>
@@ -4580,11 +4596,11 @@ function WhatsAppSettingsPanel({ whatsappEnabled, setWhatsappEnabled, whatsappTe
             placeholder={DEFAULT_WHATSAPP_TEMPLATE}
             rows={5}
             dir="rtl"
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm outline-none focus:border-teal-500"
+            className="w-full rounded-lg border border-app-border-strong bg-app-surface px-3 py-2 text-sm text-app-text outline-none focus:border-brand-500"
           />
           <div className="mt-2 flex flex-wrap gap-1.5">
             {WHATSAPP_TAGS.map((tag) => (
-              <button key={tag} type="button" onClick={() => insertTag(tag)} className="rounded bg-stone-100 px-1.5 py-0.5 text-[11px] font-mono text-slate-600 transition hover:bg-teal-100 hover:text-teal-800" dir="ltr">{`{${tag}}`}</button>
+              <button key={tag} type="button" onClick={() => insertTag(tag)} className="rounded bg-app-border/60 px-1.5 py-0.5 text-[11px] font-mono text-app-text-muted transition hover:bg-brand-100 hover:text-brand-800" dir="ltr">{`{${tag}}`}</button>
             ))}
           </div>
         </div>
@@ -4627,44 +4643,54 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
   };
 
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
       <button onClick={() => !authenticated && setShowMasterPin(true)} className="flex w-full items-center justify-between text-left">
-        <span className="flex items-center gap-2 text-sm font-semibold text-slate-800"><Lock size={16} className="text-teal-600" /> {t("settings_ownerOnly")}</span>
-        {!authenticated && <ChevronRight size={16} className="text-slate-300" />}
+        <span className="flex items-center gap-2 text-sm font-semibold text-app-text"><Lock size={16} className="text-brand-600" /> {t("settings_ownerOnly")}</span>
+        {!authenticated && <ChevronRight size={16} className="text-app-text-subtle" />}
       </button>
-      <p className="mt-1 text-xs text-slate-500">{t("settings_ownerOnlyHint")}</p>
+      <p className="mt-1 text-xs text-app-text-subtle">{t("settings_ownerOnlyHint")}</p>
 
       {authenticated && (
-        <div className="mt-4 space-y-2">
-          {OWNER_SECTIONS.map((s) => (
-            <div key={s.key} className="flex items-center justify-between rounded-lg border border-stone-200 px-3 py-2.5">
-              <span className="flex items-center gap-2 text-sm text-slate-700">
-                {sectionLocks[s.key] && <Lock size={13} className="text-amber-600" />}
-                {t(s.labelKey)}
-              </span>
-              <Toggle checked={Boolean(sectionLocks[s.key])} onChange={() => toggleSection(s.key)} />
+        <div className="mt-4 space-y-4">
+          {/* Real, individually-lockable sections — exactly OWNER_SECTIONS
+              (5 items). Payment methods below are a separate, always-on
+              enable/disable list under this same master PIN — they are not
+              individually lockable, unlike these five. */}
+          <div className="rounded-lg border border-app-border bg-app-bg/60 p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-app-text"><Lock size={14} className="text-brand-600" /> {t("owner_sectionLockTitle")}</div>
+            <p className="mb-3 mt-0.5 text-[11px] text-app-text-subtle">{t("owner_sectionLockHint")}</p>
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              {OWNER_SECTIONS.map((s) => (
+                <div key={s.key} className="flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-3 py-2.5">
+                  <span className="flex items-center gap-2 text-sm text-app-text">
+                    <Lock size={13} className={sectionLocks[s.key] ? "text-warning-600" : "text-app-text-subtle"} />
+                    {t(s.labelKey)}
+                  </span>
+                  <Toggle checked={Boolean(sectionLocks[s.key])} onChange={() => toggleSection(s.key)} />
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
 
-          <div className="pt-3 mt-1 border-t border-stone-200">
-            <div className="mb-1 text-xs font-semibold text-slate-700">{t("owner_payMethodsTitle")}</div>
-            <p className="mb-2 text-[11px] text-slate-500">{t("owner_payMethodsHint")}</p>
+          <div className="rounded-lg border border-app-border bg-app-bg/60 p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-app-text"><CreditCard size={14} className="text-brand-600" /> {t("owner_payMethodsTitle")}</div>
+            <p className="mb-3 mt-0.5 text-[11px] text-app-text-subtle">{t("owner_payMethodsHint")}</p>
             <div className="space-y-2">
               {POS_PAY_METHODS.map((m) => (
-                <div key={m.value} className="flex items-center justify-between rounded-lg border border-stone-200 px-3 py-2.5">
-                  <span className="text-sm text-slate-700">{t(m.key)}</span>
+                <div key={m.value} className="flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-3 py-2.5">
+                  <span className="text-sm text-app-text">{t(m.key)}</span>
                   <Toggle checked={enabledPayMethods[m.value] !== false} onChange={() => togglePayMethod(m.value)} />
                 </div>
               ))}
             </div>
-            {payMethodError && <div className="mt-2 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{payMethodError}</div>}
+            {payMethodError && <div className="mt-2 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{payMethodError}</div>}
           </div>
 
           <WhatsAppSettingsPanel whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} />
 
           <ZatcaSettingsPanel zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />
 
-          <button onClick={() => setAuthenticated(false)} className="mt-2 text-xs font-medium text-teal-700 hover:underline">{t("owner_lockPanel")}</button>
+          <button onClick={() => setAuthenticated(false)} className="text-xs font-medium text-brand-700 hover:underline">{t("owner_lockPanel")}</button>
         </div>
       )}
 
@@ -4706,14 +4732,14 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
   return (
     <div className="max-w-xl space-y-6">
       <div>
-        <div className="mb-4 f-display text-xl font-semibold text-slate-900">{t("settings_title")}</div>
-        <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-          <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-800"><Globe size={16} className="text-teal-600" /> {t("settings_language")}</div>
-          <p className="mb-4 text-xs text-slate-500">{t("settings_languageHint")}</p>
+        <div className="mb-4 f-display text-xl font-semibold text-app-text">{t("settings_title")}</div>
+        <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
+          <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-app-text"><Globe size={16} className="text-brand-600" /> {t("settings_language")}</div>
+          <p className="mb-4 text-xs text-app-text-subtle">{t("settings_languageHint")}</p>
           <div className="grid grid-cols-3 gap-3">
             {options.map((o) => (
               <button key={o.code} onClick={() => setLang(o.code)}
-                className={`rounded-xl border-2 px-4 py-4 text-center font-semibold transition ${lang === o.code ? "border-teal-600 bg-teal-50 text-teal-800" : "border-stone-200 text-slate-600 hover:border-stone-300"}`}>
+                className={`rounded-xl border-2 px-4 py-4 text-center font-semibold transition ${lang === o.code ? "border-brand-600 bg-brand-50 text-brand-800" : "border-app-border text-app-text-muted hover:border-app-border-strong"}`}>
                 {t(o.key)}
               </button>
             ))}
@@ -4721,20 +4747,20 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
         </div>
       </div>
 
-      <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-        <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-800"><Building2 size={16} className="text-teal-600" /> {t("settings_merchantInfo")}</div>
-        <p className="mb-4 text-xs text-slate-500">{t("settings_merchantInfoHint")}</p>
+      <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
+        <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-app-text"><Building2 size={16} className="text-brand-600" /> {t("settings_merchantInfo")}</div>
+        <p className="mb-4 text-xs text-app-text-subtle">{t("settings_merchantInfoHint")}</p>
         <Field label={t("settings_merchantName")}><input value={merchant.name} onChange={update("name")} className={inputCls} autoComplete="off" /></Field>
         <Field label={t("settings_merchantPhone")}><input value={merchant.phone} onChange={update("phone")} className={inputCls} autoComplete="off" /></Field>
         <Field label={t("settings_merchantAddress")}><input value={merchant.address} onChange={update("address")} className={inputCls} autoComplete="off" /></Field>
         <Field label={t("settings_merchantTax")}><input value={merchant.taxNumber} onChange={update("taxNumber")} className={inputCls} autoComplete="off" /></Field>
       </div>
 
-      <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+      <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
         <div className="flex items-center justify-between">
           <div>
-            <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-slate-800"><ReceiptText size={16} className="text-teal-600" /> {t("settings_autoPrint")}</div>
-            <p className="text-xs text-slate-500">{t("settings_autoPrintHint")}</p>
+            <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-app-text"><ReceiptText size={16} className="text-brand-600" /> {t("settings_autoPrint")}</div>
+            <p className="text-xs text-app-text-subtle">{t("settings_autoPrintHint")}</p>
           </div>
           <Toggle checked={Boolean(merchant.autoPrint)} onChange={(val) => setMerchant((prev) => ({ ...prev, autoPrint: val }))} />
         </div>
@@ -4745,10 +4771,10 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
                 onChange={(e) => setMerchant((prev) => ({ ...prev, autoPrintCopies: Math.min(10, Math.max(1, Number(e.target.value) || 1)) }))}
                 className={`${inputCls} w-24`} />
             </Field>
-            <div className="flex items-center justify-between rounded-lg border border-stone-200 px-3 py-2.5">
+            <div className="flex items-center justify-between rounded-lg border border-app-border px-3 py-2.5">
               <div>
-                <div className="text-sm text-slate-700">{t("settings_showPrintPreview")}</div>
-                <p className="text-[11px] text-slate-500">{t("settings_showPrintPreviewHint")}</p>
+                <div className="text-sm text-app-text">{t("settings_showPrintPreview")}</div>
+                <p className="text-[11px] text-app-text-subtle">{t("settings_showPrintPreviewHint")}</p>
               </div>
               <Toggle checked={merchant.showPrintPreview !== false} onChange={(val) => setMerchant((prev) => ({ ...prev, showPrintPreview: val }))} />
             </div>
@@ -4758,9 +4784,9 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
 
       <OwnerOnlySettings ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />
 
-      <div className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
-        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800"><Lock size={16} className="text-teal-600" /> {t("settings_account")}</div>
-        <button onClick={onLogout} className="w-full rounded-lg border border-rose-200 bg-rose-50 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100">
+      <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
+        <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-app-text"><Lock size={16} className="text-brand-600" /> {t("settings_account")}</div>
+        <button onClick={onLogout} className="w-full rounded-lg border border-danger-200 bg-danger-50 py-2.5 text-sm font-semibold text-danger-700 hover:bg-danger-100">
           {t("settings_logout")}
         </button>
       </div>
