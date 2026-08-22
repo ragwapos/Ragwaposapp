@@ -23,6 +23,11 @@ export default {
         danger: { 50: '#fef3f2', 500: '#f04438', 600: '#d92d20', 700: '#b42318' },
         info: { 50: '#eff8ff', 500: '#2e90fa', 600: '#1570ef', 700: '#175cd3' },
         accent: { 400: '#ff9d5c', 500: '#ff7a3d', 600: '#f0611f' },
+        // Public landing page only — a light, airy palette, distinct from the
+        // internal app's dark navy sidebar/app-* tokens above. Navy still
+        // appears on the landing page, but only in the footer band and the
+        // CTA banners (per the approved design), never as the page ground.
+        landing: { bg: '#f6faf9', ink: '#0b2331', 'ink-muted': '#5b7381' },
       },
       fontFamily: {
         cairo: ["'Cairo'", "'Segoe UI'", 'Tahoma', 'sans-serif'],
@@ -32,6 +37,7 @@ export default {
         'app-sm': '0 1px 3px rgba(16,24,40,.06), 0 1px 2px rgba(16,24,40,.04)',
         'app-md': '0 4px 8px -2px rgba(16,24,40,.06), 0 2px 4px -2px rgba(16,24,40,.04)',
         'app-lg': '0 12px 16px -4px rgba(16,24,40,.08), 0 4px 6px -2px rgba(16,24,40,.03)',
+        soft: '0 2px 8px rgba(11,35,49,.04), 0 16px 40px -12px rgba(11,35,49,.12)',
       },
     },
   },
