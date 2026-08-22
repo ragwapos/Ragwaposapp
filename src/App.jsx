@@ -6598,7 +6598,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   const { setCurrentPage, showWorkflow, setShowWorkflow, showContact, setShowContact,
     contactName, setContactName, contactMobile, setContactMobile, contactEmail, setContactEmail,
     contactType, setContactType, contactMessage, setContactMessage, contactSent, submitContact,
-    lang, setLang } = props;
+    lang, setLang, onOpenTerms } = props;
   // Anti-bot: `website` is a honeypot a real visitor never sees or fills
   // (hidden below); `formStartedAtRef` marks when the modal actually
   // opened, so the server can reject a submit that arrives faster than any
@@ -6797,6 +6797,9 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
       {/* Footer */}
       <footer className="py-8 px-6 border-t border-slate-800 text-center text-gray-500 text-sm">
         <p>{t.footer}</p>
+        <button onClick={onOpenTerms} className="mt-2 text-cyan-400 hover:underline text-xs">
+          {lang === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions'}
+        </button>
       </footer>
 
       {showContact && (
@@ -7122,7 +7125,7 @@ function EmailVerificationPage({ email, onVerified, onBack }) {
 function SignupPage(props) {
   const { setCurrentPage, signupShop, setSignupShop, signupEmail, setSignupEmail,
     signupMobile, setSignupMobile, signupAddress, setSignupAddress, signupPassword, setSignupPassword,
-    signupAgree, setSignupAgree, handleSignup, signupError, signupLoading } = props;
+    signupAgree, setSignupAgree, handleSignup, signupError, signupLoading, onOpenTerms } = props;
   // Same honeypot + minimum-fill-time anti-bot pattern as the landing
   // page's contact form (see LandingPage) — checked server-side in
   // api/send-verification-email.js.
@@ -7171,7 +7174,9 @@ function SignupPage(props) {
 
           <div className="flex items-start gap-3 mb-6">
             <input type="checkbox" checked={signupAgree} onChange={(e) => setSignupAgree(e.target.checked)} className="w-4 h-4 rounded accent-cyan-400 mt-1" />
-            <label className="text-gray-400 text-sm">أوافق على شروط الخدمة</label>
+            <label className="text-gray-400 text-sm">
+              أوافق على <button type="button" onClick={onOpenTerms} className="text-cyan-400 hover:underline">شروط الخدمة</button>
+            </label>
           </div>
 
           {signupError && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{signupError}</div>}
@@ -7194,8 +7199,257 @@ function SignupPage(props) {
   );
 }
 
+// Blocks copy/select on the terms text itself (still fully legible — this
+// is friction against casual copy-paste, not an attempt to hide anything;
+// trivially bypassed via view-source/print/screenshot, which is fine, this
+// isn't meant to be real DRM). Deliberately NOT pairing this with a tiny or
+// low-contrast font: a Terms of Service only has legal weight if the user
+// could actually read what they agreed to — a court or consumer-protection
+// body could treat an intentionally illegible contract as never properly
+// disclosed, which undermines the entire point of having one.
+function TermsPage({ onBack }) {
+  const blockCopy = (e) => e.preventDefault();
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-start justify-center p-4 py-10">
+      <div className="absolute top-6 right-6">
+        <button onClick={onBack} className="px-4 py-2 text-gray-300 hover:text-white transition">← العودة</button>
+      </div>
+      <div className="w-full max-w-3xl mt-16">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2">شروط وأحكام استخدام نظام رغوة (Ragwa)</h1>
+          <p className="text-gray-400 text-sm">اتفاقية استخدام ملزمة قانونياً</p>
+        </div>
+
+        <div
+          className="bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8 text-gray-300 text-base leading-relaxed space-y-6 select-none"
+          onCopy={blockCopy} onCut={blockCopy} onContextMenu={blockCopy}
+          dir="rtl"
+        >
+          <section>
+            <h2 className="text-xl font-bold text-white mb-2">المقدمة</h2>
+            <p>هذه الاتفاقية تحكم استخدامك لمنصة رغوة وخدماتها. بالاشتراك في المنصة أو استخدامك لها، فإنك تقر بأنك قد قرأت واستوعبت جميع الشروط والأحكام الواردة فيها وتوافق على الالتزام بها بشكل كامل. هدفنا هو توفير خدمة موثوقة وشفافة تلبي احتياجاتك.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white mb-2">البند الأول: التعاريف</h2>
+            <p><strong className="text-white">النظام/المنصة:</strong> منصة رغوة الإلكترونية وجميع خدماتها وتطبيقاتها بمختلف صيغها (ويب، تطبيقات محمولة، إلخ).</p>
+            <p><strong className="text-white">الشركة:</strong> الجهة المسؤولة عن تطوير وتشغيل النظام وإدارة خدماته بكفاءة واحترافية.</p>
+            <p><strong className="text-white">المستخدم/العميل:</strong> أي شخص يقوم بإنشاء حساب واستخدام خدمات النظام.</p>
+            <p><strong className="text-white">الخدمة:</strong> جميع الأدوات والميزات والخدمات التي توفرها المنصة للعميل لإدارة عملياته بفعالية.</p>
+            <p><strong className="text-white">بيانات المستخدم:</strong> المعلومات التي يدخلها المستخدم في النظام (اسم، رقم، بيانات نشاط، إلخ).</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white mb-2">البند الثاني: قبول الشروط والتزام المستخدم</h2>
+            <p>استخدامك للنظام يعني قبولك الكامل لجميع شروط هذه الاتفاقية. إذا كنت لا توافق على أي بند، يجب عليك عدم استخدام المنصة. تحتفظ الشركة بحق تحديث هذه الشروط لتحسين الخدمة، وسيتم إخطارك بالتغييرات المهمة. استمرارك في استخدام المنصة يعني موافقتك على التحديثات.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white mb-2">البند الثالث: استخدام المنصة بشكل مسؤول</h2>
+            <h3 className="font-semibold text-white mt-3 mb-1">3.1 الالتزامات القانونية والأخلاقية</h3>
+            <p>نطلب منك استخدام المنصة بشكل مسؤول وقانوني وبما يتوافق مع جميع القوانين والأنظمة المعمول بها في المملكة العربية السعودية. نتعاون معك لبناء بيئة آمنة وموثوقة. تتعهد بعدم استخدام المنصة في:</p>
+            <ul className="list-disc pr-6 space-y-1">
+              <li>أي نشاط غير قانوني أو يخالف القوانين المعمول بها</li>
+              <li>تمويل الإرهاب أو غسيل الأموال أو الأنشطة الإجرامية</li>
+              <li>الاحتيال أو التدليس أو التلاعب أو الخداع</li>
+              <li>انتهاك حقوق الآخرين أو الإساءة إليهم</li>
+              <li>نشر محتوى يحرض على العنف أو الكراهية</li>
+            </ul>
+            <h3 className="font-semibold text-white mt-3 mb-1">3.2 الأمان والحماية</h3>
+            <p>نعتمد عليك في حماية حسابك. تتعهد بحماية بيانات اعتمادك (اسم المستخدم وكلمة المرور) والحفاظ على سريتها. أنت الوحيد المسؤول عن جميع الأنشطة التي تتم من خلال حسابك. لا تحاول الوصول بطرق غير مصرح بها إلى النظام أو حسابات المستخدمين الآخرين.</p>
+            <h3 className="font-semibold text-white mt-3 mb-1">3.3 المسؤولية عن الانتهاكات</h3>
+            <p>في حالة انتهاكك لهذه الشروط، أنت تتحمل المسؤولية الكاملة عن ذلك، وتوافق على تعويض الشركة عن أي خسائر أو أضرار قد تنشأ عن انتهاكك.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white mb-2">البند الرابع: وصف الخدمة</h2>
+            <p>منصة رغوة مصممة بعناية لإدارة عمليات محلات مغاسل الملابس بكفاءة، وتوفر:</p>
+            <ul className="list-disc pr-6 space-y-1">
+              <li>إدارة البيانات والسجلات بسهولة وأمان</li>
+              <li>توليد التقارير والإحصائيات الشاملة</li>
+              <li>تحليل بيانات الاستخدام لاتخاذ قرارات أفضل</li>
+            </ul>
+            <p>تقتصر الخدمة على مستخدم واحد لكل حساب لضمان الأمان والسيطرة. تحتفظ الشركة بحقها في تطوير وتحسين وإضافة ميزات جديدة للمنصة في أي وقت لتطورها باستمرار وتلبية احتياجاتك المتغيرة.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white mb-2">البند الخامس: حالة المنصة وتطورها</h2>
+            <h3 className="font-semibold text-white mt-3 mb-1">5.1 مرحلة تطويرية مثيرة</h3>
+            <p>منصة رغوة في مرحلة تطوير ديناميكية وحية. نحن نركز على جودة الخدمة والأداء الفعلي قبل التسجيل الرسمي، وهذا يعني:</p>
+            <ul className="space-y-1">
+              <li>✓ كل تحديث واختبار من أجلك ومن أجل تحسين تجربتك</li>
+              <li>✓ استقرار النظام والبيانات الآمنة هي أولويتنا</li>
+              <li>✓ نحن نستمع إلى ملاحظاتك وندمجها بسرعة</li>
+            </ul>
+            <p>المنصة حالياً لم تتلقَّ التسجيل الرسمي من هيئة الزكاة والضريبة والدخل، وهذا طبيعي وشائع في مرحلة التطوير. سيتم الانتقال للتسجيل الرسمي عندما تكون المنصة جاهزة تماماً.</p>
+            <h3 className="font-semibold text-white mt-3 mb-1">5.2 فرصة حقيقية للمستخدمين الأوائل</h3>
+            <p>كنت من أوائل من يستخدم المنصة، وهذا يعني:</p>
+            <ul className="space-y-1">
+              <li>✓ الخدمة مجانية تماماً خلال هذه المرحلة</li>
+              <li>✓ تأثيرك المباشر على تطوير الميزات القادمة</li>
+              <li>✓ دعم شخصي من فريقنا</li>
+              <li>✓ تحسين مستمر بناءً على احتياجاتك</li>
+            </ul>
+            <h3 className="font-semibold text-white mt-3 mb-1">5.3 التزامنا بالجودة والاستقرار</h3>
+            <p>نحن ملتزمون بتقديم خدمة موثوقة وآمنة. يتم توفير الخدمة بأفضل جودة ممكنة مع التزامنا بـ:</p>
+            <ul className="space-y-1">
+              <li>✓ استقرار النظام والأداء الجيد</li>
+              <li>✓ حماية بياناتك بأعلى معايير الأمان</li>
+              <li>✓ تحسين مستمر بناءً على ملاحظات المستخدمين</li>
+            </ul>
+            <p className="italic text-gray-400">ملاحظة مهمة: كما هو الحال مع أي نظام تقني، قد تحدث توقفات غير متوقعة للصيانة أو التحديث (نادرة جداً). سنحاول إخطارك مسبقاً عند الإمكان، لأننا نقدّر وقتك.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white mb-2">البند السادس: بيانات المستخدم والخصوصية</h2>
+            <h3 className="font-semibold text-white mt-3 mb-1">6.1 جمع البيانات بهدف التحسين</h3>
+            <p>نجمع البيانات عن استخدامك للمنصة فقط لـ تحسين الخدمة وجعلها أفضل لك. البيانات التي نجمعها:</p>
+            <ul className="list-disc pr-6 space-y-1">
+              <li>سلوك الاستخدام (الميزات التي تستخدمها أكثر)</li>
+              <li>البيانات التقنية (لضمان الأداء الأفضل)</li>
+              <li>معلومات الجهاز والمتصفح (للتوافقية)</li>
+            </ul>
+            <p>كل هذا يساعدنا على:</p>
+            <ul className="list-disc pr-6 space-y-1">
+              <li>فهم احتياجاتك بشكل أفضل</li>
+              <li>تحسين السرعة والاستقرار</li>
+              <li>إضافة ميزات تناسبك</li>
+              <li>منع المشاكل الأمنية</li>
+            </ul>
+            <h3 className="font-semibold text-white mt-3 mb-1">6.2 خوادم آمنة وموثوقة</h3>
+            <p>بيانات حسابك تُخزّن على خوادم موجودة في الدمام وقد تكون في مواقع أخرى استراتيجية لضمان أسرع وصول وأعلى أمان. إذا كان لديك مخاوف جدية بخصوص الخوادم، يرجى عدم استخدام المنصة.</p>
+            <h3 className="font-semibold text-white mt-3 mb-1">6.3 نستخدم معلوماتك للتواصل المهم</h3>
+            <p>عند تسجيلك أو تواصلك معنا، تسمح لنا بـ:</p>
+            <ul className="space-y-1">
+              <li>✓ إرسال تحديثات مهمة عن النظام (صيانة، ميزات جديدة)</li>
+              <li>✓ الرد على استفساراتك وحل مشاكلك</li>
+              <li>✓ مشاركة نصائح وأفضل الممارسات</li>
+              <li>✓ إخبارك عن التطويرات الجديدة</li>
+            </ul>
+            <p>نحترم بريدك ولن نرسل لك رسائل عشوائية.</p>
+            <h3 className="font-semibold text-white mt-3 mb-1">6.4 بيانات آمنة وسرية</h3>
+            <p>لن نشارك بيانات حسابك الشخصية مع أحد، إلا في الحالات الضرورية جداً:</p>
+            <ul className="list-disc pr-6 space-y-1">
+              <li>شركاء تقنيين نحتاجهم لتقديم الخدمة</li>
+              <li>إذا أجبرتنا القوانين على ذلك</li>
+              <li>في حالات شراكة استراتيجية في المستقبل (سنخبرك مسبقاً)</li>
+            </ul>
+            <h3 className="font-semibold text-white mt-3 mb-1">6.5 الإحصائيات المجمعة (بدون اسمك)</h3>
+            <p>قد نستخدم إحصائيات عامة من كل المستخدمين (بدون ذكر اسمك) لـ:</p>
+            <ul className="list-disc pr-6 space-y-1">
+              <li>فهم الأنماط الكلية للاستخدام</li>
+              <li>تحسين الخدمة العام</li>
+              <li>البحث والتطوير</li>
+            </ul>
+            <h3 className="font-semibold text-white mt-3 mb-1">6.6 بيانات آمنة للأبد</h3>
+            <p>معلومات حسابك الأساسية (اسمك ورقمك) ستبقى محفوظة آمنة لدينا بشكل دائم. هذا يضمن أمانك ويساعدنا في الاحتفاظ بسجلات موثوقة.</p>
+            <h3 className="font-semibold text-white mt-3 mb-1">6.7 الحماية من البوتات (Cloudflare Turnstile)</h3>
+            <p>تستخدم منصة رغوة خدمة Cloudflare Turnstile للتحقق من أن الزوار أشخاص حقيقيون وحماية النظام من محاولات التسجيل الوهمية والاختراق، دون إزعاجك بأي اختبار مرئي في الغالب. باستخدامك للمنصة، فإنك تقر باطلاعك على سياسة خصوصية وشروط استخدام Cloudflare الخاصة بهذه الخدمة.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white mb-2">البند السابع: التطوير والتحديثات المستمرة</h2>
+            <p>هدفنا تحسين المنصة باستمرار. نحتفظ بحقنا في:</p>
+            <ul className="space-y-1">
+              <li>✓ إضافة ميزات جديدة ومفيدة</li>
+              <li>✓ تحسين الواجهة والأداء</li>
+              <li>✓ تحديثات أمان ضرورية</li>
+              <li>✓ تعديل أو حذف ميزات قديمة لم تعد مفيدة</li>
+            </ul>
+            <p>التزامنا بالاختبار: قبل أي تحديث رئيسي، نختبره بعناية. هذا يعني أن التحديثات تأتي محسّنة وآمنة. قد تحدث توقفات قصيرة جداً للصيانة (نادراً)، وسنحاول إخبارك بها.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white mb-2">البند الثامن: الخدمة بكل شفافية</h2>
+            <h3 className="font-semibold text-white mt-3 mb-1">8.1 ما نقدمه بصراحة</h3>
+            <p>نحن صرحاء معك: المنصة في مرحلة تطوير، لذلك:</p>
+            <ul className="list-disc pr-6 space-y-1">
+              <li>نوفرها كما هي الآن (مع التحسينات المستمرة)</li>
+              <li>نعمل بجد لضمان الاستقرار والأمان</li>
+              <li>لا نستطيع ضمان خلو النظام من أي مشكلة تقنية صغيرة</li>
+              <li>قد تحتاج إلى النسخ الاحتياطية للبيانات الحساسة</li>
+            </ul>
+            <p>هذا طبيعي وشفاف.</p>
+            <h3 className="font-semibold text-white mt-3 mb-1">8.2 نحن لا نتحمل مسؤوليات غير معقولة</h3>
+            <p>في حالة حدوث مشكلة تقنية:</p>
+            <ul className="list-disc pr-6 space-y-1">
+              <li>مسؤولية الشركة محدودة ومعقولة</li>
+              <li>نحن لا نستطيع تعويض خسائر كبيرة جداً (هذا معيار في جميع الخدمات)</li>
+              <li>لكننا ملتزمون بإصلاح أي مشكلة بسرعة</li>
+            </ul>
+            <h3 className="font-semibold text-white mt-3 mb-1">8.3 أنت مسؤول أيضاً عن أمان حسابك</h3>
+            <ul className="list-disc pr-6 space-y-1">
+              <li>احفظ نسخة احتياطية من البيانات المهمة</li>
+              <li>استخدم كلمة مرور قوية</li>
+              <li>لا تشارك بيانات حسابك مع أحد</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white mb-2">البند التاسع: إذا توقفت عن الخدمة</h2>
+            <h3 className="font-semibold text-white mt-3 mb-1">9.1 حقك في الإيقاف وحقنا أيضاً</h3>
+            <p>أنت حر في إيقاف استخدام المنصة في أي وقت. نحن أيضاً قد نضطر لإيقاف خدمتك إذا:</p>
+            <ul className="list-disc pr-6 space-y-1">
+              <li>انتهكت شروط الاستخدام</li>
+              <li>استخدمت النظام بطرق تضره</li>
+              <li>قررنا إيقاف الخدمة (سنحاول إخبارك)</li>
+            </ul>
+            <h3 className="font-semibold text-white mt-3 mb-1">9.2 بيانات آمنة حتى بعد الانتهاء</h3>
+            <p>عند الإيقاف، قد لا تتمكن من الوصول لحسابك مباشرة. لذلك من الضروري حفظ نسختك الاحتياطية من أي بيانات مهمة قبل الانتهاء.</p>
+            <p>احنا نحتفظ بالبيانات بأمان وفقاً للقانون (للسجلات والأرشفة).</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white mb-2">البند العاشر: إذا غيّرنا الشروط</h2>
+            <p>قد نحتاج لتحديث هذه الشروط لتحسين الخدمة. عندما نفعل:</p>
+            <ul className="list-disc pr-6 space-y-1">
+              <li>سنخبرك بالتغييرات المهمة عبر البريد</li>
+              <li>استمرارك في الاستخدام يعني موافقتك</li>
+              <li>إذا لم توافق على التغييرات، عليك التوقف عن الاستخدام</li>
+            </ul>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white mb-2">البند الحادي عشر: القانون والمحاكم</h2>
+            <p>هذه الاتفاقية تحكمها قوانين المملكة العربية السعودية. أي نزاع سيُحل من خلال المحاكم السعودية.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white mb-2">البند الثاني عشر: نحن هنا لك</h2>
+            <p>للتواصل معنا بسهولة:</p>
+            <ul className="space-y-1">
+              <li>📧 البريد الإلكتروني: support@ragwapos.com</li>
+              <li>💬 من خلال المنصة: قسم "الاتصال بنا"</li>
+            </ul>
+            <p>نحن نقدّر تعليقاتك وشكاواك - هذا يساعدنا على التحسين!</p>
+            <p className="italic text-gray-400">ملاحظة: قد نسجل اتصالاتك لتحسين خدمتنا والتدريب. بك توافقك على هذا.</p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white mb-2">البند الثالث عشر: معلومات إضافية</h2>
+            <ul className="list-disc pr-6 space-y-1">
+              <li>إذا وجدنا بند من بنود الشروط غير صحيح، ستبقى البنود الأخرى سارية</li>
+              <li>عدم تطبيقنا لبند معين لا يعني تنازلنا عنه</li>
+              <li>نحن غير مسؤولين عن روابط خارجية قد توجد في المنصة</li>
+            </ul>
+          </section>
+
+          <p className="text-center text-white font-semibold pt-4">شكراً لاستخدامك منصة رغوة! 🙏</p>
+          <p className="text-center text-gray-500 text-xs">آخر تحديث: 22/08/2026</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const LaundryPOS = () => {
   const [currentPage, setCurrentPage] = useState('landing');
+  // Where to send the user back to from the terms page — it can be reached
+  // from more than one place (signup checkbox, landing page footer), and a
+  // plain setCurrentPage('signup') on the way back would strand a visitor
+  // who opened it from the landing page instead.
+  const [termsReferrer, setTermsReferrer] = useState('landing');
+  const openTerms = () => { setTermsReferrer(currentPage); setCurrentPage('terms'); };
   // Chosen once on the landing page (before any login/signup) and carried
   // through as the dashboard's starting language, so a visitor who picked
   // Arabic there doesn't land on an English dashboard after signing up.
@@ -7603,7 +7857,7 @@ const LaundryPOS = () => {
       contactType={contactType} setContactType={setContactType}
       contactMessage={contactMessage} setContactMessage={setContactMessage}
       contactSent={contactSent} submitContact={submitContact}
-      lang={siteLang} setLang={setSiteLang}
+      lang={siteLang} setLang={setSiteLang} onOpenTerms={openTerms}
     />
   ) : currentPage === 'login' ? (
     <LoginPage
@@ -7616,6 +7870,8 @@ const LaundryPOS = () => {
     <ForgotPasswordPage setCurrentPage={setCurrentPage} />
   ) : currentPage === 'resetPassword' ? (
     <ResetPasswordPage onDone={async () => { await auth.signOut(); setCurrentPage('login'); }} />
+  ) : currentPage === 'terms' ? (
+    <TermsPage onBack={() => setCurrentPage(termsReferrer)} />
   ) : currentPage === 'signup' ? (
     <SignupPage
       setCurrentPage={setCurrentPage} signupShop={signupShop} setSignupShop={setSignupShop}
@@ -7625,6 +7881,7 @@ const LaundryPOS = () => {
       signupPassword={signupPassword} setSignupPassword={setSignupPassword}
       signupAgree={signupAgree} setSignupAgree={setSignupAgree}
       handleSignup={handleSignup} signupError={signupError} signupLoading={signupLoading}
+      onOpenTerms={openTerms}
     />
   ) : currentPage === 'admin' ? (
     <AdminDashboard
