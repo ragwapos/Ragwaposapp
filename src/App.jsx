@@ -6460,64 +6460,74 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   const LANDING_TEXT = {
     ar: {
       brand: 'رغوة',
+      navFeatures: 'المميزات', navHow: 'كيف يعمل', navWhy: 'لماذا رغوة؟', navFaq: 'الأسئلة الشائعة',
       navContact: 'تواصل مع فريقنا',
       navLogin: 'الدخول',
-      heroTitle1: 'من الشتات',
-      heroTitle2: 'إلى الثبات',
-      heroDesc: 'رغوة يشمل نقطة بيع، تتبع حالة الطلب، اشتراكات المغاسل والدفع الآجل في نظام واحد',
-      heroTagline: 'اسبق جيرانك بخطوة وابدأ مع رغوة',
-      ctaStart: 'ابدأ الآن مجاناً',
-      ctaWorkflow: 'شوف دورة العمل',
-      workflowTitle: 'دورة العمل',
-      workflowSteps: [
-        { step: 1, title: 'الاستقبال والتسجيل', desc: 'استقبال الملابس وتسجيل الطلب مع تحديد الخدمات' },
-        { step: 2, title: 'المعالجة والمتابعة', desc: 'متابعة الملابس في كل مرحلة من الغسل والكي' },
-        { step: 3, title: 'الجودة والتسليم', desc: 'فحص النتائج والتحضير للتسليم' },
-        { step: 4, title: 'الفوترة والإغلاق', desc: 'تسجيل الفاتورة ومعالجة الدفع' },
-      ],
-      problemsTitle: 'المشاكل قبل نظام رغوة',
+      heroTitle: 'خلّ المغسلة تمشي… وأنت ارتاح',
+      heroDesc: 'رغوة يرتّب مغسلتك من الاستلام إلى التسليم. كاشير سريع، تتبع لكل قطعة، فواتير إلكترونية، ومناديب تحت عينك — كل هذا بنظام سحابي مصمم للمغاسل السعودية.',
+      heroSupport: 'زحمة الجمعة؟ موسم العيد؟ رغوة معك، عشان شغلك يمشي وبيض وجهك يظل محفوظ.',
+      ctaStart: 'جرّب رغوة مجاناً',
+      ctaDemo: 'احجز عرض توضيحي',
+      trustRow: ['سحابي بالكامل', 'متوافق مع الفوترة الإلكترونية', 'يعمل من الجوال والتابلت'],
+
+      problemsTitle: 'مشاكل تعرفها زين',
+      problemsSubtitle: 'قبل ما تصير مشكلة، خل رغوة يحلها',
       problems: [
-        { title: 'تكتل الملابس', desc: 'عميل يحط ملابسه وينساها' },
-        { title: 'تأخر تسليم الطلبات', desc: 'للحين ماجهزت ملابس العميل؟ من اللي مسبب هالتأخير؟' },
-        { title: 'ما استلمت ملابسي 🙄', desc: 'أوف شفيه ذا جحد!' },
-        { title: 'عميل مايرجع ثاني؟', desc: 'انتبه لا تزعله' },
+        { q: 'وين الثوب؟', solution: 'كل قطعة مسجّلة برقم واضح من لحظة الاستلام، تعرف مكانها بالضبط بثانيتين.', highlight: 'صفر قطع ضايعة' },
+        { q: 'الفاتورة وين؟ والحسبة كم؟', solution: 'فاتورة إلكترونية فورية مع كل عملية بيع، محسوبة وموثقة تلقائيًا.', highlight: 'حساب دقيق، كل مرة' },
+        { q: 'المندوب وين وصل؟', solution: 'تعرف حالة كل طلب توصيل لحظة بلحظة، من الاستلام لين التسليم.', highlight: 'وضوح كامل بالتوصيل' },
+        { q: 'تقفّل الكاشير… بس لا تبدأ الحسبة من جديد', solution: 'كل بيانات يومك محفوظة تلقائيًا بالسحاب — سجّل، تقارير، أرباح، كلها جاهزة أي وقت ترجع لها.', highlight: 'ما تبدأ من صفر أبدًا' },
       ],
-      solutionTitle: 'الحل: رغوة',
-      solutionDesc: 'يحول كل هذا لنظام واحد، من تسجيل الفاتورة لين يستلم العميل ملابسه',
-      solutions: [
-        { title: 'تذكير للعميل', desc: 'يجي يسلم ملابسه في الوقت المناسب' },
-        { title: 'دورة تتبع الطلب', desc: 'تعرف بالضبط وين وصل الطلب' },
-        { title: 'فاتورة استقبال موثقة', desc: 'توثيق الملابس بالثانية!' },
-        { title: 'نظام اشتراكات', desc: 'يرجع العميل مرتين وثلاثة' },
+
+      midCtaTitle: 'حسّيت إننا نتكلم عن مغسلتك؟',
+      midCtaDesc: 'خلّنا نوريك كيف رغوة يحل هالمشاكل بمغسلتك بالذات.',
+
+      compareTitle: 'مغسلة على البركة 🧾 مقابل مغسلة برغوة 🚀',
+      compareClosing: 'الطريقة القديمة تعتمد على الذاكرة… رغوة يعتمد على النظام.',
+      compareRows: [
+        { before: 'دفتر وقلم لتسجيل الطلبات', after: 'فاتورة إلكترونية فورية لكل طلب' },
+        { before: 'تتذكر وين وصلت كل قطعة براسك', after: 'تتبع حي لكل قطعة، لحظة بلحظة' },
+        { before: 'تحسب الأرباح آخر الشهر بصعوبة', after: 'تقارير أرباح وخسائر جاهزة أي وقت' },
+        { before: 'عميل يتصل يسأل "وين طلبي؟"', after: 'تذكير تلقائي للعميل قبل ما يسأل' },
+        { before: 'ما تدري مين المندوب المتأخر', after: 'حالة كل طلب توصيل واضحة أمامك' },
+        { before: 'كل كاشير له طريقته الخاصة', after: 'نظام موحّد، كل موظف يشتغل بنفس الطريقة' },
+        { before: 'الأوراق تضيع أو تتلف', after: 'كل البيانات محفوظة بأمان بالسحاب' },
+        { before: 'صعب تعرف عميلك المتكرر', after: 'سجل عملاء ومحافظ ونظام اشتراكات' },
       ],
-      ctaTitle: 'تبي تشوف مغسلتك من كل الزوايا؟',
-      whoTitle: 'لمين رغوة؟',
-      whoSubtitle: 'من يستفيد من النظام',
-      who: [
-        { title: 'مغاسل الملابس', desc: 'محلات الغسيل والكي والتنظيف الجاف المختلفة الأحجام' },
-        { title: 'الفنادق', desc: 'فنادق وأماكن الإقامة التي تحتاج لخدمات غسيل احترافية' },
-        { title: 'الشركات والمؤسسات', desc: 'الشركات الكبرى التي تحتاج إلى خدمات غسيل موثوقة' },
+
+      featuresTitle: 'المميزات',
+      features: [
+        { title: 'فاتورتك على الواتساب', desc: 'أرسل الفاتورة والإيصال للعميل مباشرة عبر واتساب بضغطة وحدة.' },
+        { title: 'تتبع القطع', desc: 'كل قطعة ملابس لها حالتها الخاصة من الاستلام للتسليم.' },
+        { title: 'لوحة تحكم من الجوال', desc: 'تابع مغسلتك من أي مكان، من جوالك أو التابلت.' },
+        { title: 'إدارة المناديب', desc: 'تابع طلبات التوصيل من لحظة الخروج لين وصولها للعميل.' },
       ],
-      benefitsTitle: 'ليه رغوة؟',
-      benefitsSubtitle: 'الفوائد الرئيسية',
-      benefits: [
-        { title: 'توفير الوقت', desc: 'تقليل الوقت في العمليات اليدوية والحسابات' },
-        { title: 'زيادة الإنتاجية', desc: 'معالجة طلبات أكثر بنفس عدد الموظفين' },
-        { title: 'تحسين الخدمة', desc: 'خدمة أسرع وأدق مع متابعة دقيقة للطلبات' },
-        { title: 'تنظيم العمل', desc: 'ترتيب منظم من الاستقبال إلى التسليم' },
-        { title: 'بيانات دقيقة', desc: 'حفظ دقيق لجميع البيانات والعمليات' },
-        { title: 'تقارير شاملة', desc: 'معرفة الأداء والأرباح والخسائر' },
+
+      howTitle: 'كيف يعمل',
+      howSteps: [
+        { step: 1, title: 'استلم', desc: 'استقبل الملابس وسجّل الطلب بفاتورة إلكترونية فورية' },
+        { step: 2, title: 'عالج', desc: 'تابع كل قطعة عبر مراحل الغسيل والكوي' },
+        { step: 3, title: 'تابع', desc: 'اعرف حالة كل طلب لحظة بلحظة، بالفرع أو بالتوصيل' },
+        { step: 4, title: 'سلّم', desc: 'سلّم الطلب وأرسل الفاتورة للعميل تلقائيًا' },
       ],
-      impactTitle: 'كيف بيفيدني النظام كصاحب مغسلة؟',
-      impactSubtitle: 'التأثير المباشر على عملك',
-      impactItems: [
-        'تقليل الأخطاء والشكاوى من العملاء',
-        'زيادة العملاء الدائمين عن طريق الخدمة الأفضل',
-        'توفير ساعات عمل يومية في الحسابات والتنظيم',
-        'معرفة دقيقة بأرباحك وخسائرك كل يوم',
-        'القدرة على توسيع العمل بسهولة وثقة',
-        'راحة البال من أن كل شيء مسجل وآمن',
+
+      cloudTitle: 'مغسلتك معك… وين ما كنت',
+      cloudDesc: 'نظام سحابي بالكامل — تفتحه من الكمبيوتر بالمحل، أو من جوالك وأنت طريقك للبيت.',
+
+      trustTitle: 'مصمم للمغاسل السعودية',
+      trustChecklist: ['فواتير إلكترونية', 'نظام سحابي', 'تتبع للقطع', 'إدارة المناديب', 'تقارير لحظية'],
+
+      faqTitle: 'الأسئلة الشائعة',
+      faq: [
+        { q: 'هل رغوة يحتاج أجهزة خاصة؟', a: 'لا، يشتغل من أي متصفح على كمبيوتر أو جوال أو تابلت — بدون تركيب أي برنامج.' },
+        { q: 'هل بياناتي آمنة؟', a: 'نعم، كل بياناتك محفوظة بشكل مشفّر وخاص بمغسلتك فقط، ولا يقدر يشوفها أحد غيرك.' },
+        { q: 'هل يدعم الفواتير الإلكترونية المتوافقة مع الهيئة؟', a: 'نعم، رغوة مبني على التوافق مع متطلبات الفوترة الإلكترونية بالمملكة.' },
+        { q: 'كم يحتاج وقت لتعلّم النظام؟', a: 'تصميمه بسيط ومباشر — أغلب أصحاب المغاسل يبدؤون البيع بنفس اليوم.' },
       ],
+
+      finalCtaTitle: 'خل شغلك أرتب… ومغسلتك أهدى.',
+      finalCtaSupport: 'بدون تعقيد. بدون سيرفرات. وبدون ما تغيّر طريقة شغلك من يوم وليلة.',
+
       footer: '© 2024 رغوة | جميع الحقوق محفوظة',
       contactModalTitle: 'تواصل مع فريقنا',
       contactSentMsg: 'تم إرسال طلبك، بيتواصل معك فريقنا قريبًا.',
@@ -6527,64 +6537,74 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
     },
     en: {
       brand: 'Ragwa',
+      navFeatures: 'Features', navHow: 'How It Works', navWhy: 'Why Ragwa?', navFaq: 'FAQ',
       navContact: 'Contact Sales',
       navLogin: 'Log In',
-      heroTitle1: 'From Chaos',
-      heroTitle2: 'To Control',
-      heroDesc: 'Ragwa brings point of sale, order tracking, laundry subscriptions, and deferred payments together in one system',
-      heroTagline: 'Get a step ahead of your neighbors — start with Ragwa',
-      ctaStart: 'Start Free Now',
-      ctaWorkflow: 'See the Workflow',
-      workflowTitle: 'Workflow',
-      workflowSteps: [
-        { step: 1, title: 'Intake & Registration', desc: 'Receive garments and register the order with the selected services' },
-        { step: 2, title: 'Processing & Tracking', desc: 'Track garments through every stage of washing and ironing' },
-        { step: 3, title: 'Quality & Delivery', desc: 'Inspect results and prepare for handover' },
-        { step: 4, title: 'Billing & Closing', desc: 'Record the invoice and process payment' },
-      ],
-      problemsTitle: 'Problems Before Ragwa',
+      heroTitle: 'Let the shop run… while you relax',
+      heroDesc: 'Ragwa keeps your laundry shop organized from intake to delivery. A fast checkout, per-item tracking, e-invoices, and drivers you can always see — all in one cloud system built for Saudi laundry shops.',
+      heroSupport: "Busy Friday? Eid season rush? Ragwa's got you, so your work keeps moving and your reputation stays spotless.",
+      ctaStart: 'Try Ragwa Free',
+      ctaDemo: 'Book a Demo',
+      trustRow: ['Fully cloud-based', 'E-invoicing compliant', 'Works on mobile & tablet'],
+
+      problemsTitle: 'Problems you know all too well',
+      problemsSubtitle: "Before it becomes a real problem, let Ragwa handle it",
       problems: [
-        { title: 'Piled-Up Laundry', desc: 'A customer drops off their laundry and forgets about it' },
-        { title: 'Delayed Orders', desc: "Still not ready? Who's actually causing the delay?" },
-        { title: 'I never got my laundry 🙄', desc: "What a hassle." },
-        { title: "A customer who never comes back?", desc: "Careful — don't lose them" },
+        { q: 'Where\'s the shirt?', solution: 'Every piece is logged with a clear number from the moment it arrives — know exactly where it is in seconds.', highlight: 'Zero lost items' },
+        { q: 'Where\'s the invoice? What do I owe?', solution: 'An instant e-invoice with every sale, calculated and recorded automatically.', highlight: 'Accurate, every time' },
+        { q: 'Where did the driver get to?', solution: 'Track every delivery order\'s status live, from pickup to drop-off.', highlight: 'Full delivery visibility' },
+        { q: "You close the register… but don't start the math over", solution: "Your whole day's data is saved automatically in the cloud — records, reports, profits, always ready when you come back to them.", highlight: 'Never start from zero' },
       ],
-      solutionTitle: 'The Solution: Ragwa',
-      solutionDesc: 'It brings all of this into one system, from the moment the invoice is recorded until the customer picks up their laundry',
-      solutions: [
-        { title: 'Customer Reminders', desc: 'They pick up their laundry right on time' },
-        { title: 'Order Tracking', desc: 'Know exactly where the order stands' },
-        { title: 'Documented Intake Receipt', desc: 'Garments documented in seconds' },
-        { title: 'Subscription System', desc: 'Customers keep coming back' },
+
+      midCtaTitle: 'Sound like your shop?',
+      midCtaDesc: "Let's show you exactly how Ragwa solves this for your business.",
+
+      compareTitle: 'The Old-School Shop 🧾 vs. The Ragwa Shop 🚀',
+      compareClosing: 'The old way relies on memory… Ragwa relies on the system.',
+      compareRows: [
+        { before: 'A notebook and pen for orders', after: 'An instant e-invoice for every order' },
+        { before: "Remembering where every item is by heart", after: 'Live tracking for every single item' },
+        { before: 'Calculating profit by hand at month-end', after: 'Profit & loss reports ready anytime' },
+        { before: 'A customer calling to ask "where\'s my order?"', after: 'An automatic reminder before they even ask' },
+        { before: "No idea which driver is running late", after: 'Every delivery status visible at a glance' },
+        { before: 'Every cashier has their own way of doing things', after: 'One unified system, every staff member consistent' },
+        { before: 'Paper records that get lost or damaged', after: 'All data safely stored in the cloud' },
+        { before: 'Hard to recognize your repeat customers', after: 'Customer ledger, wallets, and a subscription system' },
       ],
-      ctaTitle: 'Want to see your laundry business from every angle?',
-      whoTitle: 'Who is Ragwa for?',
-      whoSubtitle: 'Who benefits from the system',
-      who: [
-        { title: 'Laundry Shops', desc: 'Washing, ironing, and dry-cleaning businesses of every size' },
-        { title: 'Hotels', desc: 'Hotels and accommodations that need professional laundry services' },
-        { title: 'Companies & Institutions', desc: 'Large organizations that need reliable laundry services' },
+
+      featuresTitle: 'Features',
+      features: [
+        { title: 'Invoices on WhatsApp', desc: "Send the invoice and receipt straight to the customer's WhatsApp with one click." },
+        { title: 'Item Tracking', desc: 'Every garment has its own status from intake to delivery.' },
+        { title: 'Dashboard on Mobile', desc: 'Keep an eye on your shop from anywhere, on your phone or tablet.' },
+        { title: 'Driver Management', desc: 'Track delivery orders from the moment they leave until they reach the customer.' },
       ],
-      benefitsTitle: 'Why Ragwa?',
-      benefitsSubtitle: 'Key Benefits',
-      benefits: [
-        { title: 'Save Time', desc: 'Cut down time spent on manual work and calculations' },
-        { title: 'Boost Productivity', desc: 'Handle more orders with the same staff' },
-        { title: 'Better Service', desc: 'Faster, more accurate service with precise order tracking' },
-        { title: 'Organized Operations', desc: 'A structured flow from intake to delivery' },
-        { title: 'Accurate Data', desc: 'Precise records of all data and operations' },
-        { title: 'Comprehensive Reports', desc: 'Know your performance, profits, and losses' },
+
+      howTitle: 'How It Works',
+      howSteps: [
+        { step: 1, title: 'Intake', desc: 'Receive the garments and log the order with an instant e-invoice' },
+        { step: 2, title: 'Process', desc: 'Track every item through washing and ironing' },
+        { step: 3, title: 'Track', desc: "Know each order's status live, in-store or on delivery" },
+        { step: 4, title: 'Deliver', desc: "Hand over the order and send the customer's invoice automatically" },
       ],
-      impactTitle: 'How does the system help me as a laundry owner?',
-      impactSubtitle: 'The direct impact on your business',
-      impactItems: [
-        'Fewer mistakes and customer complaints',
-        'More repeat customers thanks to better service',
-        'Hours saved every day on accounting and organizing',
-        'A precise picture of your profits and losses every day',
-        'The ability to grow your business with ease and confidence',
-        'Peace of mind knowing everything is recorded and secure',
+
+      cloudTitle: 'Your shop, wherever you are',
+      cloudDesc: 'A fully cloud-based system — open it from the shop computer, or from your phone on the way home.',
+
+      trustTitle: 'Built for Saudi Laundry Shops',
+      trustChecklist: ['E-invoicing', 'Cloud-based system', 'Item tracking', 'Driver management', 'Live reports'],
+
+      faqTitle: 'Frequently Asked Questions',
+      faq: [
+        { q: 'Does Ragwa need special hardware?', a: 'No — it runs in any browser on a computer, phone, or tablet, no installation needed.' },
+        { q: 'Is my data safe?', a: "Yes, all your data is stored securely and is private to your shop — no one else can see it." },
+        { q: 'Does it support compliant e-invoicing?', a: "Yes, Ragwa is built around Saudi e-invoicing compliance requirements." },
+        { q: 'How long does it take to learn?', a: "It's simple and direct — most shop owners are selling on day one." },
       ],
+
+      finalCtaTitle: 'Get your work organized… and your shop at ease.',
+      finalCtaSupport: "No complexity. No servers. And no need to change how you work overnight.",
+
       footer: '© 2024 Ragwa | All Rights Reserved',
       contactModalTitle: 'Contact Sales',
       contactSentMsg: 'Your request has been sent — our sales team will reach out to you soon.',
@@ -6595,7 +6615,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   };
 
   function LandingPage(props) {
-  const { setCurrentPage, showWorkflow, setShowWorkflow, showContact, setShowContact,
+  const { setCurrentPage, showContact, setShowContact,
     contactName, setContactName, contactMobile, setContactMobile, contactEmail, setContactEmail,
     contactType, setContactType, contactMessage, setContactMessage, contactSent, submitContact,
     lang, setLang, onOpenTerms } = props;
@@ -6606,212 +6626,225 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   const [contactWebsite, setContactWebsite] = useState('');
   const formStartedAtRef = useRef(0);
   useEffect(() => { if (showContact) formStartedAtRef.current = Date.now(); }, [showContact]);
+  const [openFaq, setOpenFaq] = useState(null);
   const t = LANDING_TEXT[lang];
   const dir = lang === 'ar' ? 'rtl' : 'ltr';
+  const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 
   return (
-    <div dir={dir} className="min-h-screen bg-gradient-to-b from-slate-950 via-blue-950 to-slate-950 text-white overflow-hidden">
+    <div dir={dir} className="min-h-screen bg-navy-950 text-white overflow-x-hidden font-cairo" style={{ fontFamily: "'Cairo','Segoe UI',Tahoma,sans-serif" }}>
       {/* Navigation */}
-      <nav className="fixed top-0 w-full bg-slate-950/90 backdrop-blur border-b border-slate-800 z-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src={LOGO_DATA_URI} alt={t.brand} className="w-12 h-12 rounded-2xl object-contain shrink-0" />
+      <nav className="fixed top-0 w-full bg-navy-950/90 backdrop-blur border-b border-navy-800 z-50">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 shrink-0">
+            <img src={LOGO_DATA_URI} alt={t.brand} className="w-11 h-11 rounded-2xl object-contain shrink-0" />
             <span className="font-bold text-xl">{t.brand}</span>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 rounded-full border border-slate-700 p-1">
-              <button onClick={() => setLang('ar')} className={`px-3 py-1 rounded-full text-xs font-semibold transition ${lang === 'ar' ? 'bg-cyan-500 text-slate-950' : 'text-gray-400 hover:text-white'}`}>عربي</button>
-              <button onClick={() => setLang('en')} className={`px-3 py-1 rounded-full text-xs font-semibold transition ${lang === 'en' ? 'bg-cyan-500 text-slate-950' : 'text-gray-400 hover:text-white'}`}>EN</button>
+
+          <div className="hidden lg:flex items-center gap-7 text-sm text-gray-300">
+            <button onClick={() => scrollTo('features')} className="hover:text-white transition">{t.navFeatures}</button>
+            <button onClick={() => scrollTo('how-it-works')} className="hover:text-white transition">{t.navHow}</button>
+            <button onClick={() => scrollTo('why')} className="hover:text-white transition">{t.navWhy}</button>
+            <button onClick={() => scrollTo('faq')} className="hover:text-white transition">{t.navFaq}</button>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="hidden sm:flex items-center gap-1 rounded-full border border-navy-700 p-1">
+              <button onClick={() => setLang('ar')} className={`px-3 py-1 rounded-full text-xs font-semibold transition ${lang === 'ar' ? 'bg-brand-500 text-navy-950' : 'text-gray-400 hover:text-white'}`}>عربي</button>
+              <button onClick={() => setLang('en')} className={`px-3 py-1 rounded-full text-xs font-semibold transition ${lang === 'en' ? 'bg-brand-500 text-navy-950' : 'text-gray-400 hover:text-white'}`}>EN</button>
             </div>
-            <button onClick={() => setShowContact(true)} className="px-4 py-2.5 rounded-lg border border-cyan-400/40 text-cyan-300 hover:bg-cyan-400/10 text-sm font-medium transition">
+            <button onClick={() => setShowContact(true)} className="hidden md:inline-flex px-4 py-2.5 rounded-lg border border-brand-400/40 text-brand-300 hover:bg-brand-400/10 text-sm font-medium transition">
               {t.navContact}
             </button>
-            <button onClick={() => setCurrentPage('login')} className="px-6 py-2.5 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 font-semibold transition">
+            <button onClick={() => setCurrentPage('login')} className="hidden md:inline-flex px-4 py-2.5 rounded-lg text-gray-200 hover:text-white text-sm font-medium transition">
               {t.navLogin}
+            </button>
+            <button onClick={() => setCurrentPage('signup')} className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 font-semibold text-sm transition text-white shadow-app-sm">
+              {t.ctaStart}
             </button>
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <div className="pt-28 pb-20 px-6">
-        <div className="max-w-4xl mx-auto text-center space-y-8">
-          <div className="space-y-6">
-            <h1 className="text-6xl md:text-7xl font-bold leading-tight">
-              {t.heroTitle1}
-              <br />
-              <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">{t.heroTitle2}</span>
-            </h1>
+      {/* Hero */}
+      <div className="pt-32 pb-20 px-6">
+        <div className="max-w-3xl mx-auto text-center space-y-7">
+          <h1 className="text-4xl md:text-6xl font-extrabold leading-tight text-wrap-balance" style={{ textWrap: 'balance' }}>
+            {t.heroTitle}
+          </h1>
+          <p className="text-lg text-gray-300 leading-relaxed max-w-2xl mx-auto">{t.heroDesc}</p>
+          <p className="text-base text-brand-400 font-medium">{t.heroSupport}</p>
 
-            <p className="text-lg text-gray-300 leading-relaxed">
-              {t.heroDesc}
-            </p>
-
-            <p className="text-base text-cyan-400 font-medium">
-              {t.heroTagline}
-            </p>
-          </div>
-
-          <div className="flex gap-4 justify-center pt-6 flex-wrap">
-            <button onClick={() => setCurrentPage('signup')} className="px-8 py-3 rounded-lg bg-green-600 hover:bg-green-700 font-semibold transition text-white">
+          <div className="flex gap-4 justify-center pt-4 flex-wrap">
+            <button onClick={() => setCurrentPage('signup')} className="px-8 py-3.5 rounded-lg bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 font-semibold transition text-white shadow-app-md">
               {t.ctaStart}
             </button>
-            <button onClick={() => setShowWorkflow(true)} className="px-8 py-3 rounded-lg border-2 border-cyan-400 text-cyan-400 hover:bg-cyan-400/10 font-semibold transition">
-              {t.ctaWorkflow}
+            <button onClick={() => setShowContact(true)} className="px-8 py-3.5 rounded-lg border-2 border-brand-400 text-brand-300 hover:bg-brand-400/10 font-semibold transition">
+              {t.ctaDemo}
+            </button>
+          </div>
+
+          <div className="flex items-center justify-center gap-x-6 gap-y-2 flex-wrap pt-6 text-xs text-gray-400">
+            {t.trustRow.map((item, i) => (
+              <span key={i} className="flex items-center gap-1.5"><span className="text-brand-400">✓</span>{item}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Problems */}
+      <div className="py-20 px-6">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-2">{t.problemsTitle}</h2>
+          <p className="text-center text-gray-400 mb-14">{t.problemsSubtitle}</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {t.problems.map((p, i) => (
+              <div key={i} className="bg-navy-900/60 border border-navy-700 rounded-xl p-6">
+                <h3 className="text-lg font-bold mb-2">{p.q}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed mb-3">{p.solution}</p>
+                <span className="inline-block text-xs font-semibold text-brand-400 bg-brand-400/10 rounded-full px-3 py-1">{p.highlight}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Mid CTA */}
+      <div className="py-16 px-6">
+        <div className="max-w-3xl mx-auto text-center space-y-5 bg-gradient-to-r from-accent-500/15 to-brand-500/15 border border-accent-500/30 rounded-2xl p-10 md:p-12">
+          <h2 className="text-2xl md:text-3xl font-bold">{t.midCtaTitle}</h2>
+          <p className="text-gray-300">{t.midCtaDesc}</p>
+          <button onClick={() => setCurrentPage('signup')} className="px-8 py-3 rounded-lg bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 font-semibold transition text-white inline-block">
+            {t.ctaStart}
+          </button>
+        </div>
+      </div>
+
+      {/* Before / After comparison */}
+      <div className="py-20 px-6 bg-navy-900/30">
+        <div className="max-w-4xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-center mb-10">{t.compareTitle}</h2>
+          <div className="overflow-hidden rounded-xl border border-navy-700">
+            {t.compareRows.map((row, i) => (
+              <div key={i} className={`grid grid-cols-2 ${i !== 0 ? 'border-t border-navy-700' : ''}`}>
+                <div className="p-4 md:p-5 text-sm text-gray-400 bg-navy-900/40">{row.before}</div>
+                <div className="p-4 md:p-5 text-sm text-white font-medium bg-brand-500/10 border-r border-navy-700">{row.after}</div>
+              </div>
+            ))}
+          </div>
+          <p className="text-center text-brand-400 font-medium mt-8">{t.compareClosing}</p>
+        </div>
+      </div>
+
+      {/* Features */}
+      <div id="features" className="py-20 px-6 scroll-mt-20">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-14">{t.featuresTitle}</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {t.features.map((f, i) => (
+              <div key={i} className="bg-navy-900/60 border border-navy-700 rounded-xl p-6 hover:border-brand-500/50 transition">
+                <h3 className="text-lg font-bold mb-2 text-brand-400">{f.title}</h3>
+                <p className="text-gray-400 text-sm leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* How it works */}
+      <div id="how-it-works" className="py-20 px-6 bg-navy-900/30 scroll-mt-20">
+        <div className="max-w-3xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-14">{t.howTitle}</h2>
+          <div className="space-y-4">
+            {t.howSteps.map((item, i) => (
+              <div key={i} className="flex gap-6 bg-navy-900/60 border border-navy-700 rounded-xl p-6">
+                <div className="shrink-0 w-11 h-11 bg-gradient-to-br from-brand-400 to-brand-600 rounded-lg flex items-center justify-center font-bold text-lg text-navy-950">
+                  {item.step}
+                </div>
+                <div>
+                  <h3 className="text-base font-bold mb-1">{item.title}</h3>
+                  <p className="text-gray-400 text-sm">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Cloud section */}
+      <div className="py-20 px-6">
+        <div className="max-w-2xl mx-auto text-center space-y-4">
+          <h2 className="text-3xl md:text-4xl font-bold">{t.cloudTitle}</h2>
+          <p className="text-gray-300">{t.cloudDesc}</p>
+        </div>
+      </div>
+
+      {/* Trust / why */}
+      <div id="why" className="py-20 px-6 bg-navy-900/30 scroll-mt-20">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold mb-8">{t.trustTitle}</h2>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            {t.trustChecklist.map((item, i) => (
+              <span key={i} className="flex items-center gap-2 text-sm bg-brand-500/10 border border-brand-500/30 text-brand-300 rounded-full px-4 py-2">
+                <span>✓</span>{item}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* FAQ */}
+      <div id="faq" className="py-20 px-6 scroll-mt-20">
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-10">{t.faqTitle}</h2>
+          <div className="space-y-3">
+            {t.faq.map((item, i) => (
+              <div key={i} className="bg-navy-900/60 border border-navy-700 rounded-xl overflow-hidden">
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full flex items-center justify-between gap-4 p-5 text-start">
+                  <span className="font-semibold text-white">{item.q}</span>
+                  <span className={`shrink-0 text-brand-400 transition-transform ${openFaq === i ? 'rotate-45' : ''}`}>+</span>
+                </button>
+                {openFaq === i && <p className="px-5 pb-5 text-sm text-gray-400 leading-relaxed">{item.a}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Final CTA */}
+      <div className="py-20 px-6">
+        <div className="max-w-2xl mx-auto text-center space-y-5">
+          <h2 className="text-3xl md:text-4xl font-bold">{t.finalCtaTitle}</h2>
+          <p className="text-gray-400">{t.finalCtaSupport}</p>
+          <div className="flex gap-4 justify-center pt-2 flex-wrap">
+            <button onClick={() => setCurrentPage('signup')} className="px-8 py-3.5 rounded-lg bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 font-semibold transition text-white shadow-app-md">
+              {t.ctaStart}
+            </button>
+            <button onClick={() => setShowContact(true)} className="px-8 py-3.5 rounded-lg border-2 border-brand-400 text-brand-300 hover:bg-brand-400/10 font-semibold transition">
+              {t.ctaDemo}
             </button>
           </div>
         </div>
       </div>
 
-      {showWorkflow && (
-        <div className="py-20 px-6 bg-gradient-to-b from-transparent via-blue-950/30 to-transparent">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex justify-between items-center mb-12">
-              <h2 className="text-4xl font-bold">{t.workflowTitle}</h2>
-              <button onClick={() => setShowWorkflow(false)} className="text-gray-400 hover:text-white text-2xl">✕</button>
-            </div>
-
-            <div className="space-y-4">
-              {t.workflowSteps.map((item, i) => (
-                <div key={i} className="flex gap-6 bg-slate-900/40 border border-slate-800 rounded-lg p-6 hover:border-cyan-500/50 transition">
-                  <div className="flex-shrink-0">
-                    <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center font-bold text-lg">
-                      {item.step}
-                    </div>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold mb-1">{item.title}</h3>
-                    <p className="text-gray-400 text-sm">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {!showWorkflow && (
-        <>
-          {/* Problems Section */}
-          <div className="py-20 px-6">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-4xl font-bold text-center mb-14">{t.problemsTitle}</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {t.problems.map((problem, i) => (
-                  <div key={i} className="bg-slate-900/40 border border-slate-800 rounded-lg p-6 text-center">
-                    <h3 className="text-xl font-semibold mb-2">{problem.title}</h3>
-                    <p className="text-gray-400 text-sm">{problem.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Solution Section */}
-          <div className="py-20 px-6 bg-gradient-to-b from-transparent via-blue-950/20 to-transparent">
-            <div className="max-w-4xl mx-auto space-y-12">
-              <div className="text-center space-y-4">
-                <h2 className="text-4xl font-bold">{t.solutionTitle}</h2>
-                <p className="text-gray-300">
-                  {t.solutionDesc}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {t.solutions.map((solution, i) => (
-                  <div key={i} className="bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border border-cyan-400/30 rounded-lg p-6 text-center">
-                    <h3 className="text-lg font-semibold mb-2 text-cyan-400">{solution.title}</h3>
-                    <p className="text-gray-400 text-sm">{solution.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* CTA Section */}
-          <div className="py-20 px-6">
-            <div className="max-w-3xl mx-auto text-center space-y-6 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-cyan-400/30 rounded-2xl p-12">
-              <h2 className="text-3xl font-bold">{t.ctaTitle}</h2>
-              <button onClick={() => setCurrentPage('signup')} className="px-8 py-3 rounded-lg bg-green-600 hover:bg-green-700 font-semibold transition text-white inline-block">
-                {t.ctaStart}
-              </button>
-            </div>
-          </div>
-
-          {/* Who Benefits */}
-          <div className="py-20 px-6">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-4xl font-bold text-center mb-2">{t.whoTitle}</h2>
-              <p className="text-center text-gray-400 mb-12">{t.whoSubtitle}</p>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {t.who.map((item, i) => (
-                  <div key={i} className="bg-slate-900/40 border border-slate-800 rounded-lg p-6 text-center">
-                    <h3 className="text-xl font-semibold mb-3 text-cyan-400">{item.title}</h3>
-                    <p className="text-gray-400 text-sm">{item.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Benefits Section */}
-          <div className="py-20 px-6 bg-gradient-to-b from-transparent via-blue-950/20 to-transparent">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-4xl font-bold text-center mb-2">{t.benefitsTitle}</h2>
-              <p className="text-center text-gray-400 mb-12">{t.benefitsSubtitle}</p>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {t.benefits.map((benefit, i) => (
-                  <div key={i} className="bg-slate-900/40 border border-slate-800 rounded-lg p-6 text-center">
-                    <h3 className="text-lg font-semibold mb-2 text-cyan-400">{benefit.title}</h3>
-                    <p className="text-gray-400 text-sm">{benefit.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Impact Section */}
-          <div className="py-20 px-6">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-4xl font-bold text-center mb-2">{t.impactTitle}</h2>
-              <p className="text-center text-gray-400 mb-12">{t.impactSubtitle}</p>
-
-              <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-cyan-400/30 rounded-2xl p-8 space-y-6">
-                <div className="space-y-4">
-                  {t.impactItems.map((item, i) => (
-                    <div key={i} className="flex gap-4">
-                      <div className="text-cyan-400 font-bold flex-shrink-0">✓</div>
-                      <p className="text-gray-300">{item}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
       {/* Footer */}
-      <footer className="py-8 px-6 border-t border-slate-800 text-center text-gray-500 text-sm">
+      <footer className="py-8 px-6 border-t border-navy-800 text-center text-gray-500 text-sm">
         <p>{t.footer}</p>
-        <button onClick={onOpenTerms} className="mt-2 text-cyan-400 hover:underline text-xs">
+        <button onClick={onOpenTerms} className="mt-2 text-brand-400 hover:underline text-xs">
           {lang === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions'}
         </button>
       </footer>
 
       {showContact && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={() => setShowContact(false)}>
-          <div dir={dir} className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
+          <div dir={dir} className="w-full max-w-md rounded-2xl bg-navy-900 border border-navy-700 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between border-b border-navy-800 px-5 py-4">
               <h3 className="font-bold text-white">{t.contactModalTitle}</h3>
               <button onClick={() => setShowContact(false)} className="text-gray-400 hover:text-white text-lg">✕</button>
             </div>
             <div className="p-5">
               {contactSent ? (
-                <div className="py-8 text-center text-cyan-300">
+                <div className="py-8 text-center text-brand-300">
                   <div className="text-3xl mb-2">✓</div>
                   <p>{t.contactSentMsg}</p>
                 </div>
@@ -6819,25 +6852,25 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
                 <>
                   <div className="mb-4">
                     <label className="block text-gray-300 text-sm font-semibold mb-2">{t.contactName}</label>
-                    <input value={contactName} onChange={(e) => setContactName(e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
+                    <input value={contactName} onChange={(e) => setContactName(e.target.value)} className="w-full bg-navy-800 border border-navy-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-brand-400 outline-none transition" />
                   </div>
                   <div className="mb-4">
                     <label className="block text-gray-300 text-sm font-semibold mb-2">{t.contactMobile}</label>
-                    <input value={contactMobile} onChange={(e) => setContactMobile(e.target.value)} placeholder="0501234567" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
+                    <input value={contactMobile} onChange={(e) => setContactMobile(e.target.value)} placeholder="0501234567" className="w-full bg-navy-800 border border-navy-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-brand-400 outline-none transition" />
                   </div>
                   <div className="mb-4">
                     <label className="block text-gray-300 text-sm font-semibold mb-2">{t.contactEmail}</label>
-                    <input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="name@example.com" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
+                    <input value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} placeholder="name@example.com" className="w-full bg-navy-800 border border-navy-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-brand-400 outline-none transition" />
                   </div>
                   <div className="mb-4">
                     <label className="block text-gray-300 text-sm font-semibold mb-2">{t.contactType}</label>
-                    <select value={contactType} onChange={(e) => setContactType(e.target.value)} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white focus:border-cyan-400 outline-none transition">
+                    <select value={contactType} onChange={(e) => setContactType(e.target.value)} className="w-full bg-navy-800 border border-navy-700 rounded-lg px-4 py-2.5 text-white focus:border-brand-400 outline-none transition">
                       {t.contactTypes.map((ct) => <option key={ct}>{ct}</option>)}
                     </select>
                   </div>
                   <div className="mb-5">
                     <label className="block text-gray-300 text-sm font-semibold mb-2">{t.contactMessage}</label>
-                    <textarea value={contactMessage} onChange={(e) => setContactMessage(e.target.value)} rows={3} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
+                    <textarea value={contactMessage} onChange={(e) => setContactMessage(e.target.value)} rows={3} className="w-full bg-navy-800 border border-navy-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:border-brand-400 outline-none transition" />
                   </div>
                   {/* Honeypot — invisible to a real visitor (off-screen, not display:none,
                       since some bots skip fields display:none hides), never tab-reachable. */}
@@ -6846,7 +6879,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
                     autoComplete="off" tabIndex={-1} aria-hidden="true"
                     style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
                   />
-                  <button onClick={() => submitContact({ website: contactWebsite, formStartedAt: formStartedAtRef.current })} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 rounded-lg transition">
+                  <button onClick={() => submitContact({ website: contactWebsite, formStartedAt: formStartedAtRef.current })} className="w-full bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 text-white font-semibold py-3 rounded-lg transition">
                     {t.contactSend}
                   </button>
                 </>
