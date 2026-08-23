@@ -3471,7 +3471,7 @@ function ProductFormModal({ editing, categories, addCategory, serviceTypes, addS
             <div className="flex gap-2">
               <input autoFocus value={newServiceName} onChange={(e) => setNewServiceName(e.target.value)} placeholder={t("products_newServiceName")} className={inputCls} />
               <button onClick={handleAddServiceType} className="shrink-0 rounded-lg bg-brand-500 px-3 py-2 text-sm font-medium text-white hover:bg-brand-600">{t("common_save")}</button>
-              <button onClick={() => setShowAddService(false)} className="shrink-0 rounded-lg border border-app-border-strong px-3 py-2 text-sm text-app-text-muted hover:bg-app-bg">{t("common_cancel")}</button>
+              <button onClick={() => setShowAddService(false)} className="shrink-0 rounded-lg px-3 py-2 text-sm font-medium text-app-text-muted hover:text-app-text">{t("common_cancel")}</button>
             </div>
           ) : (
             <button type="button" onClick={() => setShowAddService(true)} className="text-sm font-semibold text-brand-600 hover:text-brand-700">+ {t("products_addServiceType")}</button>
@@ -3505,7 +3505,10 @@ function ProductFormModal({ editing, categories, addCategory, serviceTypes, addS
         {quickAccessTaken && <div className="mt-1.5 text-xs font-semibold text-danger-600">{t("products_quickAccessTaken")}</div>}
       </Field>
 
-      <div className="mb-4"><Toggle checked={published} onChange={setPublished} label={published ? t("products_liveOnPos") : t("products_draft")} /></div>
+      <div className="mb-4 flex items-center justify-between">
+        <span className="text-sm font-semibold text-app-text">{published ? t("products_liveOnPos") : t("products_draft")}</span>
+        <Toggle checked={published} onChange={setPublished} />
+      </div>
       {formError && <div className="mb-3 rounded-lg bg-danger-50 border border-danger-200 px-3 py-2 text-xs font-medium text-danger-700">{formError}</div>}
       <button disabled={imgUploading} onClick={save} className="w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600 disabled:opacity-60">{editing ? t("products_saveChanges") : t("products_save")}</button>
     </Modal>
@@ -3598,8 +3601,8 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
               )}
               <div className="p-3">
                 <div className="mb-2 flex items-start justify-between gap-2">
-                  <span className="shrink-0 rounded-full border border-app-border bg-app-bg px-2.5 py-1 text-[11px] font-medium text-app-text-muted">{cat?.name || "—"}</span>
                   <span className="truncate text-sm font-semibold text-app-text">{p.name}</span>
+                  <span className="shrink-0 rounded-full border border-app-border bg-app-bg px-2.5 py-1 text-[11px] font-medium text-app-text-muted">{cat?.name || "—"}</span>
                 </div>
                 <div className="mb-2 flex flex-wrap gap-1">
                   {Object.keys(p.services).map((sName) => (
@@ -3607,12 +3610,12 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
                   ))}
                 </div>
                 <div className="flex items-center justify-between border-t border-app-border pt-2">
-                  <div onClick={(e) => e.stopPropagation()}>
-                    <Toggle checked={p.published} onChange={(v) => updateProduct(p.id, { published: v })} />
-                  </div>
                   <div className="text-right">
                     <div className="text-[10px] text-app-text-subtle">{t("products_table_from")}</div>
                     <div className="f-mono text-sm font-bold text-brand-700">{sar(p.price)}</div>
+                  </div>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <Toggle checked={p.published} onChange={(v) => updateProduct(p.id, { published: v })} />
                   </div>
                 </div>
               </div>
