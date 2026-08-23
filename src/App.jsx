@@ -4109,9 +4109,9 @@ function promotionDisplayStatus(p) {
 }
 
 const PROMOTION_STATUS_TONE = {
-  active: "bg-success-50 text-success-700",
-  scheduled: "bg-info-50 text-info-700",
-  expired: "bg-stone-100 text-stone-500",
+  active: "bg-success-50 text-success-700 ring-success-600/20",
+  scheduled: "bg-info-50 text-info-700 ring-info-600/20",
+  expired: "bg-app-bg text-app-text-muted ring-app-border",
 };
 
 function PromotionsView({ promotions, addPromotion, updatePromotion }) {
@@ -4131,17 +4131,17 @@ function PromotionsView({ promotions, addPromotion, updatePromotion }) {
         <button onClick={() => setShowModal(true)} className="flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-2 text-sm font-medium text-white hover:bg-brand-600"><Plus size={15} /> {t("promotions_addDiscount")}</button>
       </div>
       <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
-        <table className="w-full text-sm table-fixed">
-          <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
+        <table className="w-full text-right text-[13px]">
+          <thead className="bg-app-bg/60 text-xs font-semibold text-app-text-muted">
             <tr>
-              <th className="px-4 py-3 w-48 text-center">{t("promotions_table_name")}</th>
-              <th className="px-4 py-3 w-32 text-center">{t("promotions_table_coupon")}</th>
-              <th className="px-4 py-3 w-24 text-center">{t("promotions_table_type")}</th>
-              <th className="px-4 py-3 w-28 text-center">{t("promotions_table_value")}</th>
-              <th className="px-4 py-3 w-36 text-center">{t("promotions_table_start")}</th>
-              <th className="px-4 py-3 w-36 text-center">{t("promotions_table_end")}</th>
+              <th className="px-4 py-3">{t("promotions_table_name")}</th>
+              <th className="px-4 py-3">{t("promotions_table_coupon")}</th>
+              <th className="px-4 py-3">{t("promotions_table_type")}</th>
+              <th className="px-4 py-3">{t("promotions_table_value")}</th>
+              <th className="px-4 py-3">{t("promotions_table_start")}</th>
+              <th className="px-4 py-3">{t("promotions_table_end")}</th>
               <th className="px-4 py-3">{t("promotions_table_status")}</th>
-              <th className="px-4 py-3 w-10"></th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-app-border">
@@ -4150,15 +4150,19 @@ function PromotionsView({ promotions, addPromotion, updatePromotion }) {
               const status = promotionDisplayStatus(p);
               const statusLabel = status === "scheduled" ? t("promotions_scheduled") : status === "expired" ? t("common_expired") : t("common_active");
               return (
-                <tr key={p.id} className="hover:bg-app-bg">
-                  <td className="px-4 py-3 w-48 text-center font-medium text-app-text truncate">{p.name}</td>
-                  <td className="px-4 py-3 w-32 text-center">{p.couponOn ? <span className="f-mono text-xs tracking-wide text-app-text-muted">{p.coupon}</span> : <span className="text-app-text-subtle text-xs">—</span>}</td>
-                  <td className="px-4 py-3 w-24 text-center text-app-text-muted">{p.isPercent ? t("promotions_typePercent") : t("promotions_typeFixed")}</td>
-                  <td className="px-4 py-3 w-28 text-center f-mono font-medium text-app-text">{p.isPercent ? `${p.value}%` : sar(p.value)}</td>
-                  <td className="px-4 py-3 f-mono text-xs text-app-text-muted w-36" style={{ textAlign: "center" }}>{p.startDate ? fmtDate(p.startDate) : "—"}</td>
-                  <td className="px-4 py-3 f-mono text-xs text-app-text-muted w-36" style={{ textAlign: "center" }}>{p.endDate ? fmtDate(p.endDate) : "—"}</td>
-                  <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${PROMOTION_STATUS_TONE[status]}`}>{statusLabel}</span></td>
-                  <td className="px-4 py-3 text-right">
+                <tr key={p.id} className="hover:bg-app-bg/60">
+                  <td className="px-4 py-3 font-medium text-app-text truncate">{p.name}</td>
+                  <td className="px-4 py-3">{p.couponOn ? <span className="f-mono text-xs tracking-wide text-app-text-muted">{p.coupon}</span> : <span className="text-app-text-subtle text-xs">—</span>}</td>
+                  <td className="px-4 py-3 text-app-text-muted">{p.isPercent ? t("promotions_typePercent") : t("promotions_typeFixed")}</td>
+                  <td className="px-4 py-3 f-mono font-medium text-app-text">{p.isPercent ? `${p.value}%` : sar(p.value)}</td>
+                  <td className="px-4 py-3 f-mono text-xs text-app-text-muted">{p.startDate ? fmtDate(p.startDate) : "—"}</td>
+                  <td className="px-4 py-3 f-mono text-xs text-app-text-muted">{p.endDate ? fmtDate(p.endDate) : "—"}</td>
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold ring-1 ring-inset ${PROMOTION_STATUS_TONE[status]}`}>
+                      <span className="size-1.5 rounded-full bg-current" />{statusLabel}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
                     <div className="flex justify-end gap-2">
                       <button onClick={() => setEditingPromo(p)} className="rounded-lg border border-app-border-strong px-2.5 py-1.5 text-xs font-medium text-app-text-muted hover:bg-app-bg"><Pencil size={12} className="inline mr-1" />{t("promotions_edit")}</button>
                       {!cancelled && <button onClick={() => cancelPromotion(p)} className="rounded-lg border border-danger-300 bg-danger-50 px-2.5 py-1.5 text-xs font-medium text-danger-600 hover:bg-danger-100"><Ban size={12} className="inline mr-1" />{t("promotions_cancel")}</button>}
