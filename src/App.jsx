@@ -1055,12 +1055,15 @@ const DICT = {
     pos_splitErrorAmount: "Enter an amount less than the total for the first method.",
     pos_splitErrorWallet: "Wallet balance is not enough for the amount assigned to it in this split payment.",
 
-    invoices_liveDashboard: "Live Orders Dashboard", invoices_deliveryDashboard: "Delivery Orders Dashboard",
-    invoices_invoiceId: "Invoice ID", invoices_customer: "Customer", invoices_items: "Items", invoices_deliveryFee: "Delivery Fee",
+    invoices_liveDashboard: "Active Invoices", invoices_deliveryDashboard: "Active Delivery Invoices",
+    invoices_activeDescription: "Orders in progress, from intake to delivery", invoices_deliveryDescription: "Track delivery orders and their assigned couriers",
+    invoices_invoiceId: "Order ID", invoices_customer: "Customer", invoices_items: "Items", invoices_deliveryFee: "Delivery Fee",
     invoices_total: "Total", invoices_allStatuses: "All",
     invoices_eta: "Expected Ready", invoices_etaToday: "Today", invoices_etaTomorrow: "Tomorrow",
     invoices_noActive: "No active invoices. All caught up.", invoices_noActiveDelivery: "No active delivery orders.",
     invoices_clearFilter: "Clear Filter",
+    invoices_actionDeliver: "Deliver", invoices_actionDetails: "Details",
+    invoices_statusWaitingCourier: "Awaiting Courier", invoices_statusOnTheWay: "On the Way", invoices_statusDelivered: "Delivered",
     invoiceDetail_title: "Invoice", invoiceDetail_deliveryOrder: "Delivery Order", invoiceDetail_fee: "Fee:",
     invoiceDetail_zatcaCleared: "Verified by ZATCA ✅", invoiceDetail_zatcaSigned: "Digitally signed — pending submission to ZATCA",
     invoiceDetail_itemizedMatrix: "Itemized Matrix", invoiceDetail_closeAll: "Close Invoice / Deliver All",
@@ -1312,12 +1315,15 @@ const DICT = {
     pos_splitErrorAmount: "حط مبلغ أقل من الإجمالي للطريقة الأولى.",
     pos_splitErrorWallet: "رصيد المحفظة لا يكفي المبلغ المخصص لها في هذا الدفع المتعدد.",
 
-    invoices_liveDashboard: "لوحة الطلبات الحية", invoices_deliveryDashboard: "لوحة طلبات التوصيل",
-    invoices_invoiceId: "رقم الفاتورة", invoices_customer: "العميل", invoices_items: "القطع", invoices_deliveryFee: "سعر التوصيل",
+    invoices_liveDashboard: "الفواتير النشطة", invoices_deliveryDashboard: "فواتير التوصيل النشطة",
+    invoices_activeDescription: "الطلبات الجارية من الاستلام إلى التسليم", invoices_deliveryDescription: "متابعة طلبات التوصيل والمناديب المكلّفين بها",
+    invoices_invoiceId: "رقم الطلب", invoices_customer: "العميل", invoices_items: "القطع", invoices_deliveryFee: "سعر التوصيل",
     invoices_total: "الإجمالي", invoices_allStatuses: "الكل",
     invoices_eta: "موعد التسليم", invoices_etaToday: "اليوم", invoices_etaTomorrow: "غدًا",
     invoices_noActive: "لا توجد فواتير نشطة. كل شيء منجز.", invoices_noActiveDelivery: "لا توجد طلبات توصيل نشطة.",
     invoices_clearFilter: "حذف الفلترة",
+    invoices_actionDeliver: "تسليم", invoices_actionDetails: "تفاصيل",
+    invoices_statusWaitingCourier: "بانتظار المندوب", invoices_statusOnTheWay: "في الطريق", invoices_statusDelivered: "تم التسليم",
     invoiceDetail_title: "فاتورة", invoiceDetail_deliveryOrder: "طلب توصيل", invoiceDetail_fee: "السعر:",
     invoiceDetail_zatcaCleared: "موثقة من الهيئة ✅", invoiceDetail_zatcaSigned: "موقّعة رقميًا — بانتظار الإرسال للهيئة",
     invoiceDetail_itemizedMatrix: "تفاصيل القطع", invoiceDetail_closeAll: "إغلاق الفاتورة / تسليم الكل",
@@ -1569,12 +1575,15 @@ const DICT = {
     pos_splitErrorAmount: "پہلے طریقے کے لیے کل رقم سے کم رقم درج کریں۔",
     pos_splitErrorWallet: "اس ملٹی پیمنٹ میں والٹ کو تفویض کردہ رقم کے لیے بیلنس ناکافی ہے۔",
 
-    invoices_liveDashboard: "جاری آرڈرز کی فہرست", invoices_deliveryDashboard: "جاری ڈیلیوری آرڈرز کی فہرست",
+    invoices_liveDashboard: "جاری آرڈرز", invoices_deliveryDashboard: "جاری ڈیلیوری آرڈرز",
+    invoices_activeDescription: "وصولی سے ڈیلیوری تک جاری آرڈرز", invoices_deliveryDescription: "ڈیلیوری آرڈرز اور ان کے تفویض کردہ ڈیلیوری والوں کی نگرانی",
     invoices_invoiceId: "آرڈر نمبر", invoices_customer: "کسٹمر", invoices_items: "اشیاء", invoices_deliveryFee: "ڈیلیوری چارجز",
     invoices_total: "کل رقم", invoices_allStatuses: "تمام",
     invoices_eta: "متوقع تیاری", invoices_etaToday: "آج", invoices_etaTomorrow: "کل",
     invoices_noActive: "کوئی جاری آرڈر نہیں۔ سب کچھ مکمل ہے۔", invoices_noActiveDelivery: "کوئی جاری ڈیلیوری آرڈر نہیں۔",
     invoices_clearFilter: "فلٹر ہٹائیں",
+    invoices_actionDeliver: "ڈیلیور کریں", invoices_actionDetails: "تفصیلات",
+    invoices_statusWaitingCourier: "ڈیلیوری والے کا انتظار", invoices_statusOnTheWay: "راستے میں", invoices_statusDelivered: "ڈیلیور ہو گیا",
     invoiceDetail_title: "آرڈر", invoiceDetail_deliveryOrder: "ڈیلیوری آرڈر", invoiceDetail_fee: "چارجز:",
     invoiceDetail_zatcaCleared: "زکوٰۃ اتھارٹی سے تصدیق شدہ ✅", invoiceDetail_zatcaSigned: "ڈیجیٹل دستخط شدہ — اتھارٹی کو ارسال کا انتظار",
     invoiceDetail_itemizedMatrix: "اشیاء کی تفصیل", invoiceDetail_closeAll: "آرڈر بند کریں / سب ڈیلیور کریں",
@@ -2736,8 +2745,8 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="relative w-72">
+    <div className="flex w-full items-center gap-2">
+      <div className="relative min-w-0 flex-1">
         <Search size={14} className="pointer-events-none absolute left-3 top-3 text-slate-400" />
         <input
           value={open ? query : (selected ? `#${selected.id} · ${selected.name}` : "")}
@@ -2770,20 +2779,48 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
 }
 
 const INVOICE_STATUS_TONE = {
-  Received: "bg-stone-100 text-stone-600",
+  Received: "bg-app-bg text-app-text-muted",
   Washing: "bg-info-50 text-info-700",
   Pressing: "bg-warning-50 text-warning-700",
   Ready: "bg-success-50 text-success-700",
-  Delivered: "bg-navy-800/10 text-navy-800",
+  Delivered: "bg-navy-900/5 text-navy-900",
 };
 
 // A real promise to a real customer, so this is deliberately simple and
 // derived only from data we already track: same-day the moment any piece
 // reaches "Ready", next-day otherwise. No per-service/rush-tier turnaround
 // table exists yet — if one gets added later, this is the one place to
-// plug it in.
+// plug it in. This is Active-Invoices-only: the Delivery Invoices table
+// drops this column in favor of the courier-facing status mapping below.
 function estimatedDeliveryLabel(t, inv) {
   return invoiceOverallStatus(inv) === "Ready" ? t("invoices_etaToday") : t("invoices_etaTomorrow");
+}
+
+function StatusDot({ tone, label }) {
+  return (
+    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold ring-1 ring-inset ${tone}`}>
+      <span className="size-1.5 rounded-full bg-current" />{label}
+    </span>
+  );
+}
+
+// The Delivery Invoices screen conceptually tracks a courier hand-off
+// (awaiting courier / on the way / delivered), but there is no separate
+// driver-assignment field in the real data model — every invoice still
+// only carries the same 5-stage per-item status used everywhere else.
+// This maps the real, already-available invoiceOverallStatus()/closed
+// value onto that courier-facing language instead of inventing a field:
+// anything short of "Ready" reads as still being prepared (awaiting a
+// courier), "Ready" reads as out with the courier (on the way). The
+// success/"delivered" tone is defined for completeness but is never
+// actually reached in this table, since a `closed` invoice (the only way
+// to reach the real "Delivered" stage) drops out of the active list
+// entirely — same as every other status here.
+function deliveryStatusMeta(t, inv) {
+  const status = invoiceOverallStatus(inv);
+  if (status === "Delivered") return { tone: "bg-success-50 text-success-700", label: t("invoices_statusDelivered") };
+  if (status === "Ready") return { tone: "bg-info-50 text-info-700", label: t("invoices_statusOnTheWay") };
+  return { tone: "bg-app-bg text-app-text-muted", label: t("invoices_statusWaitingCourier") };
 }
 
 function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, merchant, zatcaInvoices = [], whatsappTemplate, whatsappEnabled }) {
@@ -2818,47 +2855,70 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
 
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+      <div className="mb-4">
         <div className="f-display text-xl font-semibold text-app-text">{isDelivery ? t("invoices_deliveryDashboard") : t("invoices_liveDashboard")}</div>
-        <InvoiceCustomerFilter customers={customers} selected={customerFilter} onSelect={setCustomerFilter} />
+        <div className="mt-1 text-sm text-app-text-muted">{isDelivery ? t("invoices_deliveryDescription") : t("invoices_activeDescription")}</div>
       </div>
-      <div className="mb-4 flex flex-wrap gap-2">
-        <button onClick={() => setStatusFilter("all")} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${statusFilter === "all" ? "bg-brand-600 text-white shadow-app-xs" : "bg-app-surface border border-app-border text-app-text-muted hover:border-app-border-strong"}`}>{t("invoices_allStatuses")}</button>
-        {statusChips.map((s) => (
-          <button key={s} onClick={() => setStatusFilter(s)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${statusFilter === s ? "bg-brand-600 text-white shadow-app-xs" : "bg-app-surface border border-app-border text-app-text-muted hover:border-app-border-strong"}`}>{stageLabel(t, s)}</button>
-        ))}
-      </div>
-      <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
-        <table className="w-full text-sm table-fixed">
-          <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
+
+      {isDelivery ? (
+        <div className="mb-4 w-full sm:max-w-xs">
+          <InvoiceCustomerFilter customers={customers} selected={customerFilter} onSelect={setCustomerFilter} />
+        </div>
+      ) : (
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="w-full sm:max-w-xs">
+            <InvoiceCustomerFilter customers={customers} selected={customerFilter} onSelect={setCustomerFilter} />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => setStatusFilter("all")} className={`rounded-full px-3.5 py-2 text-[12.5px] font-bold transition-colors ${statusFilter === "all" ? "bg-navy-900 text-white" : "bg-app-bg text-app-text-muted hover:text-app-text"}`}>{t("invoices_allStatuses")}</button>
+            {statusChips.map((s) => (
+              <button key={s} onClick={() => setStatusFilter(s)} className={`rounded-full px-3.5 py-2 text-[12.5px] font-bold transition-colors ${statusFilter === s ? "bg-navy-900 text-white" : "bg-app-bg text-app-text-muted hover:text-app-text"}`}>{stageLabel(t, s)}</button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface">
+        <table className="w-full table-fixed text-right text-[13px]">
+          <thead className="bg-app-bg/60 text-xs font-semibold uppercase tracking-wide text-app-text-muted">
             <tr>
               <th className="px-4 py-3 w-40 text-center">{t("invoices_invoiceId")}</th>
               <th className="px-4 py-3 w-56 text-center">{t("invoices_customer")}</th>
-              <th className="px-4 py-3 w-20 text-center">{t("invoices_items")}</th>
-              {isDelivery && <th className="px-4 py-3 w-40 text-center">{t("invoices_deliveryFee")}</th>}
+              {!isDelivery && <th className="px-4 py-3 w-20 text-center">{t("invoices_items")}</th>}
               <th className="px-4 py-3">{t("common_status")}</th>
-              <th className="px-4 py-3 w-32 text-center">{t("invoices_eta")}</th>
+              {!isDelivery && <th className="px-4 py-3 w-32 text-center">{t("invoices_eta")}</th>}
               <th className="px-4 py-3 w-32 text-center">{t("invoices_total")}</th>
-              <th className="px-4 py-3 w-10"></th>
+              <th className="px-4 py-3 w-28"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-app-border">
             {active.map((inv) => {
               const status = invoiceOverallStatus(inv);
+              const delivery = isDelivery ? deliveryStatusMeta(t, inv) : null;
               return (
-                <tr key={inv.id} className="hover:bg-app-bg cursor-pointer" onClick={() => setOpenId(inv.id)}>
+                <tr key={inv.id} className="cursor-pointer hover:bg-app-bg/60" onClick={() => setOpenId(inv.id)}>
                   <td className="px-4 py-3 f-mono text-app-text-muted w-40" style={{ textAlign: "center" }}>{inv.code}</td>
                   <td className="px-4 py-3 text-app-text truncate w-56 text-center">{inv.customerName}</td>
-                  <td className="px-4 py-3 text-app-text-muted w-20" style={{ textAlign: "center" }}>{inv.items.length}</td>
-                  {isDelivery && <td className="px-4 py-3 f-mono text-brand-700 w-40" style={{ textAlign: "center" }}>{sarCompact(inv.deliveryFee || 0)}</td>}
-                  <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${INVOICE_STATUS_TONE[status] || "bg-stone-100 text-stone-600"}`}>{stageLabel(t, status)}</span></td>
-                  <td className="px-4 py-3 text-app-text-muted w-32" style={{ textAlign: "center" }}>{estimatedDeliveryLabel(t, inv)}</td>
+                  {!isDelivery && <td className="px-4 py-3 text-app-text-muted w-20" style={{ textAlign: "center" }}>{inv.items.length}</td>}
+                  <td className="px-4 py-3">
+                    {isDelivery
+                      ? <StatusDot tone={delivery.tone} label={delivery.label} />
+                      : <StatusDot tone={INVOICE_STATUS_TONE[status] || "bg-app-bg text-app-text-muted"} label={stageLabel(t, status)} />}
+                  </td>
+                  {!isDelivery && <td className="px-4 py-3 text-app-text-muted w-32" style={{ textAlign: "center" }}>{estimatedDeliveryLabel(t, inv)}</td>}
                   <td className="px-4 py-3 f-mono text-app-text w-32" style={{ textAlign: "center" }}>{sarCompact(inv.total)}</td>
-                  <td className="px-4 py-3 text-right text-app-text-subtle w-10"><ChevronRight size={16} /></td>
+                  <td className="px-4 py-3 text-center w-28">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setOpenId(inv.id); }}
+                      className="rounded-lg border border-app-border px-3 py-1.5 text-[12.5px] font-semibold text-app-text hover:bg-app-bg"
+                    >
+                      {!isDelivery && status === "Ready" ? t("invoices_actionDeliver") : t("invoices_actionDetails")}
+                    </button>
+                  </td>
                 </tr>
               );
             })}
-            {active.length === 0 && <tr><td colSpan={isDelivery ? 8 : 7} className="px-4 py-10 text-center text-app-text-subtle">{isDelivery ? t("invoices_noActiveDelivery") : t("invoices_noActive")}</td></tr>}
+            {active.length === 0 && <tr><td colSpan={isDelivery ? 5 : 7} className="px-4 py-10 text-center text-app-text-subtle">{isDelivery ? t("invoices_noActiveDelivery") : t("invoices_noActive")}</td></tr>}
           </tbody>
         </table>
       </div>
