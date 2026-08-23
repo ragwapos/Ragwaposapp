@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useRef, useEffect, createContext, useContext } from "react";
 import {
   Search, Plus, X, Check, ChevronRight, Shirt, Package, Users, ClipboardList,
-  Truck, Tag, BarChart3, Wallet, ImageIcon, Ban, ArrowRight, Trash2, CreditCard,
-  Banknote, Percent, Clock, Mail, AlertTriangle, AlertCircle, CheckCircle2, Circle, Upload,
-  ReceiptText, Receipt, Building2, FileText, Sparkles, Settings, Globe, Lock, Pencil, Paperclip,
+  Truck, Tag, BarChart3, Wallet, ImageIcon, Ban, Trash2, CreditCard,
+  Banknote, Percent, Clock, Mail, AlertCircle, CheckCircle2, Circle, Upload,
+  ReceiptText, Receipt, Building2, FileText, Settings, Globe, Lock, Pencil, Paperclip,
   MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin, Home, SplitSquareHorizontal, Printer, StickyNote,
   Phone, User, Link2, FlaskConical, KeyRound, LogOut, XCircle, Download
 } from "lucide-react";
@@ -1065,7 +1065,7 @@ const DICT = {
     invoices_actionDeliver: "Deliver", invoices_actionDetails: "Details",
     invoices_statusWaitingCourier: "Awaiting Courier", invoices_statusOnTheWay: "On the Way", invoices_statusDelivered: "Delivered",
     invoiceDetail_title: "Invoice", invoiceDetail_deliveryOrder: "Delivery Order", invoiceDetail_fee: "Fee:",
-    invoiceDetail_zatcaCleared: "Verified by ZATCA ✅", invoiceDetail_zatcaSigned: "Digitally signed — pending submission to ZATCA",
+    invoiceDetail_zatcaCleared: "Verified by ZATCA", invoiceDetail_zatcaSigned: "Digitally signed — pending submission to ZATCA",
     invoiceDetail_itemizedMatrix: "Itemized Matrix", invoiceDetail_closeAll: "Close Invoice / Deliver All",
     invoiceDetail_urgent: "Urgent",
 
@@ -1092,7 +1092,7 @@ const DICT = {
     customerDetail_creditedDetail: "Credited {credited} · {discount} · {method}",
     customerDetail_debtDetail: "Debt settlement · {method}",
 
-    addCustomer_title: "➕ Add New Customer", addCustomer_systemId: "System ID (auto, can be edited)",
+    addCustomer_title: "Add New Customer", addCustomer_systemId: "System ID (auto, can be edited)",
     addCustomer_idTaken: "This number is already used by another customer — pick a different one.",
     addCustomer_mobileTaken: "This number is already registered for customer #{id} ({name}).",
     addCustomer_mobileInvalid: "Enter a valid mobile number (starting with 05 or 5).",
@@ -1332,7 +1332,7 @@ const DICT = {
     invoices_actionDeliver: "تسليم", invoices_actionDetails: "تفاصيل",
     invoices_statusWaitingCourier: "بانتظار المندوب", invoices_statusOnTheWay: "في الطريق", invoices_statusDelivered: "تم التسليم",
     invoiceDetail_title: "فاتورة", invoiceDetail_deliveryOrder: "طلب توصيل", invoiceDetail_fee: "السعر:",
-    invoiceDetail_zatcaCleared: "موثقة من الهيئة ✅", invoiceDetail_zatcaSigned: "موقّعة رقميًا — بانتظار الإرسال للهيئة",
+    invoiceDetail_zatcaCleared: "موثقة من الهيئة", invoiceDetail_zatcaSigned: "موقّعة رقميًا — بانتظار الإرسال للهيئة",
     invoiceDetail_itemizedMatrix: "تفاصيل القطع", invoiceDetail_closeAll: "إغلاق الفاتورة / تسليم الكل",
     invoiceDetail_urgent: "مستعجل",
 
@@ -1359,7 +1359,7 @@ const DICT = {
     customerDetail_creditedDetail: "أُضيف {credited} · {discount} · {method}",
     customerDetail_debtDetail: "تسوية دين · {method}",
 
-    addCustomer_title: "➕ إضافة عميل جديد", addCustomer_systemId: "الرقم التسلسلي (تلقائي، يمكن تعديله)",
+    addCustomer_title: "إضافة عميل جديد", addCustomer_systemId: "الرقم التسلسلي (تلقائي، يمكن تعديله)",
     addCustomer_idTaken: "هذا الرقم مستخدم مسبقًا لعميل آخر — اختر رقمًا آخر.",
     addCustomer_mobileTaken: "هذا الرقم مسجل مسبقًا للعميل #{id} ({name}).",
     addCustomer_mobileInvalid: "حط رقم جوال صحيح (يبدأ بـ 05 أو 5).",
@@ -1599,7 +1599,7 @@ const DICT = {
     invoices_actionDeliver: "ڈیلیور کریں", invoices_actionDetails: "تفصیلات",
     invoices_statusWaitingCourier: "ڈیلیوری والے کا انتظار", invoices_statusOnTheWay: "راستے میں", invoices_statusDelivered: "ڈیلیور ہو گیا",
     invoiceDetail_title: "آرڈر", invoiceDetail_deliveryOrder: "ڈیلیوری آرڈر", invoiceDetail_fee: "چارجز:",
-    invoiceDetail_zatcaCleared: "زکوٰۃ اتھارٹی سے تصدیق شدہ ✅", invoiceDetail_zatcaSigned: "ڈیجیٹل دستخط شدہ — اتھارٹی کو ارسال کا انتظار",
+    invoiceDetail_zatcaCleared: "زکوٰۃ اتھارٹی سے تصدیق شدہ", invoiceDetail_zatcaSigned: "ڈیجیٹل دستخط شدہ — اتھارٹی کو ارسال کا انتظار",
     invoiceDetail_itemizedMatrix: "اشیاء کی تفصیل", invoiceDetail_closeAll: "آرڈر بند کریں / سب ڈیلیور کریں",
     invoiceDetail_urgent: "فوری",
 
@@ -1626,7 +1626,7 @@ const DICT = {
     customerDetail_creditedDetail: "{credited} جمع ہوا · {discount} · {method}",
     customerDetail_debtDetail: "ادھار کی ادائیگی · {method}",
 
-    addCustomer_title: "➕ نیا کسٹمر شامل کریں", addCustomer_systemId: "سسٹم نمبر (خودکار، تبدیل کیا جا سکتا ہے)",
+    addCustomer_title: "نیا کسٹمر شامل کریں", addCustomer_systemId: "سسٹم نمبر (خودکار، تبدیل کیا جا سکتا ہے)",
     addCustomer_idTaken: "یہ نمبر پہلے سے کسی اور کسٹمر کے پاس ہے — دوسرا نمبر منتخب کریں۔",
     addCustomer_mobileTaken: "یہ نمبر پہلے سے کسٹمر #{id} ({name}) کے لیے رجسٹرڈ ہے۔",
     addCustomer_mobileInvalid: "درست موبائل نمبر درج کریں (05 یا 5 سے شروع ہونا چاہیے)۔",
