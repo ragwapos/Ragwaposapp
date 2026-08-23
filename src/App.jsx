@@ -1038,10 +1038,10 @@ const DICT = {
     productModal_addons: "Optional Add-ons", productModal_itemTotal: "Item Total", productModal_confirm: "Confirm & Add to Cart",
     productModal_notes: "Notes", productModal_notesPlaceholder: "e.g. a stain on the cuff, needs extra care...",
 
-    pos_allItems: "All Items", pos_checkout: "Checkout", pos_cartEmpty: "Cart is empty",
+    pos_allItems: "All Items", pos_checkout: "Checkout", pos_cartEmpty: "Pick an item from the menu to start the order", pos_newOrder: "New Order",
     pos_noProductsInCategory: "No products in this category yet.",
     pos_noProductsTitle: "No products yet", pos_noProductsSubtitle: "Add your products first from the \"Products\" page so they show up here and you can start selling.",
-    pos_deliveryOrder: "🚚 Delivery Order", pos_pickupOrder: "Counter / Pickup Order",
+    pos_deliveryOrder: "Delivery Order", pos_pickupOrder: "Counter / Pickup Order",
     pos_deliveryFeeLabel: "Delivery Fee (based on customer location):", pos_deliveryFeePlaceholder: "Enter fee manually",
     pos_deliveryFee: "Delivery Fee", pos_total: "Total", pos_completeSale: "Complete Sale",
     pos_searchCustomerPlaceholder: "Search by name / mobile / #ID...", pos_noMatchingCustomers: "No matching customers",
@@ -1295,10 +1295,10 @@ const DICT = {
     productModal_addons: "إضافات اختيارية", productModal_itemTotal: "إجمالي القطعة", productModal_confirm: "تأكيد وإضافة للسلة",
     productModal_notes: "ملاحظات", productModal_notesPlaceholder: "مثال: بقعة على الكم، تحتاج عناية إضافية...",
 
-    pos_allItems: "كل المنتجات", pos_checkout: "الفاتورة", pos_cartEmpty: "السلة فارغة",
+    pos_allItems: "الكل", pos_checkout: "الفاتورة", pos_cartEmpty: "اختر قطعة من القائمة عشان تبدأ الطلب", pos_newOrder: "طلب جديد",
     pos_noProductsInCategory: "لا توجد منتجات في هذه الفئة بعد.",
     pos_noProductsTitle: "لا توجد منتجات بعد", pos_noProductsSubtitle: "أضف منتجاتك أولًا من صفحة \"المنتجات\" حتى تظهر هنا وتقدر تبدأ البيع.",
-    pos_deliveryOrder: "🚚 طلب توصيل", pos_pickupOrder: "استلام من الفرع",
+    pos_deliveryOrder: "طلب توصيل", pos_pickupOrder: "استلام من الفرع",
     pos_deliveryFeeLabel: "سعر التوصيل (حسب موقع العميل):", pos_deliveryFeePlaceholder: "حدد السعر يدويًا",
     pos_deliveryFee: "سعر التوصيل", pos_total: "الإجمالي", pos_completeSale: "إتمام البيع",
     pos_searchCustomerPlaceholder: "ابحث بالاسم / الجوال / #الرقم...", pos_noMatchingCustomers: "لا يوجد عملاء مطابقين",
@@ -1552,10 +1552,10 @@ const DICT = {
     productModal_addons: "اضافی سہولیات", productModal_itemTotal: "کل رقم", productModal_confirm: "تصدیق کریں اور کارٹ میں شامل کریں",
     productModal_notes: "نوٹس", productModal_notesPlaceholder: "مثلاً: آستین پر داغ، اضافی خیال رکھیں...",
 
-    pos_allItems: "تمام اشیاء", pos_checkout: "چیک آؤٹ", pos_cartEmpty: "کارٹ خالی ہے",
+    pos_allItems: "تمام اشیاء", pos_checkout: "چیک آؤٹ", pos_cartEmpty: "آرڈر شروع کرنے کے لیے فہرست سے کوئی چیز منتخب کریں", pos_newOrder: "نیا آرڈر",
     pos_noProductsInCategory: "اس کیٹگری میں ابھی کوئی پروڈکٹ نہیں ہے۔",
     pos_noProductsTitle: "ابھی کوئی پروڈکٹ موجود نہیں", pos_noProductsSubtitle: "پہلے \"پروڈکٹس\" صفحے سے اپنی اشیاء شامل کریں تاکہ یہاں نظر آئیں اور آپ فروخت شروع کر سکیں۔",
-    pos_deliveryOrder: "🚚 ڈیلیوری آرڈر", pos_pickupOrder: "کاؤنٹر / پک اپ آرڈر",
+    pos_deliveryOrder: "ڈیلیوری آرڈر", pos_pickupOrder: "کاؤنٹر / پک اپ آرڈر",
     pos_deliveryFeeLabel: "ڈیلیوری چارجز (کسٹمر کے مقام کے مطابق):", pos_deliveryFeePlaceholder: "چارجز خود درج کریں",
     pos_deliveryFee: "ڈیلیوری چارجز", pos_total: "کل رقم", pos_completeSale: "سیل مکمل کریں",
     pos_searchCustomerPlaceholder: "نام / موبائل / #نمبر سے تلاش کریں...", pos_noMatchingCustomers: "کوئی کسٹمر نہیں ملا",
@@ -2212,13 +2212,36 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
     (c.name.toLowerCase().includes(query.toLowerCase()) || c.mobile.includes(query) || String(c.id).includes(query))
   );
 
+  // Once a customer is attached to the sale, the search box is replaced by
+  // this compact summary (avatar + name + real wallet/debt) — clearing it
+  // via the X button resets customerId back to "" so the search box (below)
+  // reappears.
+  if (selected) {
+    return (
+      <div className="flex items-center justify-between rounded-lg border border-brand-100 bg-brand-50 px-3 py-2.5">
+        <div className="flex items-center gap-2">
+          <div className="flex size-7 items-center justify-center rounded-full bg-brand-500 text-[11px] font-extrabold text-white">
+            {selected.name.slice(0, 1)}
+          </div>
+          <div>
+            <div className="text-[13px] font-bold text-app-text">{selected.name}</div>
+            <div className="text-[11px] font-semibold text-app-text-muted">
+              {t("pos_wallet")}: {sar(selected.walletBalance)} · {t("pos_debt")}: {sar(selected.debt)}
+            </div>
+          </div>
+        </div>
+        <button type="button" onClick={() => onSelect("")} title={t("common_cancel")} className="flex size-6 items-center justify-center rounded text-app-text-subtle hover:bg-white"><X className="size-3.5" /></button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex gap-2">
       <div className="relative flex-1">
         <Search size={14} className="pointer-events-none absolute left-3 top-3 text-slate-400" />
         <input
-          value={open ? query : (selected ? `#${selected.id} · ${selected.name}` : "")}
-          onFocus={() => { setOpen(true); setQuery(""); }}
+          value={query}
+          onFocus={() => setOpen(true)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           placeholder={t("pos_searchCustomerPlaceholder")}
@@ -2451,7 +2474,7 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
   return (
     <div className="flex h-full flex-col gap-4">
       <div className="flex flex-wrap items-center gap-4 rounded-xl border border-brand-200 bg-brand-50/60 px-4 py-3 shadow-app-xs">
-        <Toggle checked={isDelivery} onChange={setIsDelivery} label={isDelivery ? t("pos_deliveryOrder") : t("pos_pickupOrder")} />
+        <Toggle checked={isDelivery} onChange={setIsDelivery} label={isDelivery ? <span className="inline-flex items-center gap-1.5"><Truck size={14} />{t("pos_deliveryOrder")}</span> : t("pos_pickupOrder")} />
         {isDelivery && (
           <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-brand-800">{t("pos_deliveryFeeLabel")}</span>
@@ -2481,13 +2504,13 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
                 {p.image ? (
                   <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="aspect-square w-full object-cover" />
                 ) : (
-                  <div className="flex aspect-square w-full items-center justify-center bg-app-bg text-app-text-subtle transition-colors group-hover:bg-brand-50 group-hover:text-brand-500">
-                    <ImageIcon size={24} />
+                  <div className="flex aspect-square items-center justify-center bg-app-bg text-app-text-subtle transition-colors group-hover:bg-brand-50 group-hover:text-brand-500">
+                    <Shirt className="size-9" strokeWidth={1.5} />
                   </div>
                 )}
                 <div className="p-3">
                   <div className="text-sm font-semibold text-app-text">{p.name}</div>
-                  <div className="f-mono text-brand-700 font-semibold text-sm mt-0.5">{sar(p.price)}</div>
+                  <span className="text-[13px] font-semibold text-brand-600">{sar(p.price)}</span>
                 </div>
               </button>
             ))}
@@ -2498,24 +2521,35 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
         <div className="w-80 shrink-0 flex flex-col rounded-xl border border-app-border bg-app-surface shadow-app-sm">
           <div className="border-b border-app-border px-4 py-3 f-display font-semibold text-app-text">{t("pos_checkout")}</div>
           <div className="border-b border-app-border p-4 space-y-2">
+            {/* "طلب جديد" header — the reference design also shows a real
+                invoice-number badge here (e.g. "#10486"), but that number only
+                exists after nextDocNumber() actually runs at sale completion;
+                showing a guessed one here could show a number a concurrent
+                sale grabs first, so it's intentionally omitted. */}
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-[13px] font-bold text-app-text-subtle">{t("pos_newOrder")}</span>
+            </div>
             <Field label={t("common_customer")}>
               <CustomerPicker customers={customers} customerId={customerId} onSelect={setCustomerId} onAddNew={() => setShowAddCustomer(true)} />
             </Field>
-            {customer ? (
-              <div className="text-xs text-app-text-muted">{t("pos_wallet")}: <span className="f-mono">{sar(customer.walletBalance)}</span> · {t("pos_debt")}: <span className="f-mono text-danger-600">{sar(customer.debt)}</span></div>
-            ) : (
+            {!customer && (
               <div className="text-xs font-medium text-danger-600">{t("pos_customerRequired")}</div>
             )}
           </div>
           <div className="flex-1 overflow-y-auto px-4 py-2 space-y-2">
-            {cart.length === 0 && <div className="text-center text-sm text-app-text-subtle py-10">{t("pos_cartEmpty")}</div>}
+            {cart.length === 0 && (
+              <div className="flex h-full flex-col items-center justify-center gap-2 py-16 text-center">
+                <div className="flex size-12 items-center justify-center rounded-full bg-app-bg text-app-text-subtle"><Wallet className="size-5" /></div>
+                <p className="text-[13px] font-semibold text-app-text-subtle">{t("pos_cartEmpty")}</p>
+              </div>
+            )}
             {cart.map((i) => (
               <div key={i.cartId} className="rounded-lg border border-app-border p-2.5">
                 <div className="flex items-start justify-between">
                   <div>
                     <div className="text-sm font-medium text-app-text">{i.qty}× {i.name}</div>
                     <div className="text-xs text-app-text-muted">{i.service}{i.addons.length ? ` · ${i.addons.map((a) => a.name).join(", ")}` : ""}</div>
-                    {i.notes && <div className="text-xs text-warning-700">📝 {i.notes}</div>}
+                    {i.notes && <div className="flex items-center gap-1 text-xs text-warning-700"><FileText size={11} />{i.notes}</div>}
                   </div>
                   <button onClick={() => removeFromCart(i.cartId)} className="text-app-text-subtle hover:text-danger-500"><Trash2 size={14} /></button>
                 </div>
@@ -2525,14 +2559,14 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
           </div>
           <div className="border-t border-app-border p-4 space-y-3">
             <Field label={t("common_paymentMethod")}>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {availablePosPayMethods.map((m) => {
                   const Icon = PAY_METHOD_ICONS[m.value] || CreditCard;
                   const active = payMethod === m.value;
                   return (
                     <button key={m.value} type="button" onClick={() => setPayMethod(m.value)}
-                      className={`flex items-center gap-2 rounded-lg border px-3 py-2.5 text-xs font-medium transition ${active ? "border-brand-600 bg-brand-50 text-brand-800" : "border-app-border text-app-text-muted hover:border-app-border-strong"}`}>
-                      <Icon size={15} /> {t(m.key)}
+                      className={`flex flex-col items-center gap-1 rounded-lg border px-1 py-2.5 text-center text-[10.5px] font-bold leading-tight transition-colors ${active ? "border-brand-500 bg-brand-50 text-brand-700" : "border-app-border-strong text-app-text-muted"}`}>
+                      <Icon className="size-4" />{t(m.key)}
                     </button>
                   );
                 })}
@@ -2571,15 +2605,15 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
                 </div>
               ) : (
                 <div>
-                  <div className="flex gap-2">
-                    <input value={couponCode} onChange={(e) => { setCouponCode(e.target.value); setCouponError(""); }} placeholder={t("pos_coupon")} className={`${inputCls} f-mono tracking-wide`} />
-                    <button onClick={applyCoupon} disabled={!couponCode.trim()} className="shrink-0 rounded-lg border border-brand-300 bg-brand-50 px-3 py-2 text-xs font-medium text-brand-700 hover:bg-brand-100 disabled:opacity-40">{t("pos_applyCoupon")}</button>
+                  <div className="mb-3 flex gap-2">
+                    <input value={couponCode} onChange={(e) => { setCouponCode(e.target.value); setCouponError(""); }} placeholder={t("pos_coupon")} className="flex-1 rounded-lg border border-app-border-strong px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+                    <button onClick={applyCoupon} disabled={!couponCode.trim()} className="shrink-0 rounded-lg border border-app-border-strong px-3 py-2 text-sm font-semibold text-app-text-muted hover:bg-app-bg disabled:opacity-40">{t("pos_applyCoupon")}</button>
                   </div>
-                  {couponError && <div className="mt-1 text-xs font-medium text-danger-600">{couponError}</div>}
+                  {couponError && <div className="text-xs font-medium text-danger-600">{couponError}</div>}
                 </div>
               )
             )}
-            {autoPromos.length > 0 && <div className="text-[11px] font-medium text-brand-700">✓ {t("pos_autoDiscountApplied")}</div>}
+            {autoPromos.length > 0 && <div className="flex items-center gap-1 text-[11px] font-medium text-brand-700"><Check size={12} />{t("pos_autoDiscountApplied")}</div>}
 
             {discountAmount > 0 && (
               <div className="flex items-center justify-between text-xs text-brand-700">
