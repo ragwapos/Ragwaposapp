@@ -3,7 +3,7 @@ import {
   Search, Plus, X, Check, ChevronRight, Shirt, Package, Users, ClipboardList,
   Truck, Tag, BarChart3, Wallet, ImageIcon, Ban, ArrowRight, Trash2, CreditCard,
   Banknote, Percent, Clock, Mail, AlertTriangle, CheckCircle2, Circle, Upload,
-  ReceiptText, Building2, FileText, Sparkles, Settings, Globe, Lock, Pencil, Paperclip,
+  ReceiptText, Receipt, Building2, FileText, Sparkles, Settings, Globe, Lock, Pencil, Paperclip,
   MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin, Home, SplitSquareHorizontal,
   Phone, User
 } from "lucide-react";
@@ -1151,7 +1151,7 @@ const DICT = {
     expenses_kpiExempt: "Tax Exempt", expenses_kpiTaxable: "Taxable", expenses_kpiTotal: "Total Expenses",
     expenses_addExpenseBtn: "New Expense", expenses_searchPlaceholder: "Search expenses...",
     expenses_noExpenses: "No expenses recorded yet.",
-    addSupplier_title: "➕ Add New Supplier", addSupplier_editTitle: "✏️ Edit Supplier", addSupplier_company: "Company Name", addSupplier_agent: "Agent Name",
+    addSupplier_title: "Add New Supplier", addSupplier_editTitle: "Edit Supplier", addSupplier_company: "Company Name", addSupplier_agent: "Agent Name",
     addSupplier_contact: "Contact Number", addSupplier_taxNumber: "Tax Number (optional)", addSupplier_save: "Save Supplier",
     addSupplier_taxExempt: "Supplier is Tax Exempt", addSupplier_exemptionNumber: "Tax Exemption Number",
     supplierDetail_agent: "Agent", supplierDetail_contact: "Contact", supplierDetail_liability: "Outstanding Liability",
@@ -1408,7 +1408,7 @@ const DICT = {
     expenses_kpiExempt: "معفاة", expenses_kpiTaxable: "خاضعة للضريبة", expenses_kpiTotal: "إجمالي المصروفات",
     expenses_addExpenseBtn: "مصروف جديد", expenses_searchPlaceholder: "ابحث عن مصروف...",
     expenses_noExpenses: "لا توجد مصروفات مسجلة بعد.",
-    addSupplier_title: "➕ إضافة مورد جديد", addSupplier_editTitle: "✏️ تعديل المورد", addSupplier_company: "اسم الشركة", addSupplier_agent: "اسم الوكيل",
+    addSupplier_title: "إضافة مورد جديد", addSupplier_editTitle: "تعديل المورد", addSupplier_company: "اسم الشركة", addSupplier_agent: "اسم الوكيل",
     addSupplier_contact: "رقم التواصل", addSupplier_taxNumber: "الرقم الضريبي (اختياري)", addSupplier_save: "حفظ المورد",
     addSupplier_taxExempt: "المورد معفى من الضريبة", addSupplier_exemptionNumber: "رقم الإعفاء الضريبي",
     supplierDetail_agent: "الوكيل", supplierDetail_contact: "التواصل", supplierDetail_liability: "المستحق عليه",
@@ -1665,7 +1665,7 @@ const DICT = {
     expenses_kpiExempt: "ٹیکس فری", expenses_kpiTaxable: "ٹیکس ایبل", expenses_kpiTotal: "کل اخراجات",
     expenses_addExpenseBtn: "نیا خرچہ", expenses_searchPlaceholder: "خرچہ تلاش کریں...",
     expenses_noExpenses: "ابھی کوئی خرچہ درج نہیں ہوا۔",
-    addSupplier_title: "➕ نیا سپلائر شامل کریں", addSupplier_editTitle: "✏️ سپلائر میں ترمیم کریں", addSupplier_company: "کمپنی کا نام", addSupplier_agent: "ایجنٹ کا نام",
+    addSupplier_title: "نیا سپلائر شامل کریں", addSupplier_editTitle: "سپلائر میں ترمیم کریں", addSupplier_company: "کمپنی کا نام", addSupplier_agent: "ایجنٹ کا نام",
     addSupplier_contact: "رابطہ نمبر", addSupplier_taxNumber: "ٹیکس نمبر (اختیاری)", addSupplier_save: "سپلائر محفوظ کریں",
     addSupplier_taxExempt: "سپلائر ٹیکس سے مستثنیٰ ہے", addSupplier_exemptionNumber: "ٹیکس چھوٹ نمبر",
     supplierDetail_agent: "ایجنٹ", supplierDetail_contact: "رابطہ", supplierDetail_liability: "واجب الادا رقم",
@@ -2045,7 +2045,14 @@ function AddSupplierModal({ onClose, onSave, editing }) {
   const [taxExempt, setTaxExempt] = useState(Boolean(editing?.taxExempt));
   const [exemptionNumber, setExemptionNumber] = useState(editing?.exemptionNumber || "");
   return (
-    <Modal title={editing ? t("addSupplier_editTitle") : t("addSupplier_title")} onClose={onClose}>
+    <Modal
+      title={
+        <span className="flex items-center gap-2">
+          {editing ? <Pencil size={16} /> : <Plus size={16} />}
+          {editing ? t("addSupplier_editTitle") : t("addSupplier_title")}
+        </span>
+      }
+      onClose={onClose}>
       <Field label={t("addSupplier_company")}><input autoFocus value={company} onChange={(e) => setCompany(e.target.value)} className={inputCls} /></Field>
       <Field label={t("addSupplier_agent")}><input value={agent} onChange={(e) => setAgent(e.target.value.slice(0, 15))} maxLength={15} className={inputCls} /></Field>
       <Field label={t("addSupplier_contact")}><input value={contact} onChange={(e) => setContact(e.target.value)} className={inputCls} /></Field>
@@ -2079,9 +2086,7 @@ function SupplierQuickAddFields({ onSave, onCancel }) {
   const [company, setCompany] = useState("");
   const [agent, setAgent] = useState("");
   const [contact, setContact] = useState("");
-  const [taxNumber, setTaxNumber] = useState("");
   const [taxExempt, setTaxExempt] = useState(false);
-  const [exemptionNumber, setExemptionNumber] = useState("");
   return (
     <div className="mb-4 space-y-3 rounded-lg border border-brand-200 bg-brand-50/40 p-3">
       <div className="flex items-center justify-between">
@@ -2091,17 +2096,16 @@ function SupplierQuickAddFields({ onSave, onCancel }) {
       <input autoFocus value={company} onChange={(e) => setCompany(e.target.value)} placeholder={t("addSupplier_company")} className={inputCls} />
       <input value={agent} onChange={(e) => setAgent(e.target.value.slice(0, 15))} maxLength={15} placeholder={t("addSupplier_agent")} className={inputCls} />
       <input value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t("addSupplier_contact")} className={inputCls} />
-      <input value={taxNumber} onChange={(e) => setTaxNumber(e.target.value)} placeholder={t("addSupplier_taxNumber")} className={`${inputCls} f-mono`} />
+      {/* This quick-add card intentionally skips the tax number / exemption
+          number fields from the full AddSupplierModal — matching the approved
+          reference, which keeps this inline flow to just the essentials.
+          A supplier created here with the exempt toggle on can still have its
+          exemption number filled in later via the full edit modal (pencil
+          icon in SupplierDetailModal) before it affects tax-return totals. */}
       <Toggle checked={taxExempt} onChange={setTaxExempt} label={t("addSupplier_taxExempt")} />
-      {/* Distinct from the regular tax number above: this is what makes a
-          purchase count toward the Tax Return's exempt-purchases box (#5)
-          instead of the standard-rated box — see AddSupplierModal. */}
-      {taxExempt && (
-        <input value={exemptionNumber} onChange={(e) => setExemptionNumber(e.target.value)} placeholder={t("addSupplier_exemptionNumber")} className={`${inputCls} f-mono`} />
-      )}
       <button
         type="button"
-        onClick={() => { if (!company.trim()) return; onSave({ company: company.trim(), agent: agent.trim() || "-", contact: contact.trim() || "-", taxNumber: taxNumber.trim(), taxExempt, exemptionNumber: taxExempt ? exemptionNumber.trim() : "" }); }}
+        onClick={() => { if (!company.trim()) return; onSave({ company: company.trim(), agent: agent.trim() || "-", contact: contact.trim() || "-", taxNumber: "", taxExempt, exemptionNumber: "" }); }}
         className="w-full rounded-lg bg-brand-500 py-2 text-sm font-semibold text-white hover:bg-brand-600">
         {t("addSupplier_save")}
       </button>
@@ -3669,14 +3673,14 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
 // not-yet-redesigned ReportsView) this one is tokenized and supports an
 // optional accent icon, matching the approved reference for this screen.
 function PurchasesStatCard({ label, value, icon: Icon, tone }) {
-  const tones = { info: "bg-info-50 text-info-600", warning: "bg-warning-50 text-warning-600" };
+  const tones = { info: "bg-info-50 text-info-700", warning: "bg-warning-50 text-warning-700" };
   return (
-    <div className="flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
-      <div>
-        <div className="text-xs font-semibold text-app-text-muted">{label}</div>
-        <div className="f-mono mt-1.5 text-xl font-bold text-app-text">{value}</div>
+    <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+      <div className="flex items-center justify-between">
+        <span className="text-[13px] font-semibold text-app-text-muted">{label}</span>
+        {Icon && <div className={`flex size-9 items-center justify-center rounded-lg ${tones[tone] || ""}`}><Icon size={18} /></div>}
       </div>
-      {Icon && <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${tones[tone] || ""}`}><Icon size={18} /></span>}
+      <div className="mt-3 text-2xl font-extrabold text-app-text">{value}</div>
     </div>
   );
 }
@@ -3862,14 +3866,14 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
       {tab === "purchases" ? (
         <div>
           <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <PurchasesStatCard label={t("purchases_kpiCount")} value={purchases.length} />
-            <PurchasesStatCard label={t("purchases_kpiSuppliers")} value={suppliers.length} icon={Users} tone="info" />
             <PurchasesStatCard label={t("purchases_kpiDue")} value={sar(totalDue)} icon={Wallet} tone="warning" />
+            <PurchasesStatCard label={t("purchases_kpiSuppliers")} value={suppliers.length} icon={Receipt} tone="info" />
+            <PurchasesStatCard label={t("purchases_kpiCount")} value={purchases.length} />
           </div>
 
-          <div className="mb-4 flex flex-wrap items-center gap-3">
-            <button onClick={() => setShowPurchaseModal(true)} className="flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"><Plus size={16} />{t("purchases_addPurchaseBtn")}</button>
-            <div className="relative min-w-[200px] flex-1">
+          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <button onClick={() => setShowPurchaseModal(true)} className="flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"><Plus className="size-4" />{t("purchases_addPurchaseBtn")}</button>
+            <div className="relative sm:w-64">
               <Search size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-text-subtle" />
               <input value={supplierQuery} onChange={(e) => setSupplierQuery(e.target.value)} placeholder={t("purchases_searchSuppliers")} className={`${inputCls} pr-9`} />
             </div>
@@ -3960,7 +3964,7 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
       )}
 
       {showPurchaseModal && (
-        <Modal title={t("purchases_recordPurchase")} onClose={() => { setShowPurchaseModal(false); setShowAddSupplier(false); setPurchaseError(""); }}>
+        <Modal title={t("purchases_recordPurchase")} onClose={() => { setShowPurchaseModal(false); setShowAddSupplier(false); setPurchaseError(""); }} width="max-w-md">
           {showAddSupplier ? (
             <SupplierQuickAddFields onSave={saveNewSupplier} onCancel={() => setShowAddSupplier(false)} />
           ) : (
