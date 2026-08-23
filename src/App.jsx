@@ -1110,7 +1110,7 @@ const DICT = {
     products_newProduct: "New Product", products_image: "Image", products_upload: "Upload (250×250)",
     products_name: "Product Name", products_servicePrices: "Service Prices",
     products_servicePricesHint: "(fill in at least one)", products_noServiceTypes: "No service types yet.",
-    products_addServiceType: "➕ Add Service Type", products_newServiceName: "New service name",
+    products_addServiceType: "Add Service Type", products_newServiceName: "New service name",
     products_operationalCost: "Operational Cost (SAR)", products_noCost: "No Cost",
     products_liveOnPos: "Live on POS", products_draft: "Saved as Draft", products_save: "Save Product",
     products_editTitle: "Edit Product", products_saveChanges: "Save Changes",
@@ -1367,7 +1367,7 @@ const DICT = {
     products_newProduct: "منتج جديد", products_image: "الصورة", products_upload: "رفع صورة (250×250)",
     products_name: "اسم المنتج", products_servicePrices: "أسعار الخدمات",
     products_servicePricesHint: "(حدد سعر واحد على الأقل)", products_noServiceTypes: "لا توجد أنواع خدمات بعد.",
-    products_addServiceType: "➕ إضافة نوع خدمة", products_newServiceName: "اسم خدمة جديدة",
+    products_addServiceType: "إضافة نوع خدمة", products_newServiceName: "اسم خدمة جديدة",
     products_operationalCost: "التكلفة التشغيلية (ريال)", products_noCost: "بدون تكلفة",
     products_liveOnPos: "مفعّل في نقطة البيع", products_draft: "محفوظ كمسودة", products_save: "حفظ المنتج",
     products_editTitle: "تعديل المنتج", products_saveChanges: "حفظ التعديلات",
@@ -1624,7 +1624,7 @@ const DICT = {
     products_newProduct: "نیا پروڈکٹ", products_image: "تصویر", products_upload: "تصویر اپ لوڈ کریں (250×250)",
     products_name: "پروڈکٹ کا نام", products_servicePrices: "سروس کی قیمتیں",
     products_servicePricesHint: "(کم از کم ایک قیمت درج کریں)", products_noServiceTypes: "ابھی کوئی سروس ٹائپ موجود نہیں۔",
-    products_addServiceType: "➕ سروس ٹائپ شامل کریں", products_newServiceName: "نئی سروس کا نام",
+    products_addServiceType: "سروس ٹائپ شامل کریں", products_newServiceName: "نئی سروس کا نام",
     products_operationalCost: "آپریشنل لاگت (ریال)", products_noCost: "کوئی لاگت نہیں",
     products_liveOnPos: "پوائنٹ آف سیل پر فعال", products_draft: "ڈرافٹ کے طور پر محفوظ", products_save: "پروڈکٹ محفوظ کریں",
     products_editTitle: "پروڈکٹ میں ترمیم کریں", products_saveChanges: "تبدیلیاں محفوظ کریں",
@@ -3474,7 +3474,7 @@ function ProductFormModal({ editing, categories, addCategory, serviceTypes, addS
               <button onClick={() => setShowAddService(false)} className="shrink-0 rounded-lg border border-app-border-strong px-3 py-2 text-sm text-app-text-muted hover:bg-app-bg">{t("common_cancel")}</button>
             </div>
           ) : (
-            <button type="button" onClick={() => setShowAddService(true)} className="flex items-center gap-1 text-xs font-medium text-brand-700 hover:underline"><Plus size={13} /> {t("products_addServiceType")}</button>
+            <button type="button" onClick={() => setShowAddService(true)} className="text-sm font-semibold text-brand-600 hover:text-brand-700">+ {t("products_addServiceType")}</button>
           )}
         </div>
       </div>
@@ -3533,9 +3533,9 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
   );
 
   const kpis = [
-    { label: t("products_kpiServiceTypes"), value: serviceTypes.length, icon: Sparkles, tint: "bg-info-50 text-info-700" },
-    { label: t("products_kpiCategories"), value: categories.length, icon: Tag, tint: "bg-warning-50 text-warning-700" },
-    { label: t("products_kpiTotal"), value: products.length, icon: Package, tint: "bg-brand-50 text-brand-700" },
+    { label: t("products_kpiTotal"), value: products.length, icon: Shirt, tint: "bg-brand-50 text-brand-700" },
+    { label: t("products_kpiCategories"), value: categories.length, icon: Tag, tint: "bg-info-50 text-info-700" },
+    { label: t("products_kpiServiceTypes"), value: serviceTypes.length, icon: Package, tint: "bg-navy-900/5 text-navy-900" },
   ];
 
   return (
@@ -3554,31 +3554,33 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
         {kpis.map((k) => {
           const Icon = k.icon;
           return (
-            <div key={k.label} className="rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
-              <div className="mb-3 flex items-center justify-between">
-                <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${k.tint}`}><Icon size={16} /></div>
-                <span className="text-sm text-app-text-muted">{k.label}</span>
+            <div key={k.label} className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] font-semibold text-app-text-muted">{k.label}</span>
+                <div className={`flex size-9 items-center justify-center rounded-lg ${k.tint}`}><Icon size={16} /></div>
               </div>
-              <div className="f-display text-2xl font-bold text-app-text text-right">{k.value}</div>
+              <div className="mt-3 text-2xl font-extrabold text-app-text">{k.value}</div>
             </div>
           );
         })}
       </div>
 
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative sm:w-72 shrink-0">
-          <Search size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-text-subtle" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("products_searchPlaceholder")} className={`${inputCls} pr-9`} />
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          <button onClick={() => setActiveCat("all")} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${activeCat === "all" ? "bg-brand-600 text-white shadow-app-xs" : "bg-app-surface border border-app-border text-app-text-muted hover:border-app-border-strong"}`}>{t("products_all")}</button>
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setActiveCat("all")} className={`rounded-full px-3.5 py-2 text-[12.5px] font-bold transition ${activeCat === "all" ? "bg-navy-900 text-white" : "bg-app-bg text-app-text-muted"}`}>{t("products_all")}</button>
           {categories.map((c) => (
-            <button key={c.id} onClick={() => setActiveCat(c.id)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${activeCat === c.id ? "bg-brand-600 text-white shadow-app-xs" : "bg-app-surface border border-app-border text-app-text-muted hover:border-app-border-strong"}`}>{c.name}</button>
+            <button key={c.id} onClick={() => setActiveCat(c.id)} className={`rounded-full px-3.5 py-2 text-[12.5px] font-bold transition ${activeCat === c.id ? "bg-navy-900 text-white" : "bg-app-bg text-app-text-muted"}`}>{c.name}</button>
           ))}
+        </div>
+        <div className="sm:w-64">
+          <div className="relative">
+            <Search size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-text-subtle" />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("products_searchPlaceholder")} className={`${inputCls} pr-9`} />
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {filteredProducts.map((p) => {
           const cat = categories.find((c) => c.id === p.categoryId);
           return (
@@ -3591,7 +3593,7 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
                 <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover" />
               ) : (
                 <div className="flex aspect-[4/3] w-full items-center justify-center bg-app-bg text-app-text-subtle">
-                  <ImageIcon size={26} />
+                  <Shirt size={26} />
                 </div>
               )}
               <div className="p-3">
@@ -3599,7 +3601,11 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
                   <span className="shrink-0 rounded-full border border-app-border bg-app-bg px-2.5 py-1 text-[11px] font-medium text-app-text-muted">{cat?.name || "—"}</span>
                   <span className="truncate text-sm font-semibold text-app-text">{p.name}</span>
                 </div>
-                <div className="mb-2 truncate text-xs text-app-text-muted">{Object.keys(p.services).join(" · ")}</div>
+                <div className="mb-2 flex flex-wrap gap-1">
+                  {Object.keys(p.services).map((sName) => (
+                    <span key={sName} className="rounded-full bg-app-bg px-2 py-0.5 text-[10.5px] font-medium text-app-text-muted">{sName}</span>
+                  ))}
+                </div>
                 <div className="flex items-center justify-between border-t border-app-border pt-2">
                   <div onClick={(e) => e.stopPropagation()}>
                     <Toggle checked={p.published} onChange={(v) => updateProduct(p.id, { published: v })} />
