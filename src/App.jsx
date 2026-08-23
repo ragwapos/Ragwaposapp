@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect, createContext, useContext 
 import {
   Search, Plus, X, Check, ChevronRight, Shirt, Package, Users, ClipboardList,
   Truck, Tag, BarChart3, Wallet, ImageIcon, Ban, ArrowRight, Trash2, CreditCard,
-  Banknote, Percent, Clock, Mail, AlertTriangle, CheckCircle2, Circle, Upload,
+  Banknote, Percent, Clock, Mail, AlertTriangle, AlertCircle, CheckCircle2, Circle, Upload,
   ReceiptText, Building2, FileText, Sparkles, Settings, Globe, Lock, Pencil, Paperclip,
   MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin, Home, SplitSquareHorizontal, Printer, StickyNote,
   Phone, User
@@ -1326,8 +1326,8 @@ const DICT = {
     customers_title: "سجل العملاء", customers_addCustomer: "إضافة عميل",
     customers_subtitle: "أرصدة المحافظ والديون المستحقة لعملاء المغسلة",
     customers_totalDebt: "إجمالي الديون المستحقة", customers_totalWallet: "إجمالي أرصدة المحافظ",
-    customers_searchPlaceholder: "ابحث بالاسم أو الجوال أو #الرقم...", customers_id: "الرقم", customers_name: "الاسم",
-    customers_mobile: "الجوال", customers_wallet: "المحفظة", customers_debt: "الدين", customers_noneYet: "لا يوجد عملاء بعد.",
+    customers_searchPlaceholder: "ابحث بالاسم أو الجوال أو #الرقم...", customers_id: "الرقم", customers_name: "العميل",
+    customers_mobile: "الجوال", customers_wallet: "رصيد المحفظة", customers_debt: "دين مستحق", customers_noneYet: "لا يوجد عملاء بعد.",
     customers_lastOrder: "آخر طلب", customers_details: "تفاصيل", customers_neverOrdered: "لم يطلب بعد",
     customers_today: "اليوم", customers_yesterday: "أمس", customers_daysAgo: "قبل {n} أيام",
     customers_weekAgo: "قبل أسبوع", customers_weeksAgo: "قبل {n} أسابيع",
@@ -3269,58 +3269,45 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
         <button onClick={() => setShowAddCustomer(true)} className="flex items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-2 text-sm font-medium text-white hover:bg-brand-600"><Plus size={15} /> {t("customers_addCustomer")}</button>
       </div>
 
-      {/* Two aggregate cards over the same customer.walletBalance/debt fields
-          the table below renders — see the useMemo sums above. */}
-      <div className="mb-6 grid max-w-3xl grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
-          <div>
-            <div className="text-sm text-app-text-muted">{t("customers_totalDebt")}</div>
-            <div className="f-mono text-2xl font-bold text-app-text">{sarCompact(totalDebt)}</div>
+      {/* Two aggregate KPI tiles over the same customer.walletBalance/debt
+          fields the table below renders — see the useMemo sums above. */}
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[13px] font-semibold text-app-text-muted">{t("customers_totalWallet")}</span>
+            <div className="flex size-9 items-center justify-center rounded-lg bg-success-50 text-success-700"><Wallet size={18} /></div>
           </div>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-warning-50 text-warning-600"><AlertTriangle size={18} /></div>
+          <div className="mt-3 text-2xl font-extrabold text-app-text">{sarCompact(totalWalletBalance)}</div>
         </div>
-        <div className="flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
-          <div>
-            <div className="text-sm text-app-text-muted">{t("customers_totalWallet")}</div>
-            <div className="f-mono text-2xl font-bold text-app-text">{sarCompact(totalWalletBalance)}</div>
+        <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-[13px] font-semibold text-app-text-muted">{t("customers_totalDebt")}</span>
+            <div className="flex size-9 items-center justify-center rounded-lg bg-warning-50 text-warning-700"><AlertCircle size={18} /></div>
           </div>
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-success-50 text-success-600"><Wallet size={18} /></div>
+          <div className="mt-3 text-2xl font-extrabold text-app-text">{sarCompact(totalDebt)}</div>
         </div>
       </div>
 
-      <div className="relative mb-4 max-w-sm">
+      <div className="relative mb-4 max-w-sm sm:max-w-xs">
         <Search size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-text-subtle" />
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("customers_searchPlaceholder")} className={`${inputCls} pr-9`} />
       </div>
-      {/* max-w-4xl on the card itself (not just the table) — this page, like
-          every other dashboard view, has no outer max-width wrapper, so
-          without one here the card stretches edge-to-edge on a wide monitor.
-          Column widths are generous (not squeezed to content), each roomy
-          enough for its entry-time cap (name ≤15 chars, mobile 05+8 digits,
-          wallet/debt to 4 digits via sarCompact) with real breathing room —
-          and every header/cell is centered in its column rather than hugging
-          an edge, so header and data read as one aligned block per column. */}
-      <div className="max-w-4xl overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
-        <table className="w-full text-sm table-fixed">
-          <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
-            <tr><th className="px-4 py-3 w-56 text-center">{t("customers_name")}</th><th className="px-4 py-3 w-40 text-center">{t("customers_mobile")}</th><th className="px-4 py-3 w-40 text-center">{t("customers_wallet")}</th><th className="px-4 py-3 w-40 text-center">{t("customers_debt")}</th><th className="px-4 py-3 w-32 text-center">{t("customers_lastOrder")}</th><th className="px-4 py-3 w-24"></th></tr>
+      <div className="overflow-hidden rounded-xl border border-app-border">
+        <table className="w-full text-right text-[13px]">
+          <thead className="bg-app-bg/60 text-xs font-semibold uppercase tracking-wide text-app-text-muted">
+            <tr><th className="px-4 py-3">{t("customers_name")}</th><th className="px-4 py-3">{t("customers_wallet")}</th><th className="px-4 py-3">{t("customers_debt")}</th><th className="px-4 py-3">{t("customers_mobile")}</th><th className="px-4 py-3">{t("customers_lastOrder")}</th><th className="px-4 py-3"></th></tr>
           </thead>
           <tbody className="divide-y divide-app-border">
             {filtered.map((c) => {
               const lastOrderIso = lastOrderByCustomer.get(c.id);
               return (
-                <tr key={c.id} onClick={() => setSelected(c)} className="cursor-pointer hover:bg-app-bg">
-                  <td className="px-4 py-3 font-medium text-app-text truncate w-56 text-center">{c.name}</td>
-                  <td className="px-4 py-3 f-mono text-app-text-muted w-40" style={{ textAlign: "center" }}>{c.mobile}</td>
-                  {/* inline textAlign, not just the text-center class: .f-mono
-                      itself sets text-align via a (class+element) CSS rule,
-                      which beats a same-specificity Tailwind utility class —
-                      an inline style always wins regardless, so this is the
-                      one reliable way to center an f-mono cell specifically. */}
-                  <td className={`px-4 py-3 f-mono w-40 ${c.walletBalance > 0 ? "font-semibold text-success-600" : "text-app-text-subtle"}`} style={{ textAlign: "center" }}>{sarCompact(c.walletBalance)}</td>
-                  <td className={`px-4 py-3 f-mono w-40 ${c.debt > 0 ? "font-semibold text-danger-600" : "text-app-text-subtle"}`} style={{ textAlign: "center" }}>{sarCompact(c.debt)}</td>
-                  <td className="px-4 py-3 text-app-text-muted w-32 text-center">{lastOrderIso ? lastOrderRelativeLabel(t, lastOrderIso) : t("customers_neverOrdered")}</td>
-                  <td className="px-4 py-3 w-24 text-center">
+                <tr key={c.id} onClick={() => setSelected(c)} className="cursor-pointer hover:bg-app-bg/60">
+                  <td className="px-4 py-3 font-medium text-app-text">{c.name}</td>
+                  <td className={`px-4 py-3 f-mono ${c.walletBalance > 0 ? "font-bold text-success-700" : "text-app-text-subtle"}`}>{sarCompact(c.walletBalance)}</td>
+                  <td className={`px-4 py-3 f-mono ${c.debt > 0 ? "font-bold text-danger-700" : "text-app-text-subtle"}`}>{sarCompact(c.debt)}</td>
+                  <td className="px-4 py-3 f-mono text-app-text-muted">{c.mobile}</td>
+                  <td className="px-4 py-3 text-app-text-muted">{lastOrderIso ? lastOrderRelativeLabel(t, lastOrderIso) : t("customers_neverOrdered")}</td>
+                  <td className="px-4 py-3">
                     <button onClick={(e) => { e.stopPropagation(); setSelected(c); }} className="rounded-lg border border-app-border-strong px-3 py-1.5 text-xs font-medium text-app-text-muted hover:bg-app-bg">{t("customers_details")}</button>
                   </td>
                 </tr>
