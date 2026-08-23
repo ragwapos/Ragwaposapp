@@ -4,7 +4,7 @@ import {
   Truck, Tag, BarChart3, Wallet, ImageIcon, Ban, ArrowRight, Trash2, CreditCard,
   Banknote, Percent, Clock, Mail, AlertTriangle, CheckCircle2, Circle, Upload,
   ReceiptText, Building2, FileText, Sparkles, Settings, Globe, Lock, Pencil, Paperclip,
-  MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin, Home, SplitSquareHorizontal,
+  MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin, Home, SplitSquareHorizontal, Printer, StickyNote,
   Phone, User
 } from "lucide-react";
 import QRCode from "qrcode";
@@ -941,7 +941,7 @@ function PrintDocumentModal({ doc, onClose }) {
           {doc.whatsappEnabled && !doc.customerPhone && <div className="text-center text-[11px] text-app-text-subtle">{t("print_whatsappNoPhone")}</div>}
           <div className="flex gap-2">
             {/* Manual click always prints exactly one copy — "عدد النسخ" only governs the automatic (no-click) auto-print above. */}
-            <button onClick={() => { cancelBackgroundPrep(); printInNewWindow(1); }} className="flex-1 rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600">{t("print_printBtn")}</button>
+            <button onClick={() => { cancelBackgroundPrep(); printInNewWindow(1); }} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600"><Printer size={16} /> {t("print_printBtn")}</button>
             {doc.whatsappEnabled && (
               <button onClick={shareOnWhatsApp} disabled={!doc.customerPhone || whatsappSending} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-emerald-600 py-2.5 font-semibold text-white hover:bg-emerald-700 disabled:opacity-40">
                 {whatsappSending ? <Loader2 size={16} className="animate-spin" /> : <MessageCircle size={16} />} {whatsappSending ? t("print_whatsappSending") : t("print_whatsappBtn")}
@@ -1027,7 +1027,7 @@ const DICT = {
     common_customer: "Customer", common_status: "Status", common_date: "Date", common_amount: "Amount (SAR)",
     common_cash: "Cash", common_externalNetwork: "External Network", common_walletBalance: "Wallet Balance",
     common_creditOnAccount: "Credit (On Account)", common_splitPayment: "Split Payment", common_selectPlaceholder: "Select...",
-    common_addNew: "➕ Add New", common_newNamePlaceholder: "New name",
+    common_addNew: "+ Add New", common_newNamePlaceholder: "New name",
     common_operationFailed: "Could not complete this operation — please try again.",
     common_live: "Live", common_draft: "Draft", common_active: "Active", common_expired: "Expired",
     common_yes: "Yes", common_no: "No", common_view: "View",
@@ -1257,7 +1257,7 @@ const DICT = {
     print_product: "Product", print_price: "Price", print_total: "Total", print_deliveredDate: "Delivery Date",
     print_subtotal: "Total (Excl. VAT)", print_discount: "Discount", print_vat: "VAT (15%)", print_grandTotal: "Total (Incl. VAT)",
     print_paid: "Paid", print_remaining: "Remaining", print_pieceCount: "Piece Count", print_payMethod: "Payment Method",
-    print_dueDate: "Due Date", print_printBtn: "🖨️ Print", print_close: "Close",
+    print_dueDate: "Due Date", print_printBtn: "Print", print_close: "Close",
     print_deliverFirst: "Please deliver at least one item first, then the receipt can be printed.",
     print_printDeliveryReceipt: "Print Delivery Receipt", print_noItemsDelivered: "No items have been delivered from this invoice yet.",
     pay_cash: "Cash", pay_network: "External Network", pay_wallet: "Customer Balance", pay_credit: "Deferred Payment",
@@ -1284,7 +1284,7 @@ const DICT = {
     common_customer: "العميل", common_status: "الحالة", common_date: "التاريخ", common_amount: "المبلغ (ريال)",
     common_cash: "نقدًا", common_externalNetwork: "شبكة خارجية", common_walletBalance: "رصيد المحفظة",
     common_creditOnAccount: "آجل (على الحساب)", common_splitPayment: "دفع متعدد", common_selectPlaceholder: "اختر...",
-    common_addNew: "➕ إضافة جديد", common_newNamePlaceholder: "اسم جديد",
+    common_addNew: "+ إضافة جديد", common_newNamePlaceholder: "اسم جديد",
     common_operationFailed: "تعذر إتمام العملية — حاول مرة أخرى.",
     common_live: "مفعّل", common_draft: "مسودة", common_active: "نشط", common_expired: "منتهي",
     common_yes: "نعم", common_no: "لا", common_view: "عرض",
@@ -1514,7 +1514,7 @@ const DICT = {
     print_product: "المنتج", print_price: "السعر", print_total: "الإجمالي", print_deliveredDate: "تاريخ التسليم",
     print_subtotal: "الإجمالي (غير شامل الضريبة)", print_discount: "الخصم", print_vat: "الضريبة (15%)", print_grandTotal: "الإجمالي (شامل الضريبة)",
     print_paid: "المدفوع", print_remaining: "المتبقي", print_pieceCount: "عدد القطع", print_payMethod: "طريقة الدفع",
-    print_dueDate: "تاريخ الاستحقاق", print_printBtn: "🖨️ طباعة", print_close: "إغلاق",
+    print_dueDate: "تاريخ الاستحقاق", print_printBtn: "طباعة", print_close: "إغلاق",
     print_deliverFirst: "الرجاء تسليم قطعة واحدة على الأقل أولًا حتى يمكن طباعة الإيصال.",
     print_printDeliveryReceipt: "طباعة إيصال الاستلام", print_noItemsDelivered: "لم يتم تسليم أي قطعة من هذه الفاتورة بعد.",
     pay_cash: "نقدًا", pay_network: "شبكة خارجية", pay_wallet: "رصيد العميل", pay_credit: "دفع آجل",
@@ -1541,7 +1541,7 @@ const DICT = {
     common_customer: "کسٹمر", common_status: "صورتحال", common_date: "تاریخ", common_amount: "رقم (ریال)",
     common_cash: "نقد", common_externalNetwork: "بیرونی نیٹ ورک", common_walletBalance: "والٹ بیلنس",
     common_creditOnAccount: "ادھار (کھاتے پر)", common_splitPayment: "ملٹی پیمنٹ", common_selectPlaceholder: "منتخب کریں...",
-    common_addNew: "➕ نیا شامل کریں", common_newNamePlaceholder: "نیا نام",
+    common_addNew: "+ نیا شامل کریں", common_newNamePlaceholder: "نیا نام",
     common_operationFailed: "یہ عمل مکمل نہیں ہو سکا — دوبارہ کوشش کریں۔",
     common_live: "فعال", common_draft: "ڈرافٹ", common_active: "جاری", common_expired: "ختم شدہ",
     common_yes: "جی ہاں", common_no: "نہیں", common_view: "دیکھیں",
@@ -1771,7 +1771,7 @@ const DICT = {
     print_product: "پروڈکٹ", print_price: "قیمت", print_total: "کل رقم", print_deliveredDate: "ڈیلیوری کی تاریخ",
     print_subtotal: "کل رقم (ٹیکس کے بغیر)", print_discount: "رعایت", print_vat: "ٹیکس (15%)", print_grandTotal: "کل رقم (ٹیکس سمیت)",
     print_paid: "ادا شدہ", print_remaining: "باقی رقم", print_pieceCount: "اشیاء کی تعداد", print_payMethod: "ادائیگی کا طریقہ",
-    print_dueDate: "ادائیگی کی تاریخ", print_printBtn: "🖨️ پرنٹ کریں", print_close: "بند کریں",
+    print_dueDate: "ادائیگی کی تاریخ", print_printBtn: "پرنٹ کریں", print_close: "بند کریں",
     print_deliverFirst: "پرنٹ کرنے سے پہلے کم از کم ایک شے ڈیلیور کرنا لازمی ہے۔",
     print_printDeliveryReceipt: "ڈیلیوری رسید پرنٹ کریں", print_noItemsDelivered: "اس آرڈر سے ابھی تک کوئی شے ڈیلیور نہیں ہوئی۔",
     pay_cash: "نقد", pay_network: "بیرونی نیٹ ورک", pay_wallet: "کسٹمر بیلنس", pay_credit: "ادھار",
@@ -2515,7 +2515,7 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
                   <div>
                     <div className="text-sm font-medium text-app-text">{i.qty}× {i.name}</div>
                     <div className="text-xs text-app-text-muted">{i.service}{i.addons.length ? ` · ${i.addons.map((a) => a.name).join(", ")}` : ""}</div>
-                    {i.notes && <div className="text-xs text-warning-700">📝 {i.notes}</div>}
+                    {i.notes && <div className="flex items-center gap-1 text-xs text-warning-700"><StickyNote size={12} /> {i.notes}</div>}
                   </div>
                   <button onClick={() => removeFromCart(i.cartId)} className="text-app-text-subtle hover:text-danger-500"><Trash2 size={14} /></button>
                 </div>
@@ -2579,7 +2579,7 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
                 </div>
               )
             )}
-            {autoPromos.length > 0 && <div className="text-[11px] font-medium text-brand-700">✓ {t("pos_autoDiscountApplied")}</div>}
+            {autoPromos.length > 0 && <div className="flex items-center gap-1 text-[11px] font-medium text-brand-700"><Check size={12} /> {t("pos_autoDiscountApplied")}</div>}
 
             {discountAmount > 0 && (
               <div className="flex items-center justify-between text-xs text-brand-700">
@@ -2688,7 +2688,7 @@ function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoi
             <div className="min-w-0">
               <div className="text-sm font-medium text-slate-900 truncate">{it.name}</div>
               <div className="text-xs text-slate-500">{it.service}{it.urgent ? ` · ${t("invoiceDetail_urgent")}` : ""}{it.deliveredAt ? ` · ${fmtDateSec(it.deliveredAt)}` : ""}</div>
-              {it.notes && <div className="text-xs text-amber-700">📝 {it.notes}</div>}
+              {it.notes && <div className="flex items-center gap-1 text-xs text-amber-700"><StickyNote size={12} /> {it.notes}</div>}
             </div>
             <select value={it.status} onChange={(e) => onUpdateItemStatus(invoice.id, it.itemId, e.target.value)}
               className={`f-mono text-xs rounded-lg border px-2 py-1.5 ${it.status === "Delivered" ? "border-teal-300 bg-teal-50 text-teal-700" : "border-stone-300 text-slate-700"}`}>
