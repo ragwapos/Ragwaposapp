@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect, createContext, useContext } from "react";
 import {
-  Search, Plus, X, Check, ChevronRight, Shirt, Package, Users, ClipboardList,
+  Search, Plus, X, Check, Shirt, Package, Users, ClipboardList,
   Truck, Tag, BarChart3, Wallet, ImageIcon, Ban, Trash2, CreditCard,
   Banknote, Percent, Clock, Mail, AlertCircle, CheckCircle2, Circle, Upload,
   ReceiptText, Receipt, Building2, FileText, Settings, Globe, Lock, Pencil, Paperclip,
@@ -440,8 +440,8 @@ const inputCls = "w-full rounded-lg border border-stone-300 px-3 py-2 text-sm te
 function Toggle({ checked, onChange, label }) {
   return (
     <button type="button" onClick={() => onChange(!checked)} className="flex items-center gap-2 text-sm">
-      <span className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${checked ? "bg-teal-600" : "bg-stone-300"}`}>
-        <span className={`inline-block h-4.5 w-4.5 transform rounded-full bg-white shadow transition ${checked ? "translate-x-5" : "translate-x-1"}`} style={{ height: 18, width: 18 }} />
+      <span dir="ltr" className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition ${checked ? "bg-teal-600" : "bg-stone-300"}`}>
+        <span className={`inline-block transform rounded-full bg-white shadow transition ${checked ? "translate-x-5" : "translate-x-1"}`} style={{ height: 18, width: 18 }} />
       </span>
       {label && <span className="text-slate-700">{label}</span>}
     </button>
@@ -1014,7 +1014,6 @@ const DICT = {
     nav_pos: "Point of Sale", nav_invoices: "Active Invoices", nav_delivery: "Active Delivery Invoices",
     nav_customers: "Customer Ledger", nav_products: "Products", nav_purchases: "Purchases & Expenses",
     nav_promotions: "Promotions", nav_reports: "Reports", nav_settings: "Settings",
-    sidebar_footer: "Dynamic state · no hardcoded catalogs",
 
     home_welcomeBack: "Welcome back", home_salesToday: "Today's Sales", home_ordersToday: "Today's Orders",
     home_readyOrders: "Ready Orders", home_deliveryActive: "Delivery In Progress",
@@ -1230,13 +1229,12 @@ const DICT = {
     settings_merchantName: "Name (as registered in the Commercial Registry)", settings_merchantPhone: "Store Phone Number",
     settings_merchantAddress: "Store Location", settings_merchantTax: "Tax Number",
     settings_merchantSave: "Save Changes", settings_merchantSaved: "Saved",
-    settings_ownerOnly: "For Owner Only", settings_ownerOnlyHint: "Protect sensitive sections with a password only you know.",
     whatsapp_title: "Send Invoice via WhatsApp", whatsapp_hint: "Automatically sends the invoice to the customer over WhatsApp right after the sale is completed — available tags:",
     owner_setMasterTitle: "Set a password for this section", owner_enterMasterTitle: "Enter the owner password",
     owner_setSectionTitle: "Set a password for \"{section}\"", owner_enterSectionTitle: "This section is locked — enter the password",
     owner_pinLabel: "Password (4 digits)", owner_pinConfirmLabel: "Confirm password",
     owner_pinFormatError: "Password must be exactly 4 digits (numbers only).", owner_pinMismatch: "Passwords don't match.",
-    owner_pinWrong: "Incorrect password.", owner_lockPanel: "Lock this section again",
+    owner_pinWrong: "Incorrect password.",
     owner_payMethodsTitle: "Payment Methods Shown at POS", owner_payMethodsHint: "Turn off any payment method the staff should not see or use at checkout.",
     owner_atLeastOnePayMethod: "At least one payment method must stay enabled.",
     owner_sectionLockTitle: "Lock Sections From Staff", owner_sectionLockHint: "Turn on a section to require the owner PIN before staff can open it.",
@@ -1281,7 +1279,6 @@ const DICT = {
     nav_pos: "نقطة البيع", nav_invoices: "الفواتير النشطة", nav_delivery: "فواتير التوصيل النشطة",
     nav_customers: "سجل العملاء", nav_products: "المنتجات", nav_purchases: "المشتريات والمصروفات",
     nav_promotions: "العروض", nav_reports: "التقارير", nav_settings: "الإعدادات",
-    sidebar_footer: "بيانات ديناميكية · بدون كتالوجات ثابتة",
 
     home_welcomeBack: "أهلاً بك", home_salesToday: "مبيعات اليوم", home_ordersToday: "طلبات اليوم",
     home_readyOrders: "طلبات جاهزة", home_deliveryActive: "توصيل قيد التنفيذ",
@@ -1497,13 +1494,12 @@ const DICT = {
     settings_merchantName: "الاسم (كما هو مسجل في السجل التجاري)", settings_merchantPhone: "رقم هاتف المحل",
     settings_merchantAddress: "موقع المحل", settings_merchantTax: "الرقم الضريبي",
     settings_merchantSave: "حفظ التغييرات", settings_merchantSaved: "تم الحفظ",
-    settings_ownerOnly: "للمالك فقط", settings_ownerOnlyHint: "احمِ الأقسام الحساسة بكلمة مرور ما يعرفها إلا أنت.",
     whatsapp_title: "إرسال الفاتورة عبر واتساب", whatsapp_hint: "ترسل الفاتورة تلقائيًا للعميل عبر واتساب بعد إتمام البيع — الوسوم المتاحة:",
     owner_setMasterTitle: "حط كلمة مرور جديدة لهذي الخانة", owner_enterMasterTitle: "أدخل كلمة مرور المالك",
     owner_setSectionTitle: "حط كلمة مرور لقسم \"{section}\"", owner_enterSectionTitle: "هذا القسم مقفل — أدخل كلمة المرور",
     owner_pinLabel: "كلمة المرور (٤ أرقام)", owner_pinConfirmLabel: "تأكيد كلمة المرور",
     owner_pinFormatError: "كلمة المرور لازم تكون ٤ أرقام بالضبط (أرقام فقط).", owner_pinMismatch: "كلمتا المرور غير متطابقتين.",
-    owner_pinWrong: "كلمة المرور غير صحيحة.", owner_lockPanel: "إغلاق هذا القسم مرة ثانية",
+    owner_pinWrong: "كلمة المرور غير صحيحة.",
     owner_payMethodsTitle: "طرق الدفع الظاهرة بصفحة البيع", owner_payMethodsHint: "أطفئ أي طريقة دفع ما تبي الموظف يشوفها أو يستخدمها وقت البيع.",
     owner_atLeastOnePayMethod: "لازم تبقى طريقة دفع واحدة على الأقل مفعّلة.",
     owner_sectionLockTitle: "إغلاق الأقسام عن الموظفين", owner_sectionLockHint: "فعّل أي قسم عشان يطلب رمز المالك قبل ما يقدر الموظف يفتحه.",
@@ -1548,7 +1544,6 @@ const DICT = {
     nav_pos: "پوائنٹ آف سیل", nav_invoices: "جاری آرڈرز", nav_delivery: "جاری ڈیلیوری آرڈرز",
     nav_customers: "کسٹمر لیجر", nav_products: "پروڈکٹس", nav_purchases: "خریداری اور اخراجات",
     nav_promotions: "پرموشنز", nav_reports: "رپورٹس", nav_settings: "سیٹنگز",
-    sidebar_footer: "متحرک ڈیٹا · کوئی فکسڈ کیٹلاگ نہیں",
 
     home_welcomeBack: "خوش آمدید", home_salesToday: "آج کی فروخت", home_ordersToday: "آج کے آرڈرز",
     home_readyOrders: "تیار آرڈرز", home_deliveryActive: "جاری ڈیلیوری",
@@ -1764,13 +1759,12 @@ const DICT = {
     settings_merchantName: "نام (کمرشل رجسٹریشن میں درج شدہ)", settings_merchantPhone: "دکان کا فون نمبر",
     settings_merchantAddress: "دکان کا مقام", settings_merchantTax: "ٹیکس نمبر",
     settings_merchantSave: "تبدیلیاں محفوظ کریں", settings_merchantSaved: "محفوظ ہو گیا",
-    settings_ownerOnly: "صرف مالک کے لیے", settings_ownerOnlyHint: "حساس حصوں کو ایسے پاس ورڈ سے محفوظ کریں جو صرف آپ جانتے ہوں۔",
     whatsapp_title: "واٹس ایپ پر انوائس بھیجیں", whatsapp_hint: "سیل مکمل ہوتے ہی انوائس خودکار طور پر واٹس ایپ کے ذریعے کسٹمر کو بھیج دی جاتی ہے — دستیاب ٹیگز:",
     owner_setMasterTitle: "اس حصے کے لیے نیا پاس ورڈ بنائیں", owner_enterMasterTitle: "مالک کا پاس ورڈ درج کریں",
     owner_setSectionTitle: "\"{section}\" کے لیے پاس ورڈ بنائیں", owner_enterSectionTitle: "یہ حصہ لاک ہے — پاس ورڈ درج کریں",
     owner_pinLabel: "پاس ورڈ (4 ہندسے)", owner_pinConfirmLabel: "پاس ورڈ کی تصدیق کریں",
     owner_pinFormatError: "پاس ورڈ بالکل 4 ہندسوں پر مشتمل ہونا چاہیے (صرف نمبر)۔", owner_pinMismatch: "پاس ورڈز مماثل نہیں ہیں۔",
-    owner_pinWrong: "پاس ورڈ غلط ہے۔", owner_lockPanel: "اس حصے کو دوبارہ لاک کریں",
+    owner_pinWrong: "پاس ورڈ غلط ہے۔",
     owner_payMethodsTitle: "POS پر دکھائے جانے والے ادائیگی کے طریقے", owner_payMethodsHint: "کوئی بھی ایسا طریقہ بند کر دیں جو عملے کو چیک آؤٹ پر نظر نہیں آنا چاہیے۔",
     owner_atLeastOnePayMethod: "کم از کم ایک ادائیگی کا طریقہ فعال رہنا ضروری ہے۔",
     owner_sectionLockTitle: "عملے سے حصے مقفل کریں", owner_sectionLockHint: "کسی حصے کو فعال کریں تاکہ عملہ اسے کھولنے سے پہلے مالک کا پن درج کرے۔",
@@ -1876,7 +1870,6 @@ function Sidebar({ tab, setTab, sectionLocks, setSectionLocks, merchant }) {
       </div>
       <div className="px-5 py-4 border-t border-navy-800">
         <div className="truncate text-sm font-semibold text-white">{merchant?.name || t("app_name")}</div>
-        <div className="text-[11px] text-slate-500">{t("sidebar_footer")}</div>
       </div>
 
       {pendingNav && (
@@ -2515,16 +2508,6 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
 
   return (
     <div className="flex h-full flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-brand-200 bg-brand-50/60 px-4 py-3 shadow-app-xs">
-        <Toggle checked={isDelivery} onChange={setIsDelivery} label={isDelivery ? <span className="inline-flex items-center gap-1.5"><Truck size={14} />{t("pos_deliveryOrder")}</span> : t("pos_pickupOrder")} />
-        {isDelivery && (
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-medium text-brand-800">{t("pos_deliveryFeeLabel")}</span>
-            <input type="number" min="0" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} placeholder={t("pos_deliveryFeePlaceholder")} className={`${inputCls} w-40`} />
-          </div>
-        )}
-      </div>
-
       <div className="flex flex-1 gap-5 min-h-0">
         <div className="flex-1 flex flex-col min-w-0">
           <div className="relative mb-3">
@@ -2612,9 +2595,43 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
                     </button>
                   );
                 })}
+                {/* Not a payment method — a separate "is this a delivery
+                    order?" toggle that happens to live in this grid, right
+                    beside "دفع متعدد" (Split). Doesn't touch payMethod at
+                    all; the cashier still picks a real payment method above
+                    exactly as normal. */}
+                <button type="button" onClick={() => setIsDelivery((v) => !v)}
+                  className={`flex flex-col items-center gap-1 rounded-lg border px-1 py-2.5 text-center text-[10.5px] font-bold leading-tight transition-colors ${isDelivery ? "border-warning-500 bg-warning-50 text-warning-700" : "border-app-border-strong text-app-text-muted"}`}>
+                  <Truck className="size-4" />{t("pos_deliveryOrder")}
+                </button>
               </div>
             </Field>
+            {isDelivery && (
+              <div className="flex items-center gap-2 rounded-lg border border-warning-200 bg-warning-50 px-3 py-2.5">
+                <Truck size={14} className="shrink-0 text-warning-700" />
+                <span className="shrink-0 text-xs font-medium text-warning-800">{t("pos_deliveryFeeLabel")}</span>
+                <input type="number" min="0" autoFocus value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} placeholder={t("pos_deliveryFeePlaceholder")} className={`${inputCls} flex-1`} />
+              </div>
+            )}
             {walletInsufficient && <div className="rounded-lg bg-danger-50 border border-danger-200 px-3 py-2 text-xs font-medium text-danger-700">{t("pos_walletInsufficient")}</div>}
+
+            {cart.length > 0 && (
+              appliedCoupon ? (
+                <div className="flex items-center justify-between rounded-lg border border-brand-300 bg-brand-50 px-3 py-2 text-xs">
+                  <span className="f-mono font-semibold text-brand-800">{appliedCoupon.coupon}</span>
+                  <button onClick={removeCoupon} className="font-medium text-brand-700 hover:underline">{t("pos_removeCoupon")}</button>
+                </div>
+              ) : (
+                <div>
+                  <div className="flex gap-2">
+                    <input value={couponCode} onChange={(e) => { setCouponCode(e.target.value); setCouponError(""); }} placeholder={t("pos_coupon")} className="flex-1 rounded-lg border border-app-border-strong px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
+                    <button onClick={applyCoupon} disabled={!couponCode.trim()} className="shrink-0 rounded-lg border border-app-border-strong px-3 py-2 text-sm font-semibold text-app-text-muted hover:bg-app-bg disabled:opacity-40">{t("pos_applyCoupon")}</button>
+                  </div>
+                  {couponError && <div className="text-xs font-medium text-danger-600">{couponError}</div>}
+                </div>
+              )
+            )}
+            {autoPromos.length > 0 && <div className="flex items-center gap-1 text-[11px] font-medium text-brand-700"><Check size={12} /> {t("pos_autoDiscountApplied")}</div>}
 
             {isSplit && (
               <div className="space-y-2 rounded-lg border border-app-border bg-app-bg p-3">
@@ -2638,24 +2655,6 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
                 {splitWalletInsufficient && <div className="text-xs font-medium text-danger-600">{t("pos_splitErrorWallet")}</div>}
               </div>
             )}
-
-            {cart.length > 0 && (
-              appliedCoupon ? (
-                <div className="flex items-center justify-between rounded-lg border border-brand-300 bg-brand-50 px-3 py-2 text-xs">
-                  <span className="f-mono font-semibold text-brand-800">{appliedCoupon.coupon}</span>
-                  <button onClick={removeCoupon} className="font-medium text-brand-700 hover:underline">{t("pos_removeCoupon")}</button>
-                </div>
-              ) : (
-                <div>
-                  <div className="mb-3 flex gap-2">
-                    <input value={couponCode} onChange={(e) => { setCouponCode(e.target.value); setCouponError(""); }} placeholder={t("pos_coupon")} className="flex-1 rounded-lg border border-app-border-strong px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20" />
-                    <button onClick={applyCoupon} disabled={!couponCode.trim()} className="shrink-0 rounded-lg border border-app-border-strong px-3 py-2 text-sm font-semibold text-app-text-muted hover:bg-app-bg disabled:opacity-40">{t("pos_applyCoupon")}</button>
-                  </div>
-                  {couponError && <div className="text-xs font-medium text-danger-600">{couponError}</div>}
-                </div>
-              )
-            )}
-            {autoPromos.length > 0 && <div className="flex items-center gap-1 text-[11px] font-medium text-brand-700"><Check size={12} /> {t("pos_autoDiscountApplied")}</div>}
 
             {discountAmount > 0 && (
               <div className="flex items-center justify-between text-xs text-brand-700">
@@ -2905,6 +2904,9 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
   const openInvoice = invoices.find((i) => i.id === openId);
   const openInvoiceZatcaRecord = openInvoice ? zatcaInvoices.find((z) => z.invoiceId === openInvoice.id) : null;
   const openInvoiceCustomerPhone = openInvoice ? customers.find((c) => c.id === openInvoice.customerId)?.mobile : null;
+  // Every column gets an exactly equal share of the table's width — 5 columns
+  // on the Delivery table, 7 on the Active table (2 extra: items count + ETA).
+  const colWidth = `${100 / (isDelivery ? 5 : 7)}%`;
 
   const updateItemStatus = (invId, itemId, status) => {
     const inv = invoices.find((i) => i.id === invId);
@@ -2949,13 +2951,13 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
         <table className="w-full table-fixed text-right text-[13px]">
           <thead className="bg-app-bg/60 text-xs font-semibold uppercase tracking-wide text-app-text-muted">
             <tr>
-              <th className="px-4 py-3 w-40 text-center">{t("invoices_invoiceId")}</th>
-              <th className="px-4 py-3 w-56 text-center">{t("invoices_customer")}</th>
-              {!isDelivery && <th className="px-4 py-3 w-20 text-center">{t("invoices_items")}</th>}
-              <th className="px-4 py-3">{t("common_status")}</th>
-              {!isDelivery && <th className="px-4 py-3 w-32 text-center">{t("invoices_eta")}</th>}
-              <th className="px-4 py-3 w-32 text-center">{t("invoices_total")}</th>
-              <th className="px-4 py-3 w-28"></th>
+              <th className="px-4 py-3 text-center" style={{ width: colWidth }}>{t("invoices_invoiceId")}</th>
+              <th className="px-4 py-3 text-center" style={{ width: colWidth }}>{t("invoices_customer")}</th>
+              {!isDelivery && <th className="px-4 py-3 text-center" style={{ width: colWidth }}>{t("invoices_items")}</th>}
+              <th className="px-4 py-3 text-center" style={{ width: colWidth }}>{t("common_status")}</th>
+              {!isDelivery && <th className="px-4 py-3 text-center" style={{ width: colWidth }}>{t("invoices_eta")}</th>}
+              <th className="px-4 py-3 text-center" style={{ width: colWidth }}>{t("invoices_total")}</th>
+              <th className="px-4 py-3 text-center" style={{ width: colWidth }}></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-app-border">
@@ -2964,17 +2966,17 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
               const delivery = isDelivery ? deliveryStatusMeta(t, inv) : null;
               return (
                 <tr key={inv.id} className="cursor-pointer hover:bg-app-bg/60" onClick={() => setOpenId(inv.id)}>
-                  <td className="px-4 py-3 f-mono text-app-text-muted w-40" style={{ textAlign: "center" }}>{inv.code}</td>
-                  <td className="px-4 py-3 text-app-text truncate w-56 text-center">{inv.customerName}</td>
-                  {!isDelivery && <td className="px-4 py-3 text-app-text-muted w-20" style={{ textAlign: "center" }}>{inv.items.length}</td>}
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 f-mono text-app-text-muted text-center">{inv.code}</td>
+                  <td className="px-4 py-3 text-app-text truncate text-center">{inv.customerName}</td>
+                  {!isDelivery && <td className="px-4 py-3 text-app-text-muted text-center">{inv.items.length}</td>}
+                  <td className="px-4 py-3 text-center">
                     {isDelivery
                       ? <StatusDot tone={delivery.tone} label={delivery.label} />
                       : <StatusDot tone={INVOICE_STATUS_TONE[status] || "bg-app-bg text-app-text-muted"} label={stageLabel(t, status)} />}
                   </td>
-                  {!isDelivery && <td className="px-4 py-3 text-app-text-muted w-32" style={{ textAlign: "center" }}>{estimatedDeliveryLabel(t, inv)}</td>}
-                  <td className="px-4 py-3 f-mono text-app-text w-32" style={{ textAlign: "center" }}>{sarCompact(inv.total)}</td>
-                  <td className="px-4 py-3 text-center w-28">
+                  {!isDelivery && <td className="px-4 py-3 text-app-text-muted text-center">{estimatedDeliveryLabel(t, inv)}</td>}
+                  <td className="px-4 py-3 f-mono text-app-text text-center">{sarCompact(inv.total)}</td>
+                  <td className="px-4 py-3 text-center">
                     <button
                       onClick={(e) => { e.stopPropagation(); setOpenId(inv.id); }}
                       className="rounded-lg border border-app-border px-3 py-1.5 text-[12.5px] font-semibold text-app-text hover:bg-app-bg"
@@ -3683,17 +3685,17 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
       </div>
 
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap gap-2">
-          <button onClick={() => setActiveCat("all")} className={`rounded-full px-3.5 py-2 text-[12.5px] font-bold transition ${activeCat === "all" ? "bg-navy-900 text-white" : "bg-app-bg text-app-text-muted"}`}>{t("products_all")}</button>
-          {categories.map((c) => (
-            <button key={c.id} onClick={() => setActiveCat(c.id)} className={`rounded-full px-3.5 py-2 text-[12.5px] font-bold transition ${activeCat === c.id ? "bg-navy-900 text-white" : "bg-app-bg text-app-text-muted"}`}>{c.name}</button>
-          ))}
-        </div>
         <div className="sm:w-64">
           <div className="relative">
             <Search size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-text-subtle" />
             <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("products_searchPlaceholder")} className={`${inputCls} pr-9`} />
           </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setActiveCat("all")} className={`rounded-full px-3.5 py-2 text-[12.5px] font-bold transition ${activeCat === "all" ? "bg-navy-900 text-white" : "bg-app-bg text-app-text-muted"}`}>{t("products_all")}</button>
+          {categories.map((c) => (
+            <button key={c.id} onClick={() => setActiveCat(c.id)} className={`rounded-full px-3.5 py-2 text-[12.5px] font-bold transition ${activeCat === c.id ? "bg-navy-900 text-white" : "bg-app-bg text-app-text-muted"}`}>{c.name}</button>
+          ))}
         </div>
       </div>
 
@@ -3990,9 +3992,9 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
             <PurchasesStatCard label={t("purchases_kpiCount")} value={purchases.length} />
           </div>
 
-          <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mb-5 flex flex-wrap items-center gap-3">
             <button onClick={() => setShowPurchaseModal(true)} className="flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-600"><Plus className="size-4" />{t("purchases_addPurchaseBtn")}</button>
-            <div className="relative sm:w-64">
+            <div className="relative min-w-[200px] flex-1">
               <Search size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-text-subtle" />
               <input value={supplierQuery} onChange={(e) => setSupplierQuery(e.target.value)} placeholder={t("purchases_searchSuppliers")} className={`${inputCls} pr-9`} />
             </div>
@@ -5153,42 +5155,40 @@ function WhatsAppSettingsPanel({ whatsappEnabled, setWhatsappEnabled, whatsappTe
 // from before this layout pass — only the surrounding JSX/className moved.
 function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods }) {
   const { t } = useLang();
-  const [authenticated, setAuthenticated] = useState(false);
   const [showMasterPin, setShowMasterPin] = useState(false);
+  // What to actually do once the master password comes back verified —
+  // set right before opening the prompt, consumed and cleared on success.
+  const [pendingAction, setPendingAction] = useState(null); // { type: "pay", value } | { type: "section", key }
   const [pendingSection, setPendingSection] = useState(null);
   const [payMethodError, setPayMethodError] = useState("");
 
-  const handleMasterSuccess = (pin) => {
-    if (!ownerPassword) setOwnerPassword(pin);
-    setAuthenticated(true);
-    setShowMasterPin(false);
-  };
-
-  const toggleSection = (key) => {
-    if (sectionLocks[key]) {
-      setSectionLocks((prev) => ({ ...prev, [key]: null }));
-    } else {
-      setPendingSection(key);
-    }
-  };
-
-  const handleSectionPinSet = (pin) => {
-    setSectionLocks((prev) => ({ ...prev, [pendingSection]: pin }));
-    setPendingSection(null);
-  };
-
-  const togglePayMethod = (value) => {
+  const applyPayMethodToggle = (value) => {
     const enabledCount = Object.values(enabledPayMethods).filter(Boolean).length;
     if (enabledPayMethods[value] && enabledCount <= 1) { setPayMethodError(t("owner_atLeastOnePayMethod")); return; }
     setPayMethodError("");
     setEnabledPayMethods((prev) => ({ ...prev, [value]: !prev[value] }));
   };
 
-  const ownerBadge = (
-    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold ring-1 ring-inset bg-app-bg text-app-text-muted">
-      <Lock size={11} />{t("settings_ownerOnly")}
-    </span>
-  );
+  const requestPayMethodToggle = (value) => { setPendingAction({ type: "pay", value }); setShowMasterPin(true); };
+  const requestSectionToggle = (key) => { setPendingAction({ type: "section", key }); setShowMasterPin(true); };
+
+  const handleMasterSuccess = (pin) => {
+    if (!ownerPassword) setOwnerPassword(pin);
+    setShowMasterPin(false);
+    if (pendingAction?.type === "pay") {
+      applyPayMethodToggle(pendingAction.value);
+    } else if (pendingAction?.type === "section") {
+      const key = pendingAction.key;
+      if (sectionLocks[key]) setSectionLocks((prev) => ({ ...prev, [key]: null }));
+      else setPendingSection(key);
+    }
+    setPendingAction(null);
+  };
+
+  const handleSectionPinSet = (pin) => {
+    setSectionLocks((prev) => ({ ...prev, [pendingSection]: pin }));
+    setPendingSection(null);
+  };
 
   const pinModals = (
     <>
@@ -5204,7 +5204,7 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
             return (await sha256Hex(pin)) === ownerPassword;
           }}
           onSuccess={handleMasterSuccess}
-          onClose={() => setShowMasterPin(false)}
+          onClose={() => { setShowMasterPin(false); setPendingAction(null); }}
         />
       )}
       {pendingSection && (
@@ -5218,35 +5218,21 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
     </>
   );
 
-  if (!authenticated) {
-    return (
-      <div className="lg:col-span-2 rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
-        <button onClick={() => setShowMasterPin(true)} className="flex w-full items-center justify-between text-left">
-          <span className="flex items-center gap-2 text-sm font-semibold text-app-text"><Lock size={16} className="text-brand-600" /> {t("settings_ownerOnly")}</span>
-          <ChevronRight size={16} className="text-app-text-subtle" />
-        </button>
-        <p className="mt-1 text-xs text-app-text-subtle">{t("settings_ownerOnlyHint")}</p>
-        {pinModals}
-      </div>
-    );
-  }
-
   return (
     <>
-      {/* Card 3: enabled payment methods (POS toggles) — one real, always-on
-          toggle per PAY_METHODS entry. "Split" deliberately excluded: it's a
-          POS checkout behavior, not a payment method to switch on/off. */}
+      {/* Card 3: enabled payment methods (POS toggles) — one real toggle per
+          PAY_METHODS entry. "Split" deliberately excluded: it's a POS
+          checkout behavior, not a payment method to switch on/off. Both
+          cards stay visible at all times; every toggle here asks for the
+          owner's master password before it actually applies. */}
       <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
-        <div className="mb-1 flex items-center justify-between gap-2">
-          <span className="flex items-center gap-2 text-sm font-semibold text-app-text"><CreditCard size={16} className="text-brand-600" /> {t("owner_payMethodsTitle")}</span>
-          {ownerBadge}
-        </div>
+        <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-app-text"><CreditCard size={16} className="text-brand-600" /> {t("owner_payMethodsTitle")}</div>
         <p className="mb-4 text-xs text-app-text-subtle">{t("owner_payMethodsHint")}</p>
         <div className="space-y-2">
           {PAY_METHODS.map((m) => (
             <div key={m.value} className="flex items-center justify-between rounded-lg border border-app-border px-3 py-2.5">
               <span className="text-sm text-app-text">{t(m.key)}</span>
-              <Toggle checked={enabledPayMethods[m.value] !== false} onChange={() => togglePayMethod(m.value)} />
+              <Toggle checked={enabledPayMethods[m.value] !== false} onChange={() => requestPayMethodToggle(m.value)} />
             </div>
           ))}
         </div>
@@ -5256,14 +5242,11 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
       {/* Card 4: per-section staff locks — full width. Exactly OWNER_SECTIONS
           (5 items) are real, individually-lockable sections with their own
           PIN via sectionLocks. "طرق الدفع" is shown as a 6th row for visual
-          consistency only — it's already gated behind this same master PIN
-          (Card 3 above), not an individually-lockable section, so it renders
-          as a static "protected" indicator rather than a real toggle. */}
+          consistency only — it's already gated behind the same master
+          password (Card 3 above), not an individually-lockable section, so
+          it renders as a static "protected" indicator rather than a toggle. */}
       <div className="lg:col-span-2 rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
-        <div className="mb-1 flex items-center justify-between gap-2">
-          <span className="flex items-center gap-2 text-sm font-semibold text-app-text"><Lock size={16} className="text-brand-600" /> {t("owner_sectionLockTitle")}</span>
-          {ownerBadge}
-        </div>
+        <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-app-text"><Lock size={16} className="text-brand-600" /> {t("owner_sectionLockTitle")}</div>
         <p className="mb-4 text-xs text-app-text-subtle">{t("owner_sectionLockHint")}</p>
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {OWNER_SECTIONS.map((s) => (
@@ -5272,7 +5255,7 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
                 <Lock size={13} className={sectionLocks[s.key] ? "text-warning-600" : "text-app-text-subtle"} />
                 {t(s.labelKey)}
               </span>
-              <Toggle checked={Boolean(sectionLocks[s.key])} onChange={() => toggleSection(s.key)} />
+              <Toggle checked={Boolean(sectionLocks[s.key])} onChange={() => requestSectionToggle(s.key)} />
             </div>
           ))}
           <div className="flex items-center justify-between rounded-lg border border-app-border px-3 py-2.5">
@@ -5283,7 +5266,6 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
             <span className="inline-flex items-center gap-1 rounded-full bg-app-bg px-2 py-1 text-[11px] font-semibold text-app-text-muted">{t("owner_protectedByMaster")}</span>
           </div>
         </div>
-        <button onClick={() => setAuthenticated(false)} className="mt-4 text-xs font-medium text-brand-700 hover:underline">{t("owner_lockPanel")}</button>
       </div>
 
       {pinModals}
