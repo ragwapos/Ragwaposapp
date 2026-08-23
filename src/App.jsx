@@ -1828,10 +1828,11 @@ function Sidebar({ tab, setTab, sectionLocks, setSectionLocks, merchant }) {
           const locked = Boolean(sectionLocks[n.key]);
           return (
             <button key={n.key} onClick={() => handleNavClick(n.key)}
-              className={`group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition ${active ? "bg-brand-600 text-white shadow" : "text-stone-300 hover:bg-navy-800 hover:text-white"}`}>
-              <Icon size={16} />
-              <span className="flex-1 text-left font-medium">{t(n.labelKey)}</span>
+              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13.5px] font-semibold transition-colors ${active ? "bg-brand-500/15 text-white ring-1 ring-inset ring-brand-400/30" : "text-white/65 hover:bg-white/5 hover:text-white"}`}>
+              <Icon className={`size-[18px] shrink-0 ${active ? "text-brand-300" : ""}`} />
+              <span className="truncate">{t(n.labelKey)}</span>
               {locked && <Lock size={12} className={active ? "text-brand-100" : "text-amber-400"} />}
+              {active && !locked && <span className="mr-auto size-1.5 shrink-0 rounded-full bg-brand-400" />}
             </button>
           );
         })}
