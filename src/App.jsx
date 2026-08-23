@@ -375,10 +375,16 @@ const LOGO_DATA_URI = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAY
    ========================================================================= */
 const Fonts = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap');
-    .f-display{font-family:'Space Grotesk',sans-serif;}
-    .f-body{font-family:'Inter',sans-serif;}
-    .f-mono{font-family:'JetBrains Mono',monospace; direction:ltr; unicode-bidi:embed; display:inline-block;}
+    /* Cairo itself is already loaded site-wide via the <link> in index.html
+       (originally added for the public landing page) — the approved
+       internal-app reference build also renders every screen in Cairo,
+       numbers included, so the tenant/admin UI adopts the same family here
+       instead of the old Latin-only Space Grotesk/Inter/JetBrains Mono set
+       (which never actually rendered Arabic glyphs — the browser silently
+       fell back to a system font for every Arabic character anyway). */
+    .f-display{font-family:'Cairo','Segoe UI',Tahoma,sans-serif; font-weight:700;}
+    .f-body{font-family:'Cairo','Segoe UI',Tahoma,sans-serif;}
+    .f-mono{font-family:'Cairo','Segoe UI',Tahoma,sans-serif; font-weight:600; direction:ltr; unicode-bidi:embed; display:inline-block;}
     /* .f-mono's own display:inline-block (needed so a <span> of it sits
        correctly LTR inside surrounding RTL text) silently breaks any <td>/<th>
        that also carries the class: inline-block removes it from the table's
@@ -1052,6 +1058,7 @@ const DICT = {
     invoices_liveDashboard: "Live Orders Dashboard", invoices_deliveryDashboard: "Delivery Orders Dashboard",
     invoices_invoiceId: "Invoice ID", invoices_customer: "Customer", invoices_items: "Items", invoices_deliveryFee: "Delivery Fee",
     invoices_total: "Total", invoices_allStatuses: "All",
+    invoices_eta: "Expected Ready", invoices_etaToday: "Today", invoices_etaTomorrow: "Tomorrow",
     invoices_noActive: "No active invoices. All caught up.", invoices_noActiveDelivery: "No active delivery orders.",
     invoices_clearFilter: "Clear Filter",
     invoiceDetail_title: "Invoice", invoiceDetail_deliveryOrder: "Delivery Order", invoiceDetail_fee: "Fee:",
@@ -1308,6 +1315,7 @@ const DICT = {
     invoices_liveDashboard: "لوحة الطلبات الحية", invoices_deliveryDashboard: "لوحة طلبات التوصيل",
     invoices_invoiceId: "رقم الفاتورة", invoices_customer: "العميل", invoices_items: "القطع", invoices_deliveryFee: "سعر التوصيل",
     invoices_total: "الإجمالي", invoices_allStatuses: "الكل",
+    invoices_eta: "موعد التسليم", invoices_etaToday: "اليوم", invoices_etaTomorrow: "غدًا",
     invoices_noActive: "لا توجد فواتير نشطة. كل شيء منجز.", invoices_noActiveDelivery: "لا توجد طلبات توصيل نشطة.",
     invoices_clearFilter: "حذف الفلترة",
     invoiceDetail_title: "فاتورة", invoiceDetail_deliveryOrder: "طلب توصيل", invoiceDetail_fee: "السعر:",
@@ -1564,6 +1572,7 @@ const DICT = {
     invoices_liveDashboard: "جاری آرڈرز کی فہرست", invoices_deliveryDashboard: "جاری ڈیلیوری آرڈرز کی فہرست",
     invoices_invoiceId: "آرڈر نمبر", invoices_customer: "کسٹمر", invoices_items: "اشیاء", invoices_deliveryFee: "ڈیلیوری چارجز",
     invoices_total: "کل رقم", invoices_allStatuses: "تمام",
+    invoices_eta: "متوقع تیاری", invoices_etaToday: "آج", invoices_etaTomorrow: "کل",
     invoices_noActive: "کوئی جاری آرڈر نہیں۔ سب کچھ مکمل ہے۔", invoices_noActiveDelivery: "کوئی جاری ڈیلیوری آرڈر نہیں۔",
     invoices_clearFilter: "فلٹر ہٹائیں",
     invoiceDetail_title: "آرڈر", invoiceDetail_deliveryOrder: "ڈیلیوری آرڈر", invoiceDetail_fee: "چارجز:",
@@ -2463,17 +2472,17 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
               <button key={c.id} onClick={() => setActiveCat(c.id)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${activeCat === c.id ? "bg-brand-600 text-white shadow-app-xs" : "bg-app-surface border border-app-border text-app-text-muted hover:border-app-border-strong"}`}>{c.name}</button>
             ))}
           </div>
-          <div className="grid flex-1 auto-rows-max grid-cols-2 gap-4 overflow-y-auto pr-1 sm:grid-cols-3 xl:grid-cols-4">
+          <div className="grid flex-1 auto-rows-max grid-cols-2 gap-3 overflow-y-auto pr-1 sm:grid-cols-3 xl:grid-cols-4">
             {visibleProducts.map((p) => (
-              <button key={p.id} onClick={() => setModalProduct(p)} className="relative text-left rounded-xl border border-app-border bg-app-surface overflow-hidden hover:shadow-app-md hover:border-brand-300 transition">
+              <button key={p.id} onClick={() => setModalProduct(p)} className="group relative flex flex-col text-left rounded-xl border border-app-border bg-app-surface overflow-hidden transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-app-md active:translate-y-0">
                 {p.quickAccessKey && (
                   <span className="absolute top-1.5 right-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-navy-900 text-[11px] font-bold text-white shadow">{p.quickAccessKey}</span>
                 )}
                 {p.image ? (
-                  <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="h-28 w-full object-cover" />
+                  <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="aspect-square w-full object-cover" />
                 ) : (
-                  <div className="flex h-28 w-full items-center justify-center bg-app-bg">
-                    <ImageIcon size={24} className="text-app-text-subtle" />
+                  <div className="flex aspect-square w-full items-center justify-center bg-app-bg text-app-text-subtle transition-colors group-hover:bg-brand-50 group-hover:text-brand-500">
+                    <ImageIcon size={24} />
                   </div>
                 )}
                 <div className="p-3">
@@ -2768,6 +2777,15 @@ const INVOICE_STATUS_TONE = {
   Delivered: "bg-navy-800/10 text-navy-800",
 };
 
+// A real promise to a real customer, so this is deliberately simple and
+// derived only from data we already track: same-day the moment any piece
+// reaches "Ready", next-day otherwise. No per-service/rush-tier turnaround
+// table exists yet — if one gets added later, this is the one place to
+// plug it in.
+function estimatedDeliveryLabel(t, inv) {
+  return invoiceOverallStatus(inv) === "Ready" ? t("invoices_etaToday") : t("invoices_etaTomorrow");
+}
+
 function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, merchant, zatcaInvoices = [], whatsappTemplate, whatsappEnabled }) {
   const { t } = useLang();
   const [openId, setOpenId] = useState(null);
@@ -2818,8 +2836,9 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
               <th className="px-4 py-3 w-56 text-center">{t("invoices_customer")}</th>
               <th className="px-4 py-3 w-20 text-center">{t("invoices_items")}</th>
               {isDelivery && <th className="px-4 py-3 w-40 text-center">{t("invoices_deliveryFee")}</th>}
-              <th className="px-4 py-3 w-32 text-center">{t("invoices_total")}</th>
               <th className="px-4 py-3">{t("common_status")}</th>
+              <th className="px-4 py-3 w-32 text-center">{t("invoices_eta")}</th>
+              <th className="px-4 py-3 w-32 text-center">{t("invoices_total")}</th>
               <th className="px-4 py-3 w-10"></th>
             </tr>
           </thead>
@@ -2832,13 +2851,14 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
                   <td className="px-4 py-3 text-app-text truncate w-56 text-center">{inv.customerName}</td>
                   <td className="px-4 py-3 text-app-text-muted w-20" style={{ textAlign: "center" }}>{inv.items.length}</td>
                   {isDelivery && <td className="px-4 py-3 f-mono text-brand-700 w-40" style={{ textAlign: "center" }}>{sarCompact(inv.deliveryFee || 0)}</td>}
-                  <td className="px-4 py-3 f-mono text-app-text w-32" style={{ textAlign: "center" }}>{sarCompact(inv.total)}</td>
                   <td className="px-4 py-3"><span className={`rounded-full px-2.5 py-1 text-xs font-medium ${INVOICE_STATUS_TONE[status] || "bg-stone-100 text-stone-600"}`}>{stageLabel(t, status)}</span></td>
+                  <td className="px-4 py-3 text-app-text-muted w-32" style={{ textAlign: "center" }}>{estimatedDeliveryLabel(t, inv)}</td>
+                  <td className="px-4 py-3 f-mono text-app-text w-32" style={{ textAlign: "center" }}>{sarCompact(inv.total)}</td>
                   <td className="px-4 py-3 text-right text-app-text-subtle w-10"><ChevronRight size={16} /></td>
                 </tr>
               );
             })}
-            {active.length === 0 && <tr><td colSpan={isDelivery ? 7 : 6} className="px-4 py-10 text-center text-app-text-subtle">{isDelivery ? t("invoices_noActiveDelivery") : t("invoices_noActive")}</td></tr>}
+            {active.length === 0 && <tr><td colSpan={isDelivery ? 8 : 7} className="px-4 py-10 text-center text-app-text-subtle">{isDelivery ? t("invoices_noActiveDelivery") : t("invoices_noActive")}</td></tr>}
           </tbody>
         </table>
       </div>
@@ -3568,10 +3588,10 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
                 <span className="absolute top-2 right-2 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-navy-900 text-[11px] font-bold text-white shadow">{p.quickAccessKey}</span>
               )}
               {p.image ? (
-                <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="h-32 w-full object-cover" />
+                <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="aspect-[4/3] w-full object-cover" />
               ) : (
-                <div className="flex h-32 w-full items-center justify-center bg-app-bg">
-                  <ImageIcon size={26} className="text-app-text-subtle" />
+                <div className="flex aspect-[4/3] w-full items-center justify-center bg-app-bg text-app-text-subtle">
+                  <ImageIcon size={26} />
                 </div>
               )}
               <div className="p-3">
