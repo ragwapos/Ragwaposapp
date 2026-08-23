@@ -5,7 +5,7 @@ import {
   Banknote, Percent, Clock, Mail, AlertTriangle, AlertCircle, CheckCircle2, Circle, Upload,
   ReceiptText, Receipt, Building2, FileText, Sparkles, Settings, Globe, Lock, Pencil, Paperclip,
   MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin, Home, SplitSquareHorizontal, Printer, StickyNote,
-  Phone, User
+  Phone, User, Link2, FlaskConical, KeyRound, LogOut, XCircle
 } from "lucide-react";
 import QRCode from "qrcode";
 // auth/db here are supabase.auth / the Supabase client (see src/supabase.js).
@@ -1224,35 +1224,37 @@ const DICT = {
     settings_showPrintPreview: "Show invoice preview", settings_showPrintPreviewHint: "Turn off to print silently with no popup and go straight to the next sale.",
     settings_merchantName: "Name (as registered in the Commercial Registry)", settings_merchantPhone: "Store Phone Number",
     settings_merchantAddress: "Store Location", settings_merchantTax: "Tax Number",
+    settings_merchantSave: "Save Changes", settings_merchantSaved: "Saved",
     settings_ownerOnly: "For Owner Only", settings_ownerOnlyHint: "Protect sensitive sections with a password only you know.",
-    whatsapp_title: "WhatsApp", whatsapp_hint: "Let cashiers share receipts over WhatsApp. Off by default. Turning it on lets you customize the message below — available tags:",
+    whatsapp_title: "Send Invoice via WhatsApp", whatsapp_hint: "Automatically sends the invoice to the customer over WhatsApp right after the sale is completed — available tags:",
     owner_setMasterTitle: "Set a password for this section", owner_enterMasterTitle: "Enter the owner password",
     owner_setSectionTitle: "Set a password for \"{section}\"", owner_enterSectionTitle: "This section is locked — enter the password",
     owner_pinLabel: "Password (4 digits)", owner_pinConfirmLabel: "Confirm password",
     owner_pinFormatError: "Password must be exactly 4 digits (numbers only).", owner_pinMismatch: "Passwords don't match.",
-    owner_pinWrong: "Incorrect password.", owner_lockPanel: "🔒 Lock this section again",
+    owner_pinWrong: "Incorrect password.", owner_lockPanel: "Lock this section again",
     owner_payMethodsTitle: "Payment Methods Shown at POS", owner_payMethodsHint: "Turn off any payment method the staff should not see or use at checkout.",
     owner_atLeastOnePayMethod: "At least one payment method must stay enabled.",
     owner_sectionLockTitle: "Lock Sections From Staff", owner_sectionLockHint: "Turn on a section to require the owner PIN before staff can open it.",
+    owner_payMethodsRowLabel: "Payment Methods", owner_protectedByMaster: "Protected",
     zatca_title: "ZATCA Integration (Phase 2)", zatca_hint: "When enabled, new invoices are verified with ZATCA automatically.",
     zatca_connected: "Connected", zatca_notConnected: "Not connected",
     zatca_enableToggle: "Enable ZATCA Integration", zatca_otpLabel: "OTP Code", zatca_otpPlaceholder: "6-digit code",
-    zatca_otpInvalid: "Code must be 6 digits.", zatca_connect: "🔗 Connect to ZATCA", zatca_cancel: "Cancel",
+    zatca_otpInvalid: "Code must be 6 digits.", zatca_connect: "Connect to ZATCA", zatca_cancel: "Cancel",
     zatca_disableConfirm: "Disable ZATCA integration? New invoices will go back to normal.",
-    zatca_statusConnected: "✅ Connected", zatca_statusDisconnected: "⭕ Disconnected",
-    zatca_certificateStatus: "Certificate Status", zatca_certActive: "✅ Active", zatca_certPending: "⏳ Pending",
-    zatca_certExpired: "❌ Expired", zatca_certRevoked: "❌ Revoked",
+    zatca_statusConnected: "Connected", zatca_statusDisconnected: "Disconnected",
+    zatca_certificateStatus: "Certificate Status", zatca_certActive: "Active", zatca_certPending: "Pending",
+    zatca_certExpired: "Expired", zatca_certRevoked: "Revoked",
     zatca_expiresOn: "Expires on", zatca_lastSync: "Last Sync", zatca_neverSynced: "Not synced yet",
     zatca_stats: "Statistics", zatca_cleared: "Cleared Invoices", zatca_reported: "Reported Invoices", zatca_failed: "Failed",
-    zatca_testConnection: "🧪 Test Connection", zatca_testSuccess: "✅ Connection working",
-    zatca_reset: "🗑️ Remove ZATCA Data", zatca_resetConfirm: "Delete all ZATCA configuration? This cannot be undone.",
-    zatca_enableSuccess: "✅ Connected to ZATCA successfully", zatca_lastError: "Last Error",
-    zatca_generateCsr: "1. Generate Certificate Request (CSR)", zatca_generateCsrButton: "🔑 Generate CSR",
+    zatca_testConnection: "Test Connection", zatca_testSuccess: "Connection working",
+    zatca_reset: "Remove ZATCA Data", zatca_resetConfirm: "Delete all ZATCA configuration? This cannot be undone.",
+    zatca_enableSuccess: "Connected to ZATCA successfully", zatca_lastError: "Last Error",
+    zatca_generateCsr: "1. Generate Certificate Request (CSR)", zatca_generateCsrButton: "Generate CSR",
     zatca_businessCategory: "Business Category", zatca_businessCategoryPlaceholder: "e.g. Laundry Services",
     zatca_csrLabel: "Certificate Request (CSR)", zatca_csrHint: "Submit this CSR at ZATCA's Fatoora portal (fatoora.zatca.gov.sa) to get your real verification code, then enter it below.",
     zatca_copyCsr: "Copy CSR", zatca_copied: "Copied", zatca_publicKeyLabel: "Public Key",
     zatca_connectStep: "2. Enter ZATCA's Verification Code", zatca_csrRequiredFirst: "Generate a CSR first.",
-    settings_account: "Account", settings_logout: "🚪 Log Out",
+    settings_account: "Account", settings_logout: "Log Out",
 
     print_taxInvoice: "Simplified Tax Invoice", print_receipt: "Receipt", print_deliveryReceipt: "Delivery Receipt",
     print_address: "Address:", print_phone: "Phone Num:", print_date: "Date:", print_invNum: "Inv Num:",
@@ -1484,35 +1486,37 @@ const DICT = {
     settings_showPrintPreview: "إظهار معاينة الفاتورة", settings_showPrintPreviewHint: "أطفئها عشان تطبع مباشرة بدون أي نافذة، وتنتقل فورًا للبيعة التالية.",
     settings_merchantName: "الاسم (كما هو مسجل في السجل التجاري)", settings_merchantPhone: "رقم هاتف المحل",
     settings_merchantAddress: "موقع المحل", settings_merchantTax: "الرقم الضريبي",
+    settings_merchantSave: "حفظ التغييرات", settings_merchantSaved: "تم الحفظ",
     settings_ownerOnly: "للمالك فقط", settings_ownerOnlyHint: "احمِ الأقسام الحساسة بكلمة مرور ما يعرفها إلا أنت.",
-    whatsapp_title: "واتس", whatsapp_hint: "يسمح للكاشير يشارك الفواتير عبر واتساب. مطفّى افتراضيًا. لما تفعّله تقدر تخصّص الرسالة بالأسفل — الوسوم المتاحة:",
+    whatsapp_title: "إرسال الفاتورة عبر واتساب", whatsapp_hint: "ترسل الفاتورة تلقائيًا للعميل عبر واتساب بعد إتمام البيع — الوسوم المتاحة:",
     owner_setMasterTitle: "حط كلمة مرور جديدة لهذي الخانة", owner_enterMasterTitle: "أدخل كلمة مرور المالك",
     owner_setSectionTitle: "حط كلمة مرور لقسم \"{section}\"", owner_enterSectionTitle: "هذا القسم مقفل — أدخل كلمة المرور",
     owner_pinLabel: "كلمة المرور (٤ أرقام)", owner_pinConfirmLabel: "تأكيد كلمة المرور",
     owner_pinFormatError: "كلمة المرور لازم تكون ٤ أرقام بالضبط (أرقام فقط).", owner_pinMismatch: "كلمتا المرور غير متطابقتين.",
-    owner_pinWrong: "كلمة المرور غير صحيحة.", owner_lockPanel: "🔒 إغلاق هذا القسم مرة ثانية",
+    owner_pinWrong: "كلمة المرور غير صحيحة.", owner_lockPanel: "إغلاق هذا القسم مرة ثانية",
     owner_payMethodsTitle: "طرق الدفع الظاهرة بصفحة البيع", owner_payMethodsHint: "أطفئ أي طريقة دفع ما تبي الموظف يشوفها أو يستخدمها وقت البيع.",
     owner_atLeastOnePayMethod: "لازم تبقى طريقة دفع واحدة على الأقل مفعّلة.",
     owner_sectionLockTitle: "إغلاق الأقسام عن الموظفين", owner_sectionLockHint: "فعّل أي قسم عشان يطلب رمز المالك قبل ما يقدر الموظف يفتحه.",
+    owner_payMethodsRowLabel: "طرق الدفع", owner_protectedByMaster: "محمي",
     zatca_title: "الربط مع هيئة الزكاة والضريبة (المرحلة الثانية)", zatca_hint: "عند التفعيل، يتم توثيق الفواتير الجديدة مع الهيئة تلقائيًا.",
     zatca_connected: "متصل", zatca_notConnected: "غير متصل",
     zatca_enableToggle: "تفعيل الربط مع الهيئة", zatca_otpLabel: "رمز التحقق (OTP)", zatca_otpPlaceholder: "٦ أرقام",
-    zatca_otpInvalid: "الرمز يجب أن يكون 6 أرقام.", zatca_connect: "🔗 ربط مع الهيئة", zatca_cancel: "إلغاء",
+    zatca_otpInvalid: "الرمز يجب أن يكون 6 أرقام.", zatca_connect: "ربط مع الهيئة", zatca_cancel: "إلغاء",
     zatca_disableConfirm: "هل تريد تعطيل الربط مع الهيئة؟ الفواتير الجديدة ستعود للوضع العادي.",
-    zatca_statusConnected: "✅ متصل", zatca_statusDisconnected: "⭕ غير متصل",
-    zatca_certificateStatus: "حالة الشهادة", zatca_certActive: "✅ نشطة", zatca_certPending: "⏳ قيد الانتظار",
-    zatca_certExpired: "❌ منتهية", zatca_certRevoked: "❌ ملغاة",
+    zatca_statusConnected: "متصل", zatca_statusDisconnected: "غير متصل",
+    zatca_certificateStatus: "حالة الشهادة", zatca_certActive: "نشطة", zatca_certPending: "قيد الانتظار",
+    zatca_certExpired: "منتهية", zatca_certRevoked: "ملغاة",
     zatca_expiresOn: "تنتهي في", zatca_lastSync: "آخر تحديث", zatca_neverSynced: "لم يتم التحديث بعد",
     zatca_stats: "الإحصائيات", zatca_cleared: "فواتير موثقة", zatca_reported: "فواتير مبلغة", zatca_failed: "فواتير فاشلة",
-    zatca_testConnection: "🧪 اختبار الاتصال", zatca_testSuccess: "✅ الاتصال يعمل بشكل صحيح",
-    zatca_reset: "🗑️ إزالة بيانات الربط", zatca_resetConfirm: "هل تريد حذف جميع بيانات الربط مع الهيئة؟ لا يمكن التراجع عن هذا.",
-    zatca_enableSuccess: "✅ تم الربط مع الهيئة بنجاح", zatca_lastError: "آخر خطأ",
-    zatca_generateCsr: "١. توليد طلب الشهادة (CSR)", zatca_generateCsrButton: "🔑 توليد CSR",
+    zatca_testConnection: "اختبار الاتصال", zatca_testSuccess: "الاتصال يعمل بشكل صحيح",
+    zatca_reset: "إزالة بيانات الربط", zatca_resetConfirm: "هل تريد حذف جميع بيانات الربط مع الهيئة؟ لا يمكن التراجع عن هذا.",
+    zatca_enableSuccess: "تم الربط مع الهيئة بنجاح", zatca_lastError: "آخر خطأ",
+    zatca_generateCsr: "١. توليد طلب الشهادة (CSR)", zatca_generateCsrButton: "توليد CSR",
     zatca_businessCategory: "النشاط التجاري", zatca_businessCategoryPlaceholder: "مثال: خدمات المغاسل",
     zatca_csrLabel: "طلب الشهادة (CSR)", zatca_csrHint: "قدّم طلب الشهادة هذا في بوابة فاتورة (fatoora.zatca.gov.sa) للحصول على رمز التحقق الحقيقي، ثم أدخله بالأسفل.",
     zatca_copyCsr: "نسخ CSR", zatca_copied: "تم النسخ", zatca_publicKeyLabel: "المفتاح العام",
     zatca_connectStep: "٢. أدخل رمز التحقق من الهيئة", zatca_csrRequiredFirst: "وَلّد CSR أولاً.",
-    settings_account: "الحساب", settings_logout: "🚪 تسجيل الخروج",
+    settings_account: "الحساب", settings_logout: "تسجيل الخروج",
 
     print_taxInvoice: "فاتورة ضريبية مبسطة", print_receipt: "إيصال", print_deliveryReceipt: "إيصال تسليم الملابس",
     print_address: "العنوان:", print_phone: "رقم الهاتف:", print_date: "التاريخ:", print_invNum: "رقم الفاتورة:",
@@ -1744,35 +1748,37 @@ const DICT = {
     settings_showPrintPreview: "انوائس پیش نظارہ دکھائیں", settings_showPrintPreviewHint: "بند کریں تاکہ بغیر کسی پاپ اپ کے خاموشی سے پرنٹ ہو اور فوراً اگلی سیل پر جائے۔",
     settings_merchantName: "نام (کمرشل رجسٹریشن میں درج شدہ)", settings_merchantPhone: "دکان کا فون نمبر",
     settings_merchantAddress: "دکان کا مقام", settings_merchantTax: "ٹیکس نمبر",
+    settings_merchantSave: "تبدیلیاں محفوظ کریں", settings_merchantSaved: "محفوظ ہو گیا",
     settings_ownerOnly: "صرف مالک کے لیے", settings_ownerOnlyHint: "حساس حصوں کو ایسے پاس ورڈ سے محفوظ کریں جو صرف آپ جانتے ہوں۔",
-    whatsapp_title: "واٹس ایپ", whatsapp_hint: "کیشیئرز کو رسیدیں واٹس ایپ پر شیئر کرنے دیں۔ ڈیفالٹ میں بند ہے۔ فعال کرنے پر نیچے پیغام حسبِ ضرورت بنا سکتے ہیں — دستیاب ٹیگز:",
+    whatsapp_title: "واٹس ایپ پر انوائس بھیجیں", whatsapp_hint: "سیل مکمل ہوتے ہی انوائس خودکار طور پر واٹس ایپ کے ذریعے کسٹمر کو بھیج دی جاتی ہے — دستیاب ٹیگز:",
     owner_setMasterTitle: "اس حصے کے لیے نیا پاس ورڈ بنائیں", owner_enterMasterTitle: "مالک کا پاس ورڈ درج کریں",
     owner_setSectionTitle: "\"{section}\" کے لیے پاس ورڈ بنائیں", owner_enterSectionTitle: "یہ حصہ لاک ہے — پاس ورڈ درج کریں",
     owner_pinLabel: "پاس ورڈ (4 ہندسے)", owner_pinConfirmLabel: "پاس ورڈ کی تصدیق کریں",
     owner_pinFormatError: "پاس ورڈ بالکل 4 ہندسوں پر مشتمل ہونا چاہیے (صرف نمبر)۔", owner_pinMismatch: "پاس ورڈز مماثل نہیں ہیں۔",
-    owner_pinWrong: "پاس ورڈ غلط ہے۔", owner_lockPanel: "🔒 اس حصے کو دوبارہ لاک کریں",
+    owner_pinWrong: "پاس ورڈ غلط ہے۔", owner_lockPanel: "اس حصے کو دوبارہ لاک کریں",
     owner_payMethodsTitle: "POS پر دکھائے جانے والے ادائیگی کے طریقے", owner_payMethodsHint: "کوئی بھی ایسا طریقہ بند کر دیں جو عملے کو چیک آؤٹ پر نظر نہیں آنا چاہیے۔",
     owner_atLeastOnePayMethod: "کم از کم ایک ادائیگی کا طریقہ فعال رہنا ضروری ہے۔",
     owner_sectionLockTitle: "عملے سے حصے مقفل کریں", owner_sectionLockHint: "کسی حصے کو فعال کریں تاکہ عملہ اسے کھولنے سے پہلے مالک کا پن درج کرے۔",
+    owner_payMethodsRowLabel: "ادائیگی کے طریقے", owner_protectedByMaster: "محفوظ شدہ",
     zatca_title: "زکوٰۃ اتھارٹی کے ساتھ ربط (فیز 2)", zatca_hint: "فعال ہونے پر، نئے انوائسز خودکار طور پر اتھارٹی سے تصدیق شدہ ہوں گے۔",
     zatca_connected: "منسلک", zatca_notConnected: "غیر منسلک",
     zatca_enableToggle: "زکوٰۃ ربط فعال کریں", zatca_otpLabel: "OTP کوڈ", zatca_otpPlaceholder: "6 ہندسوں کا کوڈ",
-    zatca_otpInvalid: "کوڈ 6 ہندسوں کا ہونا چاہیے۔", zatca_connect: "🔗 اتھارٹی سے ربط کریں", zatca_cancel: "منسوخ کریں",
+    zatca_otpInvalid: "کوڈ 6 ہندسوں کا ہونا چاہیے۔", zatca_connect: "اتھارٹی سے ربط کریں", zatca_cancel: "منسوخ کریں",
     zatca_disableConfirm: "زکوٰۃ ربط غیر فعال کریں؟ نئے انوائسز معمول کی حالت میں واپس چلے جائیں گے۔",
-    zatca_statusConnected: "✅ منسلک", zatca_statusDisconnected: "⭕ غیر منسلک",
-    zatca_certificateStatus: "سرٹیفکیٹ کی صورتحال", zatca_certActive: "✅ فعال", zatca_certPending: "⏳ زیر التوا",
-    zatca_certExpired: "❌ ختم شدہ", zatca_certRevoked: "❌ منسوخ شدہ",
+    zatca_statusConnected: "منسلک", zatca_statusDisconnected: "غیر منسلک",
+    zatca_certificateStatus: "سرٹیفکیٹ کی صورتحال", zatca_certActive: "فعال", zatca_certPending: "زیر التوا",
+    zatca_certExpired: "ختم شدہ", zatca_certRevoked: "منسوخ شدہ",
     zatca_expiresOn: "ختم ہونے کی تاریخ", zatca_lastSync: "آخری ہم آہنگی", zatca_neverSynced: "ابھی تک ہم آہنگ نہیں ہوا",
     zatca_stats: "اعداد و شمار", zatca_cleared: "تصدیق شدہ انوائسز", zatca_reported: "رپورٹ شدہ انوائسز", zatca_failed: "ناکام",
-    zatca_testConnection: "🧪 کنکشن ٹیسٹ کریں", zatca_testSuccess: "✅ کنکشن ٹھیک کام کر رہا ہے",
-    zatca_reset: "🗑️ زکوٰۃ ڈیٹا ہٹائیں", zatca_resetConfirm: "زکوٰۃ کی تمام ترتیبات حذف کریں؟ اسے واپس نہیں لیا جا سکتا۔",
-    zatca_enableSuccess: "✅ اتھارٹی سے کامیابی سے ربط ہو گیا", zatca_lastError: "آخری خرابی",
-    zatca_generateCsr: "1. سرٹیفکیٹ ریکویسٹ (CSR) بنائیں", zatca_generateCsrButton: "🔑 CSR بنائیں",
+    zatca_testConnection: "کنکشن ٹیسٹ کریں", zatca_testSuccess: "کنکشن ٹھیک کام کر رہا ہے",
+    zatca_reset: "زکوٰۃ ڈیٹا ہٹائیں", zatca_resetConfirm: "زکوٰۃ کی تمام ترتیبات حذف کریں؟ اسے واپس نہیں لیا جا سکتا۔",
+    zatca_enableSuccess: "اتھارٹی سے کامیابی سے ربط ہو گیا", zatca_lastError: "آخری خرابی",
+    zatca_generateCsr: "1. سرٹیفکیٹ ریکویسٹ (CSR) بنائیں", zatca_generateCsrButton: "CSR بنائیں",
     zatca_businessCategory: "کاروباری زمرہ", zatca_businessCategoryPlaceholder: "مثلاً: لانڈری سروسز",
     zatca_csrLabel: "سرٹیفکیٹ ریکویسٹ (CSR)", zatca_csrHint: "یہ CSR ZATCA کے فاتورہ پورٹل (fatoora.zatca.gov.sa) پر جمع کروائیں تاکہ اصل تصدیقی کوڈ ملے، پھر نیچے درج کریں۔",
     zatca_copyCsr: "CSR کاپی کریں", zatca_copied: "کاپی ہو گیا", zatca_publicKeyLabel: "پبلک کی",
     zatca_connectStep: "2. ZATCA کا تصدیقی کوڈ درج کریں", zatca_csrRequiredFirst: "پہلے CSR بنائیں۔",
-    settings_account: "اکاؤنٹ", settings_logout: "🚪 لاگ آؤٹ",
+    settings_account: "اکاؤنٹ", settings_logout: "لاگ آؤٹ",
 
     print_taxInvoice: "سادہ ٹیکس انوائس", print_receipt: "رسید", print_deliveryReceipt: "کپڑوں کی ڈیلیوری رسید",
     print_address: "پتہ:", print_phone: "فون نمبر:", print_date: "تاریخ:", print_invNum: "انوائس نمبر:",
@@ -4820,6 +4826,7 @@ function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disabl
   };
 
   const certLabelKey = { PENDING: "zatca_certPending", ACTIVE: "zatca_certActive", EXPIRED: "zatca_certExpired", REVOKED: "zatca_certRevoked" }[zatcaConfig?.certificateStatus] || "zatca_certPending";
+  const CertIcon = { PENDING: Clock, ACTIVE: CheckCircle2, EXPIRED: XCircle, REVOKED: XCircle }[zatcaConfig?.certificateStatus] || Clock;
 
   return (
     <div className="rounded-lg border border-app-border bg-app-bg/60 p-4">
@@ -4828,8 +4835,8 @@ function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disabl
           <div className="flex flex-wrap items-center gap-2">
             <FileText size={14} className="text-brand-600 shrink-0" />
             <span className="text-sm font-semibold text-app-text">{t("zatca_title")}</span>
-            <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${isEnabled ? "bg-success-50 text-success-700" : "border border-app-border bg-app-bg text-app-text-subtle"}`}>
-              <span className={`h-1.5 w-1.5 rounded-full ${isEnabled ? "bg-success-500" : "bg-app-text-subtle"}`} />
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold ring-1 ring-inset ${isEnabled ? "bg-success-50 text-success-700" : "bg-app-bg text-app-text-muted"}`}>
+              <span className="size-1.5 rounded-full bg-current" />
               {t(isEnabled ? "zatca_connected" : "zatca_notConnected")}
             </span>
           </div>
@@ -4849,7 +4856,7 @@ function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disabl
             className={inputCls}
           />
           <div className="mt-2 flex gap-2">
-            <button onClick={handleGenerateCsr} disabled={busy} className="flex-1 rounded-lg bg-brand-500 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60">{t("zatca_generateCsrButton")}</button>
+            <button onClick={handleGenerateCsr} disabled={busy} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-500 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60"><KeyRound size={15} /> {t("zatca_generateCsrButton")}</button>
             <button onClick={() => { setShowOtpInput(false); setError(""); }} className="rounded-lg border border-app-border-strong px-3 py-2 text-sm font-medium text-app-text-muted hover:bg-app-bg">{t("zatca_cancel")}</button>
           </div>
         </div>
@@ -4876,7 +4883,7 @@ function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disabl
               className={`${inputCls} f-mono tracking-widest`}
             />
             <div className="mt-2 flex gap-2">
-              <button onClick={handleConnect} disabled={busy} className="flex-1 rounded-lg bg-brand-500 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60">{t("zatca_connect")}</button>
+              <button onClick={handleConnect} disabled={busy} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-brand-500 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60"><Link2 size={15} /> {t("zatca_connect")}</button>
               <button onClick={() => { setShowOtpInput(false); setOtp(""); setError(""); }} className="rounded-lg border border-app-border-strong px-3 py-2 text-sm font-medium text-app-text-muted hover:bg-app-bg">{t("zatca_cancel")}</button>
             </div>
           </div>
@@ -4888,7 +4895,7 @@ function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disabl
           <div className="grid grid-cols-2 gap-2">
             <div className="rounded-lg border border-app-border bg-app-surface p-2.5">
               <div className="text-[11px] text-app-text-subtle">{t("zatca_certificateStatus")}</div>
-              <div className="text-sm font-semibold text-app-text">{t(certLabelKey)}</div>
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-app-text"><CertIcon size={14} className="text-brand-600" /> {t(certLabelKey)}</div>
             </div>
             <div className="rounded-lg border border-app-border bg-app-surface p-2.5">
               <div className="text-[11px] text-app-text-subtle">{t("zatca_lastSync")}</div>
@@ -4910,8 +4917,8 @@ function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disabl
           )}
 
           <div className="flex gap-2">
-            <button onClick={handleTest} className="flex-1 rounded-lg border border-app-border-strong px-3 py-2 text-xs font-medium text-app-text-muted hover:bg-app-bg">{t("zatca_testConnection")}</button>
-            <button onClick={() => setConfirmAction("reset")} disabled={busy} className="flex-1 rounded-lg border border-danger-300 px-3 py-2 text-xs font-medium text-danger-600 hover:bg-danger-50 disabled:opacity-60">{t("zatca_reset")}</button>
+            <button onClick={handleTest} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-app-border-strong px-3 py-2 text-xs font-medium text-app-text-muted hover:bg-app-bg"><FlaskConical size={14} /> {t("zatca_testConnection")}</button>
+            <button onClick={() => setConfirmAction("reset")} disabled={busy} className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-danger-300 px-3 py-2 text-xs font-medium text-danger-600 hover:bg-danger-50 disabled:opacity-60"><Trash2 size={14} /> {t("zatca_reset")}</button>
           </div>
         </div>
       )}
@@ -4926,8 +4933,8 @@ function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disabl
         </div>
       )}
 
-      {error && <div className="mt-2 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{error}</div>}
-      {notice && <div className="mt-2 rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-xs font-medium text-success-700">{notice}</div>}
+      {error && <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700"><XCircle size={14} className="shrink-0" /> {error}</div>}
+      {notice && <div className="mt-2 flex items-center gap-1.5 rounded-lg border border-success-200 bg-success-50 px-3 py-2 text-xs font-medium text-success-700"><CheckCircle2 size={14} className="shrink-0" /> {notice}</div>}
     </div>
   );
 }
@@ -4992,7 +4999,14 @@ function WhatsAppSettingsPanel({ whatsappEnabled, setWhatsappEnabled, whatsappTe
   );
 }
 
-function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+// Renders as grid items directly inside SettingsView's `grid grid-cols-1
+// lg:grid-cols-2` — while locked this is a single full-width prompt card;
+// once the master PIN is entered it expands into the two real cards
+// (enabled payment methods, and per-section staff locks) side by side with
+// the merchant-info/ZATCA cards above. Business logic below (PIN verify/
+// hash, section lock set/clear, pay-method enable/disable) is unchanged
+// from before this layout pass — only the surrounding JSX/className moved.
+function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods }) {
   const { t } = useLang();
   const [authenticated, setAuthenticated] = useState(false);
   const [showMasterPin, setShowMasterPin] = useState(false);
@@ -5025,58 +5039,14 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
     setEnabledPayMethods((prev) => ({ ...prev, [value]: !prev[value] }));
   };
 
-  return (
-    <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
-      <button onClick={() => !authenticated && setShowMasterPin(true)} className="flex w-full items-center justify-between text-left">
-        <span className="flex items-center gap-2 text-sm font-semibold text-app-text"><Lock size={16} className="text-brand-600" /> {t("settings_ownerOnly")}</span>
-        {!authenticated && <ChevronRight size={16} className="text-app-text-subtle" />}
-      </button>
-      <p className="mt-1 text-xs text-app-text-subtle">{t("settings_ownerOnlyHint")}</p>
+  const ownerBadge = (
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold ring-1 ring-inset bg-app-bg text-app-text-muted">
+      <Lock size={11} />{t("settings_ownerOnly")}
+    </span>
+  );
 
-      {authenticated && (
-        <div className="mt-4 space-y-4">
-          {/* Real, individually-lockable sections — exactly OWNER_SECTIONS
-              (5 items). Payment methods below are a separate, always-on
-              enable/disable list under this same master PIN — they are not
-              individually lockable, unlike these five. */}
-          <div className="rounded-lg border border-app-border bg-app-bg/60 p-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-app-text"><Lock size={14} className="text-brand-600" /> {t("owner_sectionLockTitle")}</div>
-            <p className="mb-3 mt-0.5 text-[11px] text-app-text-subtle">{t("owner_sectionLockHint")}</p>
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-              {OWNER_SECTIONS.map((s) => (
-                <div key={s.key} className="flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-3 py-2.5">
-                  <span className="flex items-center gap-2 text-sm text-app-text">
-                    <Lock size={13} className={sectionLocks[s.key] ? "text-warning-600" : "text-app-text-subtle"} />
-                    {t(s.labelKey)}
-                  </span>
-                  <Toggle checked={Boolean(sectionLocks[s.key])} onChange={() => toggleSection(s.key)} />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-app-border bg-app-bg/60 p-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-app-text"><CreditCard size={14} className="text-brand-600" /> {t("owner_payMethodsTitle")}</div>
-            <p className="mb-3 mt-0.5 text-[11px] text-app-text-subtle">{t("owner_payMethodsHint")}</p>
-            <div className="space-y-2">
-              {POS_PAY_METHODS.map((m) => (
-                <div key={m.value} className="flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-3 py-2.5">
-                  <span className="text-sm text-app-text">{t(m.key)}</span>
-                  <Toggle checked={enabledPayMethods[m.value] !== false} onChange={() => togglePayMethod(m.value)} />
-                </div>
-              ))}
-            </div>
-            {payMethodError && <div className="mt-2 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{payMethodError}</div>}
-          </div>
-
-          <WhatsAppSettingsPanel whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} />
-
-          <ZatcaSettingsPanel zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />
-
-          <button onClick={() => setAuthenticated(false)} className="text-xs font-medium text-brand-700 hover:underline">{t("owner_lockPanel")}</button>
-        </div>
-      )}
-
+  const pinModals = (
+    <>
       {showMasterPin && (
         <PinPromptModal
           title={ownerPassword ? t("owner_enterMasterTitle") : t("owner_setMasterTitle")}
@@ -5100,7 +5070,79 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
           onClose={() => setPendingSection(null)}
         />
       )}
-    </div>
+    </>
+  );
+
+  if (!authenticated) {
+    return (
+      <div className="lg:col-span-2 rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+        <button onClick={() => setShowMasterPin(true)} className="flex w-full items-center justify-between text-left">
+          <span className="flex items-center gap-2 text-sm font-semibold text-app-text"><Lock size={16} className="text-brand-600" /> {t("settings_ownerOnly")}</span>
+          <ChevronRight size={16} className="text-app-text-subtle" />
+        </button>
+        <p className="mt-1 text-xs text-app-text-subtle">{t("settings_ownerOnlyHint")}</p>
+        {pinModals}
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Card 3: enabled payment methods (POS toggles) — one real, always-on
+          toggle per PAY_METHODS entry. "Split" deliberately excluded: it's a
+          POS checkout behavior, not a payment method to switch on/off. */}
+      <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <span className="flex items-center gap-2 text-sm font-semibold text-app-text"><CreditCard size={16} className="text-brand-600" /> {t("owner_payMethodsTitle")}</span>
+          {ownerBadge}
+        </div>
+        <p className="mb-4 text-xs text-app-text-subtle">{t("owner_payMethodsHint")}</p>
+        <div className="space-y-2">
+          {PAY_METHODS.map((m) => (
+            <div key={m.value} className="flex items-center justify-between rounded-lg border border-app-border px-3 py-2.5">
+              <span className="text-sm text-app-text">{t(m.key)}</span>
+              <Toggle checked={enabledPayMethods[m.value] !== false} onChange={() => togglePayMethod(m.value)} />
+            </div>
+          ))}
+        </div>
+        {payMethodError && <div className="mt-2 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{payMethodError}</div>}
+      </div>
+
+      {/* Card 4: per-section staff locks — full width. Exactly OWNER_SECTIONS
+          (5 items) are real, individually-lockable sections with their own
+          PIN via sectionLocks. "طرق الدفع" is shown as a 6th row for visual
+          consistency only — it's already gated behind this same master PIN
+          (Card 3 above), not an individually-lockable section, so it renders
+          as a static "protected" indicator rather than a real toggle. */}
+      <div className="lg:col-span-2 rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+        <div className="mb-1 flex items-center justify-between gap-2">
+          <span className="flex items-center gap-2 text-sm font-semibold text-app-text"><Lock size={16} className="text-brand-600" /> {t("owner_sectionLockTitle")}</span>
+          {ownerBadge}
+        </div>
+        <p className="mb-4 text-xs text-app-text-subtle">{t("owner_sectionLockHint")}</p>
+        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+          {OWNER_SECTIONS.map((s) => (
+            <div key={s.key} className="flex items-center justify-between rounded-lg border border-app-border px-3 py-2.5">
+              <span className="flex items-center gap-2 text-sm text-app-text">
+                <Lock size={13} className={sectionLocks[s.key] ? "text-warning-600" : "text-app-text-subtle"} />
+                {t(s.labelKey)}
+              </span>
+              <Toggle checked={Boolean(sectionLocks[s.key])} onChange={() => toggleSection(s.key)} />
+            </div>
+          ))}
+          <div className="flex items-center justify-between rounded-lg border border-app-border px-3 py-2.5">
+            <span className="flex items-center gap-2 text-sm text-app-text">
+              <Lock size={13} className="text-app-text-subtle" />
+              {t("owner_payMethodsRowLabel")}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-app-bg px-2 py-1 text-[11px] font-semibold text-app-text-muted">{t("owner_protectedByMaster")}</span>
+          </div>
+        </div>
+        <button onClick={() => setAuthenticated(false)} className="mt-4 text-xs font-medium text-brand-700 hover:underline">{t("owner_lockPanel")}</button>
+      </div>
+
+      {pinModals}
+    </>
   );
 }
 
@@ -5112,11 +5154,22 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
     { code: "ur", key: "settings_lang_ur" },
   ];
   const update = (field) => (e) => setMerchant((prev) => ({ ...prev, [field]: e.target.value }));
+
+  // Merchant fields already autosave through the tenant_settings sync
+  // effect in LaundryOpsApp the instant `merchant` state changes — this
+  // button doesn't open a second write path, it just gives the owner an
+  // explicit, reassuring confirmation that what they typed is saved.
+  const [merchantSaved, setMerchantSaved] = useState(false);
+  const handleMerchantSave = () => {
+    setMerchantSaved(true);
+    setTimeout(() => setMerchantSaved(false), 1800);
+  };
+
   return (
-    <div className="max-w-xl space-y-6">
+    <div className="max-w-5xl space-y-6">
       <div>
         <div className="mb-4 f-display text-xl font-semibold text-app-text">{t("settings_title")}</div>
-        <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
+        <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
           <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-app-text"><Globe size={16} className="text-brand-600" /> {t("settings_language")}</div>
           <p className="mb-4 text-xs text-app-text-subtle">{t("settings_languageHint")}</p>
           <div className="grid grid-cols-3 gap-3">
@@ -5130,47 +5183,64 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
         </div>
       </div>
 
-      <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
-        <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-app-text"><Building2 size={16} className="text-brand-600" /> {t("settings_merchantInfo")}</div>
-        <p className="mb-4 text-xs text-app-text-subtle">{t("settings_merchantInfoHint")}</p>
-        <Field label={t("settings_merchantName")}><input value={merchant.name} onChange={update("name")} className={inputCls} autoComplete="off" /></Field>
-        <Field label={t("settings_merchantPhone")}><input value={merchant.phone} onChange={update("phone")} className={inputCls} autoComplete="off" /></Field>
-        <Field label={t("settings_merchantAddress")}><input value={merchant.address} onChange={update("address")} className={inputCls} autoComplete="off" /></Field>
-        <Field label={t("settings_merchantTax")}><input value={merchant.taxNumber} onChange={update("taxNumber")} className={inputCls} autoComplete="off" /></Field>
-      </div>
-
-      <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-app-text"><ReceiptText size={16} className="text-brand-600" /> {t("settings_autoPrint")}</div>
-            <p className="text-xs text-app-text-subtle">{t("settings_autoPrintHint")}</p>
-          </div>
-          <Toggle checked={Boolean(merchant.autoPrint)} onChange={(val) => setMerchant((prev) => ({ ...prev, autoPrint: val }))} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Card 1: بيانات المنشأة */}
+        <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+          <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-app-text"><Building2 size={16} className="text-brand-600" /> {t("settings_merchantInfo")}</div>
+          <p className="mb-4 text-xs text-app-text-subtle">{t("settings_merchantInfoHint")}</p>
+          <Field label={t("settings_merchantName")}><input value={merchant.name} onChange={update("name")} className={inputCls} autoComplete="off" /></Field>
+          <Field label={t("settings_merchantPhone")}><input value={merchant.phone} onChange={update("phone")} className={inputCls} autoComplete="off" /></Field>
+          <Field label={t("settings_merchantAddress")}><input value={merchant.address} onChange={update("address")} className={inputCls} autoComplete="off" /></Field>
+          <Field label={t("settings_merchantTax")}><input value={merchant.taxNumber} onChange={update("taxNumber")} className={inputCls} autoComplete="off" /></Field>
+          <button onClick={handleMerchantSave} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">
+            {merchantSaved ? t("settings_merchantSaved") : t("settings_merchantSave")}
+          </button>
         </div>
-        {merchant.autoPrint && (
-          <div className="mt-4 space-y-4">
-            <Field label={t("settings_autoPrintCopies")}>
-              <input type="number" min="1" max="10" value={merchant.autoPrintCopies || 1}
-                onChange={(e) => setMerchant((prev) => ({ ...prev, autoPrintCopies: Math.min(10, Math.max(1, Number(e.target.value) || 1)) }))}
-                className={`${inputCls} w-24`} />
-            </Field>
-            <div className="flex items-center justify-between rounded-lg border border-app-border px-3 py-2.5">
-              <div>
-                <div className="text-sm text-app-text">{t("settings_showPrintPreview")}</div>
-                <p className="text-[11px] text-app-text-subtle">{t("settings_showPrintPreviewHint")}</p>
+
+        {/* Card 2: التوافق مع ZATCA — badge/CSR/OTP flow (ZatcaSettingsPanel),
+            plus the auto-print and WhatsApp-send toggles grouped alongside it. */}
+        <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs space-y-3">
+          <ZatcaSettingsPanel zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />
+
+          <div className="rounded-lg border border-app-border bg-app-bg/60 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <ReceiptText size={14} className="text-brand-600 shrink-0" />
+                <span className="text-sm font-semibold text-app-text">{t("settings_autoPrint")}</span>
               </div>
-              <Toggle checked={merchant.showPrintPreview !== false} onChange={(val) => setMerchant((prev) => ({ ...prev, showPrintPreview: val }))} />
+              <Toggle checked={Boolean(merchant.autoPrint)} onChange={(val) => setMerchant((prev) => ({ ...prev, autoPrint: val }))} />
             </div>
+            <p className="mt-0.5 text-[11px] text-app-text-subtle">{t("settings_autoPrintHint")}</p>
+            {merchant.autoPrint && (
+              <div className="mt-3 space-y-2">
+                <Field label={t("settings_autoPrintCopies")}>
+                  <input type="number" min="1" max="10" value={merchant.autoPrintCopies || 1}
+                    onChange={(e) => setMerchant((prev) => ({ ...prev, autoPrintCopies: Math.min(10, Math.max(1, Number(e.target.value) || 1)) }))}
+                    className={`${inputCls} w-24`} />
+                </Field>
+                <div className="flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-3 py-2.5">
+                  <div>
+                    <div className="text-sm text-app-text">{t("settings_showPrintPreview")}</div>
+                    <p className="text-[11px] text-app-text-subtle">{t("settings_showPrintPreviewHint")}</p>
+                  </div>
+                  <Toggle checked={merchant.showPrintPreview !== false} onChange={(val) => setMerchant((prev) => ({ ...prev, showPrintPreview: val }))} />
+                </div>
+              </div>
+            )}
           </div>
-        )}
+
+          <WhatsAppSettingsPanel whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} />
+        </div>
+
+        {/* Cards 3 & 4: enabled payment methods + per-section staff locks,
+            both behind the same master owner PIN — see OwnerOnlySettings. */}
+        <OwnerOnlySettings ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} />
       </div>
 
-      <OwnerOnlySettings ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />
-
-      <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
+      <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
         <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-app-text"><Lock size={16} className="text-brand-600" /> {t("settings_account")}</div>
-        <button onClick={onLogout} className="w-full rounded-lg border border-danger-200 bg-danger-50 py-2.5 text-sm font-semibold text-danger-700 hover:bg-danger-100">
-          {t("settings_logout")}
+        <button onClick={onLogout} className="flex w-full items-center justify-center gap-2 rounded-lg border border-danger-200 bg-danger-50 py-2.5 text-sm font-semibold text-danger-700 hover:bg-danger-100">
+          <LogOut size={16} /> {t("settings_logout")}
         </button>
       </div>
     </div>
