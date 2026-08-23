@@ -5,7 +5,7 @@ import {
   Banknote, Percent, Clock, Mail, AlertTriangle, CheckCircle2, Circle, Upload,
   ReceiptText, Building2, FileText, Sparkles, Settings, Globe, Lock, Pencil, Paperclip,
   MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin, Home, SplitSquareHorizontal, Printer, StickyNote,
-  Phone, User
+  Phone, User, Download
 } from "lucide-react";
 import QRCode from "qrcode";
 // auth/db here are supabase.auth / the Supabase client (see src/supabase.js).
@@ -1175,6 +1175,9 @@ const DICT = {
     promoModal_overlapError: "There is already an active discount running during this period — overlapping discount periods are not allowed.",
     promoModal_valueError: "Enter a value greater than 0 (percentage discounts can't exceed 100%).",
 
+    reports_title: "Reports", reports_subtitle: "Comprehensive operational and financial reports for the laundry.",
+    reports_fromDate: "From Date", reports_toDate: "To Date", reports_exportCsv: "Export CSV", reports_print: "Print",
+    reports_table_item: "Item",
     reports_salesTab: "Sales Ledger", reports_procurementTab: "Procurement Ledger",
     reports_kpi_invoices: "Invoices", reports_kpi_grossSales: "Gross Sales", reports_kpi_vatCollected: "VAT Collected",
     reports_kpi_netRevenue: "Net Revenue", reports_kpi_outstandingDebt: "Outstanding Debt",
@@ -1194,6 +1197,8 @@ const DICT = {
     reports_pl_revenue: "Revenue", reports_pl_costs: "Costs (Purchases + Expenses)",
     reports_pl_profit: "Profit", reports_pl_loss: "Loss", reports_pl_margin: "Profit Margin",
     reports_pl_result: "Result",
+    reports_pl_totalRevenue: "Total Revenue", reports_pl_purchaseCost: "Cost of Purchases",
+    reports_pl_operatingExpenses: "Operating Expenses", reports_pl_netProfitLabel: "Net Profit", reports_pl_netLossLabel: "Net Loss",
 
     reports_vat_periodMode: "Period Type", reports_vat_quarterly: "Quarterly", reports_vat_monthly: "Monthly",
     reports_vat_year: "Year", reports_vat_quarter: "Quarter", reports_vat_month: "Month",
@@ -1209,7 +1214,7 @@ const DICT = {
     reports_vat_totalPurchases: "Total Purchases", reports_vat_totalInputVat: "Total Input VAT",
     reports_vat_netTitle: "Net VAT Due to the Authority", reports_vat_dueToAuthority: "Amount payable to the Authority:",
     reports_vat_dueRefund: "Amount due for refund/carry-forward:",
-    reports_vat_copy: "Copy", reports_vat_copied: "Copied!", reports_vat_exportCsv: "⬇️ Export CSV (Excel)", reports_vat_printPdf: "🖨️ Print / Save as PDF",
+    reports_vat_copy: "Copy", reports_vat_copied: "Copied!", reports_vat_exportCsv: "Export CSV (Excel)", reports_vat_printPdf: "Print / Save as PDF",
     reports_vat_notTracked: "Not tracked separately in this system — shown as 0.",
 
     settings_title: "Settings", settings_language: "Language", settings_languageHint: "Choose the app language. Everything switches immediately — only names you type yourself (products, categories, customers) stay as written.",
@@ -1432,9 +1437,12 @@ const DICT = {
     promoModal_overlapError: "يوجد خصم آخر نشط بالفعل خلال هذه الفترة — لا يُسمح بتداخل فترات الخصومات.",
     promoModal_valueError: "أدخل قيمة أكبر من صفر (الخصم كنسبة مئوية ما يتجاوز 100%).",
 
+    reports_title: "التقارير", reports_subtitle: "تقارير تشغيلية ومالية شاملة للمغسلة.",
+    reports_fromDate: "من تاريخ", reports_toDate: "إلى تاريخ", reports_exportCsv: "تصدير CSV", reports_print: "طباعة",
+    reports_table_item: "البند",
     reports_salesTab: "سجل المبيعات", reports_procurementTab: "سجل المشتريات",
     reports_kpi_invoices: "الفواتير", reports_kpi_grossSales: "إجمالي المبيعات", reports_kpi_vatCollected: "الضريبة المحصلة",
-    reports_kpi_netRevenue: "صافي الإيرادات", reports_kpi_outstandingDebt: "الديون المستحقة",
+    reports_kpi_netRevenue: "صافي الإيرادات", reports_kpi_outstandingDebt: "إجمالي المستحق",
     reports_allPaymentMethods: "كل طرق الدفع",
     reports_table_invoice: "الفاتورة", reports_table_client: "العميل", reports_table_method: "الطريقة",
     reports_table_net: "الصافي", reports_table_vat: "الضريبة", reports_table_gross: "الإجمالي",
@@ -1443,7 +1451,7 @@ const DICT = {
     reports_kpi_netCost: "صافي تكلفة المشتريات", reports_table_poId: "رقم الطلب", reports_table_supplier: "المورد",
     reports_table_value: "القيمة", reports_table_created: "تاريخ الإنشاء", reports_procurementEmpty: "لا توجد سجلات مشتريات بعد.",
 
-    reports_expensesTab: "المصروفات", reports_plTab: "الربح والخسارة", reports_vatTab: "الإقرار الضريبي",
+    reports_expensesTab: "المصروفات", reports_plTab: "الأرباح والخسائر", reports_vatTab: "الإقرار الضريبي",
     reports_kpi_totalExpenses: "إجمالي المصروفات", reports_kpi_expenseVat: "ضريبة المصروفات", reports_kpi_expenseNet: "صافي المصروفات (غير شامل الضريبة)",
     reports_expensesEmpty: "لا توجد مصروفات مطابقة لهذه الفلاتر.",
 
@@ -1451,6 +1459,8 @@ const DICT = {
     reports_pl_revenue: "الإيرادات", reports_pl_costs: "التكاليف (مشتريات + مصروفات)",
     reports_pl_profit: "ربح", reports_pl_loss: "خسارة", reports_pl_margin: "هامش الربح",
     reports_pl_result: "النتيجة",
+    reports_pl_totalRevenue: "إجمالي الإيرادات", reports_pl_purchaseCost: "تكلفة المشتريات",
+    reports_pl_operatingExpenses: "المصروفات التشغيلية", reports_pl_netProfitLabel: "صافي الربح", reports_pl_netLossLabel: "صافي الخسارة",
 
     reports_vat_periodMode: "نوع الفترة", reports_vat_quarterly: "ربع سنوي", reports_vat_monthly: "شهري",
     reports_vat_year: "السنة", reports_vat_quarter: "الربع", reports_vat_month: "الشهر",
@@ -1466,7 +1476,7 @@ const DICT = {
     reports_vat_totalPurchases: "إجمالي المشتريات", reports_vat_totalInputVat: "إجمالي ضريبة المشتريات",
     reports_vat_netTitle: "صافي الضريبة المستحقة للهيئة", reports_vat_dueToAuthority: "المبلغ المطلوب سداده للهيئة:",
     reports_vat_dueRefund: "مبلغ مستحق الاسترداد/الترحيل:",
-    reports_vat_copy: "نسخ", reports_vat_copied: "تم النسخ!", reports_vat_exportCsv: "⬇️ تصدير CSV (إكسل)", reports_vat_printPdf: "🖨️ طباعة / حفظ PDF",
+    reports_vat_copy: "نسخ", reports_vat_copied: "تم النسخ!", reports_vat_exportCsv: "تصدير CSV (إكسل)", reports_vat_printPdf: "طباعة / حفظ PDF",
     reports_vat_notTracked: "غير مرصود بشكل منفصل بهذا النظام — يظهر كـ 0.",
 
     settings_title: "الإعدادات", settings_language: "اللغة", settings_languageHint: "اختر لغة التطبيق. كل شيء يتغير فورًا — فقط الأسماء اللي تكتبها بنفسك (منتجات، فئات، عملاء) تبقى كما كتبتها.",
@@ -1689,9 +1699,12 @@ const DICT = {
     promoModal_overlapError: "اس مدت کے دوران پہلے سے ایک فعال رعایت موجود ہے — رعایتوں کی مدت میں تداخل کی اجازت نہیں ہے۔",
     promoModal_valueError: "صفر سے بڑی ایک قیمت درج کریں (فیصد رعایت 100% سے زیادہ نہیں ہو سکتی)۔",
 
+    reports_title: "رپورٹس", reports_subtitle: "لانڈری کے لیے جامع آپریشنل اور مالیاتی رپورٹس۔",
+    reports_fromDate: "تاریخ سے", reports_toDate: "تاریخ تک", reports_exportCsv: "CSV ایکسپورٹ کریں", reports_print: "پرنٹ",
+    reports_table_item: "آئٹم",
     reports_salesTab: "سیلز رپورٹ", reports_procurementTab: "خریداری رپورٹ",
     reports_kpi_invoices: "آرڈرز", reports_kpi_grossSales: "کل فروخت", reports_kpi_vatCollected: "وصول شدہ ٹیکس",
-    reports_kpi_netRevenue: "خالص آمدنی", reports_kpi_outstandingDebt: "واجب الادا ادھار",
+    reports_kpi_netRevenue: "خالص آمدنی", reports_kpi_outstandingDebt: "کل واجب الادا",
     reports_allPaymentMethods: "تمام ادائیگی کے طریقے",
     reports_table_invoice: "آرڈر", reports_table_client: "کسٹمر", reports_table_method: "طریقہ",
     reports_table_net: "خالص", reports_table_vat: "ٹیکس", reports_table_gross: "کل رقم",
@@ -1708,6 +1721,8 @@ const DICT = {
     reports_pl_revenue: "آمدنی", reports_pl_costs: "لاگت (خریداری + اخراجات)",
     reports_pl_profit: "منافع", reports_pl_loss: "نقصان", reports_pl_margin: "منافع کا تناسب",
     reports_pl_result: "نتیجہ",
+    reports_pl_totalRevenue: "کل آمدنی", reports_pl_purchaseCost: "خریداری کی لاگت",
+    reports_pl_operatingExpenses: "آپریشنل اخراجات", reports_pl_netProfitLabel: "خالص منافع", reports_pl_netLossLabel: "خالص نقصان",
 
     reports_vat_periodMode: "مدت کی قسم", reports_vat_quarterly: "سہ ماہی", reports_vat_monthly: "ماہانہ",
     reports_vat_year: "سال", reports_vat_quarter: "سہ ماہی", reports_vat_month: "مہینہ",
@@ -1723,7 +1738,7 @@ const DICT = {
     reports_vat_totalPurchases: "کل خریداری", reports_vat_totalInputVat: "کل ان پٹ ٹیکس",
     reports_vat_netTitle: "ادارے کو واجب الادا خالص ٹیکس", reports_vat_dueToAuthority: "ادارے کو ادا کی جانے والی رقم:",
     reports_vat_dueRefund: "واپسی/منتقلی کے قابل رقم:",
-    reports_vat_copy: "کاپی کریں", reports_vat_copied: "کاپی ہو گیا!", reports_vat_exportCsv: "⬇️ CSV ایکسپورٹ کریں (ایکسل)", reports_vat_printPdf: "🖨️ پرنٹ / PDF محفوظ کریں",
+    reports_vat_copy: "کاپی کریں", reports_vat_copied: "کاپی ہو گیا!", reports_vat_exportCsv: "CSV ایکسپورٹ کریں (ایکسل)", reports_vat_printPdf: "پرنٹ / PDF محفوظ کریں",
     reports_vat_notTracked: "اس نظام میں الگ سے ٹریک نہیں ہوتا — 0 دکھایا گیا ہے۔",
 
     settings_title: "سیٹنگز", settings_language: "زبان", settings_languageHint: "ایپ کی زبان منتخب کریں۔ ہر چیز فوری تبدیل ہو جائے گی — صرف وہ نام جو آپ خود لکھتے ہیں (پروڈکٹس، کیٹگریز، کسٹمرز) ویسے ہی رہیں گے۔",
@@ -4205,9 +4220,22 @@ function downloadCSV(rows, filename) {
   URL.revokeObjectURL(url);
 }
 
+// Generic "is this ISO date within the picked range" check, shared by every
+// non-VAT tab's own date filter below — no dates picked simply means every
+// row passes, i.e. all-time by default (there is no separate "since the shop
+// opened" mode: an empty range already means "everything").
+function inDateRange(iso, rangeStart, rangeEnd) {
+  const ts = new Date(iso).getTime();
+  if (rangeStart && ts < new Date(rangeStart).getTime()) return false;
+  if (rangeEnd && ts > new Date(rangeEnd).getTime()) return false;
+  return true;
+}
+
 function ReportsView({ invoices, purchases, suppliers, categories, customers, expenses, expenseCategories }) {
   const { t } = useLang();
   const [tab, setTab] = useState("sales");
+  const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
   const [method, setMethod] = useState("all");
@@ -4218,6 +4246,14 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
   const net = gross - vat;
   const debt = customers.reduce((s, c) => s + c.debt, 0);
 
+  const exportSalesCsv = () => {
+    const rows = [
+      ["Invoice", "Client", "Method", "Net", "VAT", "Gross"],
+      ...salesRows.map((r) => [r.inv.code, r.inv.customerName, method === "all" ? splitBreakdownLabel(t, r.inv) : payMethodLabel(t, method), round2(r.net), round2(r.vat), round2(r.amount)]),
+    ];
+    downloadCSV(rows, `sales-ledger-${start || "all"}-${end || "all"}.csv`);
+  };
+
   // A purchase only carries reclaimable input VAT if its supplier has a
   // registered tax number — without one there's no valid tax invoice to
   // reclaim against, so that purchase contributes zero VAT (its full amount
@@ -4225,41 +4261,61 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
   // "Input VAT Paid" KPI and the Tax Return tab's purchases box below.
   const taxedSupplierIds = new Set(suppliers.filter((s) => s.taxNumber && s.taxNumber.trim()).map((s) => s.id));
 
-  const pGross = purchases.reduce((s, p) => s + p.amount, 0);
-  const pVatEligibleGross = purchases.filter((p) => taxedSupplierIds.has(p.supplierId)).reduce((s, p) => s + p.amount, 0);
+  // ---- Procurement Ledger report ----
+  const [purchStart, setPurchStart] = useState("");
+  const [purchEnd, setPurchEnd] = useState("");
+  const [purchMethod, setPurchMethod] = useState("all");
+  const filteredPurchases = purchases.filter((p) => inDateRange(p.date, purchStart, purchEnd) && (purchMethod === "all" || p.method === purchMethod));
+  const pGross = filteredPurchases.reduce((s, p) => s + p.amount, 0);
+  const pVatEligibleGross = filteredPurchases.filter((p) => taxedSupplierIds.has(p.supplierId)).reduce((s, p) => s + p.amount, 0);
   const pVat = pVatEligibleGross - pVatEligibleGross / (1 + VAT_RATE);
   const pNet = pGross - pVat;
+
+  const exportProcurementCsv = () => {
+    const rows = [
+      ["PO ID", "Supplier", "Value", "Date", "Method"],
+      ...filteredPurchases.map((p) => [p.code, suppliers.find((s) => s.id === p.supplierId)?.company || "", round2(p.amount), p.date, p.method === "Cash" ? "Cash" : "Credit (On Account)"]),
+    ];
+    downloadCSV(rows, `procurement-ledger-${purchStart || "all"}-${purchEnd || "all"}.csv`);
+  };
 
   // ---- Expenses report ----
   const [expStart, setExpStart] = useState("");
   const [expEnd, setExpEnd] = useState("");
-  const filteredExpenses = expenses.filter((e) => {
-    const ts = new Date(e.date).getTime();
-    if (expStart && ts < new Date(expStart).getTime()) return false;
-    if (expEnd && ts > new Date(expEnd).getTime()) return false;
-    return true;
-  });
+  const filteredExpenses = expenses.filter((e) => inDateRange(e.date, expStart, expEnd));
   const eGross = filteredExpenses.reduce((s, e) => s + e.amount, 0);
   const eVat = filteredExpenses.reduce((s, e) => s + (e.taxFlag === "Inclusive" ? e.amount - e.amount / (1 + VAT_RATE) : 0), 0);
   const eNet = eGross - eVat;
 
+  const exportExpensesCsv = () => {
+    const rows = [
+      ["Item", "Amount", "Tax", "Date"],
+      ...filteredExpenses.map((e) => [expenseCategories.find((c) => c.id === e.categoryId)?.name || "", round2(e.amount), e.taxFlag, e.date]),
+    ];
+    downloadCSV(rows, `expenses-${expStart || "all"}-${expEnd || "all"}.csv`);
+  };
+
   // ---- Profit & Loss report ----
+  // No dates picked = all-time totals shown immediately (there is no separate
+  // "since the shop opened" toggle — an empty range already means "everything").
   const [plStart, setPlStart] = useState("");
   const [plEnd, setPlEnd] = useState("");
-  const revenueAllTime = invoices.reduce((s, i) => s + invoiceRevenue(i).amount, 0);
-  const costsAllTime = purchases.reduce((s, p) => s + p.amount, 0) + expenses.reduce((s, e) => s + e.amount, 0);
-  const resultAllTime = revenueAllTime - costsAllTime;
+  const [plMethod, setPlMethod] = useState("all");
+  const plRows = buildSalesRows(invoices, plStart, plEnd, plMethod);
+  const plRevenue = plRows.reduce((s, r) => s + r.amount, 0);
+  const plPurchaseCost = purchases.filter((p) => inDateRange(p.date, plStart, plEnd)).reduce((s, p) => s + p.amount, 0);
+  const plOperatingExpenses = expenses.filter((e) => inDateRange(e.date, plStart, plEnd)).reduce((s, e) => s + e.amount, 0);
+  const plNetProfit = plRevenue - plPurchaseCost - plOperatingExpenses;
 
-  const inPeriod = (iso) => {
-    const ts = new Date(iso).getTime();
-    if (plStart && ts < new Date(plStart).getTime()) return false;
-    if (plEnd && ts > new Date(plEnd).getTime()) return false;
-    return true;
+  const exportPlCsv = () => {
+    const rows = [
+      ["Total Revenue", round2(plRevenue)],
+      ["Cost of Purchases", round2(plPurchaseCost)],
+      ["Operating Expenses", round2(plOperatingExpenses)],
+      [plNetProfit >= 0 ? "Net Profit" : "Net Loss", round2(Math.abs(plNetProfit))],
+    ];
+    downloadCSV(rows, `profit-and-loss-${plStart || "all"}-${plEnd || "all"}.csv`);
   };
-  const revenuePeriod = invoices.filter((i) => inPeriod(i.createdAt)).reduce((s, i) => s + invoiceRevenue(i).amount, 0);
-  const costsPeriod = purchases.filter((p) => inPeriod(p.date)).reduce((s, p) => s + p.amount, 0) + expenses.filter((e) => inPeriod(e.date)).reduce((s, e) => s + e.amount, 0);
-  const resultPeriod = revenuePeriod - costsPeriod;
-  const marginPeriod = revenuePeriod > 0 ? (resultPeriod / revenuePeriod) * 100 : 0;
 
   // ---- VAT / Tax Return report ----
   const [vatMode, setVatMode] = useState("quarterly");
@@ -4298,8 +4354,6 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
   const totalInputVat = purchBox1Vat;
   const netVatDue = totalOutputVat - totalInputVat;
 
-  const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
-
   const exportVatCsv = () => {
     const rows = [
       ["Sales — Output VAT"],
@@ -4328,21 +4382,41 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
     downloadCSV(rows, `vat-return-${vatYear}-${vatMode === "quarterly" ? `Q${vatQuarter}` : `M${vatMonth}`}.csv`);
   };
 
-  // Local, presentation-only KPI card — kept private to ReportsView so this
+  // Local, presentation-only KPI tile — kept private to ReportsView so this
   // redesign never touches the shared (still-legacy-styled) KPI component
-  // that other screens might start relying on later.
-  const kpiAccents = { slate: "text-app-text", teal: "text-brand-700", rose: "text-danger-600", amber: "text-warning-600" };
-  const kpi = (label, value, accent = "slate") => (
-    <div className="rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
-      <div className="text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{label}</div>
-      <div className={`f-mono mt-1.5 text-2xl font-semibold ${kpiAccents[accent]}`}>{value}</div>
+  // that other, not-yet-corrected screens still rely on.
+  const kpiTones = {
+    warning: "bg-warning-50 text-warning-700",
+    success: "bg-success-50 text-success-700",
+    info: "bg-info-50 text-info-700",
+    brand: "bg-brand-50 text-brand-700",
+    navy: "bg-navy-900/5 text-navy-900",
+    danger: "bg-danger-50 text-danger-700",
+  };
+  const kpiTile = (label, value, tone, icon) => (
+    <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+      <div className="flex items-center justify-between">
+        <span className="text-[13px] font-semibold text-app-text-muted">{label}</span>
+        {icon && <div className={`flex size-9 items-center justify-center rounded-lg ${kpiTones[tone]}`}>{icon}</div>}
+      </div>
+      <div className="mt-3 text-2xl font-extrabold text-app-text">{value}</div>
     </div>
   );
+
+  // Shared field/button treatment for every non-VAT filter row below.
+  const fieldCls = "h-10 w-full rounded-lg border border-app-border-strong bg-app-surface px-3 text-sm text-app-text outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-500/15";
+  const secondaryBtnCls = "inline-flex items-center justify-center gap-1.5 rounded-lg border border-app-border-strong bg-app-surface px-3 h-8 text-[13px] font-semibold text-app-text hover:bg-app-bg";
+  const primaryBtnCls = "inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand-500 px-3 h-8 text-[13px] font-semibold text-white hover:bg-brand-600";
 
   const tabBtnCls = (active) => `rounded-full px-4 py-2 text-sm font-medium transition ${active ? "bg-brand-600 text-white shadow-app-xs" : "bg-app-surface border border-app-border text-app-text-muted hover:border-app-border-strong"}`;
 
   return (
     <div>
+      <div className="mb-6">
+        <div className="f-display text-xl font-semibold text-app-text">{t("reports_title")}</div>
+        <div className="mt-0.5 text-sm text-app-text-muted">{t("reports_subtitle")}</div>
+      </div>
+
       <div className="mb-4 flex flex-wrap gap-2">
         <button onClick={() => setTab("sales")} className={tabBtnCls(tab === "sales")}>{t("reports_salesTab")}</button>
         <button onClick={() => setTab("procurement")} className={tabBtnCls(tab === "procurement")}>{t("reports_procurementTab")}</button>
@@ -4353,20 +4427,32 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
 
       {tab === "sales" && (
         <>
-          <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {kpi(t("reports_kpi_invoices"), salesRows.length)}
-            {kpi(t("reports_kpi_grossSales"), sar(gross), "teal")}
-            {kpi(t("reports_kpi_vatCollected"), sar(vat), "amber")}
-            {kpi(t("reports_kpi_netRevenue"), sar(net), "teal")}
-            {kpi(t("reports_kpi_outstandingDebt"), sar(debt), "rose")}
+          <div className="mb-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            {kpiTile(t("reports_kpi_outstandingDebt"), sar(debt), "warning")}
+            {kpiTile(t("reports_kpi_netRevenue"), sar(net), "success")}
+            {kpiTile(t("reports_kpi_vatCollected"), sar(vat), "info")}
+            {kpiTile(t("reports_kpi_grossSales"), sar(gross), "brand")}
+            {kpiTile(t("reports_kpi_invoices"), salesRows.length, "navy")}
           </div>
-          <div className="mb-4 flex flex-wrap gap-3 rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
-            <input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} className={`${inputCls} w-auto`} />
-            <input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} className={`${inputCls} w-auto`} />
-            <select value={method} onChange={(e) => setMethod(e.target.value)} className={`${inputCls} w-auto`}>
-              <option value="all">{t("reports_allPaymentMethods")}</option>
-              {PAY_METHODS.filter((m) => m.value !== "Wallet Balance").map((m) => <option key={m.value} value={m.value}>{t(m.key)}</option>)}
-            </select>
+          <div className="mb-5 flex flex-wrap items-end gap-3">
+            <div className="w-40">
+              <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_fromDate")}</label>
+              <input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} className={fieldCls} />
+            </div>
+            <div className="w-40">
+              <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_toDate")}</label>
+              <input type="datetime-local" value={end} onChange={(e) => setEnd(e.target.value)} className={fieldCls} />
+            </div>
+            <div className="w-44">
+              <select value={method} onChange={(e) => setMethod(e.target.value)} className={fieldCls}>
+                <option value="all">{t("reports_allPaymentMethods")}</option>
+                {PAY_METHODS.filter((m) => m.value !== "Wallet Balance").map((m) => <option key={m.value} value={m.value}>{t(m.key)}</option>)}
+              </select>
+            </div>
+            <div className="mr-auto flex gap-2">
+              <button onClick={() => window.print()} className={secondaryBtnCls}><Printer size={14} />{t("reports_print")}</button>
+              <button onClick={exportSalesCsv} className={primaryBtnCls}><Download size={14} />{t("reports_exportCsv")}</button>
+            </div>
           </div>
           <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
             <table className="w-full text-sm table-fixed">
@@ -4393,11 +4479,33 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
 
       {tab === "procurement" && (
         <>
-          <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {kpi(t("reports_kpi_purchases"), purchases.length)}
-            {kpi(t("reports_kpi_grossOutflow"), sar(pGross), "rose")}
-            {kpi(t("reports_kpi_inputVat"), sar(pVat), "amber")}
-            {kpi(t("reports_kpi_netCost"), sar(pNet), "teal")}
+          <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {kpiTile(t("reports_kpi_purchases"), filteredPurchases.length, "navy")}
+            {kpiTile(t("reports_kpi_grossOutflow"), sar(pGross), "danger")}
+            {kpiTile(t("reports_kpi_inputVat"), sar(pVat), "info")}
+            {kpiTile(t("reports_kpi_netCost"), sar(pNet), "brand")}
+          </div>
+          <div className="mb-5 flex flex-wrap items-end gap-3">
+            <div className="w-40">
+              <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_fromDate")}</label>
+              <input type="date" value={purchStart} onChange={(e) => setPurchStart(e.target.value)} className={fieldCls} />
+            </div>
+            <div className="w-40">
+              <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_toDate")}</label>
+              <input type="date" value={purchEnd} onChange={(e) => setPurchEnd(e.target.value)} className={fieldCls} />
+            </div>
+            <div className="w-44">
+              {/* Purchases are never paid by wallet/network/split — only Cash or Credit (On Account) exist on a purchase record. */}
+              <select value={purchMethod} onChange={(e) => setPurchMethod(e.target.value)} className={fieldCls}>
+                <option value="all">{t("reports_allPaymentMethods")}</option>
+                <option value="Cash">{t("common_cash")}</option>
+                <option value="Credit (On Account)">{t("purchases_credit")}</option>
+              </select>
+            </div>
+            <div className="mr-auto flex gap-2">
+              <button onClick={() => window.print()} className={secondaryBtnCls}><Printer size={14} />{t("reports_print")}</button>
+              <button onClick={exportProcurementCsv} className={primaryBtnCls}><Download size={14} />{t("reports_exportCsv")}</button>
+            </div>
           </div>
           <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
             <table className="w-full text-sm table-fixed">
@@ -4405,7 +4513,7 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
                 <tr><th className="px-4 py-3 w-40 text-center">{t("reports_table_poId")}</th><th className="px-4 py-3 w-56 text-center">{t("reports_table_supplier")}</th><th className="px-4 py-3 w-36 text-center">{t("reports_table_value")}</th><th className="px-4 py-3 w-72 text-center">{t("reports_table_created")}</th><th className="px-4 py-3 w-28 text-center">{t("customerDetail_method")}</th><th className="px-4 py-3">{t("supplierDetail_invoice")}</th></tr>
               </thead>
               <tbody className="divide-y divide-app-border">
-                {purchases.map((p) => (
+                {filteredPurchases.map((p) => (
                   <tr key={p.id} className="hover:bg-app-bg">
                     <td className="px-4 py-3 f-mono text-app-text-muted w-40" style={{ textAlign: "center" }}>{p.code}</td>
                     <td className="px-4 py-3 w-56 text-center text-app-text truncate">{suppliers.find((s) => s.id === p.supplierId)?.company}</td>
@@ -4421,7 +4529,7 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
                     </td>
                   </tr>
                 ))}
-                {purchases.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-app-text-subtle">{t("reports_procurementEmpty")}</td></tr>}
+                {filteredPurchases.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-app-text-subtle">{t("reports_procurementEmpty")}</td></tr>}
               </tbody>
             </table>
           </div>
@@ -4430,20 +4538,30 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
 
       {tab === "expenses" && (
         <>
-          <div className="mb-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {kpi(t("reports_kpi_totalExpenses"), sar(eGross), "rose")}
-            {kpi(t("reports_kpi_expenseVat"), sar(eVat), "amber")}
-            {kpi(t("reports_kpi_expenseNet"), sar(eNet), "teal")}
-            {kpi(t("reports_kpi_invoices"), filteredExpenses.length)}
+          <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {kpiTile(t("reports_kpi_totalExpenses"), sar(eGross), "danger")}
+            {kpiTile(t("reports_kpi_expenseVat"), sar(eVat), "info")}
+            {kpiTile(t("reports_kpi_expenseNet"), sar(eNet), "brand")}
+            {kpiTile(t("reports_kpi_invoices"), filteredExpenses.length, "navy")}
           </div>
-          <div className="mb-4 flex flex-wrap gap-3 rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
-            <input type="date" value={expStart} onChange={(e) => setExpStart(e.target.value)} className={`${inputCls} w-auto`} />
-            <input type="date" value={expEnd} onChange={(e) => setExpEnd(e.target.value)} className={`${inputCls} w-auto`} />
+          <div className="mb-5 flex flex-wrap items-end gap-3">
+            <div className="w-40">
+              <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_fromDate")}</label>
+              <input type="date" value={expStart} onChange={(e) => setExpStart(e.target.value)} className={fieldCls} />
+            </div>
+            <div className="w-40">
+              <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_toDate")}</label>
+              <input type="date" value={expEnd} onChange={(e) => setExpEnd(e.target.value)} className={fieldCls} />
+            </div>
+            <div className="mr-auto flex gap-2">
+              <button onClick={() => window.print()} className={secondaryBtnCls}><Printer size={14} />{t("reports_print")}</button>
+              <button onClick={exportExpensesCsv} className={primaryBtnCls}><Download size={14} />{t("reports_exportCsv")}</button>
+            </div>
           </div>
           <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
             <table className="w-full text-sm table-fixed">
               <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
-                <tr><th className="px-4 py-3 w-56 text-center">{t("expenses_table_category")}</th><th className="px-4 py-3 w-40 text-center">{t("expenses_table_amount")}</th><th className="px-4 py-3 w-48 text-center">{t("expenses_table_tax")}</th><th className="px-4 py-3 w-72 text-center">{t("expenses_table_date")}</th><th className="px-4 py-3">{t("expenses_table_receipt")}</th></tr>
+                <tr><th className="px-4 py-3 w-56 text-center">{t("reports_table_item")}</th><th className="px-4 py-3 w-40 text-center">{t("expenses_table_amount")}</th><th className="px-4 py-3 w-48 text-center">{t("expenses_table_tax")}</th><th className="px-4 py-3 w-72 text-center">{t("expenses_table_date")}</th><th className="px-4 py-3">{t("expenses_table_receipt")}</th></tr>
               </thead>
               <tbody className="divide-y divide-app-border">
                 {filteredExpenses.map((e) => (
@@ -4475,30 +4593,51 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
 
       {tab === "pl" && (
         <>
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("reports_pl_allTimeTitle")}</div>
-          <div className="mb-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-            {kpi(t("reports_pl_revenue"), sar(revenueAllTime), "teal")}
-            {kpi(t("reports_pl_costs"), sar(costsAllTime), "rose")}
-            {kpi(resultAllTime >= 0 ? t("reports_pl_profit") : t("reports_pl_loss"), sar(Math.abs(resultAllTime)), resultAllTime >= 0 ? "teal" : "rose")}
+          <div className="mb-5 flex flex-wrap items-end gap-3">
+            <div className="w-40">
+              <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_fromDate")}</label>
+              <input type="datetime-local" value={plStart} onChange={(e) => setPlStart(e.target.value)} className={fieldCls} />
+            </div>
+            <div className="w-40">
+              <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_toDate")}</label>
+              <input type="datetime-local" value={plEnd} onChange={(e) => setPlEnd(e.target.value)} className={fieldCls} />
+            </div>
+            <div className="w-44">
+              <select value={plMethod} onChange={(e) => setPlMethod(e.target.value)} className={fieldCls}>
+                <option value="all">{t("reports_allPaymentMethods")}</option>
+                {PAY_METHODS.filter((m) => m.value !== "Wallet Balance").map((m) => <option key={m.value} value={m.value}>{t(m.key)}</option>)}
+              </select>
+            </div>
+            <div className="mr-auto flex gap-2">
+              <button onClick={() => window.print()} className={secondaryBtnCls}><Printer size={14} />{t("reports_print")}</button>
+              <button onClick={exportPlCsv} className={primaryBtnCls}><Download size={14} />{t("reports_exportCsv")}</button>
+            </div>
           </div>
 
-          <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("reports_pl_periodTitle")}</div>
-          <div className="mb-4 flex flex-wrap gap-3 rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
-            <input type="datetime-local" value={plStart} onChange={(e) => setPlStart(e.target.value)} className={`${inputCls} w-auto`} />
-            <input type="datetime-local" value={plEnd} onChange={(e) => setPlEnd(e.target.value)} className={`${inputCls} w-auto`} />
-          </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {kpi(t("reports_pl_revenue"), sar(revenuePeriod), "teal")}
-            {kpi(t("reports_pl_costs"), sar(costsPeriod), "rose")}
-            {kpi(resultPeriod >= 0 ? t("reports_pl_profit") : t("reports_pl_loss"), sar(Math.abs(resultPeriod)), resultPeriod >= 0 ? "teal" : "rose")}
-            {kpi(t("reports_pl_margin"), `${marginPeriod.toFixed(1)}%`, resultPeriod >= 0 ? "teal" : "rose")}
+          <div className="rounded-xl border border-app-border bg-app-surface p-6 divide-y divide-app-border">
+            <div className="flex items-center justify-between py-3">
+              <span className="text-sm text-app-text-muted">{t("reports_pl_totalRevenue")}</span>
+              <span className="font-semibold text-app-text">{sar(plRevenue)}</span>
+            </div>
+            <div className="flex items-center justify-between py-3">
+              <span className="text-sm text-app-text-muted">{t("reports_pl_purchaseCost")}</span>
+              <span className="font-semibold text-app-text">({sar(plPurchaseCost)})</span>
+            </div>
+            <div className="flex items-center justify-between py-3">
+              <span className="text-sm text-app-text-muted">{t("reports_pl_operatingExpenses")}</span>
+              <span className="font-semibold text-app-text">({sar(plOperatingExpenses)})</span>
+            </div>
+            <div className="flex items-center justify-between py-4">
+              <span className="text-base font-bold text-app-text">{plNetProfit >= 0 ? t("reports_pl_netProfitLabel") : t("reports_pl_netLossLabel")}</span>
+              <span className={`text-xl font-extrabold ${plNetProfit >= 0 ? "text-success-700" : "text-danger-700"}`}>{sar(Math.abs(plNetProfit))}</span>
+            </div>
           </div>
         </>
       )}
 
       {tab === "vat" && (
         <>
-          <div className="mb-4 flex flex-wrap items-end gap-3 rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
+          <div className="mb-4 rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
             <div>
               <div className="mb-1 text-xs font-semibold text-app-text-muted">{t("reports_vat_periodMode")}</div>
               <div className="flex gap-2">
@@ -4506,28 +4645,34 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
                 <button onClick={() => setVatMode("monthly")} className={`rounded-lg border px-3 py-2 text-sm font-medium ${vatMode === "monthly" ? "border-brand-600 bg-brand-50 text-brand-700" : "border-app-border-strong text-app-text-muted"}`}>{t("reports_vat_monthly")}</button>
               </div>
             </div>
-            <div>
-              <div className="mb-1 text-xs font-semibold text-app-text-muted">{t("reports_vat_year")}</div>
-              <input type="number" value={vatYear} onChange={(e) => setVatYear(Number(e.target.value))} className={`${inputCls} w-24`} />
+
+            <div className="mt-3 flex flex-wrap items-end gap-3">
+              <div className="w-28">
+                <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_vat_year")}</label>
+                <input type="number" value={vatYear} onChange={(e) => setVatYear(Number(e.target.value))} className={fieldCls} />
+              </div>
+              <div className="mr-auto flex gap-2">
+                <button onClick={() => window.print()} className={secondaryBtnCls}><Printer size={14} />{t("reports_vat_printPdf")}</button>
+                <button onClick={exportVatCsv} className={primaryBtnCls}><Download size={14} />{t("reports_vat_exportCsv")}</button>
+              </div>
             </div>
-            {vatMode === "quarterly" ? (
-              <div>
-                <div className="mb-1 text-xs font-semibold text-app-text-muted">{t("reports_vat_quarter")}</div>
-                <select value={vatQuarter} onChange={(e) => setVatQuarter(Number(e.target.value))} className={`${inputCls} w-28`}>
-                  <option value={1}>Q1</option><option value={2}>Q2</option><option value={3}>Q3</option><option value={4}>Q4</option>
-                </select>
-              </div>
-            ) : (
-              <div>
-                <div className="mb-1 text-xs font-semibold text-app-text-muted">{t("reports_vat_month")}</div>
-                <select value={vatMonth} onChange={(e) => setVatMonth(Number(e.target.value))} className={`${inputCls} w-28`}>
-                  {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => <option key={m} value={m}>{m}</option>)}
-                </select>
-              </div>
-            )}
-            <div className="ms-auto flex gap-2">
-              <button onClick={exportVatCsv} className="rounded-lg border border-brand-300 bg-brand-50 px-3 py-2 text-xs font-medium text-brand-700 hover:bg-brand-100">{t("reports_vat_exportCsv")}</button>
-              <button onClick={() => window.print()} className="rounded-lg border border-app-border-strong px-3 py-2 text-xs font-medium text-app-text-muted hover:bg-app-bg">{t("reports_vat_printPdf")}</button>
+
+            <div className="mt-3 flex flex-wrap items-end gap-3">
+              {vatMode === "quarterly" ? (
+                <div className="w-28">
+                  <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_vat_quarter")}</label>
+                  <select value={vatQuarter} onChange={(e) => setVatQuarter(Number(e.target.value))} className={fieldCls}>
+                    <option value={1}>Q1</option><option value={2}>Q2</option><option value={3}>Q3</option><option value={4}>Q4</option>
+                  </select>
+                </div>
+              ) : (
+                <div className="w-28">
+                  <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_vat_month")}</label>
+                  <select value={vatMonth} onChange={(e) => setVatMonth(Number(e.target.value))} className={fieldCls}>
+                    {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+              )}
             </div>
           </div>
 
