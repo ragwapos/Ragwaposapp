@@ -2087,6 +2087,7 @@ function SupplierQuickAddFields({ onSave, onCancel }) {
   const [agent, setAgent] = useState("");
   const [contact, setContact] = useState("");
   const [taxExempt, setTaxExempt] = useState(false);
+  const [exemptionNumber, setExemptionNumber] = useState("");
   return (
     <div className="mb-4 space-y-3 rounded-lg border border-brand-200 bg-brand-50/40 p-3">
       <div className="flex items-center justify-between">
@@ -2096,16 +2097,22 @@ function SupplierQuickAddFields({ onSave, onCancel }) {
       <input autoFocus value={company} onChange={(e) => setCompany(e.target.value)} placeholder={t("addSupplier_company")} className={inputCls} />
       <input value={agent} onChange={(e) => setAgent(e.target.value.slice(0, 15))} maxLength={15} placeholder={t("addSupplier_agent")} className={inputCls} />
       <input value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t("addSupplier_contact")} className={inputCls} />
-      {/* This quick-add card intentionally skips the tax number / exemption
-          number fields from the full AddSupplierModal — matching the approved
-          reference, which keeps this inline flow to just the essentials.
-          A supplier created here with the exempt toggle on can still have its
-          exemption number filled in later via the full edit modal (pencil
-          icon in SupplierDetailModal) before it affects tax-return totals. */}
+      {/* This quick-add card skips the real tax NUMBER field (registered
+          suppliers are the less-common case and can be filled in later via
+          the full edit modal) — but the exemption number can't be skipped
+          the same way: exemptSupplierIds only counts a supplier as exempt
+          when BOTH taxExempt and exemptionNumber are set, so saving exempt=true
+          with no number here would silently drop this supplier's purchases
+          out of the tax return entirely (neither taxed nor exempt) until
+          someone remembers to go edit it — a real VAT-classification bug,
+          not just a missing field. */}
       <Toggle checked={taxExempt} onChange={setTaxExempt} label={t("addSupplier_taxExempt")} />
+      {taxExempt && (
+        <input value={exemptionNumber} onChange={(e) => setExemptionNumber(e.target.value)} placeholder={t("addSupplier_exemptionNumber")} className={`${inputCls} f-mono`} />
+      )}
       <button
         type="button"
-        onClick={() => { if (!company.trim()) return; onSave({ company: company.trim(), agent: agent.trim() || "-", contact: contact.trim() || "-", taxNumber: "", taxExempt, exemptionNumber: "" }); }}
+        onClick={() => { if (!company.trim()) return; onSave({ company: company.trim(), agent: agent.trim() || "-", contact: contact.trim() || "-", taxNumber: "", taxExempt, exemptionNumber: taxExempt ? exemptionNumber.trim() : "" }); }}
         className="w-full rounded-lg bg-brand-500 py-2 text-sm font-semibold text-white hover:bg-brand-600">
         {t("addSupplier_save")}
       </button>
