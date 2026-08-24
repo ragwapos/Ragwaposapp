@@ -104,7 +104,7 @@ function buildInvoiceXml({ invoice, merchant, uuid, previousInvoiceHashB64, net,
     return `
   <cac:InvoiceLine>
     <cbc:ID>${idx + 1}</cbc:ID>
-    <cbc:InvoicedQuantity unitCode="PCE">${it.qty}</cbc:InvoicedQuantity>
+    <cbc:InvoicedQuantity unitCode="PCE">${esc(it.qty)}</cbc:InvoicedQuantity>
     <cbc:LineExtensionAmount currencyID="SAR">${it.lineTotal.toFixed(2)}</cbc:LineExtensionAmount>
     <cac:TaxTotal>
       <cbc:TaxAmount currencyID="SAR">${(it.lineTotal - it.lineTotal / 1.15).toFixed(2)}</cbc:TaxAmount>
@@ -130,8 +130,8 @@ function buildInvoiceXml({ invoice, merchant, uuid, previousInvoiceHashB64, net,
   <cbc:ProfileID>reporting:1.0</cbc:ProfileID>
   <cbc:ID>${esc(invoice.code)}</cbc:ID>
   <cbc:UUID>${esc(uuid)}</cbc:UUID>
-  <cbc:IssueDate>${issueDate}</cbc:IssueDate>
-  <cbc:IssueTime>${issueTime}</cbc:IssueTime>
+  <cbc:IssueDate>${esc(issueDate)}</cbc:IssueDate>
+  <cbc:IssueTime>${esc(issueTime)}</cbc:IssueTime>
   <cbc:InvoiceTypeCode name="0200000">388</cbc:InvoiceTypeCode>
   <cbc:DocumentCurrencyCode>SAR</cbc:DocumentCurrencyCode>
   <cbc:TaxCurrencyCode>SAR</cbc:TaxCurrencyCode>

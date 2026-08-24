@@ -7816,8 +7816,11 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
             <button onClick={() => scrollTo('features')} className="hover:text-white transition">{t.navFeatures}</button>
             <button onClick={() => scrollTo('how-it-works')} className="hover:text-white transition">{t.navHow}</button>
             <button onClick={() => scrollTo('faq')} className="hover:text-white transition">{t.navFaq}</button>
-            <button onClick={onOpenTerms} className="hover:text-white transition">
+            <button onClick={() => onOpenTerms()} className="hover:text-white transition">
               {lang === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions'}
+            </button>
+            <button onClick={() => onOpenTerms('privacy')} className="hover:text-white transition">
+              {lang === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy'}
             </button>
           </div>
           <p className="text-xs text-gray-500 pt-2">© {new Date().getFullYear()} {t.brand} | {t.footerRights}</p>
@@ -8197,7 +8200,7 @@ function SignupPage(props) {
           <div className="flex items-start gap-3 mb-6">
             <input type="checkbox" checked={signupAgree} onChange={(e) => setSignupAgree(e.target.checked)} className="w-4 h-4 rounded accent-cyan-400 mt-1" />
             <label className="text-gray-400 text-sm">
-              أوافق على <button type="button" onClick={onOpenTerms} className="text-cyan-400 hover:underline">شروط الخدمة</button>
+              أوافق على <button type="button" onClick={() => onOpenTerms()} className="text-cyan-400 hover:underline">شروط الخدمة</button>
             </label>
           </div>
 
@@ -8229,8 +8232,12 @@ function SignupPage(props) {
 // could actually read what they agreed to — a court or consumer-protection
 // body could treat an intentionally illegible contract as never properly
 // disclosed, which undermines the entire point of having one.
-function TermsPage({ onBack }) {
+function TermsPage({ onBack, scrollTarget }) {
   const blockCopy = (e) => e.preventDefault();
+  useEffect(() => {
+    if (!scrollTarget) return;
+    document.getElementById(scrollTarget)?.scrollIntoView({ block: 'start' });
+  }, [scrollTarget]);
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-start justify-center p-4 py-10">
       <div className="fixed top-6 right-6 z-10">
@@ -8322,7 +8329,7 @@ function TermsPage({ onBack }) {
             <p className="italic text-gray-400">ملاحظة مهمة: كما هو الحال مع أي نظام تقني، قد تحدث توقفات غير متوقعة للصيانة أو التحديث (نادرة جداً). سنحاول إخطارك مسبقاً عند الإمكان، لأننا نقدّر وقتك.</p>
           </section>
 
-          <section>
+          <section id="privacy">
             <h2 className="text-xl font-bold text-white mb-2">البند السادس: بيانات المستخدم والخصوصية</h2>
             <h3 className="font-semibold text-white mt-3 mb-1">6.1 جمع البيانات بهدف التحسين</h3>
             <p>نجمع البيانات عن استخدامك للمنصة فقط لـ تحسين الخدمة وجعلها أفضل لك. البيانات التي نجمعها:</p>
@@ -8471,7 +8478,11 @@ const LaundryPOS = () => {
   // plain setCurrentPage('signup') on the way back would strand a visitor
   // who opened it from the landing page instead.
   const [termsReferrer, setTermsReferrer] = useState('landing');
-  const openTerms = () => { setTermsReferrer(currentPage); setCurrentPage('terms'); };
+  // Optional section id (e.g. "privacy") to scroll TermsPage to on open —
+  // lets the footer's "Privacy Policy" link jump straight to the privacy
+  // clause instead of duplicating that content on a separate page.
+  const [termsScrollTarget, setTermsScrollTarget] = useState(null);
+  const openTerms = (scrollTarget) => { setTermsReferrer(currentPage); setTermsScrollTarget(scrollTarget || null); setCurrentPage('terms'); };
   // Chosen once on the landing page (before any login/signup) and carried
   // through as the dashboard's starting language, so a visitor who picked
   // Arabic there doesn't land on an English dashboard after signing up.
@@ -8893,7 +8904,7 @@ const LaundryPOS = () => {
   ) : currentPage === 'resetPassword' ? (
     <ResetPasswordPage onDone={async () => { await auth.signOut(); setCurrentPage('login'); }} />
   ) : currentPage === 'terms' ? (
-    <TermsPage onBack={() => setCurrentPage(termsReferrer)} />
+    <TermsPage onBack={() => setCurrentPage(termsReferrer)} scrollTarget={termsScrollTarget} />
   ) : currentPage === 'signup' ? (
     <SignupPage
       setCurrentPage={setCurrentPage} signupShop={signupShop} setSignupShop={setSignupShop}
