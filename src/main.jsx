@@ -21,8 +21,21 @@ if (dsn) {
   });
 }
 
+function ErrorFallback() {
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px', fontFamily: 'system-ui, sans-serif', padding: '24px', textAlign: 'center' }}>
+      <p style={{ fontSize: '16px', color: '#333' }}>حدث خطأ غير متوقع. الرجاء إعادة تحميل الصفحة.</p>
+      <button onClick={() => window.location.reload()} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#17a5a0', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
+        إعادة التحميل
+      </button>
+    </div>
+  );
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <LaundryPOS />
+    <Sentry.ErrorBoundary fallback={<ErrorFallback />}>
+      <LaundryPOS />
+    </Sentry.ErrorBoundary>
   </React.StrictMode>
 );
