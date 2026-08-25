@@ -5544,22 +5544,26 @@ function HomeDashboardView({ invoices, merchant, setTab }) {
 function AppShell({ tab, setTab, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { dir, t } = useLang();
   const isRtl = dir === "rtl";
-  // The sidebar is a fixed off-canvas drawer below sm: (closed by default,
+  // The sidebar is a fixed off-canvas drawer below lg: (closed by default,
   // opened via the hamburger button, and closed again the moment any nav
   // item is picked — see Sidebar's onNavigate) and reverts to its normal
-  // always-visible in-flow column at sm: and up, matching desktop exactly.
+  // always-visible in-flow column at lg: and up, matching desktop exactly.
+  // lg: (1024px), not sm: (640px) like the KPI/filter/card patterns
+  // elsewhere in this pass — verified against the reference build's actual
+  // DOM (hidden lg:block / lg:hidden throughout its nav), since a device in
+  // the 640-1024px gap would otherwise still get the full-width sidebar.
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   return (
     <div dir={dir} className="flex h-screen w-full bg-stone-100 f-body">
       <Fonts />
       {mobileNavOpen && (
-        <div className="fixed inset-0 z-40 bg-black/40 sm:hidden" onClick={() => setMobileNavOpen(false)} />
+        <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setMobileNavOpen(false)} />
       )}
-      <div className={`fixed inset-y-0 z-50 transition-transform duration-200 sm:static sm:z-auto sm:translate-x-0 ${isRtl ? "right-0" : "left-0"} ${mobileNavOpen ? "translate-x-0" : isRtl ? "translate-x-full" : "-translate-x-full"}`}>
+      <div className={`fixed inset-y-0 z-50 transition-transform duration-200 lg:static lg:z-auto lg:translate-x-0 ${isRtl ? "right-0" : "left-0"} ${mobileNavOpen ? "translate-x-0" : isRtl ? "translate-x-full" : "-translate-x-full"}`}>
         <Sidebar tab={tab} setTab={setTab} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} merchant={merchant} onNavigate={() => setMobileNavOpen(false)} />
       </div>
       <div className="flex flex-1 flex-col overflow-hidden">
-        <div className="flex items-center gap-3 border-b border-stone-200 bg-white px-4 py-3 sm:hidden">
+        <div className="flex items-center gap-3 border-b border-stone-200 bg-white px-4 py-3 lg:hidden">
           <button onClick={() => setMobileNavOpen(true)} aria-label={t("app_name")}><Menu className="size-5 text-navy-900" /></button>
           <span className="font-bold text-navy-900">{t("app_name")}</span>
         </div>
