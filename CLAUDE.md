@@ -14,6 +14,9 @@ Every change must be evaluated for whether it could newly expose the site to com
 ## 4. No dead code left behind
 When editing or adding a feature, remove anything that becomes unused as a result in the same change — unused imports, now-orphaned helper functions, stale translation keys, leftover feature flags. Don't defer cleanup to later.
 
+## 5. Security scan before every push
+Before running `git push` — even if explicitly told to "just push" — trigger a Raqib scan (`trigger_scan`) and wait for its report (`get_report`) first. Review the findings; if the pending changes introduce a new high/critical issue, flag it and pause instead of pushing through. Only push once the scan is clean, or any findings are pre-existing ones the user has already accepted. If the raqib MCP tools aren't available in the current session (e.g. the server was just configured and needs a session restart before its tools register), say so explicitly rather than silently skipping the scan and pushing anyway.
+
 ---
 
 See `PROJECT_REFERENCE.md` for the full functional/architecture/security-posture reference — read it at the start of a new session before doing anything else on this project.
