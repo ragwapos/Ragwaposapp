@@ -2516,9 +2516,9 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
   }
 
   return (
-    <div className="flex h-full flex-col gap-4">
-      <div className="flex flex-1 gap-5 min-h-0">
-        <div className="flex-1 flex flex-col min-w-0">
+    <div className="flex flex-col gap-4 lg:h-full">
+      <div className="flex flex-col gap-5 lg:flex-1 lg:flex-row lg:min-h-0">
+        <div className="flex flex-col min-w-0 lg:flex-1">
           <div className="relative mb-3">
             <Search size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-text-subtle" />
             <input value={productQuery} onChange={(e) => setProductQuery(e.target.value)} placeholder={t("pos_searchProductsPlaceholder")} className={`${inputCls} pr-9`} />
@@ -2529,7 +2529,7 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
               <button key={c.id} onClick={() => setActiveCat(c.id)} className={`shrink-0 rounded-full px-4 py-2 text-sm font-medium transition ${activeCat === c.id ? "bg-brand-600 text-white shadow-app-xs" : "bg-app-surface border border-app-border text-app-text-muted hover:border-app-border-strong"}`}>{c.name}</button>
             ))}
           </div>
-          <div className="grid flex-1 auto-rows-max grid-cols-2 gap-3 overflow-y-auto pr-1 sm:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4 lg:flex-1 lg:auto-rows-max lg:overflow-y-auto lg:pr-1">
             {visibleProducts.map((p) => (
               <button key={p.id} onClick={() => setModalProduct(p)} className="group relative flex flex-col text-left rounded-xl border border-app-border bg-app-surface overflow-hidden transition-all hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-app-md active:translate-y-0">
                 {p.quickAccessKey && (
@@ -2552,7 +2552,7 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
           </div>
         </div>
 
-        <div className="w-80 shrink-0 flex flex-col rounded-xl border border-app-border bg-app-surface shadow-app-sm">
+        <div className="w-full shrink-0 flex flex-col rounded-xl border border-app-border bg-app-surface shadow-app-sm lg:w-80">
           <div className="border-b border-app-border px-4 py-3 f-display font-semibold text-app-text">{t("pos_checkout")}</div>
           <div className="border-b border-app-border p-4 space-y-2">
             {/* "طلب جديد" header — the reference design also shows a real
@@ -2913,9 +2913,6 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
   const openInvoice = invoices.find((i) => i.id === openId);
   const openInvoiceZatcaRecord = openInvoice ? zatcaInvoices.find((z) => z.invoiceId === openInvoice.id) : null;
   const openInvoiceCustomerPhone = openInvoice ? customers.find((c) => c.id === openInvoice.customerId)?.mobile : null;
-  // Every column gets an exactly equal share of the table's width — 5 columns
-  // on the Delivery table, 7 on the Active table (2 extra: items count + ETA).
-  const colWidth = `${100 / (isDelivery ? 5 : 7)}%`;
 
   const updateItemStatus = (invId, itemId, status) => {
     const inv = invoices.find((i) => i.id === invId);
@@ -2956,17 +2953,17 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
         </div>
       )}
 
-      <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface">
-        <table className="w-full table-fixed text-right text-[13px]">
+      <div className="overflow-x-auto rounded-xl border border-app-border bg-app-surface">
+        <table className="w-full min-w-[640px] text-right text-[13px]">
           <thead className="bg-app-bg/60 text-xs font-semibold uppercase tracking-wide text-app-text-muted">
             <tr>
-              <th className="px-4 py-3 text-center" style={{ width: colWidth }}>{t("invoices_invoiceId")}</th>
-              <th className="px-4 py-3 text-center" style={{ width: colWidth }}>{t("invoices_customer")}</th>
-              {!isDelivery && <th className="px-4 py-3 text-center" style={{ width: colWidth }}>{t("invoices_items")}</th>}
-              <th className="px-4 py-3 text-center" style={{ width: colWidth }}>{t("common_status")}</th>
-              {!isDelivery && <th className="px-4 py-3 text-center" style={{ width: colWidth }}>{t("invoices_eta")}</th>}
-              <th className="px-4 py-3 text-center" style={{ width: colWidth }}>{t("invoices_total")}</th>
-              <th className="px-4 py-3 text-center" style={{ width: colWidth }}></th>
+              <th className="whitespace-nowrap px-4 py-3 text-center">{t("invoices_invoiceId")}</th>
+              <th className="whitespace-nowrap px-4 py-3 text-center">{t("invoices_customer")}</th>
+              {!isDelivery && <th className="whitespace-nowrap px-4 py-3 text-center">{t("invoices_items")}</th>}
+              <th className="whitespace-nowrap px-4 py-3 text-center">{t("common_status")}</th>
+              {!isDelivery && <th className="whitespace-nowrap px-4 py-3 text-center">{t("invoices_eta")}</th>}
+              <th className="whitespace-nowrap px-4 py-3 text-center">{t("invoices_total")}</th>
+              <th className="whitespace-nowrap px-4 py-3 text-center"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-app-border">
@@ -2975,17 +2972,17 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
               const delivery = isDelivery ? deliveryStatusMeta(t, inv) : null;
               return (
                 <tr key={inv.id} className="cursor-pointer hover:bg-app-bg/60" onClick={() => setOpenId(inv.id)}>
-                  <td className="px-4 py-3 f-mono text-app-text-muted text-center">{inv.code}</td>
-                  <td className="px-4 py-3 text-app-text truncate text-center">{inv.customerName}</td>
-                  {!isDelivery && <td className="px-4 py-3 text-app-text-muted text-center">{inv.items.length}</td>}
-                  <td className="px-4 py-3 text-center">
+                  <td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-muted text-center">{inv.code}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-app-text text-center">{inv.customerName}</td>
+                  {!isDelivery && <td className="whitespace-nowrap px-4 py-3 text-app-text-muted text-center">{inv.items.length}</td>}
+                  <td className="whitespace-nowrap px-4 py-3 text-center">
                     {isDelivery
                       ? <StatusDot tone={delivery.tone} label={delivery.label} />
                       : <StatusDot tone={INVOICE_STATUS_TONE[status] || "bg-app-bg text-app-text-muted"} label={stageLabel(t, status)} />}
                   </td>
-                  {!isDelivery && <td className="px-4 py-3 text-app-text-muted text-center">{estimatedDeliveryLabel(t, inv)}</td>}
-                  <td className="px-4 py-3 f-mono text-app-text text-center">{sarCompact(inv.total)}</td>
-                  <td className="px-4 py-3 text-center">
+                  {!isDelivery && <td className="whitespace-nowrap px-4 py-3 text-app-text-muted text-center">{estimatedDeliveryLabel(t, inv)}</td>}
+                  <td className="whitespace-nowrap px-4 py-3 f-mono text-app-text text-center">{sarCompact(inv.total)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-center">
                     <button
                       onClick={(e) => { e.stopPropagation(); setOpenId(inv.id); }}
                       className="rounded-lg border border-app-border px-3 py-1.5 text-[12.5px] font-semibold text-app-text hover:bg-app-bg"
@@ -3429,22 +3426,22 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
         <Search size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-text-subtle" />
         <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("customers_searchPlaceholder")} className={`${inputCls} pr-9`} />
       </div>
-      <div className="overflow-hidden rounded-xl border border-app-border">
-        <table className="w-full text-right text-[13px]">
+      <div className="overflow-x-auto rounded-xl border border-app-border">
+        <table className="w-full min-w-[640px] text-right text-[13px]">
           <thead className="bg-app-bg/60 text-xs font-semibold uppercase tracking-wide text-app-text-muted">
-            <tr><th className="px-4 py-3">{t("customers_name")}</th><th className="px-4 py-3">{t("customers_wallet")}</th><th className="px-4 py-3">{t("customers_debt")}</th><th className="px-4 py-3">{t("customers_mobile")}</th><th className="px-4 py-3">{t("customers_lastOrder")}</th><th className="px-4 py-3"></th></tr>
+            <tr><th className="whitespace-nowrap px-4 py-3">{t("customers_name")}</th><th className="whitespace-nowrap px-4 py-3">{t("customers_wallet")}</th><th className="whitespace-nowrap px-4 py-3">{t("customers_debt")}</th><th className="whitespace-nowrap px-4 py-3">{t("customers_mobile")}</th><th className="whitespace-nowrap px-4 py-3">{t("customers_lastOrder")}</th><th className="whitespace-nowrap px-4 py-3"></th></tr>
           </thead>
           <tbody className="divide-y divide-app-border">
             {filtered.map((c) => {
               const lastOrderIso = lastOrderByCustomer.get(c.id);
               return (
                 <tr key={c.id} onClick={() => setSelected(c)} className="cursor-pointer hover:bg-app-bg/60">
-                  <td className="px-4 py-3 font-medium text-app-text">{c.name}</td>
-                  <td className={`px-4 py-3 f-mono ${c.walletBalance > 0 ? "font-bold text-success-700" : "text-app-text-subtle"}`}>{sarCompact(c.walletBalance)}</td>
-                  <td className={`px-4 py-3 f-mono ${c.debt > 0 ? "font-bold text-danger-700" : "text-app-text-subtle"}`}>{sarCompact(c.debt)}</td>
-                  <td className="px-4 py-3 f-mono text-app-text-muted">{c.mobile}</td>
-                  <td className="px-4 py-3 text-app-text-muted">{lastOrderIso ? lastOrderRelativeLabel(t, lastOrderIso) : t("customers_neverOrdered")}</td>
-                  <td className="px-4 py-3">
+                  <td className="whitespace-nowrap px-4 py-3 font-medium text-app-text">{c.name}</td>
+                  <td className={`whitespace-nowrap px-4 py-3 f-mono ${c.walletBalance > 0 ? "font-bold text-success-700" : "text-app-text-subtle"}`}>{sarCompact(c.walletBalance)}</td>
+                  <td className={`whitespace-nowrap px-4 py-3 f-mono ${c.debt > 0 ? "font-bold text-danger-700" : "text-app-text-subtle"}`}>{sarCompact(c.debt)}</td>
+                  <td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-muted">{c.mobile}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-app-text-muted">{lastOrderIso ? lastOrderRelativeLabel(t, lastOrderIso) : t("customers_neverOrdered")}</td>
+                  <td className="whitespace-nowrap px-4 py-3">
                     <button onClick={(e) => { e.stopPropagation(); setSelected(c); }} className="rounded-lg border border-app-border-strong px-3 py-1.5 text-xs font-medium text-app-text-muted hover:bg-app-bg">{t("customers_details")}</button>
                   </td>
                 </tr>
@@ -4633,20 +4630,20 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
               <button onClick={exportSalesCsv} className={primaryBtnCls}><Download size={14} />{t("reports_exportCsv")}</button>
             </div>
           </div>
-          <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
-            <table className="w-full text-sm table-fixed">
+          <div className="overflow-x-auto rounded-xl border border-app-border bg-app-surface shadow-app-sm">
+            <table className="w-full min-w-[640px] text-sm">
               <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
-                <tr><th className="px-4 py-3 w-40 text-center">{t("reports_table_invoice")}</th><th className="px-4 py-3 w-56 text-center">{t("reports_table_client")}</th><th className="px-4 py-3 text-center">{t("reports_table_method")}</th><th className="px-4 py-3 w-28 text-center">{t("reports_table_net")}</th><th className="px-4 py-3 w-28 text-center">{t("reports_table_vat")}</th><th className="px-4 py-3 w-28 text-center">{t("reports_table_gross")}</th></tr>
+                <tr><th className="whitespace-nowrap px-4 py-3 text-center">{t("reports_table_invoice")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("reports_table_client")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("reports_table_method")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("reports_table_net")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("reports_table_vat")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("reports_table_gross")}</th></tr>
               </thead>
               <tbody className="divide-y divide-app-border">
                 {salesRows.map((r) => (
                   <tr key={r.inv.id} className="hover:bg-app-bg">
-                    <td className="px-4 py-3 f-mono text-app-text-muted w-40" style={{ textAlign: "center" }}>{r.inv.code}</td>
-                    <td className="px-4 py-3 w-56 text-center text-app-text truncate">{r.inv.customerName}</td>
-                    <td className="px-4 py-3 text-center text-app-text-muted">{method === "all" ? splitBreakdownLabel(t, r.inv) : payMethodLabel(t, method)}</td>
-                    <td className="px-4 py-3 f-mono w-28" style={{ textAlign: "center" }}>{sar(r.net)}</td>
-                    <td className="px-4 py-3 f-mono text-warning-600 w-28" style={{ textAlign: "center" }}>{sar(r.vat)}</td>
-                    <td className="px-4 py-3 f-mono font-semibold text-app-text w-28" style={{ textAlign: "center" }}>{sar(r.amount)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-muted text-center">{r.inv.code}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-center text-app-text">{r.inv.customerName}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-center text-app-text-muted">{method === "all" ? splitBreakdownLabel(t, r.inv) : payMethodLabel(t, method)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 f-mono text-center">{sar(r.net)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 f-mono text-warning-600 text-center">{sar(r.vat)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 f-mono font-semibold text-app-text text-center">{sar(r.amount)}</td>
                   </tr>
                 ))}
                 {salesRows.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-app-text-subtle">{t("reports_salesEmpty")}</td></tr>}
@@ -4690,20 +4687,20 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
               <button onClick={exportProcurementCsv} className={primaryBtnCls}><Download size={14} />{t("reports_exportCsv")}</button>
             </div>
           </div>
-          <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
-            <table className="w-full text-sm table-fixed">
+          <div className="overflow-x-auto rounded-xl border border-app-border bg-app-surface shadow-app-sm">
+            <table className="w-full min-w-[640px] text-sm">
               <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
-                <tr><th className="px-4 py-3 w-40 text-center">{t("reports_table_poId")}</th><th className="px-4 py-3 w-56 text-center">{t("reports_table_supplier")}</th><th className="px-4 py-3 w-36 text-center">{t("reports_table_value")}</th><th className="px-4 py-3 w-72 text-center">{t("reports_table_created")}</th><th className="px-4 py-3 w-28 text-center">{t("customerDetail_method")}</th><th className="px-4 py-3">{t("supplierDetail_invoice")}</th></tr>
+                <tr><th className="whitespace-nowrap px-4 py-3 text-center">{t("reports_table_poId")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("reports_table_supplier")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("reports_table_value")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("reports_table_created")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("customerDetail_method")}</th><th className="whitespace-nowrap px-4 py-3">{t("supplierDetail_invoice")}</th></tr>
               </thead>
               <tbody className="divide-y divide-app-border">
                 {filteredPurchases.map((p) => (
                   <tr key={p.id} className="hover:bg-app-bg">
-                    <td className="px-4 py-3 f-mono text-app-text-muted w-40" style={{ textAlign: "center" }}>{p.code}</td>
-                    <td className="px-4 py-3 w-56 text-center text-app-text truncate">{suppliers.find((s) => s.id === p.supplierId)?.company}</td>
-                    <td className="px-4 py-3 f-mono font-semibold text-app-text w-36" style={{ textAlign: "center" }}>{sar(p.amount)}</td>
-                    <td className="px-4 py-3 f-mono text-app-text-muted w-72" style={{ textAlign: "center" }}>{fmtDate(p.date)}</td>
-                    <td className="px-4 py-3 w-28 text-center text-app-text-muted">{p.method === "Cash" ? t("common_cash") : t("purchases_credit")}</td>
-                    <td className="px-4 py-3">
+                    <td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-muted text-center">{p.code}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-center text-app-text">{suppliers.find((s) => s.id === p.supplierId)?.company}</td>
+                    <td className="whitespace-nowrap px-4 py-3 f-mono font-semibold text-app-text text-center">{sar(p.amount)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-muted text-center">{fmtDate(p.date)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-center text-app-text-muted">{p.method === "Cash" ? t("common_cash") : t("purchases_credit")}</td>
+                    <td className="whitespace-nowrap px-4 py-3">
                       {p.attachment ? (
                         <button onClick={() => openStoredDocument(p.attachment)} className="inline-flex items-center gap-1 text-brand-600 hover:underline">
                           <Paperclip size={13} />{t("common_view")}
@@ -4745,19 +4742,19 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
               <button onClick={exportExpensesCsv} className={primaryBtnCls}><Download size={14} />{t("reports_exportCsv")}</button>
             </div>
           </div>
-          <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
-            <table className="w-full text-sm table-fixed">
+          <div className="overflow-x-auto rounded-xl border border-app-border bg-app-surface shadow-app-sm">
+            <table className="w-full min-w-[640px] text-sm">
               <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
-                <tr><th className="px-4 py-3 w-56 text-center">{t("reports_table_item")}</th><th className="px-4 py-3 w-40 text-center">{t("expenses_table_amount")}</th><th className="px-4 py-3 w-48 text-center">{t("expenses_table_tax")}</th><th className="px-4 py-3 w-72 text-center">{t("expenses_table_date")}</th><th className="px-4 py-3">{t("expenses_table_receipt")}</th></tr>
+                <tr><th className="whitespace-nowrap px-4 py-3 text-center">{t("reports_table_item")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("expenses_table_amount")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("expenses_table_tax")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("expenses_table_date")}</th><th className="whitespace-nowrap px-4 py-3">{t("expenses_table_receipt")}</th></tr>
               </thead>
               <tbody className="divide-y divide-app-border">
                 {filteredExpenses.map((e) => (
                   <tr key={e.id} className="hover:bg-app-bg">
-                    <td className="px-4 py-3 w-56 text-center font-medium text-app-text truncate">{expenseCategories.find((c) => c.id === e.categoryId)?.name || "—"}</td>
-                    <td className="px-4 py-3 f-mono text-app-text w-40" style={{ textAlign: "center" }}>{sar(e.amount)}</td>
-                    <td className="px-4 py-3 w-48 text-center text-app-text-muted">{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</td>
-                    <td className="px-4 py-3 f-mono text-app-text-muted w-72" style={{ textAlign: "center" }}>{e.date}</td>
-                    <td className="px-4 py-3 text-app-text-muted">
+                    <td className="whitespace-nowrap px-4 py-3 text-center font-medium text-app-text">{expenseCategories.find((c) => c.id === e.categoryId)?.name || "—"}</td>
+                    <td className="whitespace-nowrap px-4 py-3 f-mono text-app-text text-center">{sar(e.amount)}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-center text-app-text-muted">{e.taxFlag === "Inclusive" ? t("expenses_taxInclusive") : t("expenses_taxExempt")}</td>
+                    <td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-muted text-center">{e.date}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-app-text-muted">
                       {e.receipt?.startsWith("http") || e.receipt?.startsWith("data:") || e.receipt?.includes("/") ? (
                         <button onClick={() => openStoredDocument(e.receipt)} className="inline-flex items-center gap-1 text-brand-600 hover:underline">
                           <ReceiptText size={13} />{e.receiptName || t("common_view")}
@@ -4867,36 +4864,36 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
 
           <div className="print-area">
             <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("reports_vat_salesTable")}</div>
-            <div className="mb-6 overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
-              <table className="w-full text-sm table-fixed">
+            <div className="mb-6 overflow-x-auto rounded-xl border border-app-border bg-app-surface shadow-app-sm">
+              <table className="w-full min-w-[520px] text-sm">
                 <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
-                  <tr><th className="px-4 py-3 w-10 text-center">#</th><th className="px-4 py-3 text-center">{t("common_category")}</th><th className="px-4 py-3 w-56 text-center">{t("reports_vat_taxableAmount")}</th><th className="px-4 py-3 w-40 text-center">{t("reports_vat_vatAmount")}</th></tr>
+                  <tr><th className="whitespace-nowrap px-4 py-3 text-center">#</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("common_category")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("reports_vat_taxableAmount")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("reports_vat_vatAmount")}</th></tr>
                 </thead>
                 <tbody className="divide-y divide-app-border">
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>1</td><td className="px-4 py-3 text-center">{t("reports_vat_box1_sales")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(salesBox1Taxable)} t={t} /></td><td className="px-4 py-3 w-40 text-center"><CopyableNumber value={round2(salesBox1Vat)} t={t} /></td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>2</td><td className="px-4 py-3 text-center">{t("reports_vat_box2_sales")}</td><td className="px-4 py-3 f-mono text-app-text-subtle w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>3</td><td className="px-4 py-3 text-center">{t("reports_vat_box3_sales")}</td><td className="px-4 py-3 f-mono text-app-text-subtle w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>4</td><td className="px-4 py-3 text-center">{t("reports_vat_box4_sales")}</td><td className="px-4 py-3 f-mono text-app-text-subtle w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>5</td><td className="px-4 py-3 text-center">{t("reports_vat_box5_sales")}</td><td className="px-4 py-3 f-mono text-app-text-subtle w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr className="bg-app-bg font-semibold"><td className="px-4 py-3 text-center" colSpan={2}>{t("reports_vat_totalSales")} / {t("reports_vat_totalOutputVat")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(totalSalesValue)} t={t} /></td><td className="px-4 py-3 w-40 text-center"><CopyableNumber value={round2(totalOutputVat)} t={t} /></td></tr>
+                  <tr><td className="whitespace-nowrap px-4 py-3 f-mono text-center">1</td><td className="whitespace-nowrap px-4 py-3 text-center">{t("reports_vat_box1_sales")}</td><td className="whitespace-nowrap px-4 py-3 text-center"><CopyableNumber value={round2(salesBox1Taxable)} t={t} /></td><td className="whitespace-nowrap px-4 py-3 text-center"><CopyableNumber value={round2(salesBox1Vat)} t={t} /></td></tr>
+                  <tr><td className="whitespace-nowrap px-4 py-3 f-mono text-center">2</td><td className="whitespace-nowrap px-4 py-3 text-center">{t("reports_vat_box2_sales")}</td><td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-subtle text-center">0.00</td><td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-subtle text-center">0.00</td></tr>
+                  <tr><td className="whitespace-nowrap px-4 py-3 f-mono text-center">3</td><td className="whitespace-nowrap px-4 py-3 text-center">{t("reports_vat_box3_sales")}</td><td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-subtle text-center">0.00</td><td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-subtle text-center">0.00</td></tr>
+                  <tr><td className="whitespace-nowrap px-4 py-3 f-mono text-center">4</td><td className="whitespace-nowrap px-4 py-3 text-center">{t("reports_vat_box4_sales")}</td><td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-subtle text-center">0.00</td><td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-subtle text-center">0.00</td></tr>
+                  <tr><td className="whitespace-nowrap px-4 py-3 f-mono text-center">5</td><td className="whitespace-nowrap px-4 py-3 text-center">{t("reports_vat_box5_sales")}</td><td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-subtle text-center">0.00</td><td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-subtle text-center">0.00</td></tr>
+                  <tr className="bg-app-bg font-semibold"><td className="whitespace-nowrap px-4 py-3 text-center" colSpan={2}>{t("reports_vat_totalSales")} / {t("reports_vat_totalOutputVat")}</td><td className="whitespace-nowrap px-4 py-3 text-center"><CopyableNumber value={round2(totalSalesValue)} t={t} /></td><td className="whitespace-nowrap px-4 py-3 text-center"><CopyableNumber value={round2(totalOutputVat)} t={t} /></td></tr>
                 </tbody>
               </table>
               <div className="border-t border-app-border px-4 py-2 text-[11px] text-app-text-subtle">{t("reports_vat_notTracked")}</div>
             </div>
 
             <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("reports_vat_purchasesTable")}</div>
-            <div className="mb-6 overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
-              <table className="w-full text-sm table-fixed">
+            <div className="mb-6 overflow-x-auto rounded-xl border border-app-border bg-app-surface shadow-app-sm">
+              <table className="w-full min-w-[520px] text-sm">
                 <thead className="bg-app-bg text-xs font-semibold uppercase tracking-wide text-app-text-muted">
-                  <tr><th className="px-4 py-3 w-10 text-center">#</th><th className="px-4 py-3 text-center">{t("common_category")}</th><th className="px-4 py-3 w-56 text-center">{t("reports_vat_taxableAmount")}</th><th className="px-4 py-3 w-40 text-center">{t("reports_vat_vatAmount")}</th></tr>
+                  <tr><th className="whitespace-nowrap px-4 py-3 text-center">#</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("common_category")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("reports_vat_taxableAmount")}</th><th className="whitespace-nowrap px-4 py-3 text-center">{t("reports_vat_vatAmount")}</th></tr>
                 </thead>
                 <tbody className="divide-y divide-app-border">
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>1</td><td className="px-4 py-3 text-center">{t("reports_vat_box1_purch")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(purchBox1Taxable)} t={t} /></td><td className="px-4 py-3 w-40 text-center"><CopyableNumber value={round2(purchBox1Vat)} t={t} /></td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>2</td><td className="px-4 py-3 text-center">{t("reports_vat_box2_purch")}</td><td className="px-4 py-3 f-mono text-app-text-subtle w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>3</td><td className="px-4 py-3 text-center">{t("reports_vat_box3_purch")}</td><td className="px-4 py-3 f-mono text-app-text-subtle w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>4</td><td className="px-4 py-3 text-center">{t("reports_vat_box4_purch")}</td><td className="px-4 py-3 f-mono text-app-text-subtle w-56" style={{ textAlign: "center" }}>0.00</td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr><td className="px-4 py-3 f-mono w-10" style={{ textAlign: "center" }}>5</td><td className="px-4 py-3 text-center">{t("reports_vat_box5_purch")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(purchBox5Exempt)} t={t} /></td><td className="px-4 py-3 f-mono text-app-text-subtle w-40" style={{ textAlign: "center" }}>0.00</td></tr>
-                  <tr className="bg-app-bg font-semibold"><td className="px-4 py-3 text-center" colSpan={2}>{t("reports_vat_totalPurchases")} / {t("reports_vat_totalInputVat")}</td><td className="px-4 py-3 w-56 text-center"><CopyableNumber value={round2(totalPurchasesValue)} t={t} /></td><td className="px-4 py-3 w-40 text-center"><CopyableNumber value={round2(totalInputVat)} t={t} /></td></tr>
+                  <tr><td className="whitespace-nowrap px-4 py-3 f-mono text-center">1</td><td className="whitespace-nowrap px-4 py-3 text-center">{t("reports_vat_box1_purch")}</td><td className="whitespace-nowrap px-4 py-3 text-center"><CopyableNumber value={round2(purchBox1Taxable)} t={t} /></td><td className="whitespace-nowrap px-4 py-3 text-center"><CopyableNumber value={round2(purchBox1Vat)} t={t} /></td></tr>
+                  <tr><td className="whitespace-nowrap px-4 py-3 f-mono text-center">2</td><td className="whitespace-nowrap px-4 py-3 text-center">{t("reports_vat_box2_purch")}</td><td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-subtle text-center">0.00</td><td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-subtle text-center">0.00</td></tr>
+                  <tr><td className="whitespace-nowrap px-4 py-3 f-mono text-center">3</td><td className="whitespace-nowrap px-4 py-3 text-center">{t("reports_vat_box3_purch")}</td><td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-subtle text-center">0.00</td><td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-subtle text-center">0.00</td></tr>
+                  <tr><td className="whitespace-nowrap px-4 py-3 f-mono text-center">4</td><td className="whitespace-nowrap px-4 py-3 text-center">{t("reports_vat_box4_purch")}</td><td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-subtle text-center">0.00</td><td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-subtle text-center">0.00</td></tr>
+                  <tr><td className="whitespace-nowrap px-4 py-3 f-mono text-center">5</td><td className="whitespace-nowrap px-4 py-3 text-center">{t("reports_vat_box5_purch")}</td><td className="whitespace-nowrap px-4 py-3 text-center"><CopyableNumber value={round2(purchBox5Exempt)} t={t} /></td><td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-subtle text-center">0.00</td></tr>
+                  <tr className="bg-app-bg font-semibold"><td className="whitespace-nowrap px-4 py-3 text-center" colSpan={2}>{t("reports_vat_totalPurchases")} / {t("reports_vat_totalInputVat")}</td><td className="whitespace-nowrap px-4 py-3 text-center"><CopyableNumber value={round2(totalPurchasesValue)} t={t} /></td><td className="whitespace-nowrap px-4 py-3 text-center"><CopyableNumber value={round2(totalInputVat)} t={t} /></td></tr>
                 </tbody>
               </table>
               <div className="border-t border-app-border px-4 py-2 text-[11px] text-app-text-subtle">{t("reports_vat_notTracked")}</div>
