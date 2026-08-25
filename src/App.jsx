@@ -7444,10 +7444,13 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   };
 
   function LandingPage(props) {
-  const { setCurrentPage, showContact, setShowContact,
+  const { navigate, showContact, setShowContact,
     contactName, setContactName, contactMobile, setContactMobile, contactEmail, setContactEmail,
     contactType, setContactType, contactMessage, setContactMessage, contactSent, submitContact,
-    lang, setLang, onOpenTerms } = props;
+    lang, onOpenTerms } = props;
+  const goLogin = (e) => { e.preventDefault(); navigate('login', '/login'); };
+  const goSignup = (e) => { e.preventDefault(); navigate('signup', '/signup'); };
+  const goLang = (l) => (e) => { e.preventDefault(); navigate('landing', l === 'en' ? '/en' : '/'); };
   // Anti-bot: `website` is a honeypot a real visitor never sees or fills
   // (hidden below); `formStartedAtRef` marks when the modal actually
   // opened, so the server can reject a submit that arrives faster than any
@@ -7530,18 +7533,18 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
               secondary to the one primary CTA per the approved nav spec. */}
           <div className="flex items-center gap-4 shrink-0">
             <div className="hidden sm:flex items-center gap-1 rounded-full border border-slate-200 p-1">
-              <button onClick={() => setLang('ar')} className={`px-3 py-1 rounded-full text-xs font-semibold transition ${lang === 'ar' ? 'bg-brand-500 text-white' : 'text-landing-ink-muted hover:text-landing-ink'}`}>عربي</button>
-              <button onClick={() => setLang('en')} className={`px-3 py-1 rounded-full text-xs font-semibold transition ${lang === 'en' ? 'bg-brand-500 text-white' : 'text-landing-ink-muted hover:text-landing-ink'}`}>EN</button>
+              <button onClick={goLang('ar')} className={`px-3 py-1 rounded-full text-xs font-semibold transition ${lang === 'ar' ? 'bg-brand-500 text-white' : 'text-landing-ink-muted hover:text-landing-ink'}`}>عربي</button>
+              <button onClick={goLang('en')} className={`px-3 py-1 rounded-full text-xs font-semibold transition ${lang === 'en' ? 'bg-brand-500 text-white' : 'text-landing-ink-muted hover:text-landing-ink'}`}>EN</button>
             </div>
             <button onClick={() => setShowContact(true)} className="hidden md:inline text-sm text-landing-ink-muted hover:text-landing-ink font-medium transition">
               {t.navContact}
             </button>
-            <button onClick={() => setCurrentPage('login')} className="hidden md:inline text-sm text-landing-ink-muted hover:text-landing-ink font-medium transition">
+            <a href="/login" onClick={goLogin} className="hidden md:inline text-sm text-landing-ink-muted hover:text-landing-ink font-medium transition">
               {t.navLogin}
-            </button>
-            <button onClick={() => setCurrentPage('signup')} className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 font-semibold text-sm transition text-white shadow-app-sm">
+            </a>
+            <a href="/signup" onClick={goSignup} className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 font-semibold text-sm transition text-white shadow-app-sm">
               {t.ctaStart}
-            </button>
+            </a>
           </div>
         </div>
       </nav>
@@ -7561,9 +7564,9 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
             <p className="text-base text-brand-600 font-medium">{t.heroSupport}</p>
 
             <div className="flex gap-4 justify-center lg:justify-start pt-2 flex-wrap">
-              <button onClick={() => setCurrentPage('signup')} className="px-8 py-3.5 rounded-lg bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 font-semibold transition text-white shadow-app-md">
+              <a href="/signup" onClick={goSignup} className="px-8 py-3.5 rounded-lg bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 font-semibold transition text-white shadow-app-md inline-block">
                 {t.ctaStart}
-              </button>
+              </a>
               <button onClick={() => setShowContact(true)} className="px-8 py-3.5 rounded-lg border-2 border-brand-400 text-brand-600 hover:bg-brand-50 font-semibold transition">
                 {t.ctaDemo}
               </button>
@@ -7657,9 +7660,9 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
             <h2 className="text-2xl md:text-3xl font-bold">{t.midCtaTitle}</h2>
             <p className="text-brand-50">{t.midCtaDesc}</p>
             <div className="flex gap-4 justify-center pt-2 flex-wrap">
-              <button onClick={() => setCurrentPage('signup')} className="px-8 py-3 rounded-lg bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 font-semibold transition text-white">
+              <a href="/signup" onClick={goSignup} className="px-8 py-3 rounded-lg bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 font-semibold transition text-white inline-block">
                 {t.ctaStart}
-              </button>
+              </a>
               <button onClick={() => setShowContact(true)} className="px-8 py-3 rounded-lg border-2 border-white/70 text-white hover:bg-white/10 font-semibold transition">
                 {t.ctaDemo}
               </button>
@@ -7786,9 +7789,9 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
             <h2 className="text-2xl md:text-3xl font-bold">{t.finalCtaTitle}</h2>
             <p className="text-brand-50 max-w-xl mx-auto">{t.finalCtaDesc}</p>
             <div className="flex gap-4 justify-center pt-2 flex-wrap">
-              <button onClick={() => setCurrentPage('signup')} className="px-8 py-3.5 rounded-lg bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 font-semibold transition text-white">
+              <a href="/signup" onClick={goSignup} className="px-8 py-3.5 rounded-lg bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 font-semibold transition text-white inline-block">
                 {t.ctaStart}
-              </button>
+              </a>
               <button onClick={() => setShowContact(true)} className="px-8 py-3.5 rounded-lg border-2 border-white/70 text-white hover:bg-white/10 font-semibold transition">
                 {t.ctaDemo}
               </button>
@@ -7804,9 +7807,9 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
         <div className="max-w-4xl mx-auto px-6 py-14 text-center space-y-6">
           <div className="space-y-4">
             <h3 className="text-xl font-bold text-white">{t.footerCta}</h3>
-            <button onClick={() => setCurrentPage('signup')} className="px-7 py-2.5 rounded-lg bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 font-semibold transition text-white inline-block">
+            <a href="/signup" onClick={goSignup} className="px-7 py-2.5 rounded-lg bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 font-semibold transition text-white inline-block">
               {t.ctaStart}
-            </button>
+            </a>
           </div>
           <div className="flex items-center justify-center gap-2 pt-4">
             <img src={LOGO_DATA_URI} alt={t.brand} className="w-8 h-8 rounded-lg object-contain" />
@@ -7816,12 +7819,12 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
             <button onClick={() => scrollTo('features')} className="hover:text-white transition">{t.navFeatures}</button>
             <button onClick={() => scrollTo('how-it-works')} className="hover:text-white transition">{t.navHow}</button>
             <button onClick={() => scrollTo('faq')} className="hover:text-white transition">{t.navFaq}</button>
-            <button onClick={() => onOpenTerms()} className="hover:text-white transition">
+            <a href="/terms" onClick={(e) => { e.preventDefault(); onOpenTerms(); }} className="hover:text-white transition">
               {lang === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions'}
-            </button>
-            <button onClick={() => onOpenTerms('privacy')} className="hover:text-white transition">
+            </a>
+            <a href="/privacy" onClick={(e) => { e.preventDefault(); onOpenTerms('privacy'); }} className="hover:text-white transition">
               {lang === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy'}
-            </button>
+            </a>
           </div>
           <p className="text-xs text-gray-500 pt-2">© {new Date().getFullYear()} {t.brand} | {t.footerRights}</p>
         </div>
@@ -7864,12 +7867,17 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
                     <label className="block text-landing-ink text-sm font-semibold mb-2">{t.contactMessage}</label>
                     <textarea value={contactMessage} onChange={(e) => setContactMessage(e.target.value)} rows={3} className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-landing-ink placeholder-slate-400 focus:border-brand-400 outline-none transition" />
                   </div>
-                  {/* Honeypot — invisible to a real visitor (off-screen, not display:none,
-                      since some bots skip fields display:none hides), never tab-reachable. */}
+                  {/* Honeypot — invisible to a real visitor (clipped to 0×0, not
+                      display:none, since some bots skip fields display:none hides),
+                      never tab-reachable. Clipped in place rather than pushed off
+                      with a large negative offset — that used to blow up this
+                      page's scrollWidth by ~9999px whenever the contact modal was
+                      open, since Chrome counts a transformed/offset box's ink
+                      overflow toward the document's scrollable area. */}
                   <input
                     type="text" value={contactWebsite} onChange={(e) => setContactWebsite(e.target.value)}
                     autoComplete="off" tabIndex={-1} aria-hidden="true"
-                    style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+                    style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0, opacity: 0 }}
                   />
                   <button onClick={() => submitContact({ website: contactWebsite, formStartedAt: formStartedAtRef.current })} className="w-full bg-gradient-to-r from-accent-400 to-accent-600 hover:from-accent-500 hover:to-accent-600 text-white font-semibold py-3 rounded-lg transition">
                     {t.contactSend}
@@ -7886,14 +7894,14 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
 
 
   function LoginPage(props) {
-  const { setCurrentPage, showPassword, setShowPassword, loginEmail, setLoginEmail,
+  const { navigate, showPassword, setShowPassword, loginEmail, setLoginEmail,
     loginPassword, setLoginPassword, handleLogin, loginError, loginLoading } = props;
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
       <div className="absolute top-6 right-6">
-        <button onClick={() => setCurrentPage('landing')} className="px-4 py-2 text-gray-300 hover:text-white transition">
+        <a href="/" onClick={(e) => { e.preventDefault(); navigate('landing', '/'); }} className="px-4 py-2 text-gray-300 hover:text-white transition">
           ← العودة
-        </button>
+        </a>
       </div>
 
       <div className="w-full max-w-md">
@@ -7923,7 +7931,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
           </div>
 
           <div className="text-left mb-4 -mt-2">
-            <button onClick={() => setCurrentPage('forgotPassword')} className="text-cyan-400 hover:text-cyan-300 text-xs">نسيت كلمة المرور؟</button>
+            <a href="/forgot-password" onClick={(e) => { e.preventDefault(); navigate('forgotPassword', '/forgot-password'); }} className="text-cyan-400 hover:text-cyan-300 text-xs">نسيت كلمة المرور؟</a>
           </div>
 
           {loginError && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{loginError}</div>}
@@ -7933,7 +7941,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
           </button>
 
           <p className="text-center text-gray-400 text-sm">
-            ليس لديك حساب؟ <button onClick={() => setCurrentPage('signup')} className="text-cyan-400 hover:text-cyan-300">إنشاء حساب</button>
+            ليس لديك حساب؟ <a href="/signup" onClick={(e) => { e.preventDefault(); navigate('signup', '/signup'); }} className="text-cyan-400 hover:text-cyan-300">إنشاء حساب</a>
           </p>
         </div>
       </div>
@@ -7946,7 +7954,8 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
 // onAuthStateChange picks up as a PASSWORD_RECOVERY event and routes to
 // ResetPasswordPage). Self-contained: reads/writes nothing from LaundryPOS's
 // own state, just `auth` directly, same as LandingPage/LoginPage.
-function ForgotPasswordPage({ setCurrentPage }) {
+function ForgotPasswordPage({ navigate }) {
+  const goLogin = (e) => { e.preventDefault(); navigate('login', '/login'); };
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -7974,7 +7983,7 @@ function ForgotPasswordPage({ setCurrentPage }) {
           {sent ? (
             <>
               <p className="text-gray-400 text-center text-sm mb-8">تم إرسال رابط استرجاع كلمة المرور لبريدك — افتحه من نفس الجهاز اللي بتحط فيه كلمة المرور الجديدة.</p>
-              <button onClick={() => setCurrentPage('login')} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 rounded-lg transition">رجوع لتسجيل الدخول</button>
+              <a href="/login" onClick={goLogin} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 rounded-lg transition inline-block text-center">رجوع لتسجيل الدخول</a>
             </>
           ) : (
             <>
@@ -7988,7 +7997,7 @@ function ForgotPasswordPage({ setCurrentPage }) {
                 {loading ? 'جارٍ الإرسال...' : 'إرسال رابط الاسترجاع'}
               </button>
               <p className="text-center text-gray-400 text-sm">
-                <button onClick={() => setCurrentPage('login')} className="text-cyan-400 hover:text-cyan-300">رجوع لتسجيل الدخول</button>
+                <a href="/login" onClick={goLogin} className="text-cyan-400 hover:text-cyan-300">رجوع لتسجيل الدخول</a>
               </p>
             </>
           )}
@@ -8148,7 +8157,7 @@ function EmailVerificationPage({ email, onVerified, onBack }) {
 }
 
 function SignupPage(props) {
-  const { setCurrentPage, signupShop, setSignupShop, signupEmail, setSignupEmail,
+  const { navigate, signupShop, setSignupShop, signupEmail, setSignupEmail,
     signupMobile, setSignupMobile, signupAddress, setSignupAddress, signupPassword, setSignupPassword,
     signupAgree, setSignupAgree, handleSignup, signupError, signupLoading, onOpenTerms } = props;
   // Same honeypot + minimum-fill-time anti-bot pattern as the landing
@@ -8159,9 +8168,9 @@ function SignupPage(props) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
       <div className="absolute top-6 right-6">
-        <button onClick={() => setCurrentPage('landing')} className="px-4 py-2 text-gray-300 hover:text-white transition">
+        <a href="/" onClick={(e) => { e.preventDefault(); navigate('landing', '/'); }} className="px-4 py-2 text-gray-300 hover:text-white transition">
           ← العودة
-        </button>
+        </a>
       </div>
 
       <div className="w-full max-w-md">
@@ -8209,14 +8218,14 @@ function SignupPage(props) {
           <input
             type="text" value={signupWebsite} onChange={(e) => setSignupWebsite(e.target.value)}
             autoComplete="off" tabIndex={-1} aria-hidden="true"
-            style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+            style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0, opacity: 0 }}
           />
           <button onClick={() => handleSignup({ website: signupWebsite, formStartedAt: formStartedAtRef.current })} disabled={signupLoading || !signupAgree} className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-6">
             {signupLoading ? 'جارٍ الإنشاء...' : 'إنشاء الحساب'}
           </button>
 
           <p className="text-center text-gray-400 text-sm">
-            لديك حساب؟ <button onClick={() => setCurrentPage('login')} className="text-cyan-400 hover:text-cyan-300">دخول</button>
+            لديك حساب؟ <a href="/login" onClick={(e) => { e.preventDefault(); navigate('login', '/login'); }} className="text-cyan-400 hover:text-cyan-300">دخول</a>
           </p>
         </div>
       </div>
@@ -8374,6 +8383,8 @@ function TermsPage({ onBack, scrollTarget }) {
             <p>معلومات حسابك الأساسية (اسمك ورقمك) ستبقى محفوظة آمنة لدينا بشكل دائم. هذا يضمن أمانك ويساعدنا في الاحتفاظ بسجلات موثوقة.</p>
             <h3 className="font-semibold text-white mt-3 mb-1">6.7 الحماية من البوتات (Cloudflare Turnstile)</h3>
             <p>تستخدم منصة رغوة خدمة Cloudflare Turnstile للتحقق من أن الزوار أشخاص حقيقيون وحماية النظام من محاولات التسجيل الوهمية والاختراق، دون إزعاجك بأي اختبار مرئي في الغالب. باستخدامك للمنصة، فإنك تقر باطلاعك على سياسة خصوصية وشروط استخدام Cloudflare الخاصة بهذه الخدمة.</p>
+            <h3 className="font-semibold text-white mt-3 mb-1">6.8 مراقبة الأخطاء التقنية (Sentry)</h3>
+            <p>تستخدم منصة رغوة خدمة Sentry لرصد الأخطاء التقنية غير المتوقعة وتشخيصها بهدف إصلاحها بسرعة والحفاظ على استقرار النظام. قد تصل هذه الخدمة إلى بيانات تقنية محدودة عند حدوث خطأ (مثل نوع الخطأ ومساره داخل الكود)، وليست مخصصة لجمع بيانات شخصية أو تسويقية.</p>
           </section>
 
           <section>
@@ -8464,15 +8475,68 @@ function TermsPage({ onBack, scrollTarget }) {
           </section>
 
           <p className="text-center text-white font-semibold pt-4">شكراً لاستخدامك منصة رغوة! 🙏</p>
-          <p className="text-center text-gray-500 text-xs">آخر تحديث: 22/08/2026</p>
+          <p className="text-center text-gray-500 text-xs">آخر تحديث: 25/08/2026</p>
         </div>
       </div>
     </div>
   );
 }
 
+// Public, crawlable paths → internal page state. Scoped to the
+// unauthenticated marketing/auth flow only — dashboard/admin/pending stay
+// pure client state since they require an active session and have no SEO
+// value of their own.
+const PATH_PAGE_MAP = {
+  '/': 'landing', '/en': 'landing',
+  '/login': 'login', '/signup': 'signup',
+  '/forgot-password': 'forgotPassword',
+  '/terms': 'terms', '/privacy': 'terms',
+};
+const pageForPath = (path) => PATH_PAGE_MAP[path] || 'landing';
+const PAGE_TO_PATH = {
+  landing: '/', login: '/login', signup: '/signup', forgotPassword: '/forgot-password',
+};
+
+const SITE_ORIGIN = 'https://www.ragwapos.com';
+// Per-page <title>/description/canonical/robots, keyed the same way
+// PATH_PAGE_MAP resolves a pathname to a page — used to keep the document
+// head in sync with whatever `currentPage` is actually showing, since this
+// is a pure client-rendered SPA with one static index.html for every route.
+// /login and /forgot-password are noindex: real utility pages with no
+// unique search intent behind them (nobody searches "ragwa login"), so
+// indexing them just dilutes crawl budget / looks like thin content.
+function getPageMeta(page, termsScrollTarget, siteLang) {
+  if (page === 'landing' && siteLang === 'en') {
+    return { title: 'Ragwa | Laundry Shop POS System', description: 'Ragwa keeps your laundry shop organized from intake to delivery. A fast checkout, per-item tracking, e-invoices, and drivers you can always see — all in one cloud system built for Saudi laundry shops.', path: '/en', robots: null };
+  }
+  if (page === 'terms' && termsScrollTarget === 'privacy') {
+    return { title: 'سياسة الخصوصية | رغوة', description: 'كيف تجمع منصة رغوة بيانات المستخدمين وتحميها وتستخدمها.', path: '/privacy', robots: null };
+  }
+  switch (page) {
+    case 'login': return { title: 'تسجيل الدخول | رغوة', description: 'سجّل دخولك إلى لوحة تحكم رغوة لإدارة مغسلتك.', path: '/login', robots: 'noindex,follow' };
+    case 'signup': return { title: 'إنشاء حساب | رغوة', description: 'أنشئ حساب رغوة مجاناً وابدأ إدارة مغسلتك اليوم.', path: '/signup', robots: null };
+    case 'forgotPassword': return { title: 'استعادة كلمة المرور | رغوة', description: 'استعد كلمة مرور حسابك في رغوة.', path: '/forgot-password', robots: 'noindex,follow' };
+    case 'terms': return { title: 'الشروط والأحكام | رغوة', description: 'الشروط والأحكام الخاصة باستخدام منصة رغوة.', path: '/terms', robots: null };
+    default: return { title: 'رغوة | نظام نقطة بيع لمغاسل الملابس', description: 'رغوة: نظام نقطة بيع لمغاسل الملابس يجمع البيع، تتبع الطلبات، الاشتراكات، والدفع الآجل في مكان واحد. جرّب رغوة مجاناً.', path: '/', robots: null };
+  }
+}
+function setMetaTag(selector, create, attrs) {
+  let el = document.head.querySelector(selector);
+  if (!el) { el = create(); document.head.appendChild(el); }
+  Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, v));
+  return el;
+}
+function removeMetaTag(selector) {
+  document.head.querySelectorAll(selector).forEach((el) => el.remove());
+}
+
 const LaundryPOS = () => {
-  const [currentPage, setCurrentPage] = useState('landing');
+  // Real <a href> anchors point at these paths (crawlable, shareable,
+  // right-click-able), so a direct visit or a page refresh has to land on
+  // the matching page instead of always resetting to the landing page —
+  // checked once at mount via lazy init, and re-derived on browser
+  // back/forward via the popstate listener below.
+  const [currentPage, setCurrentPage] = useState(() => pageForPath(window.location.pathname));
   // Where to send the user back to from the terms page — it can be reached
   // from more than one place (signup checkbox, landing page footer), and a
   // plain setCurrentPage('signup') on the way back would strand a visitor
@@ -8481,12 +8545,79 @@ const LaundryPOS = () => {
   // Optional section id (e.g. "privacy") to scroll TermsPage to on open —
   // lets the footer's "Privacy Policy" link jump straight to the privacy
   // clause instead of duplicating that content on a separate page.
-  const [termsScrollTarget, setTermsScrollTarget] = useState(null);
-  const openTerms = (scrollTarget) => { setTermsReferrer(currentPage); setTermsScrollTarget(scrollTarget || null); setCurrentPage('terms'); };
+  const [termsScrollTarget, setTermsScrollTarget] = useState(() =>
+    window.location.pathname === '/privacy' ? 'privacy' : null
+  );
   // Chosen once on the landing page (before any login/signup) and carried
   // through as the dashboard's starting language, so a visitor who picked
   // Arabic there doesn't land on an English dashboard after signing up.
-  const [siteLang, setSiteLang] = useState('ar');
+  // '/en' is the only path with real translated content today, so it's the
+  // only one that seeds this to 'en'.
+  const [siteLang, setSiteLang] = useState(() => (window.location.pathname === '/en' ? 'en' : 'ar'));
+  // Central navigation: updates the URL bar (so refresh/share/back-forward
+  // all work) and the page state together. Every internal nav control for
+  // the five public pages routes through this instead of calling
+  // setCurrentPage directly, so the URL never drifts out of sync with what's
+  // actually rendered.
+  const navigate = (page, path) => {
+    window.history.pushState({}, '', path);
+    setCurrentPage(page);
+    // '/' and '/en' are the two language variants of the landing page —
+    // keep siteLang in lockstep with whichever one we just navigated to.
+    if (path === '/en') setSiteLang('en');
+    else if (path === '/') setSiteLang('ar');
+  };
+  const openTerms = (scrollTarget) => {
+    setTermsReferrer(currentPage);
+    setTermsScrollTarget(scrollTarget || null);
+    navigate('terms', scrollTarget === 'privacy' ? '/privacy' : '/terms');
+  };
+  const closeTerms = () => {
+    const path = termsReferrer === 'landing' ? (siteLang === 'en' ? '/en' : '/') : (PAGE_TO_PATH[termsReferrer] || '/');
+    navigate(termsReferrer, path);
+  };
+  // Browser back/forward doesn't call navigate() (pushState doesn't fire
+  // popstate), so it needs its own re-derivation straight from the URL —
+  // same source of truth as the initial-mount lazy inits above.
+  useEffect(() => {
+    const onPopState = () => {
+      const path = window.location.pathname;
+      setCurrentPage(pageForPath(path));
+      setTermsScrollTarget(path === '/privacy' ? 'privacy' : null);
+      if (path === '/en') setSiteLang('en'); else if (path === '/') setSiteLang((l) => (l === 'en' ? 'ar' : l));
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+  // Keeps <title>/description/canonical/robots/hreflang/<html lang> in sync
+  // with whatever page is actually showing — there's one static index.html
+  // shared by every route, so without this every public URL would report
+  // the homepage's metadata regardless of what a crawler or a shared link
+  // preview actually rendered.
+  useEffect(() => {
+    const meta = getPageMeta(currentPage, termsScrollTarget, siteLang);
+    const url = `${SITE_ORIGIN}${meta.path}`;
+    document.title = meta.title;
+    setMetaTag('meta[name="description"]', () => document.createElement('meta'), { name: 'description', content: meta.description });
+    setMetaTag('link[rel="canonical"]', () => document.createElement('link'), { rel: 'canonical', href: url });
+    setMetaTag('meta[property="og:title"]', () => document.createElement('meta'), { property: 'og:title', content: meta.title });
+    setMetaTag('meta[property="og:description"]', () => document.createElement('meta'), { property: 'og:description', content: meta.description });
+    setMetaTag('meta[property="og:url"]', () => document.createElement('meta'), { property: 'og:url', content: url });
+    if (meta.robots) setMetaTag('meta[name="robots"]', () => document.createElement('meta'), { name: 'robots', content: meta.robots });
+    else removeMetaTag('meta[name="robots"]');
+    // Only the landing page has two real language variants today.
+    if (currentPage === 'landing') {
+      setMetaTag('link[hreflang="ar"]', () => document.createElement('link'), { rel: 'alternate', hreflang: 'ar', href: `${SITE_ORIGIN}/` });
+      setMetaTag('link[hreflang="en"]', () => document.createElement('link'), { rel: 'alternate', hreflang: 'en', href: `${SITE_ORIGIN}/en` });
+      setMetaTag('link[hreflang="x-default"]', () => document.createElement('link'), { rel: 'alternate', hreflang: 'x-default', href: `${SITE_ORIGIN}/` });
+      document.documentElement.lang = siteLang;
+      document.documentElement.dir = siteLang === 'en' ? 'ltr' : 'rtl';
+    } else {
+      removeMetaTag('link[hreflang]');
+      document.documentElement.lang = 'ar';
+      document.documentElement.dir = 'rtl';
+    }
+  }, [currentPage, termsScrollTarget, siteLang]);
   const [showPassword, setShowPassword] = useState(false);
   const [showWorkflow, setShowWorkflow] = useState(false);
   const [authResolved, setAuthResolved] = useState(false);
@@ -8641,6 +8772,14 @@ const LaundryPOS = () => {
         setAuthResolved(true);
         return;
       }
+      // A resolved session always wins over whatever public path the URL
+      // bar happens to still show (e.g. /login right after signing in) —
+      // clear it so it doesn't sit there stale while the private app
+      // renders. Doesn't push a path of its own for dashboard/admin/pending
+      // since those aren't given dedicated public URLs.
+      if (['/login', '/signup', '/forgot-password'].includes(window.location.pathname)) {
+        window.history.pushState({}, '', '/');
+      }
       try {
         const dest = await resolveDestination(user);
         if (dest.page === 'verify') {
@@ -8793,7 +8932,7 @@ const LaundryPOS = () => {
   const handleLogout = async () => {
     const { error: err } = await auth.signOut();
     if (err) console.error(err);
-    setCurrentPage('landing');
+    navigate('landing', '/');
     setTenantId(null);
     setLoginEmail(''); setLoginPassword(''); setLoginError('');
   };
@@ -8882,7 +9021,7 @@ const LaundryPOS = () => {
     </div>
   ) : currentPage === 'landing' ? (
     <LandingPage
-      setCurrentPage={setCurrentPage} showWorkflow={showWorkflow} setShowWorkflow={setShowWorkflow}
+      navigate={navigate} showWorkflow={showWorkflow} setShowWorkflow={setShowWorkflow}
       showContact={showContact} setShowContact={setShowContact}
       contactName={contactName} setContactName={setContactName}
       contactMobile={contactMobile} setContactMobile={setContactMobile}
@@ -8890,24 +9029,24 @@ const LaundryPOS = () => {
       contactType={contactType} setContactType={setContactType}
       contactMessage={contactMessage} setContactMessage={setContactMessage}
       contactSent={contactSent} submitContact={submitContact}
-      lang={siteLang} setLang={setSiteLang} onOpenTerms={openTerms}
+      lang={siteLang} onOpenTerms={openTerms}
     />
   ) : currentPage === 'login' ? (
     <LoginPage
-      setCurrentPage={setCurrentPage} showPassword={showPassword} setShowPassword={setShowPassword}
+      navigate={navigate} showPassword={showPassword} setShowPassword={setShowPassword}
       loginEmail={loginEmail} setLoginEmail={setLoginEmail}
       loginPassword={loginPassword} setLoginPassword={setLoginPassword}
       handleLogin={handleLogin} loginError={loginError} loginLoading={loginLoading}
     />
   ) : currentPage === 'forgotPassword' ? (
-    <ForgotPasswordPage setCurrentPage={setCurrentPage} />
+    <ForgotPasswordPage navigate={navigate} />
   ) : currentPage === 'resetPassword' ? (
     <ResetPasswordPage onDone={async () => { await auth.signOut(); setCurrentPage('login'); }} />
   ) : currentPage === 'terms' ? (
-    <TermsPage onBack={() => setCurrentPage(termsReferrer)} scrollTarget={termsScrollTarget} />
+    <TermsPage onBack={closeTerms} scrollTarget={termsScrollTarget} />
   ) : currentPage === 'signup' ? (
     <SignupPage
-      setCurrentPage={setCurrentPage} signupShop={signupShop} setSignupShop={setSignupShop}
+      navigate={navigate} signupShop={signupShop} setSignupShop={setSignupShop}
       signupEmail={signupEmail} setSignupEmail={setSignupEmail}
       signupMobile={signupMobile} setSignupMobile={setSignupMobile}
       signupAddress={signupAddress} setSignupAddress={setSignupAddress}
