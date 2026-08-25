@@ -5,7 +5,8 @@ import {
   Banknote, Percent, Clock, Mail, AlertCircle, CheckCircle2, Circle, Upload,
   ReceiptText, Receipt, Building2, FileText, Settings, Globe, Lock, Pencil, Paperclip,
   MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin, Home, SplitSquareHorizontal, Printer, StickyNote,
-  Phone, User, Link2, FlaskConical, KeyRound, LogOut, XCircle, Download
+  Phone, User, Link2, FlaskConical, KeyRound, LogOut, XCircle, Download,
+  SlidersHorizontal, ChevronDown
 } from "lucide-react";
 import QRCode from "qrcode";
 // auth/db here are supabase.auth / the Supabase client (see src/supabase.js).
@@ -1186,7 +1187,7 @@ const DICT = {
     promoModal_valueError: "Enter a value greater than 0 (percentage discounts can't exceed 100%).",
 
     reports_title: "Reports", reports_subtitle: "Comprehensive operational and financial reports for the laundry.",
-    reports_fromDate: "From Date", reports_toDate: "To Date", reports_exportCsv: "Export CSV", reports_print: "Print",
+    reports_fromDate: "From Date", reports_toDate: "To Date", reports_exportCsv: "Export CSV", reports_print: "Print", reports_filtersToggle: "Filters & Export",
     reports_table_item: "Item",
     reports_salesTab: "Sales Ledger", reports_procurementTab: "Procurement Ledger",
     reports_kpi_invoices: "Invoices", reports_kpi_grossSales: "Gross Sales", reports_kpi_vatCollected: "VAT Collected",
@@ -1451,7 +1452,7 @@ const DICT = {
     promoModal_valueError: "أدخل قيمة أكبر من صفر (الخصم كنسبة مئوية ما يتجاوز 100%).",
 
     reports_title: "التقارير", reports_subtitle: "تقارير تشغيلية ومالية شاملة للمغسلة.",
-    reports_fromDate: "من تاريخ", reports_toDate: "إلى تاريخ", reports_exportCsv: "تصدير CSV", reports_print: "طباعة",
+    reports_fromDate: "من تاريخ", reports_toDate: "إلى تاريخ", reports_exportCsv: "تصدير CSV", reports_print: "طباعة", reports_filtersToggle: "الفلاتر والتصدير",
     reports_table_item: "البند",
     reports_salesTab: "سجل المبيعات", reports_procurementTab: "سجل المشتريات",
     reports_kpi_invoices: "الفواتير", reports_kpi_grossSales: "إجمالي المبيعات", reports_kpi_vatCollected: "الضريبة المحصلة",
@@ -1716,7 +1717,7 @@ const DICT = {
     promoModal_valueError: "صفر سے بڑی ایک قیمت درج کریں (فیصد رعایت 100% سے زیادہ نہیں ہو سکتی)۔",
 
     reports_title: "رپورٹس", reports_subtitle: "لانڈری کے لیے جامع آپریشنل اور مالیاتی رپورٹس۔",
-    reports_fromDate: "تاریخ سے", reports_toDate: "تاریخ تک", reports_exportCsv: "CSV ایکسپورٹ کریں", reports_print: "پرنٹ",
+    reports_fromDate: "تاریخ سے", reports_toDate: "تاریخ تک", reports_exportCsv: "CSV ایکسپورٹ کریں", reports_print: "پرنٹ", reports_filtersToggle: "فلٹرز اور ایکسپورٹ",
     reports_table_item: "آئٹم",
     reports_salesTab: "سیلز رپورٹ", reports_procurementTab: "خریداری رپورٹ",
     reports_kpi_invoices: "آرڈرز", reports_kpi_grossSales: "کل فروخت", reports_kpi_vatCollected: "وصول شدہ ٹیکس",
@@ -3407,15 +3408,15 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
 
       {/* Two aggregate KPI tiles over the same customer.walletBalance/debt
           fields the table below renders — see the useMemo sums above. */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+      <div className="-mx-4 flex gap-3 overflow-x-auto scrollbar-none snap-x snap-mandatory px-4 pb-1 mb-6 sm:mx-0 sm:grid sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-2">
+        <div className="w-[150px] shrink-0 snap-start rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs sm:w-auto sm:shrink">
           <div className="flex items-center justify-between">
             <span className="text-[13px] font-semibold text-app-text-muted">{t("customers_totalWallet")}</span>
             <div className="flex size-9 items-center justify-center rounded-lg bg-success-50 text-success-700"><Wallet size={18} /></div>
           </div>
           <div className="mt-3 text-2xl font-extrabold text-app-text">{sarCompact(totalWalletBalance)}</div>
         </div>
-        <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+        <div className="w-[150px] shrink-0 snap-start rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs sm:w-auto sm:shrink">
           <div className="flex items-center justify-between">
             <span className="text-[13px] font-semibold text-app-text-muted">{t("customers_totalDebt")}</span>
             <div className="flex size-9 items-center justify-center rounded-lg bg-warning-50 text-warning-700"><AlertCircle size={18} /></div>
@@ -3677,11 +3678,11 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
         </button>
       </div>
 
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="-mx-4 flex gap-3 overflow-x-auto scrollbar-none snap-x snap-mandatory px-4 pb-1 mb-6 sm:mx-0 sm:grid sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-3">
         {kpis.map((k) => {
           const Icon = k.icon;
           return (
-            <div key={k.label} className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+            <div key={k.label} className="w-[150px] shrink-0 snap-start rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs sm:w-auto sm:shrink">
               <div className="flex items-center justify-between">
                 <span className="text-[13px] font-semibold text-app-text-muted">{k.label}</span>
                 <div className={`flex size-9 items-center justify-center rounded-lg ${k.tint}`}><Icon size={16} /></div>
@@ -3804,7 +3805,7 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
 function PurchasesStatCard({ label, value, icon: Icon, tone }) {
   const tones = { info: "bg-info-50 text-info-700", warning: "bg-warning-50 text-warning-700" };
   return (
-    <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+    <div className="w-[150px] shrink-0 snap-start rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs sm:w-auto sm:shrink">
       <div className="flex items-center justify-between">
         <span className="text-[13px] font-semibold text-app-text-muted">{label}</span>
         {Icon && <div className={`flex size-9 items-center justify-center rounded-lg ${tones[tone] || ""}`}><Icon size={18} /></div>}
@@ -3994,7 +3995,7 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
 
       {tab === "purchases" ? (
         <div>
-          <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="-mx-4 flex gap-3 overflow-x-auto scrollbar-none snap-x snap-mandatory px-4 pb-1 mb-5 sm:mx-0 sm:grid sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-3">
             <PurchasesStatCard label={t("purchases_kpiDue")} value={sar(totalDue)} icon={Wallet} tone="warning" />
             <PurchasesStatCard label={t("purchases_kpiSuppliers")} value={suppliers.length} icon={Receipt} tone="info" />
             <PurchasesStatCard label={t("purchases_kpiCount")} value={purchases.length} />
@@ -4053,7 +4054,7 @@ function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchas
         </div>
       ) : (
         <div>
-          <div className="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="-mx-4 flex gap-3 overflow-x-auto scrollbar-none snap-x snap-mandatory px-4 pb-1 mb-5 sm:mx-0 sm:grid sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-3">
             <PurchasesStatCard label={t("expenses_kpiExempt")} value={sar(exemptTotal)} />
             <PurchasesStatCard label={t("expenses_kpiTaxable")} value={sar(taxableTotal)} icon={ReceiptText} tone="info" />
             <PurchasesStatCard label={t("expenses_kpiTotal")} value={sar(expensesTotal)} icon={Wallet} tone="warning" />
@@ -4263,7 +4264,7 @@ function PromotionsView({ promotions, addPromotion, updatePromotion }) {
         </div>
         <button onClick={() => setShowModal(true)} className="flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-500 px-3 py-2 text-sm font-medium text-white hover:bg-brand-600"><Plus size={15} /> {t("promotions_addDiscount")}</button>
       </div>
-      <div className="overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
+      <div className="hidden sm:block overflow-hidden rounded-xl border border-app-border bg-app-surface shadow-app-sm">
         <table className="w-full text-right text-[13px]">
           <thead className="bg-app-bg/60 text-xs font-semibold text-app-text-muted">
             <tr>
@@ -4307,6 +4308,47 @@ function PromotionsView({ promotions, addPromotion, updatePromotion }) {
             {promotions.length === 0 && <tr><td colSpan={8} className="px-4 py-10 text-center text-app-text-subtle">{t("promotions_empty")}</td></tr>}
           </tbody>
         </table>
+      </div>
+
+      <div className="flex flex-col gap-3 sm:hidden">
+        {promotions.map((p) => {
+          const status = promotionDisplayStatus(p);
+          const statusLabel = status === "scheduled" ? t("promotions_scheduled") : status === "expired" ? t("common_expired") : t("common_active");
+          return (
+            <div key={p.id} className="rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <span className="font-medium text-app-text truncate">{p.name}</span>
+                <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold ring-1 ring-inset ${PROMOTION_STATUS_TONE[status]}`}>
+                  <span className="size-1.5 rounded-full bg-current" />{statusLabel}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+                <div>
+                  <div className="text-xs text-app-text-subtle">{t("promotions_table_type")}</div>
+                  <div className="text-app-text">{p.isPercent ? t("promotions_typePercent") : t("promotions_typeFixed")}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-app-text-subtle">{t("promotions_table_coupon")}</div>
+                  <div className="f-mono text-app-text">{p.couponOn ? p.coupon : "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-app-text-subtle">{t("promotions_table_value")}</div>
+                  <div className="f-mono font-medium text-app-text">{p.isPercent ? `${p.value}%` : sar(p.value)}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-app-text-subtle">{t("promotions_table_start")}</div>
+                  <div className="f-mono text-app-text">{p.startDate ? fmtDate(p.startDate) : "—"}</div>
+                </div>
+                <div>
+                  <div className="text-xs text-app-text-subtle">{t("promotions_table_end")}</div>
+                  <div className="f-mono text-app-text">{p.endDate ? fmtDate(p.endDate) : "—"}</div>
+                </div>
+              </div>
+              <button onClick={() => setEditingPromo(p)} className="mt-3 w-full rounded-lg border border-app-border-strong px-3 py-2 text-sm font-medium text-app-text-muted hover:bg-app-bg"><Pencil size={12} className="inline mr-1" />{t("promotions_edit")}</button>
+            </div>
+          );
+        })}
+        {promotions.length === 0 && <div className="py-10 text-center text-app-text-subtle">{t("promotions_empty")}</div>}
       </div>
       {showModal && <PromotionModal promotions={promotions} onClose={() => setShowModal(false)} onSave={(p) => { addPromotion({ ...p, active: true }); setShowModal(false); }} />}
       {editingPromo && <PromotionModal promotions={promotions} editing={editingPromo} onClose={() => setEditingPromo(null)} onSave={(p) => { updatePromotion(editingPromo.id, p); setEditingPromo(null); }} />}
@@ -4356,6 +4398,14 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
   const { t } = useLang();
   const [tab, setTab] = useState("sales");
   const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+
+  // Each filter bar collapses behind its own "الفلاتر والتصدير" toggle on
+  // mobile only (sm:hidden button, sm:flex content) — one open flag per
+  // tab so switching tabs doesn't carry an open/closed state across them.
+  const [salesFiltersOpen, setSalesFiltersOpen] = useState(false);
+  const [procurementFiltersOpen, setProcurementFiltersOpen] = useState(false);
+  const [expensesFiltersOpen, setExpensesFiltersOpen] = useState(false);
+  const [plFiltersOpen, setPlFiltersOpen] = useState(false);
 
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
@@ -4514,8 +4564,12 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
     navy: "bg-navy-900/5 text-navy-900",
     danger: "bg-danger-50 text-danger-700",
   };
-  const kpiTile = (label, value, tone, icon) => (
-    <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+  // `mobileScroll` opts a tile into the fixed mobile width its parent's
+  // horizontal-scroll-row wrapper expects — only the sales/expenses tabs
+  // use that wrapper, so procurement/P&L tiles (still a plain wrapping
+  // grid on mobile) call this with the default false and stay unaffected.
+  const kpiTile = (label, value, tone, icon, mobileScroll = false) => (
+    <div className={`${mobileScroll ? "w-[150px] shrink-0 snap-start sm:w-auto sm:shrink " : ""}rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs`}>
       <div className="flex items-center justify-between">
         <span className="text-[13px] font-semibold text-app-text-muted">{label}</span>
         {icon && <div className={`flex size-9 items-center justify-center rounded-lg ${kpiTones[tone]}`}>{icon}</div>}
@@ -4548,14 +4602,18 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
 
       {tab === "sales" && (
         <>
-          <div className="mb-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {kpiTile(t("reports_kpi_outstandingDebt"), sar(debt), "warning")}
-            {kpiTile(t("reports_kpi_netRevenue"), sar(net), "success")}
-            {kpiTile(t("reports_kpi_vatCollected"), sar(vat), "info")}
-            {kpiTile(t("reports_kpi_grossSales"), sar(gross), "brand")}
-            {kpiTile(t("reports_kpi_invoices"), salesRows.length, "navy")}
+          <div className="-mx-4 flex gap-3 overflow-x-auto scrollbar-none snap-x snap-mandatory px-4 pb-1 mb-6 sm:mx-0 sm:grid sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-3 lg:grid-cols-5">
+            {kpiTile(t("reports_kpi_outstandingDebt"), sar(debt), "warning", null, true)}
+            {kpiTile(t("reports_kpi_netRevenue"), sar(net), "success", null, true)}
+            {kpiTile(t("reports_kpi_vatCollected"), sar(vat), "info", null, true)}
+            {kpiTile(t("reports_kpi_grossSales"), sar(gross), "brand", null, true)}
+            {kpiTile(t("reports_kpi_invoices"), salesRows.length, "navy", null, true)}
           </div>
-          <div className="mb-5 flex flex-wrap items-end gap-3">
+          <button onClick={() => setSalesFiltersOpen((v) => !v)} className="mb-3 flex w-full items-center justify-between gap-2 rounded-lg border border-app-border-strong bg-app-surface px-3.5 py-2.5 text-[13px] font-bold text-app-text sm:hidden">
+            <span className="flex items-center gap-2"><SlidersHorizontal className="size-4" />{t("reports_filtersToggle")}</span>
+            <ChevronDown className={`size-4 transition-transform ${salesFiltersOpen ? "rotate-180" : ""}`} />
+          </button>
+          <div className={`${salesFiltersOpen ? "flex" : "hidden"} mb-5 flex-wrap items-end gap-3 sm:flex`}>
             <div className="w-40">
               <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_fromDate")}</label>
               <input type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} className={fieldCls} />
@@ -4606,7 +4664,11 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
             {kpiTile(t("reports_kpi_inputVat"), sar(pVat), "info")}
             {kpiTile(t("reports_kpi_netCost"), sar(pNet), "brand")}
           </div>
-          <div className="mb-5 flex flex-wrap items-end gap-3">
+          <button onClick={() => setProcurementFiltersOpen((v) => !v)} className="mb-3 flex w-full items-center justify-between gap-2 rounded-lg border border-app-border-strong bg-app-surface px-3.5 py-2.5 text-[13px] font-bold text-app-text sm:hidden">
+            <span className="flex items-center gap-2"><SlidersHorizontal className="size-4" />{t("reports_filtersToggle")}</span>
+            <ChevronDown className={`size-4 transition-transform ${procurementFiltersOpen ? "rotate-180" : ""}`} />
+          </button>
+          <div className={`${procurementFiltersOpen ? "flex" : "hidden"} mb-5 flex-wrap items-end gap-3 sm:flex`}>
             <div className="w-40">
               <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_fromDate")}</label>
               <input type="date" value={purchStart} onChange={(e) => setPurchStart(e.target.value)} className={fieldCls} />
@@ -4659,13 +4721,17 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
 
       {tab === "expenses" && (
         <>
-          <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {kpiTile(t("reports_kpi_totalExpenses"), sar(eGross), "danger")}
-            {kpiTile(t("reports_kpi_expenseVat"), sar(eVat), "info")}
-            {kpiTile(t("reports_kpi_expenseNet"), sar(eNet), "brand")}
-            {kpiTile(t("reports_kpi_invoices"), filteredExpenses.length, "navy")}
+          <div className="-mx-4 flex gap-3 overflow-x-auto scrollbar-none snap-x snap-mandatory px-4 pb-1 mb-6 sm:mx-0 sm:grid sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-4">
+            {kpiTile(t("reports_kpi_totalExpenses"), sar(eGross), "danger", null, true)}
+            {kpiTile(t("reports_kpi_expenseVat"), sar(eVat), "info", null, true)}
+            {kpiTile(t("reports_kpi_expenseNet"), sar(eNet), "brand", null, true)}
+            {kpiTile(t("reports_kpi_invoices"), filteredExpenses.length, "navy", null, true)}
           </div>
-          <div className="mb-5 flex flex-wrap items-end gap-3">
+          <button onClick={() => setExpensesFiltersOpen((v) => !v)} className="mb-3 flex w-full items-center justify-between gap-2 rounded-lg border border-app-border-strong bg-app-surface px-3.5 py-2.5 text-[13px] font-bold text-app-text sm:hidden">
+            <span className="flex items-center gap-2"><SlidersHorizontal className="size-4" />{t("reports_filtersToggle")}</span>
+            <ChevronDown className={`size-4 transition-transform ${expensesFiltersOpen ? "rotate-180" : ""}`} />
+          </button>
+          <div className={`${expensesFiltersOpen ? "flex" : "hidden"} mb-5 flex-wrap items-end gap-3 sm:flex`}>
             <div className="w-40">
               <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_fromDate")}</label>
               <input type="date" value={expStart} onChange={(e) => setExpStart(e.target.value)} className={fieldCls} />
@@ -4714,7 +4780,11 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
 
       {tab === "pl" && (
         <>
-          <div className="mb-5 flex flex-wrap items-end gap-3">
+          <button onClick={() => setPlFiltersOpen((v) => !v)} className="mb-3 flex w-full items-center justify-between gap-2 rounded-lg border border-app-border-strong bg-app-surface px-3.5 py-2.5 text-[13px] font-bold text-app-text sm:hidden">
+            <span className="flex items-center gap-2"><SlidersHorizontal className="size-4" />{t("reports_filtersToggle")}</span>
+            <ChevronDown className={`size-4 transition-transform ${plFiltersOpen ? "rotate-180" : ""}`} />
+          </button>
+          <div className={`${plFiltersOpen ? "flex" : "hidden"} mb-5 flex-wrap items-end gap-3 sm:flex`}>
             <div className="w-40">
               <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_fromDate")}</label>
               <input type="datetime-local" value={plStart} onChange={(e) => setPlStart(e.target.value)} className={fieldCls} />
@@ -4768,17 +4838,6 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
             </div>
 
             <div className="mt-3 flex flex-wrap items-end gap-3">
-              <div className="w-28">
-                <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_vat_year")}</label>
-                <input type="number" value={vatYear} onChange={(e) => setVatYear(Number(e.target.value))} className={fieldCls} />
-              </div>
-              <div className="mr-auto flex gap-2">
-                <button onClick={() => window.print()} className={secondaryBtnCls}><Printer size={14} />{t("reports_vat_printPdf")}</button>
-                <button onClick={exportVatCsv} className={primaryBtnCls}><Download size={14} />{t("reports_vat_exportCsv")}</button>
-              </div>
-            </div>
-
-            <div className="mt-3 flex flex-wrap items-end gap-3">
               {vatMode === "quarterly" ? (
                 <div className="w-28">
                   <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_vat_quarter")}</label>
@@ -4794,6 +4853,15 @@ function ReportsView({ invoices, purchases, suppliers, categories, customers, ex
                   </select>
                 </div>
               )}
+              <div className="w-28">
+                <label className="mb-1 block text-xs font-semibold text-app-text-muted">{t("reports_vat_year")}</label>
+                <input type="number" value={vatYear} onChange={(e) => setVatYear(Number(e.target.value))} className={fieldCls} />
+              </div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap items-end gap-2">
+              <button onClick={() => window.print()} className={secondaryBtnCls}><Printer size={14} />{t("reports_vat_printPdf")}</button>
+              <button onClick={exportVatCsv} className={primaryBtnCls}><Download size={14} />{t("reports_vat_exportCsv")}</button>
             </div>
           </div>
 
@@ -5411,11 +5479,11 @@ function HomeDashboardView({ invoices, merchant, setTab }) {
         {t("home_welcomeBack")}{merchant?.name ? `, ${merchant.name}` : ""}
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="-mx-4 flex gap-3 overflow-x-auto scrollbar-none snap-x snap-mandatory px-4 pb-1 mb-6 sm:mx-0 sm:grid sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => {
           const Icon = k.icon;
           return (
-            <div key={k.label} className="rounded-xl border border-stone-200 bg-white p-5 shadow-sm">
+            <div key={k.label} className="w-[150px] shrink-0 snap-start rounded-xl border border-stone-200 bg-white p-5 shadow-sm sm:w-auto sm:shrink">
               <div className={`mb-3 flex h-10 w-10 items-center justify-center rounded-lg ${k.tint}`}><Icon size={18} /></div>
               <div className="f-display text-2xl font-bold text-slate-900">{k.value}</div>
               <div className="text-sm text-slate-500">{k.label}</div>
