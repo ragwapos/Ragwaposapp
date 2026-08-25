@@ -6,7 +6,7 @@ import {
   ReceiptText, Receipt, Building2, FileText, Settings, Globe, Lock, Pencil, Paperclip,
   MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin, Home, SplitSquareHorizontal, Printer, StickyNote,
   Phone, User, Link2, FlaskConical, KeyRound, LogOut, XCircle, Download,
-  SlidersHorizontal, ChevronDown
+  SlidersHorizontal, ChevronDown, Menu
 } from "lucide-react";
 import QRCode from "qrcode";
 // auth/db here are supabase.auth / the Supabase client (see src/supabase.js).
@@ -1836,18 +1836,18 @@ const NAV = [
   { key: "settings", labelKey: "nav_settings", icon: Settings },
 ];
 
-function Sidebar({ tab, setTab, sectionLocks, setSectionLocks, merchant }) {
+function Sidebar({ tab, setTab, sectionLocks, setSectionLocks, merchant, onNavigate = () => {} }) {
   const { t } = useLang();
   const [pendingNav, setPendingNav] = useState(null);
 
   const handleNavClick = (key) => {
     if (sectionLocks[key]) setPendingNav(key);
-    else setTab(key);
+    else { setTab(key); onNavigate(); }
   };
 
   return (
     <div className="flex h-full w-60 shrink-0 flex-col bg-navy-900 text-stone-200 f-body">
-      <button onClick={() => setTab("home")} className="flex items-center gap-3 px-5 py-6 text-left hover:bg-navy-800/60 transition">
+      <button onClick={() => { setTab("home"); onNavigate(); }} className="flex items-center gap-3 px-5 py-6 text-left hover:bg-navy-800/60 transition">
         <img src={LOGO_DATA_URI} alt="Ragwa" className="h-11 w-11 shrink-0 object-contain drop-shadow-md" />
         <div>
           <div className="f-display text-2xl font-bold tracking-tight text-white leading-none">{t("app_name")}</div>
@@ -1871,7 +1871,7 @@ function Sidebar({ tab, setTab, sectionLocks, setSectionLocks, merchant }) {
         })}
       </nav>
       <div className="border-t border-navy-800 px-3 pt-1">
-        <button onClick={() => setTab("home")}
+        <button onClick={() => { setTab("home"); onNavigate(); }}
           className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${tab === "home" ? "text-white" : "text-white/50 hover:text-white"}`}>
           <Home size={16} />
           <span>{t("nav_home")}</span>
@@ -1894,7 +1894,7 @@ function Sidebar({ tab, setTab, sectionLocks, setSectionLocks, merchant }) {
             }
             return (await sha256Hex(pin)) === stored;
           }}
-          onSuccess={() => { setTab(pendingNav); setPendingNav(null); }}
+          onSuccess={() => { setTab(pendingNav); setPendingNav(null); onNavigate(); }}
           onClose={() => setPendingNav(null)}
         />
       )}
@@ -5542,12 +5542,28 @@ function HomeDashboardView({ invoices, merchant, setTab }) {
    ROOT APP
    ========================================================================= */
 function AppShell({ tab, setTab, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
-  const { dir } = useLang();
+  const { dir, t } = useLang();
+  const isRtl = dir === "rtl";
+  // The sidebar is a fixed off-canvas drawer below sm: (closed by default,
+  // opened via the hamburger button, and closed again the moment any nav
+  // item is picked — see Sidebar's onNavigate) and reverts to its normal
+  // always-visible in-flow column at sm: and up, matching desktop exactly.
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   return (
     <div dir={dir} className="flex h-screen w-full bg-stone-100 f-body">
       <Fonts />
-      <Sidebar tab={tab} setTab={setTab} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} merchant={merchant} />
-      <main className="flex-1 overflow-y-auto p-6">
+      {mobileNavOpen && (
+        <div className="fixed inset-0 z-40 bg-black/40 sm:hidden" onClick={() => setMobileNavOpen(false)} />
+      )}
+      <div className={`fixed inset-y-0 z-50 transition-transform duration-200 sm:static sm:z-auto sm:translate-x-0 ${isRtl ? "right-0" : "left-0"} ${mobileNavOpen ? "translate-x-0" : isRtl ? "translate-x-full" : "-translate-x-full"}`}>
+        <Sidebar tab={tab} setTab={setTab} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} merchant={merchant} onNavigate={() => setMobileNavOpen(false)} />
+      </div>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex items-center gap-3 border-b border-stone-200 bg-white px-4 py-3 sm:hidden">
+          <button onClick={() => setMobileNavOpen(true)} aria-label={t("app_name")}><Menu className="size-5 text-navy-900" /></button>
+          <span className="font-bold text-navy-900">{t("app_name")}</span>
+        </div>
+        <main className="flex-1 overflow-y-auto p-6">
         {tab === "home" && <HomeDashboardView invoices={invoices} merchant={merchant} setTab={setTab} />}
         {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promotions} enabledPayMethods={enabledPayMethods} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} setTab={setTab} />}
         {tab === "invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} />}
@@ -5558,7 +5574,8 @@ function AppShell({ tab, setTab, categories, addCategory, products, addProduct, 
         {tab === "promotions" && <PromotionsView promotions={promotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
         {tab === "reports" && <ReportsView invoices={invoices} purchases={purchases} suppliers={suppliers} categories={categories} customers={customers} expenses={expenses} expenseCategories={expenseCategories} />}
         {tab === "settings" && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
-      </main>
+        </main>
+      </div>
     </div>
   );
 }
