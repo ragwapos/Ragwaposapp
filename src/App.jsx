@@ -2249,12 +2249,27 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
   const { t } = useLang();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
   const selected = customers.find((c) => c.id === Number(customerId));
   const idOnly = query.startsWith("#");
   const results = customers.filter((c) =>
     idOnly ? String(c.id).includes(query.slice(1).trim()) :
     (c.name.toLowerCase().includes(query.toLowerCase()) || c.mobile.includes(query) || String(c.id).includes(query))
   );
+
+  // Closing on the input's blur (via a timeout) races with mobile touch
+  // events: on iOS Safari / Chrome Android, the input can blur before the
+  // synthetic click reaches a result button, unmounting the list first and
+  // making the tap appear to do nothing. A real click-outside listener has
+  // no such race — the list only closes on an actual tap elsewhere.
+  useEffect(() => {
+    if (!open) return;
+    const handlePointerDown = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [open]);
 
   // Once a customer is attached to the sale, the search box is replaced by
   // this compact summary (avatar + name + real wallet/debt) — clearing it
@@ -2281,12 +2296,11 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
 
   return (
     <div className="flex gap-2">
-      <div className="relative flex-1">
+      <div className="relative flex-1" ref={containerRef}>
         <Search size={14} className="pointer-events-none absolute left-3 top-3 text-slate-400" />
         <input
           value={query}
           onFocus={() => setOpen(true)}
-          onBlur={() => setTimeout(() => setOpen(false), 150)}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           placeholder={t("pos_searchCustomerPlaceholder")}
           className={`${inputCls} pl-8`}
@@ -2294,7 +2308,7 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
         {open && (
           <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-app-border bg-app-surface shadow-app-md">
             {results.map((c) => (
-              <button key={c.id} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { onSelect(c.id); setOpen(false); setQuery(""); }}
+              <button key={c.id} type="button" onClick={() => { onSelect(c.id); setOpen(false); setQuery(""); }}
                 className="block w-full px-3 py-2 text-left text-sm hover:bg-app-bg">
                 <span className="f-mono text-slate-400 mr-1.5">#{c.id}</span>{c.name}<span className="text-slate-400"> · {c.mobile}</span>
               </button>
@@ -2808,6 +2822,7 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
   const { t } = useLang();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const containerRef = useRef(null);
   const idOnly = query.startsWith("#");
   const results = customers.filter((c) =>
     idOnly ? String(c.id).includes(query.slice(1).trim()) :
@@ -2819,14 +2834,25 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
     setQuery(""); setOpen(false); onSelect(null);
   };
 
+  // See CustomerPicker for why this closes via a click-outside listener
+  // rather than onBlur+setTimeout — the latter races with mobile touch
+  // events and can unmount a result button before its click ever fires.
+  useEffect(() => {
+    if (!open) return;
+    const handlePointerDown = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [open]);
+
   return (
     <div className="flex w-full items-center gap-2">
-      <div className="relative min-w-0 flex-1">
+      <div className="relative min-w-0 flex-1" ref={containerRef}>
         <Search size={14} className="pointer-events-none absolute left-3 top-3 text-slate-400" />
         <input
           value={open ? query : (selected ? `#${selected.id} · ${selected.name}` : "")}
           onFocus={() => { setOpen(true); setQuery(""); }}
-          onBlur={() => setTimeout(() => setOpen(false), 150)}
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           placeholder={t("pos_searchCustomerPlaceholder")}
           className={`${inputCls} pl-8`}
@@ -2834,7 +2860,7 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
         {open && (
           <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-app-border bg-app-surface shadow-app-md">
             {results.map((c) => (
-              <button key={c.id} type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => { onSelect(c); setOpen(false); setQuery(""); }}
+              <button key={c.id} type="button" onClick={() => { onSelect(c); setOpen(false); setQuery(""); }}
                 className="block w-full px-3 py-2 text-left text-sm hover:bg-app-bg">
                 <span className="f-mono text-app-text-subtle mr-1.5">#{c.id}</span>{c.name}<span className="text-app-text-subtle"> · {c.mobile}</span>
               </button>
@@ -2844,7 +2870,7 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
         )}
       </div>
       {hasActiveSearch && (
-        <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={clearFilter} title={t("invoices_clearFilter")}
+        <button type="button" onClick={clearFilter} title={t("invoices_clearFilter")}
           className="flex shrink-0 items-center gap-1.5 rounded-lg border border-danger-300 bg-danger-50 px-3 py-2 text-sm font-medium text-danger-600 hover:bg-danger-100">
           <Trash2 size={15} /> {t("invoices_clearFilter")}
         </button>
