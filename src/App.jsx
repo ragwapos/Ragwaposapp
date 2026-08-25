@@ -2262,13 +2262,19 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
   // synthetic click reaches a result button, unmounting the list first and
   // making the tap appear to do nothing. A real click-outside listener has
   // no such race — the list only closes on an actual tap elsewhere.
+  // Deliberately `mousedown`, not `pointerdown`: this is the event every
+  // major combobox implementation (react-select, downshift, Radix,
+  // Headless UI) uses for outside-click detection specifically because
+  // it's the one with the longest, most consistent cross-browser/touch
+  // track record — pointerdown closed this list on a real Android tap
+  // before the result button's own click ever fired.
   useEffect(() => {
     if (!open) return;
-    const handlePointerDown = (e) => {
+    const handleMouseDown = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
     };
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
   }, [open]);
 
   // Once a customer is attached to the sale, the search box is replaced by
@@ -2836,14 +2842,15 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
 
   // See CustomerPicker for why this closes via a click-outside listener
   // rather than onBlur+setTimeout — the latter races with mobile touch
-  // events and can unmount a result button before its click ever fires.
+  // events and can unmount a result button before its click ever fires —
+  // and why that listener is `mousedown`, not `pointerdown`.
   useEffect(() => {
     if (!open) return;
-    const handlePointerDown = (e) => {
+    const handleMouseDown = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
     };
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("mousedown", handleMouseDown);
+    return () => document.removeEventListener("mousedown", handleMouseDown);
   }, [open]);
 
   return (
