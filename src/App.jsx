@@ -2268,13 +2268,23 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
   // it's the one with the longest, most consistent cross-browser/touch
   // track record — pointerdown closed this list on a real Android tap
   // before the result button's own click ever fired.
+  // Also listening on `touchstart`: confirmed on Samsung Internet that
+  // even the synthesized `mousedown` for a touch can resolve to a target
+  // outside the container by the time it fires, closing the list before
+  // the tap's click reaches the result button. touchstart is the first,
+  // unmediated touch event — its target is fixed at the actual point of
+  // contact, so it isn't subject to that later re-targeting.
   useEffect(() => {
     if (!open) return;
-    const handleMouseDown = (e) => {
+    const handleOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
     };
-    document.addEventListener("mousedown", handleMouseDown);
-    return () => document.removeEventListener("mousedown", handleMouseDown);
+    document.addEventListener("mousedown", handleOutside);
+    document.addEventListener("touchstart", handleOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("touchstart", handleOutside);
+    };
   }, [open]);
 
   // Once a customer is attached to the sale, the search box is replaced by
@@ -2843,14 +2853,18 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
   // See CustomerPicker for why this closes via a click-outside listener
   // rather than onBlur+setTimeout — the latter races with mobile touch
   // events and can unmount a result button before its click ever fires —
-  // and why that listener is `mousedown`, not `pointerdown`.
+  // and why that listener covers both `mousedown` and `touchstart`.
   useEffect(() => {
     if (!open) return;
-    const handleMouseDown = (e) => {
+    const handleOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
     };
-    document.addEventListener("mousedown", handleMouseDown);
-    return () => document.removeEventListener("mousedown", handleMouseDown);
+    document.addEventListener("mousedown", handleOutside);
+    document.addEventListener("touchstart", handleOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleOutside);
+      document.removeEventListener("touchstart", handleOutside);
+    };
   }, [open]);
 
   return (
