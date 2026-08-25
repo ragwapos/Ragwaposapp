@@ -647,12 +647,19 @@ function buildPrintableHtml(doc) {
 // api.whatsapp.com/send is WhatsApp's own "Click to Chat" API endpoint —
 // wa.me is a short link that itself redirects here, so calling it directly
 // skips that extra redirect hop.
-// On desktop, the native attempt below goes through a hidden iframe rather
-// than window.open()/location.href — a custom-protocol navigation there
-// never touches this tab or opens a blank one: if WhatsApp Desktop has the
-// whatsapp:// handler registered, the OS switches to it; if not, the
-// iframe's failed navigation is invisible, no error page, no popup. The POS
-// tab itself is never touched either way.
+// On desktop, the native attempt below fires the whatsapp:// deep link via
+// a hidden <a> click on the page itself rather than a hidden iframe. An
+// iframe used to work here but Chrome now blocks navigating a nested
+// browsing context to a non-http(s) scheme outright (anti-abuse hardening
+// against malicious ad iframes) — the navigation silently never happens, so
+// `blur` never fires and every attempt fell through to the "not installed"
+// fallback below, opening a new tab every time regardless of whether
+// WhatsApp Desktop was actually there. A same-document anchor click is a
+// real top-level navigation attempt (carries the click's user activation)
+// and isn't subject to that restriction: if the handler's registered, the
+// OS switches to it without this tab/page being touched at all; if not,
+// Chrome just no-ops the unrecognized scheme and stays put — no error page,
+// no popup, nothing for a blocker to catch.
 // There's no reliable way from a web page to confirm the OS actually
 // switched to the app, so this uses the standard heuristic other sites use
 // for this same problem (Slack, Zoom, etc.): treat the browser window
@@ -672,12 +679,13 @@ function openWhatsApp(phone, message) {
   let handedOff = false;
   const onBlur = () => { handedOff = true; };
   window.addEventListener("blur", onBlur, { once: true });
-  const iframe = document.createElement("iframe");
-  iframe.style.display = "none";
-  iframe.src = `whatsapp://send?phone=${phone}&text=${encoded}`;
-  document.body.appendChild(iframe);
+  const link = document.createElement("a");
+  link.href = `whatsapp://send?phone=${phone}&text=${encoded}`;
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
   setTimeout(() => {
-    iframe.remove();
     window.removeEventListener("blur", onBlur);
     if (!handedOff) window.open(webUrl, "_blank");
   }, 1200);
