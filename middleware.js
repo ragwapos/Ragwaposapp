@@ -7,10 +7,25 @@ export const config = {
   matcher: ['/((?!api/|assets/|.*\\.\\w+$).*)'],
 };
 
-// Must stay in sync with PATH_PAGE_MAP in src/App.jsx. Duplicated here (not
-// imported) because this runs in an isolated Edge runtime that can't pull in
-// App.jsx (a large JSX file, not a plain ESM module this runtime can load).
-const KNOWN_PATHS = new Set(['/', '/en', '/login', '/signup', '/forgot-password', '/terms', '/privacy']);
+// Must stay in sync with PATH_PAGE_MAP/DASHBOARD_TAB_PATHS/
+// REPORTS_SUBTAB_PATHS/PURCHASES_SUBTAB_PATHS in src/App.jsx. Duplicated
+// here (not imported) because this runs in an isolated Edge runtime that
+// can't pull in App.jsx (a large JSX file, not a plain ESM module this
+// runtime can load).
+const KNOWN_PATHS = new Set([
+  // Public marketing/auth pages
+  '/', '/en', '/login', '/signup', '/forgot-password', '/terms', '/privacy',
+  // Authenticated dashboard tabs (real URLs, but only actually usable once
+  // logged in -- App.jsx's own onAuthStateChange redirects an anonymous
+  // visitor here to /login rather than this middleware trying to read a
+  // Supabase session cookie at the edge)
+  '/home', '/pos', '/active-invoices', '/delivery-invoices', '/customers',
+  '/inventory', '/purchases', '/promotions', '/reports', '/settings',
+  // Reports/Purchases sub-tabs (their default sub-tab is served at the
+  // bare /reports and /purchases paths above, not a separate path)
+  '/reports/procurement', '/reports/expenses', '/reports/profit-loss', '/reports/vat',
+  '/purchases/expenses',
+]);
 
 export default async function middleware(request) {
   const { pathname } = new URL(request.url);

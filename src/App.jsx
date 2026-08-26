@@ -1839,13 +1839,17 @@ const NAV = [
   { key: "settings", labelKey: "nav_settings", icon: Settings },
 ];
 
-function Sidebar({ tab, setTab, sectionLocks, setSectionLocks, merchant, onNavigate = () => {} }) {
+// The PIN-prompt-on-locked-section flow now lives one level up (AppShell) —
+// setTab here is really the parent's lock-aware requestTab, so a click just
+// calls it directly. onNavigate (closes the mobile drawer) still only fires
+// for an unlocked item's immediate nav, exactly like before: for a locked
+// one, the drawer stays open behind the PIN modal AppShell renders.
+function Sidebar({ tab, setTab, sectionLocks, merchant, onNavigate = () => {} }) {
   const { t } = useLang();
-  const [pendingNav, setPendingNav] = useState(null);
 
   const handleNavClick = (key) => {
-    if (sectionLocks[key]) setPendingNav(key);
-    else { setTab(key); onNavigate(); }
+    setTab(key);
+    if (!sectionLocks[key]) onNavigate();
   };
 
   return (
@@ -1883,24 +1887,6 @@ function Sidebar({ tab, setTab, sectionLocks, setSectionLocks, merchant, onNavig
       <div className="px-5 py-4 border-t border-navy-800">
         <div className="truncate text-sm font-semibold text-white">{merchant?.name || t("app_name")}</div>
       </div>
-
-      {pendingNav && (
-        <PinPromptModal
-          title={t("owner_enterSectionTitle")}
-          mode="enter"
-          verify={async (pin) => {
-            const stored = sectionLocks[pendingNav];
-            if (pin === stored) { // legacy plaintext — self-heal to a hash
-              const key = pendingNav;
-              sha256Hex(pin).then((h) => setSectionLocks((p) => ({ ...p, [key]: h })));
-              return true;
-            }
-            return (await sha256Hex(pin)) === stored;
-          }}
-          onSuccess={() => { setTab(pendingNav); setPendingNav(null); onNavigate(); }}
-          onClose={() => setPendingNav(null)}
-        />
-      )}
     </div>
   );
 }
@@ -3889,9 +3875,11 @@ function PurchasesStatCard({ label, value, icon: Icon, tone }) {
   );
 }
 
-function PurchasesExpensesView({ suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, adjustSupplierBalance, nextDocNumber }) {
+// tab/setTab are now controlled from AppShell (via navigateTab), so /purchases
+// and /purchases/expenses are real, bookmarkable, browser-back-forward-able
+// URLs — this component no longer owns that state itself.
+function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, adjustSupplierBalance, nextDocNumber }) {
   const { t } = useLang();
-  const [tab, setTab] = useState("purchases");
 
   // Purchases sub-state
   const [supplierId, setSupplierId] = useState(suppliers[0]?.id || "");
@@ -4468,9 +4456,12 @@ function inDateRange(iso, rangeStart, rangeEnd) {
   return true;
 }
 
-function ReportsView({ invoices, purchases, suppliers, categories, customers, expenses, expenseCategories }) {
+// tab/setTab are now controlled from AppShell (via navigateTab), so /reports
+// and its sub-tab paths (/reports/vat, etc.) are real, bookmarkable,
+// browser-back-forward-able URLs — this component no longer owns that
+// state itself.
+function ReportsView({ tab, setTab, invoices, purchases, suppliers, categories, customers, expenses, expenseCategories }) {
   const { t } = useLang();
-  const [tab, setTab] = useState("sales");
   const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
 
   // Each filter bar collapses behind its own "الفلاتر والتصدير" toggle on
@@ -5642,7 +5633,7 @@ function HomeDashboardView({ invoices, merchant, setTab }) {
 /* =========================================================================
    ROOT APP
    ========================================================================= */
-function AppShell({ tab, setTab, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { dir, t } = useLang();
   const isRtl = dir === "rtl";
   // The sidebar is a fixed off-canvas drawer below lg: (closed by default,
@@ -5661,7 +5652,7 @@ function AppShell({ tab, setTab, categories, addCategory, products, addProduct, 
         <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setMobileNavOpen(false)} />
       )}
       <div className={`fixed inset-y-0 z-50 transition-transform duration-200 lg:static lg:z-auto lg:translate-x-0 ${isRtl ? "right-0" : "left-0"} ${mobileNavOpen ? "translate-x-0" : isRtl ? "translate-x-full" : "-translate-x-full"}`}>
-        <Sidebar tab={tab} setTab={setTab} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} merchant={merchant} onNavigate={() => setMobileNavOpen(false)} />
+        <Sidebar tab={tab} setTab={setTab} sectionLocks={sectionLocks} merchant={merchant} onNavigate={() => setMobileNavOpen(false)} />
       </div>
       <div className="flex flex-1 flex-col overflow-hidden">
         <div className="flex items-center gap-3 border-b border-stone-200 bg-white px-4 py-3 lg:hidden">
@@ -5675,18 +5666,52 @@ function AppShell({ tab, setTab, categories, addCategory, products, addProduct, 
         {tab === "delivery_invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} isDelivery />}
         {tab === "customers" && <CustomersView customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} invoices={invoices} addInvoice={addInvoice} transactions={customerTransactions} addTransaction={addTransaction} merchant={merchant} applyCustomerPayment={applyCustomerPayment} nextDocNumber={nextDocNumber} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} />}
         {tab === "inventory" && <InventoryView categories={categories} addCategory={addCategory} products={products} addProduct={addProduct} updateProduct={updateProduct} addons={addons} addAddon={addAddon} removeAddon={removeAddon} serviceTypes={serviceTypes} addServiceType={addServiceType} />}
-        {tab === "purchases" && <PurchasesExpensesView suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={purchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={expenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
+        {tab === "purchases" && <PurchasesExpensesView tab={purchasesSubTab} setTab={(s) => navigateTab("purchases", s)} suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={purchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={expenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
         {tab === "promotions" && <PromotionsView promotions={promotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
-        {tab === "reports" && <ReportsView invoices={invoices} purchases={purchases} suppliers={suppliers} categories={categories} customers={customers} expenses={expenses} expenseCategories={expenseCategories} />}
+        {tab === "reports" && <ReportsView tab={reportsSubTab} setTab={(s) => navigateTab("reports", s)} invoices={invoices} purchases={purchases} suppliers={suppliers} categories={categories} customers={customers} expenses={expenses} expenseCategories={expenseCategories} />}
         {tab === "settings" && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
         </main>
       </div>
+      {/* Same PIN-prompt-on-locked-nav flow the sidebar always had —
+          lifted up here (Sidebar now just calls its setTab prop directly)
+          so a locked deep link can trigger the exact same prompt on load,
+          not only a sidebar click. */}
+      {pendingNav && (
+        <PinPromptModal
+          title={t("owner_enterSectionTitle")}
+          mode="enter"
+          verify={async (pin) => {
+            const stored = sectionLocks[pendingNav.key];
+            if (pin === stored) { // legacy plaintext — self-heal to a hash
+              const key = pendingNav.key;
+              sha256Hex(pin).then((h) => setSectionLocks((p) => ({ ...p, [key]: h })));
+              return true;
+            }
+            return (await sha256Hex(pin)) === stored;
+          }}
+          onSuccess={() => { navigateTab(pendingNav.key, pendingNav.subTab); setPendingNav(null); }}
+          onClose={() => setPendingNav(null)}
+        />
+      )}
     </div>
   );
 }
 
 function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
+  // Always starts at "home", even for a deep link like /reports -- NOT a
+  // shortcut we can take. sectionLocks loads asynchronously from
+  // tenant_settings (starts out as "nothing locked" until that real data
+  // arrives, see its useState below), so lazy-initializing straight to the
+  // requested tab would render a locked section's real data for however
+  // long that fetch takes. The actual jump (direct if unlocked, a PIN
+  // prompt first if locked) only happens once settingsLoaded is true — see
+  // the effect below.
   const [tab, setTab] = useState("home");
+  const [reportsSubTab, setReportsSubTab] = useState("sales");
+  const [purchasesSubTab, setPurchasesSubTab] = useState("purchases");
+  // A locked section requested either via the sidebar or a direct/deep
+  // link — { key, subTab } while a PIN prompt is pending, else null.
+  const [pendingNav, setPendingNav] = useState(null);
   // Starts from whatever language the visitor picked on the landing page;
   // a saved tenant_settings.lang (once one exists) still overrides this on
   // load below, so a returning user's own explicit choice always wins.
@@ -6013,6 +6038,59 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     return () => unsub();
   }, [tenantId]);
 
+  // Central navigation for the dashboard's tabs — mirrors the navigate()/
+  // popstate pattern LaundryPOS uses for the public pages. Every internal
+  // nav control (sidebar, home's quick actions, in-page sub-tab switches)
+  // routes through here so the URL never drifts from what's rendered.
+  const navigateTab = (newTab, subTab) => {
+    window.history.pushState({}, '', pathForTab(newTab, subTab));
+    setTab(newTab);
+    if (newTab === 'reports') setReportsSubTab(subTab || 'sales');
+    else if (newTab === 'purchases') setPurchasesSubTab(subTab || 'purchases');
+  };
+  // Same as navigateTab, but checks the PIN gate first — this is what the
+  // sidebar (and any other main-nav trigger) calls instead of navigateTab
+  // directly. Sub-tab switches inside an already-open section don't need
+  // this: you already passed the gate to get there.
+  const requestTab = (key, subTab) => {
+    if (sectionLocks[key]) setPendingNav({ key, subTab: subTab || null });
+    else navigateTab(key, subTab);
+  };
+
+  // Browser back/forward doesn't fire navigateTab (pushState doesn't
+  // trigger popstate), so it needs its own re-derivation straight from the
+  // URL. Deliberately bypasses the PIN gate: getting here at all means the
+  // browser history already has this state — i.e. it was unlocked once
+  // already this session, or was never locked — so re-prompting on every
+  // back/forward tap would just be annoying, not a real security gain.
+  useEffect(() => {
+    const onPopState = () => {
+      const resolved = tabForPath(window.location.pathname);
+      if (!resolved) return;
+      setTab(resolved.tab);
+      if (resolved.tab === 'reports') setReportsSubTab(resolved.subTab || 'sales');
+      else if (resolved.tab === 'purchases') setPurchasesSubTab(resolved.subTab || 'purchases');
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  // Resolves whatever tab the user actually landed on (a deep link, or a
+  // refresh) exactly once real sectionLocks data has loaded — see the
+  // "Always starts at home" note on the tab state above for why this can't
+  // run any earlier. Runs once: initialDeepLinkResolved guards against
+  // sectionLocks changing again later (e.g. the owner edits a lock
+  // remotely while this tab is already open) suddenly popping a PIN prompt
+  // for whatever screen is already showing.
+  const initialDeepLinkResolved = useRef(false);
+  useEffect(() => {
+    if (initialDeepLinkResolved.current || !settingsLoaded) return;
+    initialDeepLinkResolved.current = true;
+    const resolved = tabForPath(window.location.pathname);
+    if (!resolved || resolved.tab === 'home') return;
+    requestTab(resolved.tab, resolved.subTab);
+  }, [settingsLoaded]);
+
   useEffect(() => {
     if (!tenantId || !settingsLoaded) return;
     const rowId = settingsRowId || crypto.randomUUID();
@@ -6246,7 +6324,8 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   return (
     <LangContext.Provider value={{ lang, setLang, dir }}>
       <AppShell
-        tab={tab} setTab={setTab}
+        tab={tab} setTab={requestTab} navigateTab={navigateTab}
+        reportsSubTab={reportsSubTab} purchasesSubTab={purchasesSubTab}
         categories={categories} addCategory={addCategory}
         products={products} addProduct={addProduct} updateProduct={updateProduct}
         addons={addons} addAddon={addAddon} removeAddon={removeAddon}
@@ -6269,6 +6348,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
         onLogout={onLogout}
         applyCustomerPayment={applyCustomerPayment} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber}
         zatcaConfig={zatcaConfig} zatcaInvoices={zatcaInvoices} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig}
+        pendingNav={pendingNav} setPendingNav={setPendingNav}
       />
     </LangContext.Provider>
   );
@@ -8701,21 +8781,53 @@ function TermsPage({ onBack, scrollTarget }) {
   );
 }
 
-// Public, crawlable paths → internal page state. Scoped to the
-// unauthenticated marketing/auth flow only — dashboard/admin/pending stay
-// pure client state since they require an active session and have no SEO
-// value of their own.
+// Public, crawlable paths → internal page state, for the unauthenticated
+// marketing/auth flow (admin/pending still have no dedicated URL — they're
+// not tenant-facing screens worth a real address).
 const PATH_PAGE_MAP = {
   '/': 'landing', '/en': 'landing',
   '/login': 'login', '/signup': 'signup',
   '/forgot-password': 'forgotPassword',
   '/terms': 'terms', '/privacy': 'terms',
 };
-// Anything not in PATH_PAGE_MAP is a genuinely unknown URL, not the landing
-// page — middleware.js (repo root) already answers these with a real HTTP
+// Real URLs for the tabs inside the authenticated dashboard (main tabs, plus
+// the sub-tabs inside Reports/Purchases — those two views keep their own
+// local sub-tab state, driven by these paths; see ReportsView/
+// PurchasesExpensesView and LaundryOpsApp's navigateTab/tabForPath). Two
+// lookup directions: pathForTab (tab/subTab -> URL) and tabForPath (URL ->
+// tab/subTab), used by LaundryOpsApp's navigation. pageForPath below only
+// needs to know these paths exist (to resolve to 'dashboard' instead of
+// 'notFound') — the tab-level detail is resolved separately, deeper in the
+// authenticated app, once a session is confirmed.
+// Must stay in sync with KNOWN_PATHS in middleware.js (repo root).
+const DASHBOARD_TAB_PATHS = {
+  home: '/home', pos: '/pos', invoices: '/active-invoices',
+  delivery_invoices: '/delivery-invoices', customers: '/customers',
+  inventory: '/inventory', purchases: '/purchases', promotions: '/promotions',
+  reports: '/reports', settings: '/settings',
+};
+const REPORTS_SUBTAB_PATHS = { procurement: '/reports/procurement', expenses: '/reports/expenses', pl: '/reports/profit-loss', vat: '/reports/vat' };
+const PURCHASES_SUBTAB_PATHS = { expenses: '/purchases/expenses' };
+const ALL_DASHBOARD_PATHS = [...Object.values(DASHBOARD_TAB_PATHS), ...Object.values(REPORTS_SUBTAB_PATHS), ...Object.values(PURCHASES_SUBTAB_PATHS)];
+function pathForTab(tab, subTab) {
+  if (tab === 'reports' && subTab && REPORTS_SUBTAB_PATHS[subTab]) return REPORTS_SUBTAB_PATHS[subTab];
+  if (tab === 'purchases' && subTab && PURCHASES_SUBTAB_PATHS[subTab]) return PURCHASES_SUBTAB_PATHS[subTab];
+  return DASHBOARD_TAB_PATHS[tab] || '/home';
+}
+function tabForPath(path) {
+  const reportsSub = Object.entries(REPORTS_SUBTAB_PATHS).find(([, p]) => p === path);
+  if (reportsSub) return { tab: 'reports', subTab: reportsSub[0] };
+  const purchasesSub = Object.entries(PURCHASES_SUBTAB_PATHS).find(([, p]) => p === path);
+  if (purchasesSub) return { tab: 'purchases', subTab: purchasesSub[0] };
+  const main = Object.entries(DASHBOARD_TAB_PATHS).find(([, p]) => p === path);
+  if (main) return { tab: main[0], subTab: null };
+  return null;
+}
+// Anything not in PATH_PAGE_MAP/ALL_DASHBOARD_PATHS is a genuinely unknown
+// URL — middleware.js (repo root) already answers these with a real HTTP
 // 404 status; this just makes sure the client-rendered UI matches that,
 // instead of silently showing the landing page for a broken/typo'd link.
-const pageForPath = (path) => PATH_PAGE_MAP[path] || 'notFound';
+const pageForPath = (path) => PATH_PAGE_MAP[path] || (ALL_DASHBOARD_PATHS.includes(path) ? 'dashboard' : 'notFound');
 const PAGE_TO_PATH = {
   landing: '/', login: '/login', signup: '/signup', forgotPassword: '/forgot-password',
 };
@@ -8741,6 +8853,7 @@ function getPageMeta(page, termsScrollTarget, siteLang) {
     case 'forgotPassword': return { title: 'استعادة كلمة المرور | رغوة', description: 'استعد كلمة مرور حسابك في رغوة.', path: '/forgot-password', robots: 'noindex,follow' };
     case 'terms': return { title: 'الشروط والأحكام | رغوة', description: 'الشروط والأحكام الخاصة باستخدام منصة رغوة.', path: '/terms', robots: null };
     case 'notFound': return { title: 'الصفحة غير موجودة | رغوة', description: 'الصفحة اللي تدور عليها مو موجودة.', path: window.location.pathname, robots: 'noindex,follow' };
+    case 'dashboard': return { title: 'لوحة التحكم | رغوة', description: 'لوحة تحكم رغوة لإدارة المغسلة.', path: window.location.pathname, robots: 'noindex,nofollow' };
     default: return { title: 'رغوة | نظام نقطة بيع لمغاسل الملابس', description: 'رغوة: نظام نقطة بيع لمغاسل الملابس يجمع البيع، تتبع الطلبات، الاشتراكات، والدفع الآجل في مكان واحد. جرّب رغوة مجاناً.', path: '/', robots: null };
   }
 }
@@ -8984,7 +9097,16 @@ const LaundryPOS = () => {
   useEffect(() => {
     const { data: { subscription } } = auth.onAuthStateChange(async (event, session) => {
       const user = session?.user;
-      if (!user) { setAuthResolved(true); return; }
+      if (!user) {
+        // An anonymous visitor landing directly on a dashboard-only URL
+        // (e.g. a bookmarked /reports) has no session to resolve — send
+        // them to log in instead of leaving LaundryOpsApp to render with
+        // no tenantId. currentPage is already 'dashboard' at this point
+        // (see pageForPath), so this is the only place that can catch it.
+        if (pageForPath(window.location.pathname) === 'dashboard') navigate('login', '/login');
+        setAuthResolved(true);
+        return;
+      }
       // Fires when the user lands back on the site via a password-recovery
       // link (auth.resetPasswordForEmail) — Supabase already exchanges it
       // for a real session by this point, so intercept BEFORE the normal
