@@ -9004,6 +9004,11 @@ const LaundryPOS = () => {
       if (['/login', '/signup', '/forgot-password'].includes(window.location.pathname)) {
         window.history.pushState({}, '', '/');
       }
+      // A genuinely unknown URL should still show the real 404 page, even
+      // for an already-authenticated tenant who followed a stale or
+      // mistyped link — not silently bounce them into their dashboard,
+      // which would make the 404 only ever appear for logged-out visitors.
+      if (pageForPath(window.location.pathname) === 'notFound') { setAuthResolved(true); return; }
       try {
         const dest = await resolveDestination(user);
         if (dest.page === 'verify') {
