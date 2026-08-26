@@ -2250,12 +2250,18 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
-  // TEMPORARY diagnostic (remove once the Samsung Internet selection bug is
-  // confirmed fixed) — three prior fixes to the outside-click listener
-  // (pointerdown, then mousedown, then mousedown+touchstart) did not resolve
-  // it there, so this surfaces what's actually happening on-device instead
-  // of guessing a fourth blind change.
-  const [dbg, setDbg] = useState("");
+  // Guards against Android/Samsung Internet's "ghost click" bug: a single
+  // tap can dispatch touchend AND a delayed duplicate click. Confirmed via
+  // live on-device diagnostics that the first (real) event correctly
+  // selected the customer, and the second (ghost), landing at the same
+  // screen coordinates after the UI had already re-rendered to the
+  // "selected" summary card, hit that card's X/clear button and
+  // immediately un-selected it again — same-frame, so no visible flicker.
+  // touchend's own preventDefault() suppresses the browser's subsequent
+  // synthetic mouse-event/click sequence for that same touch, so handling
+  // selection there (and marking it handled via this ref so a `click` that
+  // still slips through is ignored) removes the duplicate at its source.
+  const touchHandledRef = useRef(false);
   const selected = customers.find((c) => c.id === Number(customerId));
   const idOnly = query.startsWith("#");
   const results = customers.filter((c) =>
@@ -2272,40 +2278,30 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
   // major combobox implementation (react-select, downshift, Radix,
   // Headless UI) uses for outside-click detection specifically because
   // it's the one with the longest, most consistent cross-browser/touch
-  // track record — pointerdown closed this list on a real Android tap
-  // before the result button's own click ever fired.
-  // Also listening on `touchstart`: confirmed on Samsung Internet that
-  // even the synthesized `mousedown` for a touch can resolve to a target
-  // outside the container by the time it fires, closing the list before
-  // the tap's click reaches the result button. touchstart is the first,
-  // unmediated touch event — its target is fixed at the actual point of
-  // contact, so it isn't subject to that later re-targeting.
+  // track record. Also listening on `touchstart` for the same reason.
   useEffect(() => {
     if (!open) return;
     const handleOutside = (e) => {
-      const inside = containerRef.current && containerRef.current.contains(e.target);
-      if (!inside) {
-        const t = e.target;
-        setDbg(`${e.type} OUTSIDE tgt=${t.tagName}.${String(t.className).slice(0, 24)}`);
-        setOpen(false);
-      }
-    };
-    // TEMPORARY: log every click that reaches document while the list is
-    // open, so we can see whether a tap on a result button ever produces a
-    // click at all on this device, and where it lands if not.
-    const handleAnyClick = (e) => {
-      const t = e.target;
-      setDbg((prev) => `${prev} | click tgt=${t.tagName}.${String(t.className).slice(0, 24)}`);
+      if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
     };
     document.addEventListener("mousedown", handleOutside);
     document.addEventListener("touchstart", handleOutside);
-    document.addEventListener("click", handleAnyClick);
     return () => {
       document.removeEventListener("mousedown", handleOutside);
       document.removeEventListener("touchstart", handleOutside);
-      document.removeEventListener("click", handleAnyClick);
     };
   }, [open]);
+
+  const pick = (id) => { onSelect(id); setOpen(false); setQuery(""); };
+  const handleTouchEnd = (id) => (e) => {
+    e.preventDefault();
+    touchHandledRef.current = true;
+    pick(id);
+  };
+  const handleClick = (id) => () => {
+    if (touchHandledRef.current) { touchHandledRef.current = false; return; }
+    pick(id);
+  };
 
   // Once a customer is attached to the sale, the search box is replaced by
   // this compact summary (avatar + name + real wallet/debt) — clearing it
@@ -2325,7 +2321,7 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
             </div>
           </div>
         </div>
-        <button type="button" onClick={() => onSelect("")} title={t("common_cancel")} className="flex size-6 items-center justify-center rounded text-app-text-subtle hover:bg-white"><X className="size-3.5" /></button>
+        <button type="button" onTouchEnd={handleTouchEnd("")} onClick={handleClick("")} title={t("common_cancel")} className="flex size-6 items-center justify-center rounded text-app-text-subtle hover:bg-white"><X className="size-3.5" /></button>
       </div>
     );
   }
@@ -2344,7 +2340,7 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
         {open && (
           <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-app-border bg-app-surface shadow-app-md">
             {results.map((c) => (
-              <button key={c.id} type="button" onClick={() => { setDbg(`click SELECT #${c.id}`); onSelect(c.id); setOpen(false); setQuery(""); }}
+              <button key={c.id} type="button" onTouchEnd={handleTouchEnd(c.id)} onClick={handleClick(c.id)}
                 className="block w-full px-3 py-2 text-left text-sm hover:bg-app-bg">
                 <span className="f-mono text-slate-400 mr-1.5">#{c.id}</span>{c.name}<span className="text-slate-400"> · {c.mobile}</span>
               </button>
@@ -2352,8 +2348,6 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
             {results.length === 0 && <div className="px-3 py-2 text-sm text-slate-400">{t("pos_noMatchingCustomers")}</div>}
           </div>
         )}
-        {/* TEMPORARY diagnostic line — see the note above `dbg`'s declaration. */}
-        {dbg && <div className="mt-1 break-all text-[10px] text-slate-400">dbg: {dbg}</div>}
       </div>
       <button type="button" onClick={onAddNew} title={t("addCustomer_title")} className="shrink-0 rounded-lg border border-brand-300 bg-brand-50 px-3 py-2 text-brand-700 hover:bg-brand-100"><Plus size={16} /></button>
     </div>
@@ -2861,6 +2855,9 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
+  // See CustomerPicker for why selection is handled via onTouchEnd (with a
+  // click-suppression guard) rather than onClick alone.
+  const touchHandledRef = useRef(false);
   const idOnly = query.startsWith("#");
   const results = customers.filter((c) =>
     idOnly ? String(c.id).includes(query.slice(1).trim()) :
@@ -2868,9 +2865,17 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
   );
   const hasActiveSearch = Boolean(selected) || query.trim().length > 0;
 
+  const pickCustomer = (c) => { onSelect(c); setOpen(false); setQuery(""); };
   const clearFilter = () => {
     setQuery(""); setOpen(false); onSelect(null);
   };
+  const withTouchGuard = (action) => ({
+    onTouchEnd: (e) => { e.preventDefault(); touchHandledRef.current = true; action(); },
+    onClick: () => {
+      if (touchHandledRef.current) { touchHandledRef.current = false; return; }
+      action();
+    },
+  });
 
   // See CustomerPicker for why this closes via a click-outside listener
   // rather than onBlur+setTimeout — the latter races with mobile touch
@@ -2903,7 +2908,7 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
         {open && (
           <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-app-border bg-app-surface shadow-app-md">
             {results.map((c) => (
-              <button key={c.id} type="button" onClick={() => { onSelect(c); setOpen(false); setQuery(""); }}
+              <button key={c.id} type="button" {...withTouchGuard(() => pickCustomer(c))}
                 className="block w-full px-3 py-2 text-left text-sm hover:bg-app-bg">
                 <span className="f-mono text-app-text-subtle mr-1.5">#{c.id}</span>{c.name}<span className="text-app-text-subtle"> · {c.mobile}</span>
               </button>
@@ -2913,7 +2918,7 @@ function InvoiceCustomerFilter({ customers, selected, onSelect }) {
         )}
       </div>
       {hasActiveSearch && (
-        <button type="button" onClick={clearFilter} title={t("invoices_clearFilter")}
+        <button type="button" {...withTouchGuard(clearFilter)} title={t("invoices_clearFilter")}
           className="flex shrink-0 items-center gap-1.5 rounded-lg border border-danger-300 bg-danger-50 px-3 py-2 text-sm font-medium text-danger-600 hover:bg-danger-100">
           <Trash2 size={15} /> {t("invoices_clearFilter")}
         </button>
