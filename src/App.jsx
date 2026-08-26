@@ -8913,6 +8913,12 @@ const LaundryPOS = () => {
     const path = termsReferrer === 'landing' ? (siteLang === 'en' ? '/en' : '/') : (PAGE_TO_PATH[termsReferrer] || '/');
     navigate(termsReferrer, path);
   };
+  // Declared here (not further down with the rest of this component's auth
+  // state) because the popstate effect right below needs it in its
+  // dependency array — a `const` referenced there is in the temporal dead
+  // zone until its own declaration line runs, regardless of the effect
+  // callback itself only executing later.
+  const [tenantId, setTenantId] = useState(null);
   // Browser back/forward doesn't call navigate() (pushState doesn't fire
   // popstate), so it needs its own re-derivation straight from the URL —
   // same source of truth as the initial-mount lazy inits above.
@@ -8968,7 +8974,6 @@ const LaundryPOS = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showWorkflow, setShowWorkflow] = useState(false);
   const [authResolved, setAuthResolved] = useState(false);
-  const [tenantId, setTenantId] = useState(null);
 
   // Live-synced from platform_config so AdminDashboard's "add admin" /
   // "remove admin" / "toggle auto-approve" controls actually take effect.
