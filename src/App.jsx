@@ -1250,6 +1250,7 @@ const DICT = {
     owner_payMethodsRowLabel: "Payment Methods", owner_protectedByMaster: "Protected",
     zatca_title: "ZATCA Integration (Phase 2)", zatca_hint: "When enabled, new invoices are verified with ZATCA automatically.",
     zatca_connected: "Connected", zatca_notConnected: "Not connected",
+    zatca_comingSoon: "Coming soon", zatca_comingSoonHint: "ZATCA integration is being finalized and will be available here soon.",
     zatca_enableToggle: "Enable ZATCA Integration", zatca_otpLabel: "OTP Code", zatca_otpPlaceholder: "6-digit code",
     zatca_otpInvalid: "Code must be 6 digits.", zatca_connect: "Connect to ZATCA", zatca_cancel: "Cancel",
     zatca_disableConfirm: "Disable ZATCA integration? New invoices will go back to normal.",
@@ -1515,6 +1516,7 @@ const DICT = {
     owner_payMethodsRowLabel: "طرق الدفع", owner_protectedByMaster: "محمي",
     zatca_title: "الربط مع هيئة الزكاة والضريبة (المرحلة الثانية)", zatca_hint: "عند التفعيل، يتم توثيق الفواتير الجديدة مع الهيئة تلقائيًا.",
     zatca_connected: "متصل", zatca_notConnected: "غير متصل",
+    zatca_comingSoon: "قريبًا", zatca_comingSoonHint: "الربط مع هيئة الزكاة والضريبة قيد الإعداد النهائي وراح يتوفر هنا قريبًا.",
     zatca_enableToggle: "تفعيل الربط مع الهيئة", zatca_otpLabel: "رمز التحقق (OTP)", zatca_otpPlaceholder: "٦ أرقام",
     zatca_otpInvalid: "الرمز يجب أن يكون 6 أرقام.", zatca_connect: "ربط مع الهيئة", zatca_cancel: "إلغاء",
     zatca_disableConfirm: "هل تريد تعطيل الربط مع الهيئة؟ الفواتير الجديدة ستعود للوضع العادي.",
@@ -1780,6 +1782,7 @@ const DICT = {
     owner_payMethodsRowLabel: "ادائیگی کے طریقے", owner_protectedByMaster: "محفوظ شدہ",
     zatca_title: "زکوٰۃ اتھارٹی کے ساتھ ربط (فیز 2)", zatca_hint: "فعال ہونے پر، نئے انوائسز خودکار طور پر اتھارٹی سے تصدیق شدہ ہوں گے۔",
     zatca_connected: "منسلک", zatca_notConnected: "غیر منسلک",
+    zatca_comingSoon: "جلد آ رہا ہے", zatca_comingSoonHint: "زکوٰۃ اتھارٹی کے ساتھ ربط حتمی مراحل میں ہے اور جلد یہاں دستیاب ہوگا۔",
     zatca_enableToggle: "زکوٰۃ ربط فعال کریں", zatca_otpLabel: "OTP کوڈ", zatca_otpPlaceholder: "6 ہندسوں کا کوڈ",
     zatca_otpInvalid: "کوڈ 6 ہندسوں کا ہونا چاہیے۔", zatca_connect: "اتھارٹی سے ربط کریں", zatca_cancel: "منسوخ کریں",
     zatca_disableConfirm: "زکوٰۃ ربط غیر فعال کریں؟ نئے انوائسز معمول کی حالت میں واپس چلے جائیں گے۔",
@@ -5039,13 +5042,17 @@ const OWNER_SECTIONS = [
   { key: "reports", labelKey: "nav_reports" },
 ];
 
-// ZATCA Phase 2 panel — SCAFFOLD. Every "connect"/"test" action here is
-// simulated client-side (no live ZATCA network call yet); see
-// enableZatca/submitInvoiceToZatca in LaundryOpsApp for what's real
-// (a genuine SHA-256 hash and the same TLV QR builder Phase 1 printing
-// already uses) versus simulated (the certificate/clearance round trip
-// itself). Fully isolated: this is the only place in the Settings tree
-// that reads zatcaConfig or calls enable/disable/resetZatcaConfig.
+// ZATCA Phase 2 panel. enableZatca/submitInvoiceToZatca (in LaundryOpsApp)
+// now make genuine outbound calls to ZATCA's real Compliance CSID/signing
+// APIs — nothing here is simulated anymore. That's exactly why it's gated
+// off below: this project has no real CSID registered with ZATCA's Fatoora
+// portal yet, so exposing a live "Enable ZATCA Integration" toggle to real
+// shop owners today would just surface real ZATCA API errors, or worse,
+// look connected when it isn't. Flip ZATCA_FEATURE_LIVE to true once a
+// tenant has actually completed onboarding with ZATCA and this has been
+// verified end-to-end — nothing else in this component needs to change.
+const ZATCA_FEATURE_LIVE = false;
+
 function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { t } = useLang();
   const [showOtpInput, setShowOtpInput] = useState(false);
@@ -5059,6 +5066,29 @@ function ZatcaSettingsPanel({ zatcaConfig, generateZatcaCsr, enableZatca, disabl
   // block the whole page (and any automated testing driving it), unlike
   // every other confirmation in this app which is just more UI.
   const [confirmAction, setConfirmAction] = useState(null); // "disable" | "reset" | null
+
+  // See ZATCA_FEATURE_LIVE above — everything past this point (the real
+  // CSR/OTP/connect flow) is intentionally unreachable for now. Placed
+  // after all the hooks above so hook order stays identical every render.
+  if (!ZATCA_FEATURE_LIVE) {
+    return (
+      <div className="rounded-lg border border-app-border bg-app-bg/60 p-4">
+        <div className="flex items-center justify-between rounded-lg border border-app-border bg-app-surface px-3 py-2.5">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <FileText size={14} className="text-brand-600 shrink-0" />
+              <span className="text-sm font-semibold text-app-text">{t("zatca_title")}</span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-50 px-2.5 py-1 text-[12px] font-bold text-warning-700 ring-1 ring-inset">
+                <span className="size-1.5 rounded-full bg-current" />
+                {t("zatca_comingSoon")}
+              </span>
+            </div>
+            <div className="mt-0.5 text-[11px] text-app-text-subtle">{t("zatca_comingSoonHint")}</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const isEnabled = Boolean(zatcaConfig?.isEnabled);
 
