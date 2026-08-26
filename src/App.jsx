@@ -8919,13 +8919,23 @@ const LaundryPOS = () => {
   useEffect(() => {
     const onPopState = () => {
       const path = window.location.pathname;
-      setCurrentPage(pageForPath(path));
+      const resolvedPage = pageForPath(path);
+      // An authenticated tenant navigating back/forward through their own
+      // dashboard history stays on 'dashboard' even when the URL also
+      // happens to be a public path (e.g. the very first history entry,
+      // '/', maps to 'landing') -- same "a resolved session wins"
+      // principle onAuthStateChange already applies on initial load.
+      // LaundryOpsApp's own popstate listener resolves which tab that
+      // means internally. A genuinely unknown URL still shows the real
+      // 404 regardless of auth state. Depends on tenantId (not []) so
+      // this doesn't close over a stale null from before login resolved.
+      setCurrentPage(tenantId && resolvedPage !== 'notFound' ? 'dashboard' : resolvedPage);
       setTermsScrollTarget(path === '/privacy' ? 'privacy' : null);
       if (path === '/en') setSiteLang('en'); else if (path === '/') setSiteLang((l) => (l === 'en' ? 'ar' : l));
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, []);
+  }, [tenantId]);
   // Keeps <title>/description/canonical/robots/hreflang/<html lang> in sync
   // with whatever page is actually showing — there's one static index.html
   // shared by every route, so without this every public URL would report
