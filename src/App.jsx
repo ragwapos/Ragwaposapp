@@ -2250,6 +2250,12 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const containerRef = useRef(null);
+  // TEMPORARY diagnostic (remove once the Samsung Internet selection bug is
+  // confirmed fixed) — three prior fixes to the outside-click listener
+  // (pointerdown, then mousedown, then mousedown+touchstart) did not resolve
+  // it there, so this surfaces what's actually happening on-device instead
+  // of guessing a fourth blind change.
+  const [dbg, setDbg] = useState("");
   const selected = customers.find((c) => c.id === Number(customerId));
   const idOnly = query.startsWith("#");
   const results = customers.filter((c) =>
@@ -2277,13 +2283,27 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
   useEffect(() => {
     if (!open) return;
     const handleOutside = (e) => {
-      if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false);
+      const inside = containerRef.current && containerRef.current.contains(e.target);
+      if (!inside) {
+        const t = e.target;
+        setDbg(`${e.type} OUTSIDE tgt=${t.tagName}.${String(t.className).slice(0, 24)}`);
+        setOpen(false);
+      }
+    };
+    // TEMPORARY: log every click that reaches document while the list is
+    // open, so we can see whether a tap on a result button ever produces a
+    // click at all on this device, and where it lands if not.
+    const handleAnyClick = (e) => {
+      const t = e.target;
+      setDbg((prev) => `${prev} | click tgt=${t.tagName}.${String(t.className).slice(0, 24)}`);
     };
     document.addEventListener("mousedown", handleOutside);
     document.addEventListener("touchstart", handleOutside);
+    document.addEventListener("click", handleAnyClick);
     return () => {
       document.removeEventListener("mousedown", handleOutside);
       document.removeEventListener("touchstart", handleOutside);
+      document.removeEventListener("click", handleAnyClick);
     };
   }, [open]);
 
@@ -2324,7 +2344,7 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
         {open && (
           <div className="absolute z-20 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-app-border bg-app-surface shadow-app-md">
             {results.map((c) => (
-              <button key={c.id} type="button" onClick={() => { onSelect(c.id); setOpen(false); setQuery(""); }}
+              <button key={c.id} type="button" onClick={() => { setDbg(`click SELECT #${c.id}`); onSelect(c.id); setOpen(false); setQuery(""); }}
                 className="block w-full px-3 py-2 text-left text-sm hover:bg-app-bg">
                 <span className="f-mono text-slate-400 mr-1.5">#{c.id}</span>{c.name}<span className="text-slate-400"> · {c.mobile}</span>
               </button>
@@ -2332,6 +2352,8 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
             {results.length === 0 && <div className="px-3 py-2 text-sm text-slate-400">{t("pos_noMatchingCustomers")}</div>}
           </div>
         )}
+        {/* TEMPORARY diagnostic line — see the note above `dbg`'s declaration. */}
+        {dbg && <div className="mt-1 break-all text-[10px] text-slate-400">dbg: {dbg}</div>}
       </div>
       <button type="button" onClick={onAddNew} title={t("addCustomer_title")} className="shrink-0 rounded-lg border border-brand-300 bg-brand-50 px-3 py-2 text-brand-700 hover:bg-brand-100"><Plus size={16} /></button>
     </div>
