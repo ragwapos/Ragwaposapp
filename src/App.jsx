@@ -8815,6 +8815,12 @@ function pathForTab(tab, subTab) {
   return DASHBOARD_TAB_PATHS[tab] || '/home';
 }
 function tabForPath(path) {
+  // '/' itself is never pushed by navigateTab (home's real URL is /home),
+  // but it's always the very first browser-history entry for any session
+  // (the page's original load URL) -- so back/forward can land back on it
+  // for an authenticated tenant. Treat it as home rather than leaving
+  // whatever tab was showing before stuck on screen under a '/' URL.
+  if (path === '/') return { tab: 'home', subTab: null };
   const reportsSub = Object.entries(REPORTS_SUBTAB_PATHS).find(([, p]) => p === path);
   if (reportsSub) return { tab: 'reports', subTab: reportsSub[0] };
   const purchasesSub = Object.entries(PURCHASES_SUBTAB_PATHS).find(([, p]) => p === path);
