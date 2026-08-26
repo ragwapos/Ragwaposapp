@@ -8205,6 +8205,27 @@ function ForgotPasswordPage({ navigate }) {
   );
 }
 
+// Shown for any URL not in PATH_PAGE_MAP — middleware.js (repo root) already
+// answers these with a real HTTP 404 status; this is what actually renders
+// once that shell loads client-side.
+function NotFoundPage({ navigate }) {
+  const goHome = (e) => { e.preventDefault(); navigate('landing', '/'); };
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
+      <div className="w-full max-w-md text-center">
+        <img src={LOGO_DATA_URI} alt="Ragwa" className="inline-block w-16 h-16 rounded-2xl object-contain mb-4 shadow-lg" />
+        <div className="bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
+          <h1 className="text-5xl font-bold text-white mb-3">404</h1>
+          <p className="text-gray-400 text-sm mb-8">هذي الصفحة غير موجودة — يمكن الرابط قديم أو فيه خطأ إملائي.</p>
+          <a href="/" onClick={goHome} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 rounded-lg transition inline-block text-center">
+            رجوع للصفحة الرئيسية
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Reached only via the PASSWORD_RECOVERY auth event (see the
 // onAuthStateChange listener in LaundryPOS) — a real recovery session
 // already exists at this point, so auth.updateUser() is all that's needed.
@@ -8690,7 +8711,11 @@ const PATH_PAGE_MAP = {
   '/forgot-password': 'forgotPassword',
   '/terms': 'terms', '/privacy': 'terms',
 };
-const pageForPath = (path) => PATH_PAGE_MAP[path] || 'landing';
+// Anything not in PATH_PAGE_MAP is a genuinely unknown URL, not the landing
+// page — middleware.js (repo root) already answers these with a real HTTP
+// 404 status; this just makes sure the client-rendered UI matches that,
+// instead of silently showing the landing page for a broken/typo'd link.
+const pageForPath = (path) => PATH_PAGE_MAP[path] || 'notFound';
 const PAGE_TO_PATH = {
   landing: '/', login: '/login', signup: '/signup', forgotPassword: '/forgot-password',
 };
@@ -8715,6 +8740,7 @@ function getPageMeta(page, termsScrollTarget, siteLang) {
     case 'signup': return { title: 'إنشاء حساب | رغوة', description: 'أنشئ حساب رغوة مجاناً وابدأ إدارة مغسلتك اليوم.', path: '/signup', robots: null };
     case 'forgotPassword': return { title: 'استعادة كلمة المرور | رغوة', description: 'استعد كلمة مرور حسابك في رغوة.', path: '/forgot-password', robots: 'noindex,follow' };
     case 'terms': return { title: 'الشروط والأحكام | رغوة', description: 'الشروط والأحكام الخاصة باستخدام منصة رغوة.', path: '/terms', robots: null };
+    case 'notFound': return { title: 'الصفحة غير موجودة | رغوة', description: 'الصفحة اللي تدور عليها مو موجودة.', path: window.location.pathname, robots: 'noindex,follow' };
     default: return { title: 'رغوة | نظام نقطة بيع لمغاسل الملابس', description: 'رغوة: نظام نقطة بيع لمغاسل الملابس يجمع البيع، تتبع الطلبات، الاشتراكات، والدفع الآجل في مكان واحد. جرّب رغوة مجاناً.', path: '/', robots: null };
   }
 }
@@ -9253,6 +9279,8 @@ const LaundryPOS = () => {
       handleSignup={handleSignup} signupError={signupError} signupLoading={signupLoading}
       onOpenTerms={openTerms}
     />
+  ) : currentPage === 'notFound' ? (
+    <NotFoundPage navigate={navigate} />
   ) : currentPage === 'admin' ? (
     <AdminDashboard
       registrationRequests={registrationRequests}

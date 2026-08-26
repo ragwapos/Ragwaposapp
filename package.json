@@ -17,6 +17,7 @@
     "@supabase/supabase-js": "^2.110.8",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.2",
+    "@vercel/functions": "^3.9.5",
     "asn1js": "^3.0.10",
     "html2canvas": "^1.4.1",
     "lucide-react": "^0.400.0",
