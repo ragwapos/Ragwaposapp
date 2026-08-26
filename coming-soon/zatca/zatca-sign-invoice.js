@@ -2,9 +2,9 @@ import { createClient } from '@supabase/supabase-js';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import { sha256 } from '@noble/hashes/sha2.js';
 import { verifyTenantSession } from './_auth.js';
-import { checkRateLimit } from './_rateLimit.js';
-import { Sentry } from './_sentry.js';
-import { applyCors } from './_cors.js';
+import { checkRateLimit } from '../../api/_rateLimit.js';
+import { Sentry } from '../../api/_sentry.js';
+import { applyCors } from '../../api/_cors.js';
 
 // Server-side only, same pattern as zatca-generate-keys.js — the tenant's
 // decrypted private key must never leave this function.
@@ -266,7 +266,7 @@ export default async function handler(req, res) {
               <ds:SignedInfo>
                 <ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#ecdsa-sha256"/>
               </ds:SignedInfo>
-              <ds:SignatureValue>${Buffer.from(signatureDer).toString('base64')}</ds:SignatureValue>
+              <ds:SignatureValue>${esc(Buffer.from(signatureDer).toString('base64'))}</ds:SignatureValue>
               <ds:KeyInfo>
                 <ds:X509Data>
                   <ds:X509Certificate>PENDING_REAL_ZATCA_CSID</ds:X509Certificate>

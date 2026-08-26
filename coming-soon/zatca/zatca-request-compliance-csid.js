@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 import { verifyTenantSession } from './_auth.js';
-import { checkRateLimit } from './_rateLimit.js';
-import { Sentry } from './_sentry.js';
-import { applyCors } from './_cors.js';
+import { checkRateLimit } from '../../api/_rateLimit.js';
+import { Sentry } from '../../api/_sentry.js';
+import { applyCors } from '../../api/_cors.js';
 
 // Server-side only, same pattern as the other api/zatca-*.js files.
 const supabaseAdmin = createClient(

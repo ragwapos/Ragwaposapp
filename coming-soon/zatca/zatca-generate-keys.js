@@ -2,9 +2,9 @@ import { createClient } from '@supabase/supabase-js';
 import { secp256k1 } from '@noble/curves/secp256k1.js';
 import * as asn1js from 'asn1js';
 import { verifyTenantSession } from './_auth.js';
-import { checkRateLimit } from './_rateLimit.js';
-import { Sentry } from './_sentry.js';
-import { applyCors } from './_cors.js';
+import { checkRateLimit } from '../../api/_rateLimit.js';
+import { Sentry } from '../../api/_sentry.js';
+import { applyCors } from '../../api/_cors.js';
 
 // Server-side only, same pattern as send-verification-email.js: the tenant's
 // ZATCA private key and the AES key that encrypts it must never reach the
