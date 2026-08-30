@@ -355,12 +355,7 @@ function rpcBalanceError(error) {
 function isMissingRpcError(error) {
   return error?.code === "PGRST202" || error?.code === "42883" || /could not find the function|does not exist/i.test(error?.message || "");
 }
-async function sha256Hex(text) {
-  const bytes = new TextEncoder().encode(text);
-  const digest = await crypto.subtle.digest("SHA-256", bytes);
-  return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-const fmtDate = (iso) => new Date(iso).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const fmtDate =(iso) => new Date(iso).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 const fmtDateSec = (iso) => new Date(iso).toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 function printDateLabel(iso) {
   const d = new Date(iso);
@@ -1244,6 +1239,7 @@ const DICT = {
     owner_pinLabel: "Password (4 digits)", owner_pinConfirmLabel: "Confirm password",
     owner_pinFormatError: "Password must be exactly 4 digits (numbers only).", owner_pinMismatch: "Passwords don't match.",
     owner_pinWrong: "Incorrect password.",
+    owner_pinOpFailed: "Couldn't complete this action. Please try again.",
     owner_payMethodsTitle: "Payment Methods Shown at POS", owner_payMethodsHint: "Turn off any payment method the staff should not see or use at checkout.",
     owner_atLeastOnePayMethod: "At least one payment method must stay enabled.",
     owner_sectionLockTitle: "Lock Sections From Staff", owner_sectionLockHint: "Turn on a section to require the owner PIN before staff can open it.",
@@ -1510,6 +1506,7 @@ const DICT = {
     owner_pinLabel: "كلمة المرور (٤ أرقام)", owner_pinConfirmLabel: "تأكيد كلمة المرور",
     owner_pinFormatError: "كلمة المرور لازم تكون ٤ أرقام بالضبط (أرقام فقط).", owner_pinMismatch: "كلمتا المرور غير متطابقتين.",
     owner_pinWrong: "كلمة المرور غير صحيحة.",
+    owner_pinOpFailed: "تعذّر إتمام العملية. حاول مرة أخرى.",
     owner_payMethodsTitle: "طرق الدفع الظاهرة بصفحة البيع", owner_payMethodsHint: "أطفئ أي طريقة دفع ما تبي الموظف يشوفها أو يستخدمها وقت البيع.",
     owner_atLeastOnePayMethod: "لازم تبقى طريقة دفع واحدة على الأقل مفعّلة.",
     owner_sectionLockTitle: "إغلاق الأقسام عن الموظفين", owner_sectionLockHint: "فعّل أي قسم عشان يطلب رمز المالك قبل ما يقدر الموظف يفتحه.",
@@ -1776,6 +1773,7 @@ const DICT = {
     owner_pinLabel: "پاس ورڈ (4 ہندسے)", owner_pinConfirmLabel: "پاس ورڈ کی تصدیق کریں",
     owner_pinFormatError: "پاس ورڈ بالکل 4 ہندسوں پر مشتمل ہونا چاہیے (صرف نمبر)۔", owner_pinMismatch: "پاس ورڈز مماثل نہیں ہیں۔",
     owner_pinWrong: "پاس ورڈ غلط ہے۔",
+    owner_pinOpFailed: "یہ عمل مکمل نہیں ہو سکا۔ دوبارہ کوشش کریں۔",
     owner_payMethodsTitle: "POS پر دکھائے جانے والے ادائیگی کے طریقے", owner_payMethodsHint: "کوئی بھی ایسا طریقہ بند کر دیں جو عملے کو چیک آؤٹ پر نظر نہیں آنا چاہیے۔",
     owner_atLeastOnePayMethod: "کم از کم ایک ادائیگی کا طریقہ فعال رہنا ضروری ہے۔",
     owner_sectionLockTitle: "عملے سے حصے مقفل کریں", owner_sectionLockHint: "کسی حصے کو فعال کریں تاکہ عملہ اسے کھولنے سے پہلے مالک کا پن درج کرے۔",
@@ -4990,6 +4988,23 @@ function ReportsView({ tab, setTab, invoices, purchases, suppliers, categories, 
 /* =========================================================================
    SETTINGS
    ========================================================================= */
+// Owner/section PIN check now happens server-side (api/verify-pin.js) --
+// the hash/salt never touch the browser. See supabase-owner-pin-hardening.sql
+// and PROJECT_REFERENCE.md's PIN hardening section for the full design.
+async function callVerifyPin(body) {
+  const { data: { session } } = await auth.getSession();
+  try {
+    const res = await fetch("/api/verify-pin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token || ""}` },
+      body: JSON.stringify(body),
+    });
+    return await res.json();
+  } catch {
+    return { success: false, error: "network_error" };
+  }
+}
+
 function PinPromptModal({ title, mode, verify, onSuccess, onClose }) {
   const { t } = useLang();
   const [pin, setPin] = useState("");
@@ -5002,7 +5017,10 @@ function PinPromptModal({ title, mode, verify, onSuccess, onClose }) {
     if (!/^\d{4}$/.test(pin)) { setError(t("owner_pinFormatError")); return; }
     if (isSet) {
       if (pin !== confirmPin) { setError(t("owner_pinMismatch")); return; }
-      onSuccess(await sha256Hex(pin));
+      // Raw PIN passed up on purpose -- the caller sends it straight to
+      // api/verify-pin.js, which derives and stores a salted hash. Nothing
+      // in the browser ever computes or holds a PIN hash anymore.
+      onSuccess(pin);
     } else {
       if (await verify(pin)) onSuccess(pin);
       else setError(t("owner_pinWrong"));
@@ -5321,14 +5339,21 @@ function WhatsAppSettingsPanel({ whatsappEnabled, setWhatsappEnabled, whatsappTe
 // the merchant-info/ZATCA cards above. Business logic below (PIN verify/
 // hash, section lock set/clear, pay-method enable/disable) is unchanged
 // from before this layout pass — only the surrounding JSX/className moved.
-function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods }) {
+function OwnerOnlySettings({ ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods }) {
   const { t } = useLang();
   const [showMasterPin, setShowMasterPin] = useState(false);
   // What to actually do once the master password comes back verified —
   // set right before opening the prompt, consumed and cleared on success.
   const [pendingAction, setPendingAction] = useState(null); // { type: "pay", value } | { type: "section", key }
   const [pendingSection, setPendingSection] = useState(null);
+  // Held only for the few seconds between "master PIN just verified" and
+  // "new section PIN submitted" -- api/verify-pin.js re-checks it server-side
+  // before actually writing the new section PIN (a client-side-only gate
+  // between two independent requests would be exactly the kind of bypass
+  // this whole hardening pass exists to close).
+  const [verifiedMasterPin, setVerifiedMasterPin] = useState(null);
   const [payMethodError, setPayMethodError] = useState("");
+  const [pinOpError, setPinOpError] = useState("");
 
   const applyPayMethodToggle = (value) => {
     const enabledCount = Object.values(enabledPayMethods).filter(Boolean).length;
@@ -5340,21 +5365,32 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
   const requestPayMethodToggle = (value) => { setPendingAction({ type: "pay", value }); setShowMasterPin(true); };
   const requestSectionToggle = (key) => { setPendingAction({ type: "section", key }); setShowMasterPin(true); };
 
-  const handleMasterSuccess = (pin) => {
-    if (!ownerPassword) setOwnerPassword(pin);
+  const handleMasterSuccess = async (pin) => {
+    setPinOpError("");
+    if (!ownerPinSet) {
+      const r = await callVerifyPin({ action: "set_master", pin });
+      if (!r.success) { setPinOpError(t("owner_pinOpFailed")); setShowMasterPin(false); setPendingAction(null); return; }
+    }
     setShowMasterPin(false);
     if (pendingAction?.type === "pay") {
       applyPayMethodToggle(pendingAction.value);
     } else if (pendingAction?.type === "section") {
       const key = pendingAction.key;
-      if (sectionLocks[key]) setSectionLocks((prev) => ({ ...prev, [key]: null }));
-      else setPendingSection(key);
+      if (sectionLocks[key]) {
+        const r = await callVerifyPin({ action: "disable_section", masterPin: pin, scope: key });
+        if (!r.success) setPinOpError(t("owner_pinOpFailed"));
+      } else {
+        setVerifiedMasterPin(pin);
+        setPendingSection(key);
+      }
     }
     setPendingAction(null);
   };
 
-  const handleSectionPinSet = (pin) => {
-    setSectionLocks((prev) => ({ ...prev, [pendingSection]: pin }));
+  const handleSectionPinSet = async (newPin) => {
+    const r = await callVerifyPin({ action: "set_section", masterPin: verifiedMasterPin, scope: pendingSection, newPin });
+    if (!r.success) setPinOpError(t("owner_pinOpFailed"));
+    setVerifiedMasterPin(null);
     setPendingSection(null);
   };
 
@@ -5362,15 +5398,9 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
     <>
       {showMasterPin && (
         <PinPromptModal
-          title={ownerPassword ? t("owner_enterMasterTitle") : t("owner_setMasterTitle")}
-          mode={ownerPassword ? "enter" : "set"}
-          verify={async (pin) => {
-            if (pin === ownerPassword) { // legacy plaintext — self-heal to a hash
-              sha256Hex(pin).then(setOwnerPassword);
-              return true;
-            }
-            return (await sha256Hex(pin)) === ownerPassword;
-          }}
+          title={ownerPinSet ? t("owner_enterMasterTitle") : t("owner_setMasterTitle")}
+          mode={ownerPinSet ? "enter" : "set"}
+          verify={async (pin) => (await callVerifyPin({ action: "verify", scope: "master", pin })).success}
           onSuccess={handleMasterSuccess}
           onClose={() => { setShowMasterPin(false); setPendingAction(null); }}
         />
@@ -5380,7 +5410,7 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
           title={t("owner_setSectionTitle", { section: t(OWNER_SECTIONS.find((s) => s.key === pendingSection).labelKey) })}
           mode="set"
           onSuccess={handleSectionPinSet}
-          onClose={() => setPendingSection(null)}
+          onClose={() => { setPendingSection(null); setVerifiedMasterPin(null); }}
         />
       )}
     </>
@@ -5434,6 +5464,7 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
             <span className="inline-flex items-center gap-1 rounded-full bg-app-bg px-2 py-1 text-[11px] font-semibold text-app-text-muted">{t("owner_protectedByMaster")}</span>
           </div>
         </div>
+        {pinOpError && <div className="mt-2 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{pinOpError}</div>}
       </div>
 
       {pinModals}
@@ -5441,7 +5472,7 @@ function OwnerOnlySettings({ ownerPassword, setOwnerPassword, sectionLocks, setS
   );
 }
 
-function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, onLogout, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+function SettingsView({ merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, onLogout, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { lang, setLang, t } = useLang();
   const options = [
     { code: "ar", key: "settings_lang_ar" },
@@ -5529,7 +5560,7 @@ function SettingsView({ merchant, setMerchant, ownerPassword, setOwnerPassword, 
 
         {/* Cards 3 & 4: enabled payment methods + per-section staff locks,
             both behind the same master owner PIN — see OwnerOnlySettings. */}
-        <OwnerOnlySettings ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} />
+        <OwnerOnlySettings ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} />
       </div>
 
       <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
@@ -5633,7 +5664,7 @@ function HomeDashboardView({ invoices, merchant, setTab }) {
 /* =========================================================================
    ROOT APP
    ========================================================================= */
-function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPassword, setOwnerPassword, sectionLocks, setSectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { dir, t } = useLang();
   const isRtl = dir === "rtl";
   // The sidebar is a fixed off-canvas drawer below lg: (closed by default,
@@ -5669,7 +5700,7 @@ function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pe
         {tab === "purchases" && <PurchasesExpensesView tab={purchasesSubTab} setTab={(s) => navigateTab("purchases", s)} suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={purchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={expenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
         {tab === "promotions" && <PromotionsView promotions={promotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
         {tab === "reports" && <ReportsView tab={reportsSubTab} setTab={(s) => navigateTab("reports", s)} invoices={invoices} purchases={purchases} suppliers={suppliers} categories={categories} customers={customers} expenses={expenses} expenseCategories={expenseCategories} />}
-        {tab === "settings" && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword} sectionLocks={sectionLocks} setSectionLocks={setSectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
+        {tab === "settings" && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
         </main>
       </div>
       {/* Same PIN-prompt-on-locked-nav flow the sidebar always had —
@@ -5680,15 +5711,7 @@ function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pe
         <PinPromptModal
           title={t("owner_enterSectionTitle")}
           mode="enter"
-          verify={async (pin) => {
-            const stored = sectionLocks[pendingNav.key];
-            if (pin === stored) { // legacy plaintext — self-heal to a hash
-              const key = pendingNav.key;
-              sha256Hex(pin).then((h) => setSectionLocks((p) => ({ ...p, [key]: h })));
-              return true;
-            }
-            return (await sha256Hex(pin)) === stored;
-          }}
+          verify={async (pin) => (await callVerifyPin({ action: "verify", scope: pendingNav.key, pin })).success}
           onSuccess={() => { navigateTab(pendingNav.key, pendingNav.subTab); setPendingNav(null); }}
           onClose={() => setPendingNav(null)}
         />
@@ -5995,8 +6018,12 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   // once the initial load has completed (so we never overwrite real saved
   // settings with the blank defaults during the first render).
   const [merchant, setMerchant] = useState({ name: "", phone: "", address: "", taxNumber: "", autoPrint: false, autoPrintCopies: 1, showPrintPreview: true });
-  const [ownerPassword, setOwnerPassword] = useState(null);
-  const [sectionLocks, setSectionLocks] = useState({ customers: null, inventory: null, purchases: null, promotions: null, reports: null });
+  // Whether a master PIN exists and which sections are locked -- booleans
+  // only. The actual PIN hashes live server-side (owner_pin_credentials,
+  // never sent to the client) and are checked via api/verify-pin.js; see
+  // callVerifyPin/PROJECT_REFERENCE.md's PIN hardening section.
+  const [ownerPinSet, setOwnerPinSet] = useState(false);
+  const [sectionLocks, setSectionLocks] = useState({ customers: false, inventory: false, purchases: false, promotions: false, reports: false });
   const [enabledPayMethods, setEnabledPayMethods] = useState({ Cash: true, "External Network": true, "Wallet Balance": true, "Credit (On Account)": true, Split: true });
   // Empty string means "use DEFAULT_WHATSAPP_TEMPLATE" (see src/utils/phone.js)
   // rather than storing the default text itself, so a future change to the
@@ -6025,8 +6052,11 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
       if (d) {
         setSettingsRowId(d.id);
         if (d.merchant) setMerchant(d.merchant);
-        if (d.ownerPassword !== undefined) setOwnerPassword(d.ownerPassword);
-        if (d.sectionLocks) setSectionLocks(d.sectionLocks);
+        if (d.ownerPinSet !== undefined) setOwnerPinSet(Boolean(d.ownerPinSet));
+        if (d.lockedSections) {
+          const locked = new Set(d.lockedSections);
+          setSectionLocks(Object.fromEntries(OWNER_SECTIONS.map((s) => [s.key, locked.has(s.key)])));
+        }
         if (d.enabledPayMethods) setEnabledPayMethods(d.enabledPayMethods);
         if (d.whatsappTemplate !== undefined && d.whatsappTemplate !== null) setWhatsappTemplate(d.whatsappTemplate);
         if (d.whatsappEnabled !== undefined && d.whatsappEnabled !== null) setWhatsappEnabled(Boolean(d.whatsappEnabled));
@@ -6095,12 +6125,15 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     if (!tenantId || !settingsLoaded) return;
     const rowId = settingsRowId || crypto.randomUUID();
     if (!settingsRowId) setSettingsRowId(rowId);
-    // Always writing all 7 tracked fields together (never a partial subset)
-    // is the equivalent of Firestore's { merge: true } here.
-    db.from("tenant_settings").upsert(toSnakeCase({ id: rowId, tenantId, merchant, ownerPassword, sectionLocks, enabledPayMethods, whatsappTemplate, whatsappEnabled, lang }))
+    // Always writing all 5 tracked fields together (never a partial subset)
+    // is the equivalent of Firestore's { merge: true } here. ownerPinSet/
+    // lockedSections are deliberately NOT written from here -- they're
+    // server-managed (api/verify-pin.js, via the service-role key) so this
+    // client-side save can never clobber them with stale local state.
+    db.from("tenant_settings").upsert(toSnakeCase({ id: rowId, tenantId, merchant, enabledPayMethods, whatsappTemplate, whatsappEnabled, lang }))
       .then(({ error }) => { if (error) console.error("settings save failed", error); });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tenantId, settingsLoaded, merchant, ownerPassword, sectionLocks, enabledPayMethods, whatsappTemplate, whatsappEnabled, lang]);
+  }, [tenantId, settingsLoaded, merchant, enabledPayMethods, whatsappTemplate, whatsappEnabled, lang]);
 
   const walkInLabel = lang === "ar" ? "عميل مباشر" : lang === "ur" ? "براہ راست گاہک" : "Walk-in";
 
@@ -6340,8 +6373,8 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
         promotions={promotions} addPromotion={addPromotion} updatePromotion={updatePromotion}
         createInvoice={createInvoice}
         merchant={merchant} setMerchant={setMerchant}
-        ownerPassword={ownerPassword} setOwnerPassword={setOwnerPassword}
-        sectionLocks={sectionLocks} setSectionLocks={setSectionLocks}
+        ownerPinSet={ownerPinSet}
+        sectionLocks={sectionLocks}
         enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods}
         whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate}
         whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled}
