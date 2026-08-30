@@ -27,3 +27,16 @@ th {
 .scrollbar-none::-webkit-scrollbar {
   display: none; /* Chrome/Safari/new Edge */
 }
+
+/* PIN modal error feedback (PinPromptModal) -- a symmetric horizontal
+   shake, so it reads the same in RTL and LTR without any direction-aware
+   adjustment. Tailwind ships no shake utility, hence the custom keyframe. */
+@keyframes pin-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+.animate-pin-shake {
+  animation: pin-shake 400ms ease-in-out;
+}

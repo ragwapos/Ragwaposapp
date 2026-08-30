@@ -3,7 +3,7 @@ import {
   Search, Plus, X, Check, Shirt, Package, Users, ClipboardList,
   Truck, Tag, BarChart3, Wallet, ImageIcon, Ban, Trash2, CreditCard,
   Banknote, Percent, Clock, Mail, AlertCircle, CheckCircle2, Circle, Upload,
-  ReceiptText, Receipt, Building2, FileText, Settings, Globe, Lock, Pencil, Paperclip,
+  ReceiptText, Receipt, Building2, FileText, Settings, Globe, Lock, Unlock, Pencil, Paperclip,
   MessageCircle, Loader2, Smartphone, Car, QrCode, MapPin, Home, SplitSquareHorizontal, Printer, StickyNote,
   Phone, User, Link2, FlaskConical, KeyRound, LogOut, XCircle, Download,
   SlidersHorizontal, ChevronDown, Menu
@@ -1240,6 +1240,7 @@ const DICT = {
     owner_pinFormatError: "Password must be exactly 4 digits (numbers only).", owner_pinMismatch: "Passwords don't match.",
     owner_pinWrong: "Incorrect password.",
     owner_pinOpFailed: "Couldn't complete this action. Please try again.",
+    owner_pinSaving: "Saving...",
     owner_payMethodsTitle: "Payment Methods Shown at POS", owner_payMethodsHint: "Turn off any payment method the staff should not see or use at checkout.",
     owner_atLeastOnePayMethod: "At least one payment method must stay enabled.",
     owner_sectionLockTitle: "Lock Sections From Staff", owner_sectionLockHint: "Turn on a section to require the owner PIN before staff can open it.",
@@ -1507,6 +1508,7 @@ const DICT = {
     owner_pinFormatError: "كلمة المرور لازم تكون ٤ أرقام بالضبط (أرقام فقط).", owner_pinMismatch: "كلمتا المرور غير متطابقتين.",
     owner_pinWrong: "كلمة المرور غير صحيحة.",
     owner_pinOpFailed: "تعذّر إتمام العملية. حاول مرة أخرى.",
+    owner_pinSaving: "جارِ الحفظ...",
     owner_payMethodsTitle: "طرق الدفع الظاهرة بصفحة البيع", owner_payMethodsHint: "أطفئ أي طريقة دفع ما تبي الموظف يشوفها أو يستخدمها وقت البيع.",
     owner_atLeastOnePayMethod: "لازم تبقى طريقة دفع واحدة على الأقل مفعّلة.",
     owner_sectionLockTitle: "إغلاق الأقسام عن الموظفين", owner_sectionLockHint: "فعّل أي قسم عشان يطلب رمز المالك قبل ما يقدر الموظف يفتحه.",
@@ -1774,6 +1776,7 @@ const DICT = {
     owner_pinFormatError: "پاس ورڈ بالکل 4 ہندسوں پر مشتمل ہونا چاہیے (صرف نمبر)۔", owner_pinMismatch: "پاس ورڈز مماثل نہیں ہیں۔",
     owner_pinWrong: "پاس ورڈ غلط ہے۔",
     owner_pinOpFailed: "یہ عمل مکمل نہیں ہو سکا۔ دوبارہ کوشش کریں۔",
+    owner_pinSaving: "محفوظ ہو رہا ہے...",
     owner_payMethodsTitle: "POS پر دکھائے جانے والے ادائیگی کے طریقے", owner_payMethodsHint: "کوئی بھی ایسا طریقہ بند کر دیں جو عملے کو چیک آؤٹ پر نظر نہیں آنا چاہیے۔",
     owner_atLeastOnePayMethod: "کم از کم ایک ادائیگی کا طریقہ فعال رہنا ضروری ہے۔",
     owner_sectionLockTitle: "عملے سے حصے مقفل کریں", owner_sectionLockHint: "کسی حصے کو فعال کریں تاکہ عملہ اسے کھولنے سے پہلے مالک کا پن درج کرے۔",
@@ -5005,40 +5008,83 @@ async function callVerifyPin(body) {
   }
 }
 
-function PinPromptModal({ title, mode, verify, onSuccess, onClose }) {
+// onSubmitPin(pin): async, returns true/false -- does the actual work
+// (verify or set) against api/verify-pin.js. onDone(pin): sync, called
+// ~450ms AFTER a successful onSubmitPin (once the success animation has
+// played), where the caller does its own state transition (open the next
+// modal, close, flip a lock icon on the settings page). This split is what
+// lets the modal show real loading/success/error feedback instead of the
+// old fire-and-forget onSuccess, which gave no indication a network
+// round-trip was even happening.
+function PinPromptModal({ title, mode, onSubmitPin, onDone, onClose }) {
   const { t } = useLang();
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [error, setError] = useState("");
+  const [phase, setPhase] = useState("idle"); // idle | busy | success | error
+  const [mounted, setMounted] = useState(false);
   const isSet = mode === "set";
   const digits = (v) => v.replace(/\D/g, "").slice(0, 4);
+  const busy = phase === "busy" || phase === "success";
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  // Bounces through "idle" first so the shake class is genuinely removed
+  // and re-added even on back-to-back failures (e.g. two invalid-format
+  // submits with no busy phase in between) -- a same-value className
+  // update alone wouldn't restart the CSS animation. No key/remount trick,
+  // so the input DOM nodes (and focus) are never disturbed.
+  const fail = (message) => {
+    setError(message);
+    setPhase("idle");
+    requestAnimationFrame(() => setPhase("error"));
+  };
 
   const submit = async () => {
-    if (!/^\d{4}$/.test(pin)) { setError(t("owner_pinFormatError")); return; }
-    if (isSet) {
-      if (pin !== confirmPin) { setError(t("owner_pinMismatch")); return; }
-      // Raw PIN passed up on purpose -- the caller sends it straight to
-      // api/verify-pin.js, which derives and stores a salted hash. Nothing
-      // in the browser ever computes or holds a PIN hash anymore.
-      onSuccess(pin);
-    } else {
-      if (await verify(pin)) onSuccess(pin);
-      else setError(t("owner_pinWrong"));
-    }
+    if (busy) return;
+    if (!/^\d{4}$/.test(pin)) { fail(t("owner_pinFormatError")); return; }
+    if (isSet && pin !== confirmPin) { fail(t("owner_pinMismatch")); return; }
+    setError("");
+    setPhase("busy");
+    // Raw PIN sent straight to api/verify-pin.js either way -- it derives
+    // and stores/compares a salted hash server-side. Nothing in the
+    // browser ever computes or holds a PIN hash anymore.
+    const ok = await onSubmitPin(pin);
+    if (!ok) { fail(t("owner_pinWrong")); return; }
+    setPhase("success");
+    setTimeout(() => onDone(pin), 450);
   };
 
   return (
-    <Modal title={title} onClose={onClose}>
-      <Field label={t("owner_pinLabel")}>
-        <input autoFocus type="password" autoComplete="new-password" name="owner-pin-entry" inputMode="numeric" maxLength={4} value={pin} onChange={(e) => { setPin(digits(e.target.value)); setError(""); }} className={`${inputCls} f-mono text-center text-lg tracking-[0.4em]`} />
-      </Field>
-      {isSet && (
-        <Field label={t("owner_pinConfirmLabel")}>
-          <input type="password" autoComplete="new-password" name="owner-pin-confirm" inputMode="numeric" maxLength={4} value={confirmPin} onChange={(e) => { setConfirmPin(digits(e.target.value)); setError(""); }} className={`${inputCls} f-mono text-center text-lg tracking-[0.4em]`} />
+    <Modal title={title} onClose={busy ? () => {} : onClose}>
+      <div
+        className={`transition-all duration-300 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"} ${phase === "error" ? "animate-pin-shake" : ""}`}
+      >
+        <div className="mb-4 flex justify-center">
+          <span className={`flex size-12 items-center justify-center rounded-full transition-colors duration-300 ${phase === "success" ? "bg-teal-50 text-teal-600" : phase === "error" ? "bg-rose-50 text-rose-600" : "bg-app-bg text-app-text-subtle"}`}>
+            {phase === "success" && !isSet
+              ? <Unlock size={22} className="transition-transform duration-300" />
+              : <Lock size={22} className={`transition-transform duration-300 ${phase === "success" ? "scale-110" : ""}`} />}
+          </span>
+        </div>
+        <Field label={t("owner_pinLabel")}>
+          <input autoFocus disabled={busy} type="password" autoComplete="new-password" name="owner-pin-entry" inputMode="numeric" maxLength={4} value={pin} onChange={(e) => { setPin(digits(e.target.value)); setError(""); }} className={`${inputCls} f-mono text-center text-lg tracking-[0.4em] disabled:opacity-60`} />
         </Field>
-      )}
-      {error && <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{error}</div>}
-      <button onClick={submit} className="w-full rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700">{t("common_save")}</button>
+        {isSet && (
+          <Field label={t("owner_pinConfirmLabel")}>
+            <input disabled={busy} type="password" autoComplete="new-password" name="owner-pin-confirm" inputMode="numeric" maxLength={4} value={confirmPin} onChange={(e) => { setConfirmPin(digits(e.target.value)); setError(""); }} className={`${inputCls} f-mono text-center text-lg tracking-[0.4em] disabled:opacity-60`} />
+          </Field>
+        )}
+        {error && <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{error}</div>}
+        <button onClick={submit} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-lg bg-teal-600 py-2.5 font-semibold text-white hover:bg-teal-700 disabled:opacity-80 disabled:cursor-default">
+          {phase === "busy" && <><Loader2 size={16} className="animate-spin" /> {t("owner_pinSaving")}</>}
+          {phase === "success" && <><CheckCircle2 size={16} /> {t("common_save")}</>}
+          {(phase === "idle" || phase === "error") && t("common_save")}
+        </button>
+      </div>
     </Modal>
   );
 }
@@ -5354,6 +5400,13 @@ function OwnerOnlySettings({ ownerPinSet, sectionLocks, enabledPayMethods, setEn
   const [verifiedMasterPin, setVerifiedMasterPin] = useState(null);
   const [payMethodError, setPayMethodError] = useState("");
   const [pinOpError, setPinOpError] = useState("");
+  // Section row currently mid disable_section call -- no second modal on
+  // this path (the master modal already closed), so the row itself shows
+  // a small spinner in place of its Toggle instead.
+  const [disablingKey, setDisablingKey] = useState(null);
+  // Section key that JUST finished locking, for a brief highlight on its
+  // row -- cleared automatically a moment later.
+  const [justLockedKey, setJustLockedKey] = useState(null);
 
   const applyPayMethodToggle = (value) => {
     const enabledCount = Object.values(enabledPayMethods).filter(Boolean).length;
@@ -5365,20 +5418,19 @@ function OwnerOnlySettings({ ownerPinSet, sectionLocks, enabledPayMethods, setEn
   const requestPayMethodToggle = (value) => { setPendingAction({ type: "pay", value }); setShowMasterPin(true); };
   const requestSectionToggle = (key) => { setPendingAction({ type: "section", key }); setShowMasterPin(true); };
 
-  const handleMasterSuccess = async (pin) => {
-    setPinOpError("");
-    if (!ownerPinSet) {
-      const r = await callVerifyPin({ action: "set_master", pin });
-      if (!r.success) { setPinOpError(t("owner_pinOpFailed")); setShowMasterPin(false); setPendingAction(null); return; }
-    }
+  // onDone: called by PinPromptModal ~450ms after a successful master
+  // verify/set, once its own success animation has played.
+  const handleMasterDone = (pin) => {
     setShowMasterPin(false);
     if (pendingAction?.type === "pay") {
       applyPayMethodToggle(pendingAction.value);
     } else if (pendingAction?.type === "section") {
       const key = pendingAction.key;
       if (sectionLocks[key]) {
-        const r = await callVerifyPin({ action: "disable_section", masterPin: pin, scope: key });
-        if (!r.success) setPinOpError(t("owner_pinOpFailed"));
+        setDisablingKey(key);
+        callVerifyPin({ action: "disable_section", masterPin: pin, scope: key })
+          .then((r) => { if (!r.success) setPinOpError(t("owner_pinOpFailed")); })
+          .finally(() => setDisablingKey(null));
       } else {
         setVerifiedMasterPin(pin);
         setPendingSection(key);
@@ -5387,11 +5439,11 @@ function OwnerOnlySettings({ ownerPinSet, sectionLocks, enabledPayMethods, setEn
     setPendingAction(null);
   };
 
-  const handleSectionPinSet = async (newPin) => {
-    const r = await callVerifyPin({ action: "set_section", masterPin: verifiedMasterPin, scope: pendingSection, newPin });
-    if (!r.success) setPinOpError(t("owner_pinOpFailed"));
+  const handleSectionPinDone = (key) => {
     setVerifiedMasterPin(null);
     setPendingSection(null);
+    setJustLockedKey(key);
+    setTimeout(() => setJustLockedKey((k) => (k === key ? null : k)), 900);
   };
 
   const pinModals = (
@@ -5400,8 +5452,13 @@ function OwnerOnlySettings({ ownerPinSet, sectionLocks, enabledPayMethods, setEn
         <PinPromptModal
           title={ownerPinSet ? t("owner_enterMasterTitle") : t("owner_setMasterTitle")}
           mode={ownerPinSet ? "enter" : "set"}
-          verify={async (pin) => (await callVerifyPin({ action: "verify", scope: "master", pin })).success}
-          onSuccess={handleMasterSuccess}
+          onSubmitPin={async (pin) => {
+            setPinOpError("");
+            const action = ownerPinSet ? "verify" : "set_master";
+            const body = ownerPinSet ? { action, scope: "master", pin } : { action, pin };
+            return (await callVerifyPin(body)).success;
+          }}
+          onDone={handleMasterDone}
           onClose={() => { setShowMasterPin(false); setPendingAction(null); }}
         />
       )}
@@ -5409,7 +5466,13 @@ function OwnerOnlySettings({ ownerPinSet, sectionLocks, enabledPayMethods, setEn
         <PinPromptModal
           title={t("owner_setSectionTitle", { section: t(OWNER_SECTIONS.find((s) => s.key === pendingSection).labelKey) })}
           mode="set"
-          onSuccess={handleSectionPinSet}
+          onSubmitPin={async (newPin) => {
+            setPinOpError("");
+            const r = await callVerifyPin({ action: "set_section", masterPin: verifiedMasterPin, scope: pendingSection, newPin });
+            if (!r.success) setPinOpError(t("owner_pinOpFailed"));
+            return r.success;
+          }}
+          onDone={() => handleSectionPinDone(pendingSection)}
           onClose={() => { setPendingSection(null); setVerifiedMasterPin(null); }}
         />
       )}
@@ -5448,12 +5511,14 @@ function OwnerOnlySettings({ ownerPinSet, sectionLocks, enabledPayMethods, setEn
         <p className="mb-4 text-xs text-app-text-subtle">{t("owner_sectionLockHint")}</p>
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
           {OWNER_SECTIONS.map((s) => (
-            <div key={s.key} className="flex items-center justify-between rounded-lg border border-app-border px-3 py-2.5">
+            <div key={s.key} className={`flex items-center justify-between rounded-lg border px-3 py-2.5 transition-colors duration-500 ${justLockedKey === s.key ? "border-warning-200 bg-warning-50" : "border-app-border"}`}>
               <span className="flex items-center gap-2 text-sm text-app-text">
-                <Lock size={13} className={sectionLocks[s.key] ? "text-warning-600" : "text-app-text-subtle"} />
+                <Lock size={13} className={`transition-colors duration-300 ${sectionLocks[s.key] ? "text-warning-600" : "text-app-text-subtle"}`} />
                 {t(s.labelKey)}
               </span>
-              <Toggle checked={Boolean(sectionLocks[s.key])} onChange={() => requestSectionToggle(s.key)} />
+              {disablingKey === s.key
+                ? <Loader2 size={16} className="animate-spin text-app-text-subtle" />
+                : <Toggle checked={Boolean(sectionLocks[s.key])} onChange={() => requestSectionToggle(s.key)} />}
             </div>
           ))}
           <div className="flex items-center justify-between rounded-lg border border-app-border px-3 py-2.5">
@@ -5711,8 +5776,8 @@ function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pe
         <PinPromptModal
           title={t("owner_enterSectionTitle")}
           mode="enter"
-          verify={async (pin) => (await callVerifyPin({ action: "verify", scope: pendingNav.key, pin })).success}
-          onSuccess={() => { navigateTab(pendingNav.key, pendingNav.subTab); setPendingNav(null); }}
+          onSubmitPin={async (pin) => (await callVerifyPin({ action: "verify", scope: pendingNav.key, pin })).success}
+          onDone={() => { navigateTab(pendingNav.key, pendingNav.subTab); setPendingNav(null); }}
           onClose={() => setPendingNav(null)}
         />
       )}
