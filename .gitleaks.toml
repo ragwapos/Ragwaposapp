@@ -1,0 +1,15 @@
+title = "Ragwa gitleaks config"
+
+[extend]
+useDefault = true
+
+# Known public, non-secret client identifiers -- documented in
+# PROJECT_REFERENCE.md's security section and in .githooks/pre-commit's own
+# comment. Supabase's "publishable"/anon key is designed to ship in client
+# bundles (access is gated by RLS, not by keeping this value secret), so it
+# is not a real credential leak.
+[allowlist]
+description = "Public-by-design client identifiers"
+regexes = [
+  '''sb_publishable_[A-Za-z0-9_-]+''',
+]
