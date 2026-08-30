@@ -39,3 +39,20 @@ alter table tenant_settings add column if not exists locked_sections jsonb not n
 -- (تُقرأ من api/verify-pin.js فقط كمسار احتياطي أثناء الترحيل التلقائي،
 -- راجع القسم 3 بخطة التنفيذ) -- حذفها نهائياً خطوة تنظيف منفصلة لاحقة، بعد
 -- التأكد من ترحيل كل المستأجرين النشطين.
+
+-- =========================================================================
+-- Backfill (2026-08-31): owner_pin_set/locked_sections تبدأ false/[] افتراضياً
+-- بالأعمدة الجديدة -- صحيح لأي مستأجر جديد، لكن غلط لأي مستأجر عنده أصلاً
+-- owner_password أو section_locks مُعبّى من *قبل* هذا الإصلاح (كان يشتغل
+-- بالنظام القديم غير الآمن قبل هالجلسة). بدون هذا التصحيح، الواجهة تعرض
+-- "أنشئ باسورد مالك جديد" (mode=set) بدل "أدخل الباسورد الموجود" (mode=enter)
+-- لهذا المستأجر تحديداً -- ورقيب/الخادم يرفض set_master بـ409 already_set
+-- لأنه صح يكتشف وجود legacy hash، فيطلع "تعذّر إتمام العملية" بالواجهة.
+-- آمن للتشغيل أكثر من مرة (يعيد حساب القيم من نفس المصدر كل مرة).
+update tenant_settings
+set owner_pin_set = (owner_password is not null),
+    locked_sections = (
+      select coalesce(jsonb_agg(key), '[]'::jsonb)
+      from jsonb_each_text(coalesce(section_locks, '{}'::jsonb))
+      where value is not null
+    );
