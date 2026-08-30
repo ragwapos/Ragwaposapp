@@ -16,6 +16,8 @@
     }
   ],
   "rewrites": [
+    { "source": "/guides", "destination": "/guides/index.html" },
+    { "source": "/guides/:slug", "destination": "/guides/:slug.html" },
     { "source": "/((?!api/|assets/|.*\\.\\w+$).*)", "destination": "/index.html" }
   ]
 }

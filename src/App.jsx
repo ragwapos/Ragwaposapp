@@ -8103,6 +8103,11 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
             <a href="/privacy" onClick={(e) => { e.preventDefault(); onOpenTerms('privacy'); }} className="hover:text-white transition">
               {lang === 'ar' ? 'سياسة الخصوصية' : 'Privacy Policy'}
             </a>
+            {/* Plain full-page navigation on purpose -- /guides is a set of
+                static HTML pages outside the React app, not an SPA route. */}
+            <a href="/guides" className="hover:text-white transition">
+              {lang === 'ar' ? 'أدلة ومقالات' : 'Guides'}
+            </a>
           </div>
           <p className="text-xs text-gray-500 pt-2">© {new Date().getFullYear()} {t.brand} | {t.footerRights}</p>
         </div>

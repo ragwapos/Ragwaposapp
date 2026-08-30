@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/build-guides.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "prepare": "git config core.hooksPath .githooks || true"
