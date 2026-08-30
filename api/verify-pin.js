@@ -82,49 +82,50 @@ async function upsertCredential(tenantId, scope, pin) {
   if (error) throw error;
 }
 
-// Non-sensitive booleans only (which scopes are locked) -- safe for the
-// client to read via the existing tenant_settings row subscription. Recomputed
-// from owner_pin_credentials, the actual source of truth, after any change.
-async function syncTenantSettingsFlags(tenantId) {
-  const { data: rows, error } = await supabaseAdmin
-    .from('owner_pin_credentials')
-    .select('scope')
-    .eq('tenant_id', tenantId);
-  if (error) throw error;
-  const scopes = (rows || []).map((r) => r.scope);
-  const owner_pin_set = scopes.includes('master');
-  const locked_sections = scopes.filter((s) => s !== 'master');
-  await supabaseAdmin
-    .from('tenant_settings')
-    .update({ owner_pin_set, locked_sections })
-    .eq('tenant_id', tenantId);
-}
-
-// Reads the pre-migration value for a scope directly off tenant_settings
-// (owner_password for 'master', section_locks[scope] otherwise) -- the two
-// columns this whole migration is retiring. Returns null if nothing legacy
-// is stored for this scope either (never configured at all).
-async function getLegacyHash(tenantId, scope) {
+// tenant_settings read used two different ways below (legacy-hash lookup,
+// legacy-clear patch) -- fetched once per request and reused, instead of
+// two separate SELECTs, to cut round-trips on the migration path.
+async function getTenantSettingsRow(tenantId) {
   const { data, error } = await supabaseAdmin
     .from('tenant_settings')
     .select('owner_password, section_locks')
     .eq('tenant_id', tenantId)
     .maybeSingle();
   if (error) throw error;
-  if (!data) return null;
-  return scope === 'master' ? data.owner_password || null : data.section_locks?.[scope] || null;
+  return data;
 }
 
-async function clearLegacyHash(tenantId, scope) {
-  if (scope === 'master') {
-    await supabaseAdmin.from('tenant_settings').update({ owner_password: null }).eq('tenant_id', tenantId);
-    return;
+// Pure lookup against an already-fetched row -- owner_password for 'master',
+// section_locks[scope] otherwise. No query of its own.
+function extractLegacyHash(tsRow, scope) {
+  if (!tsRow) return null;
+  return scope === 'master' ? tsRow.owner_password || null : tsRow.section_locks?.[scope] || null;
+}
+
+// Single combined write: clears the now-migrated legacy value (if tsRow is
+// given -- callers with nothing to clear, e.g. a brand-new set_master, pass
+// null) and syncs owner_pin_set/locked_sections from owner_pin_credentials
+// (the source of truth) in the same round-trip.
+async function finalizeTenantSettings(tenantId, tsRow, migratedScope) {
+  const patch = {};
+  if (tsRow) {
+    if (migratedScope === 'master') {
+      patch.owner_password = null;
+    } else if (tsRow.section_locks && migratedScope in tsRow.section_locks) {
+      const next = { ...tsRow.section_locks };
+      delete next[migratedScope];
+      patch.section_locks = next;
+    }
   }
-  const { data } = await supabaseAdmin.from('tenant_settings').select('section_locks').eq('tenant_id', tenantId).maybeSingle();
-  if (!data?.section_locks || !(scope in data.section_locks)) return;
-  const next = { ...data.section_locks };
-  delete next[scope];
-  await supabaseAdmin.from('tenant_settings').update({ section_locks: next }).eq('tenant_id', tenantId);
+  const { data: rows, error } = await supabaseAdmin
+    .from('owner_pin_credentials')
+    .select('scope')
+    .eq('tenant_id', tenantId);
+  if (error) throw error;
+  const scopes = (rows || []).map((r) => r.scope);
+  patch.owner_pin_set = scopes.includes('master');
+  patch.locked_sections = scopes.filter((s) => s !== 'master');
+  await supabaseAdmin.from('tenant_settings').update(patch).eq('tenant_id', tenantId);
 }
 
 // Core check shared by the public "verify" action and the master-PIN
@@ -142,15 +143,15 @@ async function verifyScope(tenantId, scope, pin) {
     return { success: false, error: 'wrong_pin' };
   }
 
-  const legacyHash = await getLegacyHash(tenantId, scope);
+  const tsRow = await getTenantSettingsRow(tenantId);
+  const legacyHash = extractLegacyHash(tsRow, scope);
   if (!legacyHash) return { success: false, error: 'not_set' };
   if (!hexEquals(legacySha256Hex(pin), legacyHash)) return { success: false, error: 'wrong_pin' };
 
   // Correct on the legacy hash -- migrate silently now that we've actually
   // seen the real PIN (a stored SHA-256 digest can't be reversed to get it).
   await upsertCredential(tenantId, scope, pin);
-  await clearLegacyHash(tenantId, scope);
-  await syncTenantSettingsFlags(tenantId);
+  await finalizeTenantSettings(tenantId, tsRow, scope);
   return { success: true };
 }
 
@@ -178,11 +179,10 @@ export default async function handler(req, res) {
     if (action === 'set_master') {
       if (!isPin(pin)) return res.status(400).json({ success: false, error: 'invalid_request' });
       if (!(await checkRateLimit(res, 'pin-manage', `${tenantId}:master`, 10, '1 m'))) return;
-      const existingRow = await getCredRow(tenantId, 'master');
-      const legacy = await getLegacyHash(tenantId, 'master');
-      if (existingRow || legacy) return res.status(409).json({ success: false, error: 'already_set' });
+      const [existingRow, tsRow] = await Promise.all([getCredRow(tenantId, 'master'), getTenantSettingsRow(tenantId)]);
+      if (existingRow || extractLegacyHash(tsRow, 'master')) return res.status(409).json({ success: false, error: 'already_set' });
       await upsertCredential(tenantId, 'master', pin);
-      await syncTenantSettingsFlags(tenantId);
+      await finalizeTenantSettings(tenantId, null, 'master');
       return res.status(200).json({ success: true });
     }
 
@@ -194,13 +194,13 @@ export default async function handler(req, res) {
       const masterCheck = await verifyScope(tenantId, 'master', masterPin);
       if (!masterCheck.success) return res.status(403).json({ success: false, error: 'master_pin_invalid' });
 
+      const tsRow = await getTenantSettingsRow(tenantId);
       if (action === 'set_section') {
         await upsertCredential(tenantId, scope, newPin);
       } else {
         await supabaseAdmin.from('owner_pin_credentials').delete().eq('tenant_id', tenantId).eq('scope', scope);
       }
-      await clearLegacyHash(tenantId, scope);
-      await syncTenantSettingsFlags(tenantId);
+      await finalizeTenantSettings(tenantId, tsRow, scope);
       return res.status(200).json({ success: true });
     }
 
