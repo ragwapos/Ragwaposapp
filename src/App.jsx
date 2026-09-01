@@ -5552,8 +5552,15 @@ const WHATSAPP_SEND_MODES = [
 // LaundryOpsApp) — only the surrounding UI moved. Card 2 + the send-behavior
 // radios are the new "order ready" feature (see InvoicesView.updateItemStatus
 // for where whatsappReadySendMode actually gets read).
-function WhatsAppView({ whatsappEnabled, setWhatsappEnabled, whatsappTemplate, setWhatsappTemplate, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode }) {
+function WhatsAppView({ whatsappEnabled, setWhatsappEnabled, whatsappTemplate, setWhatsappTemplate, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode, diagLog = [] }) {
   const { t } = useLang();
+  // TEMPORARY diagnostic only -- see waDiag/logWaDiag in LaundryOpsApp for
+  // why this exists. renderCountRef catches an actual re-render loop (would
+  // climb fast with zero clicks); diagLog shows every click/echo/upsert
+  // event with its real timestamp, so a reported "flicker" can be matched
+  // against what the app was actually doing on that device.
+  const renderCountRef = useRef(0);
+  renderCountRef.current += 1;
   return (
     <div className="max-w-3xl space-y-6">
       <div>
@@ -5601,6 +5608,20 @@ function WhatsAppView({ whatsappEnabled, setWhatsappEnabled, whatsappTemplate, s
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* TEMPORARY diagnostic panel -- remove once the "سلوك الإرسال"
+          flicker report is root-caused (see waDiag in LaundryOpsApp). */}
+      <div className="rounded-xl border-2 border-dashed border-warning-400 bg-warning-50 p-4">
+        <div className="mb-2 text-xs font-bold text-warning-800">🔧 تشخيص مؤقت — renders: {renderCountRef.current}</div>
+        <div className="max-h-56 overflow-y-auto rounded-lg bg-navy-950 p-2 f-mono text-[11px] leading-relaxed text-success-300" dir="ltr">
+          {diagLog.length === 0 && <div className="text-white/40">(no events logged yet)</div>}
+          {[...diagLog].reverse().map((e, i) => (
+            <div key={i}>
+              [{new Date(e.t).toLocaleTimeString("en-GB", { hour12: false })}.{String(e.t % 1000).padStart(3, "0")}] {e.source} → {String(e.value)}
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -5957,7 +5978,7 @@ function HomeDashboardView({ invoices, merchant, setTab }) {
 /* =========================================================================
    ROOT APP
    ========================================================================= */
-function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode, waDiag, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { dir, t } = useLang();
   const isRtl = dir === "rtl";
   // The sidebar is a fixed off-canvas drawer below lg: (closed by default,
@@ -5993,7 +6014,7 @@ function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pe
         {tab === "purchases" && <PurchasesExpensesView tab={purchasesSubTab} setTab={(s) => navigateTab("purchases", s)} suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={purchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={expenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
         {tab === "promotions" && <PromotionsView promotions={promotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
         {tab === "reports" && <ReportsView tab={reportsSubTab} setTab={(s) => navigateTab("reports", s)} invoices={invoices} purchases={purchases} suppliers={suppliers} categories={categories} customers={customers} expenses={expenses} expenseCategories={expenseCategories} />}
-        {tab === "whatsapp" && <WhatsAppView whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} readyMessageEnabled={readyMessageEnabled} setReadyMessageEnabled={setReadyMessageEnabled} readyMessageTemplate={readyMessageTemplate} setReadyMessageTemplate={setReadyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} setWhatsappReadySendMode={setWhatsappReadySendMode} />}
+        {tab === "whatsapp" && <WhatsAppView whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} readyMessageEnabled={readyMessageEnabled} setReadyMessageEnabled={setReadyMessageEnabled} readyMessageTemplate={readyMessageTemplate} setReadyMessageTemplate={setReadyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} setWhatsappReadySendMode={setWhatsappReadySendMode} diagLog={waDiag} />}
         {tab === "settings" && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
         </main>
       </div>
@@ -6335,6 +6356,19 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   // for a tenant -- a feature that silently starts messaging customers the
   // moment it's turned on would be a surprising jump straight to "auto".
   const [whatsappReadySendMode, setWhatsappReadySendMode] = useState("ask");
+  // TEMPORARY diagnostic only (remove once the "سلوك الإرسال" flicker bug
+  // report is actually root-caused) -- two guess-based fixes already failed
+  // to resolve it and it can't be reproduced without a real login session
+  // (standing constraint: never enter a password), so per this project's own
+  // established practice (PROJECT_REFERENCE.md §18) the next step is real
+  // on-screen diagnostic data from the reporter's own device, not a third
+  // guess. Logs every event that touches whatsappReadySendMode -- a user
+  // click, a realtime echo from subscribeToRow, the debounced upsert firing,
+  // or that upsert erroring -- with a timestamp, rendered read-only in
+  // WhatsAppView.
+  const [waDiag, setWaDiag] = useState([]);
+  const logWaDiag = (source, value) => setWaDiag((prev) => [...prev.slice(-19), { t: Date.now(), source, value }]);
+  const setWhatsappReadySendModeDiag = (v) => { logWaDiag("click", v); setWhatsappReadySendMode(v); };
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
   // tenant_settings has its own `id` primary key, separate from `tenant_id`
@@ -6364,7 +6398,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
         if (d.whatsappEnabled !== undefined && d.whatsappEnabled !== null) setWhatsappEnabled(Boolean(d.whatsappEnabled));
         if (d.readyMessageEnabled !== undefined && d.readyMessageEnabled !== null) setReadyMessageEnabled(Boolean(d.readyMessageEnabled));
         if (d.readyMessageTemplate !== undefined && d.readyMessageTemplate !== null) setReadyMessageTemplate(d.readyMessageTemplate);
-        if (d.whatsappReadySendMode) setWhatsappReadySendMode(d.whatsappReadySendMode);
+        if (d.whatsappReadySendMode) { logWaDiag("echo", d.whatsappReadySendMode); setWhatsappReadySendMode(d.whatsappReadySendMode); }
         if (d.lang) setLang(d.lang);
       }
       setSettingsLoaded(true);
@@ -6444,8 +6478,11 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
       // lockedSections are deliberately NOT written from here -- they're
       // server-managed (api/verify-pin.js, via the service-role key) so this
       // client-side save can never clobber them with stale local state.
+      logWaDiag("upsert-fired", whatsappReadySendMode); // TEMPORARY diagnostic, see waDiag above
       db.from("tenant_settings").upsert(toSnakeCase({ id: rowId, tenantId, merchant, enabledPayMethods, whatsappTemplate, whatsappEnabled, readyMessageEnabled, readyMessageTemplate, whatsappReadySendMode, lang }))
-        .then(({ error }) => { if (error) console.error("settings save failed", error); });
+        .then(({ error }) => {
+          if (error) { console.error("settings save failed", error); logWaDiag("upsert-error", error.message); }
+        });
     }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -6696,7 +6733,8 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
         whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled}
         readyMessageEnabled={readyMessageEnabled} setReadyMessageEnabled={setReadyMessageEnabled}
         readyMessageTemplate={readyMessageTemplate} setReadyMessageTemplate={setReadyMessageTemplate}
-        whatsappReadySendMode={whatsappReadySendMode} setWhatsappReadySendMode={setWhatsappReadySendMode}
+        whatsappReadySendMode={whatsappReadySendMode} setWhatsappReadySendMode={setWhatsappReadySendModeDiag}
+        waDiag={waDiag}
         onLogout={onLogout}
         applyCustomerPayment={applyCustomerPayment} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber}
         zatcaConfig={zatcaConfig} zatcaInvoices={zatcaInvoices} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig}
