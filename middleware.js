@@ -20,7 +20,7 @@ const KNOWN_PATHS = new Set([
   // visitor here to /login rather than this middleware trying to read a
   // Supabase session cookie at the edge)
   '/home', '/pos', '/active-invoices', '/delivery-invoices', '/customers',
-  '/inventory', '/purchases', '/promotions', '/reports', '/settings',
+  '/inventory', '/purchases', '/promotions', '/reports', '/whatsapp', '/settings',
   // Reports/Purchases sub-tabs (their default sub-tab is served at the
   // bare /reports and /purchases paths above, not a separate path)
   '/reports/procurement', '/reports/expenses', '/reports/profit-loss', '/reports/vat',

@@ -30,11 +30,18 @@ export function cleanPhoneForWhatsApp(mobile) {
 export const DEFAULT_WHATSAPP_TEMPLATE =
   "مرحبًا {customer_name} 👋\nهذي فاتورتك من {store_name} — رقم الفاتورة {invoice_id}، بإجمالي {total_amount} ريال.\nتقدر تحمّل نسخة الفاتورة من هنا:\n{invoice_url}\n\nشكرًا لثقتك فينا!";
 
+export const DEFAULT_READY_MESSAGE_TEMPLATE =
+  "مرحبًا {customer_name} 👋\nطلبك رقم {order_id} من {store_name} أصبح جاهزًا للاستلام.\nنسعد بخدمتك 🤍";
+
 // Replaces every {tag} in the template with its value from `vars`; any tag
 // with no matching key (or a null/undefined value) is left blank rather
 // than left as literal "{tag}" text in the message the customer receives.
-export function fillWhatsAppTemplate(template, vars) {
-  const text = template && template.trim() ? template : DEFAULT_WHATSAPP_TEMPLATE;
+// `fallback` lets other WhatsApp message kinds (e.g. the "order ready"
+// notification) reuse this same fill logic with their own default text
+// instead of the invoice one -- existing call sites that omit it are
+// unaffected.
+export function fillWhatsAppTemplate(template, vars, fallback = DEFAULT_WHATSAPP_TEMPLATE) {
+  const text = template && template.trim() ? template : fallback;
   return text.replace(/\{(\w+)\}/g, (match, key) => {
     const value = vars ? vars[key] : undefined;
     return value === undefined || value === null ? "" : String(value);
