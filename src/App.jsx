@@ -2288,10 +2288,14 @@ function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
   const touchHandledRef = useRef(false);
   const selected = customers.find((c) => c.id === Number(customerId));
   const idOnly = query.startsWith("#");
+  // `customers` itself carries no guaranteed order (subscribeToTable's
+  // initial fetch has no ORDER BY, and realtime inserts just get appended)
+  // -- sort the filtered results by id every render instead, so the
+  // dropdown always reads in a predictable ascending order.
   const results = customers.filter((c) =>
     idOnly ? String(c.id).includes(query.slice(1).trim()) :
     (c.name.toLowerCase().includes(query.toLowerCase()) || c.mobile.includes(query) || String(c.id).includes(query))
-  );
+  ).sort((a, b) => a.id - b.id);
 
   // Closing on the input's blur (via a timeout) races with mobile touch
   // events: on iOS Safari / Chrome Android, the input can blur before the
@@ -6426,13 +6430,24 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     if (!tenantId || !settingsLoaded) return;
     const rowId = settingsRowId || crypto.randomUUID();
     if (!settingsRowId) setSettingsRowId(rowId);
-    // Always writing all tracked fields together (never a partial subset)
-    // is the equivalent of Firestore's { merge: true } here. ownerPinSet/
-    // lockedSections are deliberately NOT written from here -- they're
-    // server-managed (api/verify-pin.js, via the service-role key) so this
-    // client-side save can never clobber them with stale local state.
-    db.from("tenant_settings").upsert(toSnakeCase({ id: rowId, tenantId, merchant, enabledPayMethods, whatsappTemplate, whatsappEnabled, readyMessageEnabled, readyMessageTemplate, whatsappReadySendMode, lang }))
-      .then(({ error }) => { if (error) console.error("settings save failed", error); });
+    // Debounced -- a burst of rapid changes to this same row (e.g. clicking
+    // through the three "سلوك الإرسال" options back-to-back to compare them)
+    // used to fire one upsert PER click. subscribeToRow above replaces the
+    // whole local row with whatever a realtime echo delivers, with no
+    // ordering guard, so overlapping in-flight upserts could echo back
+    // out of order and make the selected option visibly flicker between
+    // values. Waiting for the user to actually stop changing something
+    // means only the final value ever gets written -- one upsert, one echo.
+    const timer = setTimeout(() => {
+      // Always writing all tracked fields together (never a partial subset)
+      // is the equivalent of Firestore's { merge: true } here. ownerPinSet/
+      // lockedSections are deliberately NOT written from here -- they're
+      // server-managed (api/verify-pin.js, via the service-role key) so this
+      // client-side save can never clobber them with stale local state.
+      db.from("tenant_settings").upsert(toSnakeCase({ id: rowId, tenantId, merchant, enabledPayMethods, whatsappTemplate, whatsappEnabled, readyMessageEnabled, readyMessageTemplate, whatsappReadySendMode, lang }))
+        .then(({ error }) => { if (error) console.error("settings save failed", error); });
+    }, 500);
+    return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenantId, settingsLoaded, merchant, enabledPayMethods, whatsappTemplate, whatsappEnabled, readyMessageEnabled, readyMessageTemplate, whatsappReadySendMode, lang]);
 
