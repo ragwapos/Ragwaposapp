@@ -406,7 +406,32 @@ const Fonts = () => (
   `}</style>
 );
 
-function Modal({ title, onClose, children, width = "max-w-lg" }) {
+// Tracks every currently-mounted Modal/AdminModal so Escape/Enter only ever
+// act on the TOPMOST one — several screens keep two of these mounted at
+// once (CustomerDetailModal + TopUpModal, SupplierDetailModal +
+// DocumentViewerModal); without this, one Escape press would close both.
+let modalStack = [];
+
+function Modal({ title, onClose, onSubmit, children, width = "max-w-lg" }) {
+  const idRef = useRef(null);
+  if (idRef.current === null) idRef.current = {};
+
+  useEffect(() => {
+    const id = idRef.current;
+    modalStack.push(id);
+    return () => { modalStack = modalStack.filter((x) => x !== id); };
+  }, []);
+
+  // Same convention as ProductModal's own shortcut handler: a note/message
+  // textarea needs Enter for its own newlines, so shortcuts sit out entirely
+  // while one is focused.
+  useKeydown((e) => {
+    if (modalStack[modalStack.length - 1] !== idRef.current) return;
+    if (document.activeElement?.tagName === "TEXTAREA") return;
+    if (e.key === "Escape") { e.preventDefault(); onClose(); }
+    else if (e.key === "Enter" && onSubmit) { e.preventDefault(); onSubmit(); }
+  });
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/60 p-4 f-body" onClick={onClose}>
       <div className={`w-full ${width} max-h-[90vh] overflow-y-auto rounded-2xl bg-app-surface shadow-app-lg`} onClick={(e) => e.stopPropagation()}>
@@ -2120,9 +2145,11 @@ function AddCustomerModal({ customers, onClose, onSave }) {
   // 9665XXXXXXXX format is only enforced once the owner actually types something.
   const mobileFormatInvalid = mobileTrimmed !== "" && !isValidSaudiMobile(mobileTrimmed);
   const mobileInvalid = mobileTaken || mobileFormatInvalid;
+  const canSave = Boolean(name.trim()) && !idInvalid && !mobileInvalid;
+  const save = () => onSave({ id: Number(id), name: name.trim(), mobile: mobileTrimmed || "-", walletBalance: 0, debt: 0 });
 
   return (
-    <Modal title={t("addCustomer_title")} onClose={onClose}>
+    <Modal title={t("addCustomer_title")} onClose={onClose} onSubmit={canSave ? save : undefined}>
       <Field label={t("addCustomer_systemId")}>
         <input type="number" min="1" value={id} onChange={(e) => setId(e.target.value)} className={`${inputCls} ${idTaken ? "border-danger-400" : ""}`} />
         {idTaken && <div className="mt-1.5 text-xs font-semibold text-danger-600">{t("addCustomer_idTaken")}</div>}
@@ -2135,8 +2162,8 @@ function AddCustomerModal({ customers, onClose, onSave }) {
         {mobileTaken && <div className="mt-1.5 text-xs font-semibold text-danger-600">{t("addCustomer_mobileTaken", { id: existingByMobile.id, name: existingByMobile.name })}</div>}
       </Field>
       <button
-        disabled={!name.trim() || idInvalid || mobileInvalid}
-        onClick={() => onSave({ id: Number(id), name: name.trim(), mobile: mobileTrimmed || "-", walletBalance: 0, debt: 0 })}
+        disabled={!canSave}
+        onClick={save}
         className="w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600 disabled:bg-app-border-strong">
         {t("addCustomer_save")}
       </button>
@@ -2152,6 +2179,7 @@ function AddSupplierModal({ onClose, onSave, editing }) {
   const [taxNumber, setTaxNumber] = useState(editing?.taxNumber || "");
   const [taxExempt, setTaxExempt] = useState(Boolean(editing?.taxExempt));
   const [exemptionNumber, setExemptionNumber] = useState(editing?.exemptionNumber || "");
+  const save = () => { if (!company.trim()) return; onSave({ company: company.trim(), agent: agent.trim() || "-", contact: contact.trim() || "-", taxNumber: taxNumber.trim(), taxExempt, exemptionNumber: taxExempt ? exemptionNumber.trim() : "" }); };
   return (
     <Modal
       title={
@@ -2160,7 +2188,7 @@ function AddSupplierModal({ onClose, onSave, editing }) {
           {editing ? t("addSupplier_editTitle") : t("addSupplier_title")}
         </span>
       }
-      onClose={onClose}>
+      onClose={onClose} onSubmit={save}>
       <Field label={t("addSupplier_company")}><input autoFocus value={company} onChange={(e) => setCompany(e.target.value)} className={inputCls} /></Field>
       <Field label={t("addSupplier_agent")}><input value={agent} onChange={(e) => setAgent(e.target.value.slice(0, 15))} maxLength={15} className={inputCls} /></Field>
       <Field label={t("addSupplier_contact")}><input value={contact} onChange={(e) => setContact(e.target.value)} className={inputCls} /></Field>
@@ -2177,7 +2205,7 @@ function AddSupplierModal({ onClose, onSave, editing }) {
         <Field label={t("addSupplier_exemptionNumber")}><input value={exemptionNumber} onChange={(e) => setExemptionNumber(e.target.value)} className={`${inputCls} f-mono`} /></Field>
       )}
       <button
-        onClick={() => { if (!company.trim()) return; onSave({ company: company.trim(), agent: agent.trim() || "-", contact: contact.trim() || "-", taxNumber: taxNumber.trim(), taxExempt, exemptionNumber: taxExempt ? exemptionNumber.trim() : "" }); }}
+        onClick={save}
         className="w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600">
         {t("addSupplier_save")}
       </button>
@@ -3238,7 +3266,7 @@ function TopUpModal({ customer, onClose, onSubmit, error }) {
   const duePayable = Math.max(0, Number(topUp || 0) - discountAmount);
 
   return (
-    <Modal title={`${t("topup_title")} · ${customer.name}`} onClose={onClose}>
+    <Modal title={`${t("topup_title")} · ${customer.name}`} onClose={onClose} onSubmit={confirm}>
       <Field label={t("topup_amount")}><input type="number" min="0" value={topUp} onChange={(e) => setTopUp(e.target.value)} className={inputCls} /></Field>
       <Field label={t("topup_discountMode")}>
         <div className="flex gap-2">
@@ -3306,8 +3334,9 @@ function SettleDebtModal({ customer, onClose, onSubmit, error }) {
     }
   };
 
+  const canSettle = !overWallet && !exceedsDebt && Number(amount || 0) > 0;
   return (
-    <Modal title={`${t("settle_title")} · ${customer.name}`} onClose={onClose}>
+    <Modal title={`${t("settle_title")} · ${customer.name}`} onClose={onClose} onSubmit={canSettle ? confirm : undefined}>
       <div className="mb-4 grid grid-cols-2 gap-3">
         <div className="rounded-lg bg-rose-50 border border-rose-200 p-3">
           <div className="text-xs text-rose-700">{t("settle_currentDebt")}</div>
@@ -3335,7 +3364,7 @@ function SettleDebtModal({ customer, onClose, onSubmit, error }) {
       <Field label={t("common_notes")}><textarea maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputCls} /></Field>
       {error && <div className="mb-4 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{error}</div>}
       <button
-        disabled={overWallet || exceedsDebt || Number(amount || 0) <= 0 || submitting}
+        disabled={!canSettle || submitting}
         onClick={confirm}
         className="w-full rounded-lg bg-slate-900 py-2.5 font-semibold text-white hover:bg-slate-800 disabled:bg-stone-300">
         {t("settle_confirm")}
@@ -3751,7 +3780,7 @@ function ProductFormModal({ editing, categories, addCategory, serviceTypes, addS
   };
 
   return (
-    <Modal title={editing ? t("products_editTitle") : t("products_newProduct")} onClose={onClose} width="max-w-xl">
+    <Modal title={editing ? t("products_editTitle") : t("products_newProduct")} onClose={onClose} onSubmit={save} width="max-w-xl">
       <Field label={t("products_name")}>
         <div className="flex items-center gap-3">
           <input value={name} onChange={(e) => setName(e.target.value)} className={`${inputCls} flex-1`} />
@@ -4281,7 +4310,7 @@ function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupp
       )}
 
       {showPurchaseModal && (
-        <Modal title={t("purchases_recordPurchase")} onClose={() => { setShowPurchaseModal(false); setShowAddSupplier(false); setPurchaseError(""); }} width="max-w-md">
+        <Modal title={t("purchases_recordPurchase")} onClose={() => { setShowPurchaseModal(false); setShowAddSupplier(false); setPurchaseError(""); }} onSubmit={recordPurchase} width="max-w-md">
           {showAddSupplier ? (
             <SupplierQuickAddFields onSave={saveNewSupplier} onCancel={() => setShowAddSupplier(false)} />
           ) : (
@@ -4314,7 +4343,7 @@ function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupp
       )}
 
       {showExpenseModal && (
-        <Modal title={t("expenses_addExpense")} onClose={() => setShowExpenseModal(false)}>
+        <Modal title={t("expenses_addExpense")} onClose={() => setShowExpenseModal(false)} onSubmit={recordExpense}>
           <Field label={t("common_category")}><EmptyDropdownAdd label={t("common_category")} items={expenseCategories} valueId={expCat} onSelect={setExpCat} onAdd={addExpCategory} /></Field>
           <Field label={t("common_amount")}><input type="number" value={expAmount} onChange={(e) => setExpAmount(e.target.value)} className={inputCls} /></Field>
           <div className="mb-4">
@@ -4334,7 +4363,7 @@ function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupp
       )}
 
       {payBalanceFor && (
-        <Modal title={`${t("payBalance_title")} · ${payBalanceFor.company}`} onClose={() => setPayBalanceFor(null)}>
+        <Modal title={`${t("payBalance_title")} · ${payBalanceFor.company}`} onClose={() => setPayBalanceFor(null)} onSubmit={payBalance}>
           <div className="mb-4 text-sm text-app-text-muted">{t("payBalance_liability")} <span className="f-mono text-danger-600 font-semibold">{sar(payBalanceFor.balance)}</span></div>
           <Field label={t("common_amount")}><input type="number" value={payAmount} onChange={(e) => { setPayAmount(e.target.value); setPayBalanceError(""); }} className={inputCls} /></Field>
           {payBalanceError && <div className="mb-3 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs text-danger-700">{payBalanceError}</div>}
@@ -4393,7 +4422,7 @@ function PromotionModal({ onClose, onSave, promotions, editing }) {
   };
 
   return (
-    <Modal title={editing ? t("promoModal_editTitle") : t("promoModal_title")} onClose={onClose}>
+    <Modal title={editing ? t("promoModal_editTitle") : t("promoModal_title")} onClose={onClose} onSubmit={handleSave}>
       <Field label={t("promoModal_name")}><input value={name} onChange={(e) => setName(e.target.value.slice(0, 15))} maxLength={15} className={inputCls} /></Field>
       <div className="mb-4 flex items-center justify-between">
         <span className="text-sm font-medium text-app-text">{t("promoModal_requiresCoupon")}</span>
@@ -4795,11 +4824,11 @@ function ReportsView({ tab, setTab, invoices, purchases, suppliers, categories, 
       {tab === "sales" && (
         <>
           <div className="-mx-4 flex gap-3 overflow-x-auto scrollbar-none snap-x snap-mandatory px-4 pb-1 mb-6 sm:mx-0 sm:grid sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-3 lg:grid-cols-5">
-            {kpiTile(t("reports_kpi_outstandingDebt"), sar(debt), "warning", null, true)}
-            {kpiTile(t("reports_kpi_netRevenue"), sar(net), "success", null, true)}
-            {kpiTile(t("reports_kpi_vatCollected"), sar(vat), "info", null, true)}
-            {kpiTile(t("reports_kpi_grossSales"), sar(gross), "brand", null, true)}
             {kpiTile(t("reports_kpi_invoices"), salesRows.length, "navy", null, true)}
+            {kpiTile(t("reports_kpi_grossSales"), sar(gross), "brand", null, true)}
+            {kpiTile(t("reports_kpi_vatCollected"), sar(vat), "info", null, true)}
+            {kpiTile(t("reports_kpi_netRevenue"), sar(net), "success", null, true)}
+            {kpiTile(t("reports_kpi_outstandingDebt"), sar(debt), "warning", null, true)}
           </div>
           <button onClick={() => setSalesFiltersOpen((v) => !v)} className="mb-3 flex w-full items-center justify-between gap-2 rounded-lg border border-app-border-strong bg-app-surface px-3.5 py-2.5 text-[13px] font-bold text-app-text sm:hidden">
             <span className="flex items-center gap-2"><SlidersHorizontal className="size-4" />{t("reports_filtersToggle")}</span>
@@ -5186,7 +5215,7 @@ function PinPromptModal({ title, mode, onSubmitPin, onDone, onClose }) {
   };
 
   return (
-    <Modal title={title} onClose={busy ? () => {} : onClose}>
+    <Modal title={title} onClose={busy ? () => {} : onClose} onSubmit={submit}>
       <div
         className={`transition-all duration-300 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"} ${phase === "error" ? "animate-pin-shake" : ""}`}
       >
@@ -6792,7 +6821,23 @@ function KpiCard({ label, value }) {
   );
 }
 
-function AdminModal({ title, onClose, children }) {
+function AdminModal({ title, onClose, onSubmit, children }) {
+  const idRef = useRef(null);
+  if (idRef.current === null) idRef.current = {};
+
+  useEffect(() => {
+    const id = idRef.current;
+    modalStack.push(id);
+    return () => { modalStack = modalStack.filter((x) => x !== id); };
+  }, []);
+
+  useKeydown((e) => {
+    if (modalStack[modalStack.length - 1] !== idRef.current) return;
+    if (document.activeElement?.tagName === "TEXTAREA") return;
+    if (e.key === "Escape") { e.preventDefault(); onClose(); }
+    else if (e.key === "Enter" && onSubmit) { e.preventDefault(); onSubmit(); }
+  });
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div className="w-full max-w-md rounded-2xl bg-slate-900 border border-slate-700 text-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
@@ -6846,7 +6891,7 @@ function AdminEditInvoiceModal({ invoice, onClose, onSave }) {
   };
 
   return (
-    <AdminModal title={`تعديل الفاتورة ${invoice.code}`} onClose={onClose}>
+    <AdminModal title={`تعديل الفاتورة ${invoice.code}`} onClose={onClose} onSubmit={save}>
       <div className="space-y-4">
         <div className="flex justify-between text-sm">
           <span className="text-gray-400">العميل</span>
@@ -7884,14 +7929,14 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
       )}
 
       {rejectingRequest && (
-        <AdminModal title="سبب الرفض" onClose={() => setRejectingRequest(null)}>
+        <AdminModal title="سبب الرفض" onClose={() => setRejectingRequest(null)} onSubmit={rejectRequest}>
           <textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} rows={3} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-cyan-400 mb-4" placeholder="اكتب سبب الرفض..." />
           <button onClick={rejectRequest} className="w-full bg-rose-600 hover:bg-rose-700 rounded-lg py-2.5 text-sm font-semibold">تأكيد الرفض</button>
         </AdminModal>
       )}
 
       {viewingInquiry && (
-        <AdminModal title="تفاصيل الاستفسار" onClose={() => setViewingInquiry(null)}>
+        <AdminModal title="تفاصيل الاستفسار" onClose={() => setViewingInquiry(null)} onSubmit={() => { markInquiryReplied(viewingInquiry.id); setViewingInquiry(null); }}>
           <div className="space-y-2 text-sm mb-4">
             <div className="flex justify-between"><span className="text-gray-400">الاسم</span><span>{viewingInquiry.name}</span></div>
             <div className="flex justify-between"><span className="text-gray-400">الجوال</span><span className="font-mono" dir="ltr">{viewingInquiry.mobile}</span></div>
@@ -7906,7 +7951,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
       )}
 
       {editingTenant && (
-        <AdminModal title={`تعديل بيانات ${editingTenant.shopName}`} onClose={() => setEditingTenant(null)}>
+        <AdminModal title={`تعديل بيانات ${editingTenant.shopName}`} onClose={() => setEditingTenant(null)} onSubmit={saveTenantEdit}>
           <label className="block text-xs text-gray-400 mb-1.5">رقم الجوال</label>
           <input value={editMobile} onChange={(e) => { setEditMobile(normalizeSaudiMobile(e.target.value)); setEditError(""); }} maxLength={12} dir="ltr" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-cyan-400 mb-4" />
           <label className="block text-xs text-gray-400 mb-1.5">البريد الإلكتروني</label>
