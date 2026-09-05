@@ -18,7 +18,7 @@ import { toSnakeCase, toCamelCase } from "./utils/transforms.js";
 import { normalizeSaudiMobile, isValidSaudiMobile, cleanPhoneForWhatsApp, fillWhatsAppTemplate, DEFAULT_WHATSAPP_TEMPLATE, DEFAULT_READY_MESSAGE_TEMPLATE } from "./utils/phone.js";
 import { generateInvoiceImage } from "./utils/invoiceImage.js";
 import { useClarityTracking } from "./utils/clarity.js";
-import { uploadTenantFile, deleteTenantFile, uploadPrivateFile, deletePrivateFile, openStoredDocument } from "./utils/storage.js";
+import { uploadTenantFile, deleteTenantFile, uploadPrivateFile, deletePrivateFile, getSignedUrl } from "./utils/storage.js";
 import { getTurnstileToken } from "./utils/turnstile.js";
 
 /* =========================================================================
@@ -419,6 +419,54 @@ function Modal({ title, onClose, children, width = "max-w-lg" }) {
         <div className="p-6">{children}</div>
       </div>
     </div>
+  );
+}
+
+// Every "view attachment/receipt" click in the app renders this instead of
+// navigating a new tab. Opening a blank tab and redirecting it later (once
+// the signed URL comes back) is exactly the pattern several ad-blockers and
+// anti-redirect extensions silently block — the tab opens and just stays
+// blank forever, no error surfaced anywhere. Viewing inline sidesteps that
+// class of bug entirely since there's no external tab/window in the primary
+// path; "open in new tab" below is a plain <a>, not a scripted redirect.
+function DocumentViewerModal({ value, name, onClose }) {
+  const { t } = useLang();
+  const [status, setStatus] = useState("loading"); // loading | ready | error
+  const [url, setUrl] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const resolved = (value.startsWith("data:") || value.startsWith("http"))
+          ? value
+          : await getSignedUrl(value);
+        if (!cancelled) { setUrl(resolved); setStatus("ready"); }
+      } catch (e) {
+        console.error("DocumentViewerModal failed", e);
+        if (!cancelled) setStatus("error");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [value]);
+
+  const isPdf = /\.pdf($|\?)/i.test(value) || value.startsWith("data:application/pdf");
+
+  return (
+    <Modal title={name || t("document_title")} onClose={onClose} width="max-w-2xl">
+      {status === "loading" && <div className="flex justify-center py-16"><Loader2 className="animate-spin" size={28} /></div>}
+      {status === "error" && <div className="py-10 text-center text-sm text-danger-600">{t("document_loadError")}</div>}
+      {status === "ready" && (
+        <div className="space-y-3">
+          {isPdf
+            ? <iframe src={url} title={name || "document"} className="h-[70vh] w-full rounded-lg border border-app-border" />
+            : <img src={url} alt={name || ""} className="max-h-[70vh] w-full rounded-lg object-contain" />}
+          <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-brand-600 hover:underline">
+            {t("document_openInNewTab")}
+          </a>
+        </div>
+      )}
+    </Modal>
   );
 }
 
@@ -1034,6 +1082,7 @@ const DICT = {
     common_operationFailed: "Could not complete this operation — please try again.",
     common_live: "Live", common_draft: "Draft", common_active: "Active", common_expired: "Expired",
     common_yes: "Yes", common_no: "No", common_view: "View",
+    document_title: "Document", document_loadError: "Couldn't load this document. Try again.", document_openInNewTab: "Open in new tab",
 
     stage_received: "Received", stage_washing: "Washing", stage_pressing: "Pressing", stage_ready: "Ready", stage_delivered: "Delivered",
 
@@ -1313,6 +1362,7 @@ const DICT = {
     common_operationFailed: "تعذر إتمام العملية — حاول مرة أخرى.",
     common_live: "مفعّل", common_draft: "مسودة", common_active: "نشط", common_expired: "منتهي",
     common_yes: "نعم", common_no: "لا", common_view: "عرض",
+    document_title: "المستند", document_loadError: "تعذّر تحميل المستند، حاول مرة ثانية.", document_openInNewTab: "فتح بتبويب جديد",
 
     stage_received: "استلام", stage_washing: "غسيل", stage_pressing: "كوي", stage_ready: "جاهز", stage_delivered: "تم التسليم",
 
@@ -1592,6 +1642,7 @@ const DICT = {
     common_operationFailed: "یہ عمل مکمل نہیں ہو سکا — دوبارہ کوشش کریں۔",
     common_live: "فعال", common_draft: "ڈرافٹ", common_active: "جاری", common_expired: "ختم شدہ",
     common_yes: "جی ہاں", common_no: "نہیں", common_view: "دیکھیں",
+    document_title: "دستاویز", document_loadError: "دستاویز لوڈ نہیں ہو سکی، دوبارہ کوشش کریں۔", document_openInNewTab: "نئے ٹیب میں کھولیں",
 
     stage_received: "موصول ہوا", stage_washing: "دھلائی", stage_pressing: "استری", stage_ready: "تیار", stage_delivered: "ڈیلیور ہو گیا",
 
@@ -2181,6 +2232,7 @@ function SupplierDetailModal({ supplier, purchases, onClose, onPayBalance, onEdi
   const { t } = useLang();
   const supplierPurchases = purchases.filter((p) => p.supplierId === supplier.id).sort((a, b) => new Date(b.date) - new Date(a.date));
   const totalSpent = supplierPurchases.reduce((s, p) => s + p.amount, 0);
+  const [viewingDoc, setViewingDoc] = useState(null);
 
   return (
     <Modal
@@ -2239,7 +2291,7 @@ function SupplierDetailModal({ supplier, purchases, onClose, onPayBalance, onEdi
                 <td className="px-3 py-2 f-mono font-semibold text-app-text">{sar(p.amount)}</td>
                 <td className="px-3 py-2">
                   {p.attachment ? (
-                    <button onClick={() => openStoredDocument(p.attachment)} className="inline-flex items-center gap-1 text-brand-600 hover:underline">
+                    <button onClick={() => setViewingDoc({ value: p.attachment, name: p.attachmentName })} className="inline-flex items-center gap-1 text-brand-600 hover:underline">
                       <Paperclip size={13} />{t("common_view")}
                     </button>
                   ) : <span className="text-app-text-subtle">—</span>}
@@ -2250,6 +2302,7 @@ function SupplierDetailModal({ supplier, purchases, onClose, onPayBalance, onEdi
           </tbody>
         </table>
       </div>
+      {viewingDoc && <DocumentViewerModal value={viewingDoc.value} name={viewingDoc.name} onClose={() => setViewingDoc(null)} />}
     </Modal>
   );
 }
@@ -3974,6 +4027,7 @@ function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupp
   const [editingSupplier, setEditingSupplier] = useState(null);
   const [showPurchaseModal, setShowPurchaseModal] = useState(false);
   const [supplierQuery, setSupplierQuery] = useState("");
+  const [viewingDoc, setViewingDoc] = useState(null);
 
   const saveNewSupplier = (data) => {
     const sup = addSupplier({ ...data, balance: 0 });
@@ -4167,7 +4221,7 @@ function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupp
             {recentPurchases.map((p) => {
               const supplier = suppliers.find((s) => s.id === p.supplierId);
               return (
-                <div key={p.id} onClick={() => p.attachment && openStoredDocument(p.attachment)} className={`flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-3 ${p.attachment ? "cursor-pointer hover:bg-app-bg" : ""}`}>
+                <div key={p.id} onClick={() => p.attachment && setViewingDoc({ value: p.attachment, name: p.attachmentName })} className={`flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-3 ${p.attachment ? "cursor-pointer hover:bg-app-bg" : ""}`}>
                   <div className="flex items-center gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-app-bg text-app-text-muted"><ReceiptText size={16} /></span>
                     <div>
@@ -4206,7 +4260,7 @@ function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupp
               const cat = expenseCategories.find((c) => c.id === e.categoryId);
               const hasReceipt = e.receipt?.startsWith("http") || e.receipt?.startsWith("data:") || e.receipt?.includes("/");
               return (
-                <div key={e.id} onClick={() => hasReceipt && openStoredDocument(e.receipt)} className={`flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-3 ${hasReceipt ? "cursor-pointer hover:bg-app-bg" : ""}`}>
+                <div key={e.id} onClick={() => hasReceipt && setViewingDoc({ value: e.receipt, name: e.receiptName })} className={`flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-3 ${hasReceipt ? "cursor-pointer hover:bg-app-bg" : ""}`}>
                   <div className="flex items-center gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-app-bg text-app-text-muted"><FileText size={16} /></span>
                     <div>
@@ -4297,6 +4351,7 @@ function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupp
         />
       )}
       {editingSupplier && <AddSupplierModal editing={editingSupplier} onClose={() => setEditingSupplier(null)} onSave={saveEditedSupplier} />}
+      {viewingDoc && <DocumentViewerModal value={viewingDoc.value} name={viewingDoc.name} onClose={() => setViewingDoc(null)} />}
     </div>
   );
 }
@@ -4542,6 +4597,7 @@ function ReportsView({ tab, setTab, invoices, purchases, suppliers, categories, 
   const [procurementFiltersOpen, setProcurementFiltersOpen] = useState(false);
   const [expensesFiltersOpen, setExpensesFiltersOpen] = useState(false);
   const [plFiltersOpen, setPlFiltersOpen] = useState(false);
+  const [viewingDoc, setViewingDoc] = useState(null);
 
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
@@ -4841,7 +4897,7 @@ function ReportsView({ tab, setTab, invoices, purchases, suppliers, categories, 
                     <td className="whitespace-nowrap px-4 py-3 text-center text-app-text-muted">{p.method === "Cash" ? t("common_cash") : t("purchases_credit")}</td>
                     <td className="whitespace-nowrap px-4 py-3">
                       {p.attachment ? (
-                        <button onClick={() => openStoredDocument(p.attachment)} className="inline-flex items-center gap-1 text-brand-600 hover:underline">
+                        <button onClick={() => setViewingDoc({ value: p.attachment, name: p.attachmentName })} className="inline-flex items-center gap-1 text-brand-600 hover:underline">
                           <Paperclip size={13} />{t("common_view")}
                         </button>
                       ) : <span className="text-app-text-subtle">—</span>}
@@ -4895,7 +4951,7 @@ function ReportsView({ tab, setTab, invoices, purchases, suppliers, categories, 
                     <td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-muted text-center">{e.date}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-app-text-muted">
                       {e.receipt?.startsWith("http") || e.receipt?.startsWith("data:") || e.receipt?.includes("/") ? (
-                        <button onClick={() => openStoredDocument(e.receipt)} className="inline-flex items-center gap-1 text-brand-600 hover:underline">
+                        <button onClick={() => setViewingDoc({ value: e.receipt, name: e.receiptName })} className="inline-flex items-center gap-1 text-brand-600 hover:underline">
                           <ReceiptText size={13} />{e.receiptName || t("common_view")}
                         </button>
                       ) : e.receipt ? (
@@ -5051,6 +5107,7 @@ function ReportsView({ tab, setTab, invoices, purchases, suppliers, categories, 
           </div>
         </>
       )}
+      {viewingDoc && <DocumentViewerModal value={viewingDoc.value} name={viewingDoc.name} onClose={() => setViewingDoc(null)} />}
     </div>
   );
 }

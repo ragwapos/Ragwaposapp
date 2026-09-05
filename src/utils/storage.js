@@ -37,7 +37,7 @@ export async function uploadTenantFile(file, folder) {
 
 // Uploads to the PRIVATE bucket. Unlike uploadTenantFile, there is no
 // public URL — callers must persist the returned PATH (not a URL) and
-// call getSignedUrl()/openStoredDocument() to actually view it later.
+// call getSignedUrl() to actually view it later.
 export async function uploadPrivateFile(file, folder) {
   const path = await uploadTo(PRIVATE_BUCKET, file, folder);
   return { path };
@@ -69,37 +69,16 @@ export async function deletePrivateFile(path) {
   await db.storage.from(PRIVATE_BUCKET).remove([path]).catch(() => {});
 }
 
-// A 60-second signed URL is plenty — callers use it immediately (open a
-// new tab) and never persist it; regenerating one is one click away.
+// A 60-second signed URL is plenty — callers (DocumentViewerModal in
+// App.jsx) use it immediately to render the document inline and never
+// persist it; regenerating one is one click away. Viewing used to open a
+// blank tab and redirect it once this resolved, but several ad-blockers
+// and anti-redirect extensions silently block exactly that pattern (it's
+// also how malvertising redirects work) — the tab would open and just stay
+// blank forever, no error anywhere. DocumentViewerModal renders the result
+// inline instead, so there's no external tab involved in the primary path.
 export async function getSignedUrl(path, expiresIn = 60) {
   const { data, error } = await db.storage.from(PRIVATE_BUCKET).createSignedUrl(path, expiresIn);
   if (error) throw error;
   return data.signedUrl;
-}
-
-// Single entry point every "view attachment/receipt" link in the app goes
-// through. Handles all 3 shapes a stored value can have, oldest first:
-//   1. a legacy base64 data: URI (pre-Storage rows) — open directly.
-//   2. a legacy public-bucket https:// URL (rows saved before this file's
-//      private-bucket migration) — open directly, still valid.
-//   3. a bare private-bucket path (current uploads) — needs a fresh
-//      signed URL first.
-// The blank tab is opened SYNCHRONOUSLY, inside the click handler, before
-// any await — required so browsers still treat it as a direct response to
-// the user's gesture and don't block it as a popup once the signed-URL
-// fetch (case 3) resolves later.
-export async function openStoredDocument(value) {
-  if (!value) return;
-  if (value.startsWith('data:') || value.startsWith('http')) {
-    window.open(value, '_blank', 'noopener,noreferrer');
-    return;
-  }
-  const tab = window.open('', '_blank', 'noopener,noreferrer');
-  try {
-    const url = await getSignedUrl(value);
-    if (tab) tab.location.href = url;
-  } catch (e) {
-    console.error('openStoredDocument failed', e);
-    if (tab) tab.close();
-  }
 }
