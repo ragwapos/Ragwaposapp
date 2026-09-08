@@ -18,6 +18,7 @@
   "rewrites": [
     { "source": "/guides", "destination": "/guides/index.html" },
     { "source": "/guides/:slug", "destination": "/guides/:slug.html" },
+    { "source": "/en", "destination": "/en/index.html" },
     { "source": "/((?!api/|assets/|.*\\.\\w+$).*)", "destination": "/index.html" }
   ]
 }
