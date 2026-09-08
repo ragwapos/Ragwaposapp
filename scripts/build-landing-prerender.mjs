@@ -133,16 +133,18 @@ function renderSnapshotBody(lang) {
 </div>`;
 }
 
-// كل سؤال كعقدة Question مستقلة داخل @graph، بدون غلاف FAQPage/QAPage —
-// قرار متعمد: FAQPage فقدت أهليتها لنتائج جوجل الغنية (مايو 2026)، وQAPage
-// بمواصفات schema.org مخصصة لسؤال واحد فقط بالصفحة (نمط منتدى)، فتغليف 5
-// أسئلة تسويقية بداخلها سوء استخدام آخر لنفس المواصفة. عقد Question مستقلة
-// بيانات صحيحة وواضحة لمحركات الذكاء الاصطناعي بدون تجاوز أي نوع مواصفة.
+// FAQPage هي النوع البنيوي الصحيح لعدة أسئلة بصفحة وحدة (بعكس QAPage،
+// المخصصة لسؤال واحد بعدة إجابات بنمط منتدى/مجتمع) — حتى لو فقدت FAQPage
+// أهليتها لنتائج جوجل الغنية (مايو 2026)، الصحة البنيوية للـschema نفسها
+// هي الهدف هنا، مو الأهلية لنتائج غنية. قرار سابق كان يغلّف الأسئلة بـ
+// @graph من عقد Question مستقلة بدل هذا الغلاف — صُحح لأن ذلك لا يمثل
+// النوع الصحيح لهذا الشكل (عدة أسئلة تسويقية بصفحة وحدة).
 function faqJsonLd(lang) {
   const t = LANDING_TEXT[lang];
   return {
     '@context': 'https://schema.org',
-    '@graph': t.faq.map((item) => ({
+    '@type': 'FAQPage',
+    mainEntity: t.faq.map((item) => ({
       '@type': 'Question',
       name: item.q,
       acceptedAnswer: { '@type': 'Answer', text: item.a },
@@ -200,6 +202,10 @@ function main() {
   enHtml = mustReplace(enHtml, '<meta property="og:locale:alternate" content="en_US" />', '<meta property="og:locale:alternate" content="ar_SA" />', 'og:locale:alternate');
   enHtml = mustReplace(enHtml, `<meta name="twitter:title" content="${AR_TITLE}" />`, `<meta name="twitter:title" content="${esc(EN_TITLE)}" />`, 'twitter:title');
   enHtml = mustReplace(enHtml, `<meta name="twitter:description" content="${AR_DESC_SHORT}" />`, `<meta name="twitter:description" content="${esc(EN_DESC)}" />`, 'twitter:description');
+  // الـh1 بالنسخة الإنجليزية نص لاتيني — يحتاج subset لاتيني، مو العربي
+  // المفترض افتراضيًا بـindex.html الأصلي (انظر التعليق فوق وسم الـpreload
+  // هناك).
+  enHtml = mustReplace(enHtml, '<link rel="preload" as="font" type="font/woff2" href="/fonts/cairo-arabic.woff2" crossorigin />', '<link rel="preload" as="font" type="font/woff2" href="/fonts/cairo-latin.woff2" crossorigin />', 'preload link (font subset, en)');
   enHtml = mustReplace(enHtml, '<div id="root"></div>', `<div id="root">${renderSnapshotBody('en')}</div>`, 'div#root الفارغ (en)');
   enHtml = mustReplace(enHtml, '</head>', `${hreflangTags()}\n<script type="application/ld+json">${JSON.stringify(faqJsonLd('en'))}</script>\n</head>`, 'وسم إغلاق head (en)');
 

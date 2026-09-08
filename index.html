@@ -27,12 +27,14 @@
     <meta name="twitter:description" content="رغوة: نظام نقطة بيع لمغاسل الملابس يجمع البيع، تتبع الطلبات، الاشتراكات، والدفع الآجل في مكان واحد." />
     <meta name="twitter:image" content="https://www.ragwapos.com/og-image.png" />
 
-    <!-- Landing page typeface (Arabic-first) — the internal POS app keeps its
-         own existing Space Grotesk/Inter/JetBrains Mono set (see the Fonts
-         component in App.jsx); this is scoped to the public landing page only. -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <!-- Cairo is self-hosted (src/index.css @font-face, public/fonts/) —
+         replaces the former fonts.googleapis.com round-trip. Preloading the
+         arabic-subset file directly (not just its CSS) because the LCP
+         element (hero <h1>) renders Arabic text at weight 800 on every
+         route this index.html serves except /en, which gets its own
+         preload swapped to the latin subset by
+         scripts/build-landing-prerender.mjs (postbuild). -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/cairo-arabic.woff2" crossorigin />
 
     <!-- Icons -->
     <link rel="icon" type="image/png" href="/favicon.png" />
@@ -49,6 +51,18 @@
       "description": "نظام نقطة بيع لمغاسل الملابس يجمع البيع، تتبع الطلبات، الاشتراكات، والدفع الآجل في مكان واحد.",
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Web"
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "رغوة",
+      "alternateName": "Ragwa",
+      "url": "https://www.ragwapos.com/",
+      "logo": "https://www.ragwapos.com/favicon.png",
+      "sameAs": ["https://www.instagram.com/ragwapos/?hl=ar"]
     }
     </script>
 

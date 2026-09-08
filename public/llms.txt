@@ -1,0 +1,26 @@
+# Ragwa (رغوة)
+
+> Ragwa is a cloud-based point-of-sale (POS) system built specifically for laundry shops in Saudi Arabia. It runs entirely in the browser — no dedicated hardware or installed software required.
+
+Ragwa is for laundry shop owners and staff who need to run checkout, track individual garments through wash/iron/ready/delivered stages, manage delivery drivers, and stay compliant with Saudi e-invoicing (ZATCA) requirements — all from one system, on desktop or mobile.
+
+## Key features
+
+- **Point of sale**: fast checkout with instant customer search, multiple payment methods (cash, card, wallet, credit/on-account, split payment), and promotions/discounts.
+- **Per-item order tracking**: every garment is tracked individually through Received → Washing → Ironing → Ready → Delivered, with a live dashboard for both walk-in and delivery orders.
+- **Simplified tax invoice (ZATCA-compliant QR)**: printed invoices for taxable sales include a QR code encoding shop name, VAT number, date/time, and totals, per Saudi ZATCA Phase 1 requirements.
+- **WhatsApp messaging**: automatic invoice delivery and "order ready" notifications sent directly to the customer's WhatsApp.
+- **Customer wallets and debt tracking**: prepaid wallet balances and on-account debt per customer, with safeguards against overpayment.
+- **Supplier and purchase management**: supplier balances, purchase records, and attached supplier invoices.
+- **Delivery driver management**: dedicated tracking for delivery orders separate from in-shop orders.
+- **Financial reports**: sales ledger, procurement ledger, expenses, profit & loss, and a VAT return report (quarterly/monthly, per ZATCA format).
+- **Role-based access**: owner-only PIN-protected sections (customer ledger, products, purchases/expenses, promotions, reports).
+- **Multi-language interface**: Arabic, English, and Urdu.
+- Each shop's data is fully isolated at the database level from every other shop on the platform.
+
+## Links
+
+- Homepage (Arabic): https://www.ragwapos.com/
+- Homepage (English): https://www.ragwapos.com/en
+- Guides (how-to articles for laundry shop owners): https://www.ragwapos.com/guides
+- Sign up: https://www.ragwapos.com/signup
