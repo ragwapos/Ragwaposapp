@@ -46,7 +46,14 @@ function mustReplace(html, needle, replacement, label) {
   return html.replace(needle, replacement);
 }
 
+// opacity:0 + animation المؤجلة: الزائر العادي ما يشوف اللقطة النصية
+// (كانت تومض كـ"مقالة" لحظة تحميل حزمة JS قبل ما React يستبدلها)، بينما
+// الزواحف تقرأ النص الخام من الـHTML ولا تطبّق CSS أصلاً. لو JS فشل أو
+// تأخر أكثر من 4 ثواني، النص يظهر تلقائياً بدل صفحة فاضية. CSS بحت —
+// سكربت inline كان بينكسر مع الـCSP (script-src 'self').
 const INLINE_STYLE = `
+  #prerender-snapshot { opacity: 0; animation: prerender-reveal 0s linear 4s forwards; }
+  @keyframes prerender-reveal { to { opacity: 1; } }
   #prerender-snapshot { font-family: 'Cairo','Segoe UI',Tahoma,sans-serif; max-width: 880px; margin: 0 auto; padding: 32px 24px; line-height: 1.85; color: #0b2331; }
   #prerender-snapshot h1 { font-size: 1.9rem; font-weight: 800; margin: 0 0 14px; }
   #prerender-snapshot h2 { font-size: 1.4rem; font-weight: 800; margin: 40px 0 14px; }
