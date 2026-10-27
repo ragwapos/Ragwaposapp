@@ -17,6 +17,9 @@ When editing or adding a feature, remove anything that becomes unused as a resul
 ## 5. Security scan before every push
 Before running `git push` — even if explicitly told to "just push" — trigger a Raqib scan (`trigger_scan`) and wait for its report (`get_report`) first. Review the findings; if the pending changes introduce a new high/critical issue, flag it and pause instead of pushing through. Only push once the scan is clean, or any findings are pre-existing ones the user has already accepted. If the raqib MCP tools aren't available in the current session (e.g. the server was just configured and needs a session restart before its tools register), say so explicitly rather than silently skipping the scan and pushing anyway.
 
+## 6. Staging first
+All new work happens on the `staging` branch and is pushed there first (auto-deploys to https://staging.ragwapos.com, protected by Vercel login). Only merge `staging` into `main` and push to production after the user has tested it on staging and approved. Staging shares the production Supabase database, so any SQL change must stay backward-compatible with the code currently on `main` (see `PROJECT_REFERENCE.md` §23).
+
 ---
 
 See `PROJECT_REFERENCE.md` for the full functional/architecture/security-posture reference — read it at the start of a new session before doing anything else on this project.
