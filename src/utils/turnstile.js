@@ -21,6 +21,15 @@ function loadTurnstileScript() {
   return scriptPromise;
 }
 
+// Starts downloading the Turnstile script early (when a protected form is
+// first shown) so it's already loaded by submit time instead of adding a
+// cold script fetch to every signup. Only the script — the single-use token
+// is still requested at submit by getTurnstileToken().
+export function preloadTurnstile() {
+  if (!import.meta.env.VITE_TURNSTILE_SITE_KEY) return;
+  loadTurnstileScript().catch(() => { scriptPromise = null; });
+}
+
 // Resolves with a Turnstile response token, or null if the widget fails to
 // load/execute (network blocked, ad-blocker, etc). Callers should treat a
 // null token as "let the server's other checks decide" rather than hard-

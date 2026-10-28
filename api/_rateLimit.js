@@ -24,7 +24,9 @@ function getLimiter(max, window) {
   if (!limiters.has(key)) {
     const r = getRedis();
     if (!r) return null;
-    limiters.set(key, new Ratelimit({ redis: r, limiter: Ratelimit.slidingWindow(max, window), prefix: 'ragwapos-ratelimit' }));
+    // timeout: the library's own fail-open deadline (default 5s) — a slow or
+    // unreachable Redis used to add up to 5s to every signup/PIN request.
+    limiters.set(key, new Ratelimit({ redis: r, limiter: Ratelimit.slidingWindow(max, window), prefix: 'ragwapos-ratelimit', timeout: 1500 }));
   }
   return limiters.get(key);
 }

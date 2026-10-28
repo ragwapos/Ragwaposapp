@@ -374,3 +374,29 @@
 **ملاحظة مفتوحة:** CLS = 0.18 بالصفحة الرئيسية — موجود بالإنتاج قبل هالتعديل بنفس القيمة بالضبط (إزاحة بقسم الـhero عند ~1.7ث، على الأغلب بعد تحميل الخط). مو من هالتعديل، يستاهل إصلاح منفصل.
 
 **لأي تعديل مستقبلي على LandingPage:** أي كود يشتغل وقت الرندر نفسه (مو داخل useEffect/handlers) لازم يكون آمن بدون `window`/`document`، وإلا الـbuild يفشل بمرحلة الـprerender.
+
+---
+
+## 26) انهيار التسجيل/الدخول على المتصفحات القديمة + بطء الدخول والتسجيل والـPIN (2026-10-29)
+
+### البلاغ
+عميل من لابتوب Dell قديم (i5 جيل 6) طلع له "حدث خطأ" وما قدر يسوي حساب ولا يدخل. وبشكل عام: إنشاء الحساب والدخول والتحقق من كلمة المرور بطيئين جداً.
+
+### 1) الانهيار — `crypto.randomUUID()` على Chrome < 92
+- "حدث خطأ" تطلع فقط من شاشة الانهيار بـ`src/main.jsx` (Sentry ErrorBoundary). سجلات Supabase ما فيها أي محاولة فاشلة → المشكلة بالمتصفح.
+- `TenantApp.jsx` (effect حفظ `tenant_settings`) ينادي `crypto.randomUUID()` أول ما تفتح لوحة **محل جديد** ما عنده صف إعدادات. الدالة موجودة من Chrome 92 / Safari 15.4 فقط → `TypeError` → التطبيق كامل يطيح. والصف ما ينكتب أبداً، فيطيح **بكل دخول**.
+- **تحقق فعلي بـDocker** (`selenium/standalone-chrome:87.0` و`109.0`): الصفحات العامة تفتح عادي بالاثنين، لكن بـChrome 87 `crypto.randomUUID()` يرمي `TypeError: crypto.randomUUID is not a function`.
+- **الإصلاح:** `src/utils/uuid.js` → `newId()`: يستخدم `crypto.randomUUID` لو موجود، وإلا يبني UUID v4 (RFC 4122) من `crypto.getRandomValues` (نفس مصدر CSPRNG، موجود من Chrome 11). استُبدلت كل الاستدعاءات (TenantApp ×10، AdminApp ×1، `storage.js` ×1). تحقق: 2000 معرّف من `newId()` داخل Chrome 87 كلها v4 صحيحة وفريدة، وكل الصفحات العامة بالبناء الجديد تفتح بـChrome 87 بدون أخطاء. الحزمة النهائية: الاستدعاءات الوحيدة الباقية لـ`randomUUID` محمية (Sentry + `newId`).
+- **قاعدة مستقبلية:** أي API متصفح أحدث من هدف Vite (`chrome87`) لازم يكون داخل فحص وجود/بديل — Vite يحوّل الصيغة فقط، مو الدوال (runtime APIs).
+
+### 2) البطء
+- **الـAPI كان بأمريكا والقاعدة بالهند:** Supabase بـ`ap-south-1` (مومباي) بينما دوال Vercel كانت بـ`iad1` (واشنطن). استعلام واحد من `/api/health` كان ~700ms، وطلب API كامل 2–5.6ث. **الإصلاح:** `"regions": ["bom1"]` بـ`vercel.json` (مومباي، نفس منطقة القاعدة وأقرب للسعودية).
+- **Upstash (تحديد المعدل) مؤرشف:** قاعدة `ragwapos-rate-limit` (خطة مجانية، كانت بـ`iad1`) "Archived due to inactivity" — `tough-raven-100082.upstash.io` ما يحل DNS. يعني تحديد المعدل بـ`/api/verify-pin` و`/api/send-verification-email` كان معطّل فعلياً (fail-open)، وكل طلب كان ينتظر لين مهلة المكتبة (الافتراضي 5ث). **الإصلاح بالكود:** `timeout: 1500` بـ`Ratelimit` (`api/_rateLimit.js`) — نفس سلوك fail-open بدون انتظار طويل. **إعادة القاعدة نفسها قرار المستخدم** (تنشئ أسرار/متغيرات بيئة جديدة).
+- **الدخول:** `resolveDestination` صار يستعلم `tenants` و`registration_requests` بالتوازي (`Promise.all`) بدل ورا بعض. وصفحة الدخول تبدأ تنزيل حزمة `TenantApp` بالخلفية (`loadTenantApp()` بـ`App.jsx`) فتكون جاهزة لحظة نجاح الدخول — تحقق بـChrome 87: `TenantApp-*.js` يتحمل على `/login`.
+- **التسجيل/التواصل:** `preloadTurnstile()` (`src/utils/turnstile.js`) يحمّل سكربت Turnstile أول ما تفتح صفحة التسجيل أو نموذج التواصل؛ التوكن نفسه (لمرة وحدة) لسا يُطلب عند الإرسال — تحقق: `api.js` يتحمل على `/signup`.
+
+### 3) جانبي: Microsoft Clarity كان محجوب بالـCSP
+ظهر باختبار Docker: `scripts.clarity.ms` (السكربت) و`c.clarity.ms` (بكسل) محجوبين، فتحليلات الزوار ما كانت تشتغل. أُضيف النطاقين بالضبط لـ`script-src`/`img-src` (بدون wildcard عام؛ `connect-src` كان أصلاً فيه `*.clarity.ms`).
+
+### ملاحظة: كود ميت قديم (مو من هالتعديل)
+فحص الأسماء غير المستخدمة طلّع `toCamelCase`/`KPI` بـ`TenantApp.jsx` و`VAT_RATE` بـ`AdminApp.jsx` — كانت غير مستخدمة قبل هالتعديل؛ تنظيفها خطوة منفصلة.

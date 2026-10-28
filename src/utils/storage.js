@@ -1,4 +1,5 @@
 import { auth, db } from '../supabase';
+import { newId } from "./uuid.js";
 
 // Product images (and the WhatsApp-shared invoice PDFs, see
 // supabase-whatsapp-feature.sql) stay in this public bucket — nothing in
@@ -19,7 +20,7 @@ async function uploadTo(bucket, file, folder) {
   const { data: userData, error: userErr } = await auth.getUser();
   if (userErr || !userData?.user) throw new Error('no_session');
   const uid = userData.user.id;
-  const path = `${uid}/${folder}/${crypto.randomUUID()}-${safeFileName(file.name)}`;
+  const path = `${uid}/${folder}/${newId()}-${safeFileName(file.name)}`;
   const { error: uploadErr } = await db.storage.from(bucket).upload(path, file, { contentType: file.type || undefined });
   if (uploadErr) throw uploadErr;
   return path;

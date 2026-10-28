@@ -8,7 +8,7 @@ import { auth, db } from "./supabase";
 import { toCamelCase } from "./utils/transforms.js";
 import { normalizeSaudiMobile, isValidSaudiMobile } from "./utils/phone.js";
 import { useClarityTracking } from "./utils/clarity.js";
-import { getTurnstileToken } from "./utils/turnstile.js";
+import { getTurnstileToken, preloadTurnstile } from "./utils/turnstile.js";
 import LandingPage from "./landing/LandingPage.jsx";
 import { subscribeToTable, subscribeToRow } from "./utils/dbSubscribe.js";
 import { ALL_DASHBOARD_PATHS } from "./utils/dashboardPaths.js";
@@ -19,7 +19,8 @@ import { ALL_DASHBOARD_PATHS } from "./utils/dashboardPaths.js";
 // never logs in (landing page, /signup, /terms, /login...). Splitting them
 // into their own lazy-loaded chunks keeps those public routes from ever
 // downloading dashboard/admin code. See PROJECT_REFERENCE.md.
-const LaundryOpsApp = lazy(() => import('./dashboard/TenantApp.jsx'));
+const loadTenantApp = () => import('./dashboard/TenantApp.jsx');
+const LaundryOpsApp = lazy(loadTenantApp);
 const AdminDashboard = lazy(() => import('./dashboard/AdminApp.jsx'));
 // Minimal, dependency-free fallback shown only for the (usually brief) time
 // it takes to fetch the lazy chunk after a successful login — deliberately
@@ -79,6 +80,9 @@ const authErrorMessage = (error) => {
   function LoginPage(props) {
   const { navigate, showPassword, setShowPassword, loginEmail, setLoginEmail,
     loginPassword, setLoginPassword, handleLogin, loginError, loginLoading } = props;
+  // Start downloading the dashboard chunk while the owner is still typing, so
+  // it's ready the moment sign-in succeeds instead of being fetched after.
+  useEffect(() => { loadTenantApp().catch(() => {}); }, []);
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
       <div className="absolute top-6 right-6">
@@ -369,6 +373,7 @@ function SignupPage(props) {
   // api/send-verification-email.js.
   const [signupWebsite, setSignupWebsite] = useState('');
   const formStartedAtRef = useRef(Date.now());
+  useEffect(() => { preloadTurnstile(); }, []);
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
       <div className="absolute top-6 right-6">
@@ -972,9 +977,12 @@ const LaundryPOS = () => {
     if (!user.email_confirmed_at) return { page: 'verify' };
     // maybeSingle() (not single()) — a missing tenant row is the expected,
     // non-error outcome for a user who just signed up and isn't approved yet.
-    const { data: tenantRow } = await db.from('tenants').select().eq('id', user.id).maybeSingle();
+    // Both lookups in parallel — one database round trip instead of two.
+    const [{ data: tenantRow }, { data: reqRows }] = await Promise.all([
+      db.from('tenants').select().eq('id', user.id).maybeSingle(),
+      db.from('registration_requests').select().eq('uid', user.id),
+    ]);
     if (tenantRow) return { page: 'dashboard', tenantId: user.id };
-    const { data: reqRows } = await db.from('registration_requests').select().eq('uid', user.id);
     const req = reqRows && reqRows[0] ? toCamelCase(reqRows[0]) : null;
     if (req && req.status === 'rejected') return { page: 'rejected', reason: req.rejectReason };
     return { page: 'pending' };

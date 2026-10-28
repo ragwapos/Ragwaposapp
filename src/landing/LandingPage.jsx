@@ -5,6 +5,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Shirt, MessageCircle, Smartphone, Car, QrCode, MapPin } from "lucide-react";
 import { LANDING_TEXT } from "../../content/landing.mjs";
+import { preloadTurnstile } from "../utils/turnstile.js";
 
 export default function LandingPage(props) {
   const { navigate, showContact, setShowContact,
@@ -20,7 +21,7 @@ export default function LandingPage(props) {
   // human could type a message. Both go to api/submit-contact untouched.
   const [contactWebsite, setContactWebsite] = useState('');
   const formStartedAtRef = useRef(0);
-  useEffect(() => { if (showContact) formStartedAtRef.current = Date.now(); }, [showContact]);
+  useEffect(() => { if (showContact) { formStartedAtRef.current = Date.now(); preloadTurnstile(); } }, [showContact]);
   const [openFaq, setOpenFaq] = useState(null);
   // prerender: set only by src/landing/prerender-entry.jsx at build time —
   // keeps every FAQ answer in the static HTML (hidden) so non-JS crawlers can

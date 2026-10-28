@@ -25,6 +25,7 @@ import { generateInvoiceImage } from "../utils/invoiceImage.js";
 import { uploadTenantFile, deleteTenantFile, uploadPrivateFile, deletePrivateFile, getSignedUrl } from "../utils/storage.js";
 import { subscribeToTable, subscribeToRow } from "../utils/dbSubscribe.js";
 import { pathForTab, tabForPath } from "../utils/dashboardPaths.js";
+import { newId } from "../utils/uuid.js";
 
 const STAGES = ["Received", "Washing", "Pressing", "Ready", "Delivered"];
 const VAT_RATE = 0.15;
@@ -5985,7 +5986,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     return () => { unsubZCfg(); unsubZInv(); };
   }, [tenantId]);
 
-  // crypto.randomUUID() replaces Firestore's doc(collection(...)).id trick —
+  // newId() replaces Firestore's doc(collection(...)).id trick —
   // both generate the new row's id CLIENT-SIDE before the write completes,
   // so callers that use the returned id immediately (e.g. selecting a
   // freshly-added category in a dropdown) keep working unchanged.
@@ -5997,7 +5998,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   // left the UI looking like the save silently did nothing. On failure the
   // optimistic change is rolled back and the error still logs as before.
   const addCategory = (name) => {
-    const id = crypto.randomUUID();
+    const id = newId();
     const row = { id, tenantId, name };
     setCategoriesState((prev) => [...prev, row]);
     db.from("categories").upsert(toSnakeCase(row)).then(({ error }) => {
@@ -6006,7 +6007,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     return { id, name };
   };
   const addProduct = (data) => {
-    const id = crypto.randomUUID();
+    const id = newId();
     const row = { id, tenantId, ...data };
     setProductsState((prev) => [...prev, row]);
     db.from("products").upsert(toSnakeCase(row)).then(({ error }) => {
@@ -6028,7 +6029,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     });
   };
   const addInvoice = (invoiceData) => {
-    const id = crypto.randomUUID();
+    const id = newId();
     const invoice = { ...invoiceData, id };
     const row = { tenantId, ...invoice };
     setInvoicesState((prev) => [...prev, row]);
@@ -6064,7 +6065,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     });
   };
   const addTransaction = (data) => {
-    const id = crypto.randomUUID();
+    const id = newId();
     const txn = { ...data, id };
     const row = { tenantId, ...txn };
     setCustomerTransactionsState((prev) => [...prev, row]);
@@ -6138,7 +6139,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     expenses: setExpensesState, promotions: setPromotionsState,
   };
   const addTo = (table) => (data) => {
-    const id = crypto.randomUUID();
+    const id = newId();
     const row = { id, tenantId, ...data };
     const setState = setStateByTable[table];
     if (setState) setState((prev) => [...prev, row]);
@@ -6321,7 +6322,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
 
   useEffect(() => {
     if (!tenantId || !settingsLoaded) return;
-    const rowId = settingsRowId || crypto.randomUUID();
+    const rowId = settingsRowId || newId();
     if (!settingsRowId) setSettingsRowId(rowId);
     // Debounced -- a burst of rapid changes to this same row (e.g. clicking
     // through the three "سلوك الإرسال" options back-to-back to compare them)
@@ -6473,12 +6474,12 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "zatca_signing_failed");
       row = {
-        id: crypto.randomUUID(), tenantId, invoiceId: invoice.id, uuid: data.uuid,
+        id: newId(), tenantId, invoiceId: invoice.id, uuid: data.uuid,
         invoiceHash: data.invoiceHash, status: "SIGNED", qrPayload: data.qrBase64,
         submittedAt: nowISO(), clearedAt: null,
       };
     } else {
-      const zatcaUuid = crypto.randomUUID();
+      const zatcaUuid = newId();
       const canonical = `${invoice.id}|${invoice.code}|${invoice.total}|${invoice.createdAt}|${merchant.taxNumber || ""}`;
       const hashBuf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(canonical));
       const invoiceHash = [...new Uint8Array(hashBuf)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -6491,7 +6492,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
         vatTotal: vatTotal.toFixed(2),
       });
       row = {
-        id: crypto.randomUUID(), tenantId, invoiceId: invoice.id, uuid: zatcaUuid,
+        id: newId(), tenantId, invoiceId: invoice.id, uuid: zatcaUuid,
         invoiceHash, status: "CLEARED", qrPayload,
         submittedAt: nowISO(), clearedAt: nowISO(),
       };
