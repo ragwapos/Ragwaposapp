@@ -379,23 +379,40 @@ function qrModules(value) {
   return QRCode.create(value, { errorCorrectionLevel: "M" }).modules;
 }
 
-function RealQR({ value, size = 96 }) {
+// Raster QR for the on-screen preview — the node html2canvas captures for
+// the WhatsApp image. The old SVG of hundreds of fractional-size <rect>s
+// (96px / 37 modules = 2.59px each, no quiet zone) came out of html2canvas
+// with seams between cells and JPEG-blurred edges: unscannable, and a
+// Phase 2 signed payload (77–93 modules ≈ 1px each) never stood a chance.
+// Here every module is a whole number of pixels with the spec's 4-module
+// white margin, drawn synchronously so it's complete before any capture.
+// The print path keeps its vector SVG (buildQrSvgString) — that one prints
+// fine at printer resolution.
+const QR_MODULE_PX = 8;
+const QR_QUIET_MODULES = 4;
+function qrPngDataUrl(value) {
   const modules = qrModules(value);
   const n = modules.size;
-  const cell = size / n;
-  const boxes = [];
+  const total = n + QR_QUIET_MODULES * 2;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = total * QR_MODULE_PX;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#000";
   for (let r = 0; r < n; r++) {
     for (let c = 0; c < n; c++) {
-      if (modules.data[r * n + c]) {
-        boxes.push(<rect key={`${r}-${c}`} x={c * cell} y={r * cell} width={cell} height={cell} fill="#000" />);
-      }
+      if (modules.data[r * n + c]) ctx.fillRect((c + QR_QUIET_MODULES) * QR_MODULE_PX, (r + QR_QUIET_MODULES) * QR_MODULE_PX, QR_MODULE_PX, QR_MODULE_PX);
     }
   }
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="mx-auto" style={{ background: "#fff" }}>
-      {boxes}
-    </svg>
-  );
+  return { url: canvas.toDataURL("image/png"), totalModules: total };
+}
+
+function RealQR({ value }) {
+  const { url, totalModules } = useMemo(() => qrPngDataUrl(value), [value]);
+  // ≥2 CSS px per module (×2 capture scale = ≥4 image px each), never below 120px.
+  const size = Math.max(120, totalModules * 2);
+  return <img src={url} alt="" width={size} height={size} className="mx-auto block" style={{ width: size, height: size, imageRendering: "pixelated" }} />;
 }
 
 // Fixed print-document vocabulary — deliberately NOT tied to useLang()/t().
@@ -457,7 +474,11 @@ function buildPrintableHtml(doc) {
   const totalsRow = (num, label, bold) => `<div style="display:flex;justify-content:space-between;font-size:13px;${bold ? "font-weight:700;" : ""}"><span style="font-family:'Courier New',monospace;direction:ltr;">${esc(num)}</span><span>${esc(label)}</span></div>`;
 
   const header = `
-    <div style="text-align:center;font-size:17px;font-weight:700;margin-bottom:14px;">${esc(doc.merchant.name || "—")}</div>
+    <div style="text-align:center;margin-bottom:14px;">
+      ${doc.merchant.logoUrl ? `<img src="${esc(doc.merchant.logoUrl)}" alt="" style="display:block;margin:0 auto 8px;max-height:64px;max-width:160px;object-fit:contain;">` : ""}
+      <div style="font-size:17px;font-weight:700;">${esc(doc.merchant.storeName || doc.merchant.name || "—")}</div>
+      ${doc.merchant.storeName && doc.merchant.name ? `<div style="font-size:12px;margin-top:2px;">${esc(doc.merchant.name)}</div>` : ""}
+    </div>
     <table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:10px;">
       ${row3(PRINT.addressEn, doc.merchant.address || "—", PRINT.addressAr)}
       ${row3(PRINT.phoneEn, doc.merchant.phone || "—", PRINT.phoneAr)}
@@ -712,7 +733,7 @@ function PrintDocumentModal({ doc, onClose }) {
       const message = fillWhatsAppTemplate(doc.whatsappTemplate, {
         customer_name: doc.customerName || "",
         invoice_id: doc.invoiceCode || "",
-        store_name: doc.merchant?.name || "",
+        store_name: doc.merchant?.storeName || doc.merchant?.name || "",
         invoice_url: url,
         total_amount: doc.totals?.gross != null ? doc.totals.gross.toFixed(2) : "",
       });
@@ -741,7 +762,12 @@ function PrintDocumentModal({ doc, onClose }) {
       <div className="flex w-full max-w-sm max-h-[92vh] flex-col overflow-hidden rounded-2xl bg-app-surface shadow-app-lg" onClick={(e) => e.stopPropagation()}>
         <div className="flex-1 overflow-y-auto">
         <div ref={printAreaRef} className="print-area p-6 text-slate-900" style={{ fontFamily: "'Inter', sans-serif" }}>
-          <div className="mb-4 text-center text-lg font-bold">{doc.merchant.name || "—"}</div>
+          <div className="mb-4 text-center">
+            {/* crossOrigin: lets html2canvas read the Storage-hosted logo into the WhatsApp image without tainting the canvas. */}
+            {doc.merchant.logoUrl && <img src={doc.merchant.logoUrl} alt="" crossOrigin="anonymous" className="mx-auto mb-2 block" style={{ maxHeight: 64, maxWidth: 160, objectFit: "contain" }} />}
+            <div className="text-lg font-bold">{doc.merchant.storeName || doc.merchant.name || "—"}</div>
+            {doc.merchant.storeName && doc.merchant.name && <div className="mt-0.5 text-xs text-slate-700">{doc.merchant.name}</div>}
+          </div>
 
           {/* Arabic label on the right, English label on the left, shared value centered — explicit alignment, not dependent on ambient text direction */}
           <div className="mb-3 space-y-1.5 text-[13px]">
@@ -1112,6 +1138,8 @@ const DICT = {
     settings_autoPrint: "Auto Print", settings_autoPrintHint: "Automatically print the receipt/invoice right after a sale, with no extra click.",
     settings_autoPrintCopies: "Number of copies",
     settings_showPrintPreview: "Show invoice preview", settings_showPrintPreviewHint: "Turn off to print silently with no popup and go straight to the next sale.",
+    settings_storeName: "Store Name", settings_logo: "Store Logo", settings_logoUpload: "Upload Logo", settings_logoRemove: "Remove",
+    settings_logoHint: "Shown at the top of printed and WhatsApp invoices. PNG, JPG or WebP, up to 1.5 MB.",
     settings_merchantName: "Name (as registered in the Commercial Registry)", settings_merchantPhone: "Store Phone Number",
     settings_merchantAddress: "Store Location", settings_merchantTax: "Tax Number",
     settings_merchantSave: "Save Changes", settings_merchantSaved: "Saved",
@@ -1392,6 +1420,8 @@ const DICT = {
     settings_autoPrint: "الطباعة التلقائية", settings_autoPrintHint: "تطبع الفاتورة/الإيصال تلقائيًا فور إتمام البيع، بدون ضغطة إضافية.",
     settings_autoPrintCopies: "عدد النسخ",
     settings_showPrintPreview: "إظهار معاينة الفاتورة", settings_showPrintPreviewHint: "أطفئها عشان تطبع مباشرة بدون أي نافذة، وتنتقل فورًا للبيعة التالية.",
+    settings_storeName: "اسم المحل", settings_logo: "شعار المحل", settings_logoUpload: "رفع الشعار", settings_logoRemove: "إزالة",
+    settings_logoHint: "يظهر أعلى الفاتورة المطبوعة وفاتورة الواتساب. PNG أو JPG أو WebP، بحد أقصى 1.5 ميجا.",
     settings_merchantName: "الاسم (كما هو مسجل في السجل التجاري)", settings_merchantPhone: "رقم هاتف المحل",
     settings_merchantAddress: "موقع المحل", settings_merchantTax: "الرقم الضريبي",
     settings_merchantSave: "حفظ التغييرات", settings_merchantSaved: "تم الحفظ",
@@ -1672,6 +1702,8 @@ const DICT = {
     settings_autoPrint: "خودکار پرنٹ", settings_autoPrintHint: "سیل مکمل ہوتے ہی رسید/انوائس خودکار طور پر پرنٹ ہو جائے گی، بغیر کسی اضافی کلک کے۔",
     settings_autoPrintCopies: "کاپیوں کی تعداد",
     settings_showPrintPreview: "انوائس پیش نظارہ دکھائیں", settings_showPrintPreviewHint: "بند کریں تاکہ بغیر کسی پاپ اپ کے خاموشی سے پرنٹ ہو اور فوراً اگلی سیل پر جائے۔",
+    settings_storeName: "دکان کا نام", settings_logo: "دکان کا لوگو", settings_logoUpload: "لوگو اپ لوڈ کریں", settings_logoRemove: "ہٹائیں",
+    settings_logoHint: "پرنٹ شدہ اور واٹس ایپ انوائس کے اوپر دکھایا جاتا ہے۔ PNG، JPG یا WebP، زیادہ سے زیادہ 1.5 MB۔",
     settings_merchantName: "نام (کمرشل رجسٹریشن میں درج شدہ)", settings_merchantPhone: "دکان کا فون نمبر",
     settings_merchantAddress: "دکان کا مقام", settings_merchantTax: "ٹیکس نمبر",
     settings_merchantSave: "تبدیلیاں محفوظ کریں", settings_merchantSaved: "محفوظ ہو گیا",
@@ -2923,7 +2955,7 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
     if (!phone) return; // no phone on file -- silently skip, no popup, no error
     const cleanedPhone = cleanPhoneForWhatsApp(phone);
     const message = fillWhatsAppTemplate(readyMessageTemplate, {
-      customer_name: inv.customerName || "", store_name: merchant?.name || "", order_id: inv.code || "",
+      customer_name: inv.customerName || "", store_name: merchant?.storeName || merchant?.name || "", order_id: inv.code || "",
     }, DEFAULT_READY_MESSAGE_TEMPLATE);
     if (whatsappReadySendMode === "auto") { openWhatsApp(cleanedPhone, message); return; }
     setReadyConfirm({ phone: cleanedPhone, message });
@@ -5679,6 +5711,35 @@ function SettingsView({ merchant, setMerchant, ownerPinSet, sectionLocks, enable
     setTimeout(() => setMerchantSaved(false), 1800);
   };
 
+  // Logo goes straight to Storage via uploadTenantFile — only the public
+  // URL lands in merchant.logoUrl (tenant_settings.merchant JSON), never
+  // the image bytes. The replaced/removed file is deleted so re-uploads
+  // don't pile up orphans in the bucket.
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoError, setLogoError] = useState("");
+  const handleLogoFile = async (e) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    const err = validateUploadedFile(file, { maxBytes: MAX_IMAGE_BYTES, allowedTypes: ALLOWED_IMAGE_TYPES });
+    e.target.value = "";
+    if (err) { setLogoError(t(err)); return; }
+    setLogoError(""); setLogoUploading(true);
+    try {
+      const { url } = await uploadTenantFile(file, "logo");
+      const previous = merchant.logoUrl;
+      setMerchant((prev) => ({ ...prev, logoUrl: url }));
+      deleteTenantFile(previous);
+    } catch {
+      setLogoError(t("upload_failed"));
+    } finally {
+      setLogoUploading(false);
+    }
+  };
+  const removeLogo = () => {
+    const previous = merchant.logoUrl;
+    setMerchant((prev) => ({ ...prev, logoUrl: "" }));
+    deleteTenantFile(previous);
+  };
+
   return (
     <div className="max-w-5xl space-y-6">
       <div>
@@ -5702,7 +5763,29 @@ function SettingsView({ merchant, setMerchant, ownerPinSet, sectionLocks, enable
         <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
           <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-app-text"><Building2 size={16} className="text-brand-600" /> {t("settings_merchantInfo")}</div>
           <p className="mb-4 text-xs text-app-text-subtle">{t("settings_merchantInfoHint")}</p>
+          <Field label={t("settings_storeName")}><input value={merchant.storeName || ""} onChange={update("storeName")} className={inputCls} autoComplete="off" /></Field>
           <Field label={t("settings_merchantName")}><input value={merchant.name} onChange={update("name")} className={inputCls} autoComplete="off" /></Field>
+          {/* Not <Field> — that's a <label>, and this block holds its own upload <label> plus a remove button. */}
+          <div className="mb-4">
+            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t("settings_logo")}</span>
+            <div className="flex items-center gap-3">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-app-border bg-white">
+                {merchant.logoUrl ? <img src={merchant.logoUrl} alt="" className="h-full w-full object-contain" /> : <ImageIcon size={20} className="text-app-text-subtle" />}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <label className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-app-border px-3 py-1.5 text-xs font-semibold text-app-text hover:bg-app-bg ${logoUploading ? "pointer-events-none opacity-60" : ""}`}>
+                  {logoUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                  {logoUploading ? t("upload_uploading") : t("settings_logoUpload")}
+                  <input type="file" accept={ALLOWED_IMAGE_TYPES.join(",")} onChange={handleLogoFile} className="hidden" />
+                </label>
+                {merchant.logoUrl && !logoUploading && (
+                  <button type="button" onClick={removeLogo} className="inline-flex items-center gap-1.5 rounded-lg border border-danger-200 px-3 py-1.5 text-xs font-semibold text-danger-700 hover:bg-danger-50"><Trash2 size={14} /> {t("settings_logoRemove")}</button>
+                )}
+              </div>
+            </div>
+            <p className="mt-1.5 text-[11px] text-app-text-subtle">{t("settings_logoHint")}</p>
+            {logoError && <p className="mt-1 text-xs font-medium text-danger-700">{logoError}</p>}
+          </div>
           <Field label={t("settings_merchantPhone")}><input value={merchant.phone} onChange={update("phone")} className={inputCls} autoComplete="off" /></Field>
           <Field label={t("settings_merchantAddress")}><input value={merchant.address} onChange={update("address")} className={inputCls} autoComplete="off" /></Field>
           <Field label={t("settings_merchantTax")}><input value={merchant.taxNumber} onChange={update("taxNumber")} className={inputCls} autoComplete="off" /></Field>
@@ -6205,7 +6288,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   // methods) live as one doc — loaded once on mount, auto-saved on any change
   // once the initial load has completed (so we never overwrite real saved
   // settings with the blank defaults during the first render).
-  const [merchant, setMerchant] = useState({ name: "", phone: "", address: "", taxNumber: "", autoPrint: false, autoPrintCopies: 1, showPrintPreview: true });
+  const [merchant, setMerchant] = useState({ storeName: "", name: "", logoUrl: "", phone: "", address: "", taxNumber: "", autoPrint: false, autoPrintCopies: 1, showPrintPreview: true });
   // Whether a master PIN exists and which sections are locked -- booleans
   // only. The actual PIN hashes live server-side (owner_pin_credentials,
   // never sent to the client) and are checked via api/verify-pin.js; see
