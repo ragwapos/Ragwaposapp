@@ -400,3 +400,18 @@
 
 ### ملاحظة: كود ميت قديم (مو من هالتعديل)
 فحص الأسماء غير المستخدمة طلّع `toCamelCase`/`KPI` بـ`TenantApp.jsx` و`VAT_RATE` بـ`AdminApp.jsx` — كانت غير مستخدمة قبل هالتعديل؛ تنظيفها خطوة منفصلة.
+
+## 27) Upstash Redis جديد بمومباي — رجوع تحديد معدل الطلبات (2026-10-29)
+- القاعدة القديمة `ragwapos-rate-limit` (iad1) انأرشفت لعدم النشاط، فكان `checkRateLimit` يفشل ويفتح (fail-open) = حماية التخمين/الإيميلات معطّلة فعليًا.
+- أُنشئت قاعدة مجانية جديدة **`ragwapos-rate-limit-bom1`** (منطقة `bom1`، نفس منطقة الـAPI وSupabase) من Vercel ← Storage، وأُزيل ربط القديمة، ورُبطت الجديدة بـ`ragwaposapp` (Production + Preview) بالبادئة **`KV`** → `KV_REST_API_URL`/`KV_REST_API_TOKEN` (نفس الأسماء اللي يقرأها `api/_rateLimit.js`، بدون تعديل كود). ملاحظة: `REDIS_URL` صار اسمه `KV_REDIS_URL` (غير مستخدم بالكود).
+- الخطة المجانية = قاعدة وحدة للحساب، وتنأرشف لو ما انستخدمت فترة طويلة.
+- **تحقق (staging):** 4 طلبات لـ`/api/send-verification-email` بنفس إيميل `example.com` → 400، 400، 400، **429 `rate_limited`**؛ ~100–200ms للطلب؛ صفر runtime errors. متغيرات البيئة تحتاج redeploy عشان تطبق.
+
+## 28) اسم المحل + شعار المحل بالفاتورة + إصلاح QR صورة الواتساب (2026-10-29)
+- **الإعدادات ← بيانات التاجر:** حقل جديد "اسم المحل" (`merchant.storeName`) فوق "الاسم (كما هو مسجل في السجل التجاري)" (`merchant.name`)، وقسم "شعار المحل" (`merchant.logoUrl`). كلها داخل JSON عمود `tenant_settings.merchant` (`store_name`/`logo_url`) — **بدون أي SQL**، ومتوافق مع كود `main` (يحتفظ بالمفاتيح الزايدة).
+- **`merchant.name` يبقى اسم السجل التجاري** لأنه بائع QR الهيئة (Tag 1) وشهادة/فاتورة المرحلة الثانية. `{store_name}` برسائل الواتساب يفضّل `storeName` ثم `name`.
+- **الشعار:** يُرفع مباشرة من المتصفح لـSupabase Storage عبر `uploadTenantFile(file, "logo")` (bucket `invoice-pdfs` العام، مجلد `<uid>/logo/`، نفس RLS صور المنتجات)، وما ينحفظ بالقاعدة إلا الرابط العام. نفس فحص صور المنتجات (`ALLOWED_IMAGE_TYPES` بدون SVG، `MAX_IMAGE_BYTES` 1.5MB). الاستبدال/الإزالة يحذف الملف القديم (`deleteTenantFile`).
+- **رأس الفاتورة (المعاينة `PrintDocumentModal` + HTML الطباعة `buildPrintableHtml`):** الشعار (max 64×160px) ← اسم المحل عريض ← اسم السجل أصغر. بدون اسم محل يطلع اسم السجل عريض لوحده؛ بدون شعار ما يطلع عنصر. الشعار بالمعاينة `crossOrigin="anonymous"` عشان html2canvas (Storage يرسل `Access-Control-Allow-Origin: *`).
+- **سبب تلف QR الواتساب:** المعاينة كانت ترسم QR كمئات `<rect>` بمقاسات كسرية بـ96px وبدون هامش أبيض؛ html2canvas (×1.5) + JPEG 0.8 = خطوط بين الوحدات وحواف مموّهة. كود المرحلة الثانية (~100 وحدة) يصير ~1px للوحدة.
+- **الإصلاح:** `qrPngDataUrl()` يرسم PNG متزامن بـ8px صحيحة للوحدة + هامش 4 وحدات؛ `RealQR` يعرضه `<img>` بحجم ≥2px للوحدة (أقل شي 120px) مع `image-rendering: pixelated`؛ `invoiceImage.js` صار `scale 2` + JPEG `0.92`. الطباعة (`buildQrSvgString`، vector) ما تغيرت.
+- **تحقق:** فك QR من مخرجات html2canvas بـjsQR بمتصفح حقيقي: القديم فشل لـpayload مرحلة أولى (49 وحدة) ومرحلة ثانية (696 حرف، 101 وحدة)؛ الجديد فك الاثنين بمطابقة حرفية.
