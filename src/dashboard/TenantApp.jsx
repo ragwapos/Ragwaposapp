@@ -15,7 +15,7 @@ import {
   ReceiptText, Receipt, Building2, FileText, Settings, Globe, Lock, Unlock, Pencil, Paperclip,
   MessageCircle, Bell, Loader2, Home, SplitSquareHorizontal, Printer, StickyNote,
   Phone, User, Link2, FlaskConical, KeyRound, LogOut, XCircle, Download,
-  SlidersHorizontal, ChevronDown, Menu
+  SlidersHorizontal, ChevronDown, Menu, Store
 } from "lucide-react";
 import QRCode from "qrcode";
 import { auth, db } from "../supabase";
@@ -484,7 +484,7 @@ function buildPrintableHtml(doc) {
       ${row3(PRINT.phoneEn, doc.merchant.phone || "—", PRINT.phoneAr)}
       ${row3(PRINT.dateEn, doc.dateLabel, PRINT.dateAr)}
       ${row3(PRINT.invNumEn, doc.invoiceCode, PRINT.invNumAr)}
-      ${row3(PRINT.cashier, PRINT.branchValueAr, PRINT.branchAr)}
+      ${row3(PRINT.cashier, esc(doc.branchName || PRINT.branchValueAr), PRINT.branchAr)}
       ${row3("", doc.customerName, PRINT.customerAr)}
     </table>
     <hr style="border:none;border-top:1px solid #1e293b;margin:10px 0;">
@@ -776,7 +776,7 @@ function PrintDocumentModal({ doc, onClose }) {
               [PRINT.phoneEn, doc.merchant.phone || "—", PRINT.phoneAr, true],
               [PRINT.dateEn, doc.dateLabel, PRINT.dateAr, true],
               [PRINT.invNumEn, doc.invoiceCode, PRINT.invNumAr, true],
-              [PRINT.cashier, PRINT.branchValueAr, PRINT.branchAr],
+              [PRINT.cashier, doc.branchName || PRINT.branchValueAr, PRINT.branchAr],
               ["", doc.customerName, PRINT.customerAr],
             ].map(([en, center, ar, mono], i) => (
               <div key={i} className="flex items-center justify-between gap-2">
@@ -925,6 +925,7 @@ const DICT = {
     nav_pos: "Point of Sale", nav_invoices: "Active Invoices", nav_delivery: "Active Delivery Invoices",
     nav_customers: "Customer Ledger", nav_products: "Products", nav_purchases: "Purchases & Expenses",
     nav_promotions: "Promotions", nav_reports: "Reports", nav_whatsapp: "WhatsApp", nav_settings: "Settings",
+    nav_branches: "Branches", branches_title: "Branches", branches_subtitle: "Manage your laundry's branches", branches_add: "Add branch", branches_nameOptional: "Branch name (optional)", branches_defaultName: "Branch {n}", branches_autoNote: "The branch gets number {n} automatically and its invoices start with B{n}-. The number never changes, even if you rename the branch.", branches_costNote: "Adding a branch increases your monthly subscription.", branches_numberCol: "No.", branches_nameCol: "Branch", branches_prefixCol: "Invoice prefix", branches_noPrefix: "None (original numbering)", branches_rename: "Rename", branches_archive: "Archive", branches_restore: "Restore", branches_active: "Active", branches_archived: "Archived", branches_errCreate: "Couldn't add the branch. Please try again.", branches_errUpdate: "Couldn't save the change. Please try again.", branches_picker_view: "Viewing", branches_all: "All branches", branches_search: "Search branches...", branches_noMatch: "No branch with that name", branches_workBranch: "Sale branch", branches_settingsTitle: "Branches", branches_settingsSingle: "Your laundry runs one branch. Add a second branch whenever you need one and the branch tools appear automatically.", branches_settingsMulti: "You have {n} active branches.", branches_manage: "Manage branches",
 
     home_welcomeBack: "Welcome back", home_salesToday: "Today's Sales", home_ordersToday: "Today's Orders",
     home_readyOrders: "Ready Orders", home_deliveryActive: "Delivery In Progress",
@@ -1207,6 +1208,7 @@ const DICT = {
     nav_pos: "نقطة البيع", nav_invoices: "الفواتير النشطة", nav_delivery: "فواتير التوصيل النشطة",
     nav_customers: "سجل العملاء", nav_products: "المنتجات", nav_purchases: "المشتريات والمصروفات",
     nav_promotions: "العروض", nav_reports: "التقارير", nav_whatsapp: "واتس اب", nav_settings: "الإعدادات",
+    nav_branches: "الفروع", branches_title: "الفروع", branches_subtitle: "إدارة فروع المغسلة", branches_add: "إضافة فرع", branches_nameOptional: "اسم الفرع (اختياري)", branches_defaultName: "فرع {n}", branches_autoNote: "يُعطى الفرع الرقم {n} تلقائيًا وتبدأ فواتيره بـ B{n}-. الرقم ثابت حتى لو غيّرت اسم الفرع.", branches_costNote: "إضافة فرع تزيد اشتراكك الشهري.", branches_numberCol: "الرقم", branches_nameCol: "الفرع", branches_prefixCol: "بادئة الفواتير", branches_noPrefix: "بدون (أرقام الفرع الأصلي)", branches_rename: "تعديل الاسم", branches_archive: "أرشفة", branches_restore: "استعادة", branches_active: "نشط", branches_archived: "مؤرشف", branches_errCreate: "تعذّر إضافة الفرع، حاول مرة ثانية.", branches_errUpdate: "تعذّر حفظ التغيير، حاول مرة ثانية.", branches_picker_view: "عرض بيانات", branches_all: "كل الفروع", branches_search: "ابحث عن فرع...", branches_noMatch: "لا يوجد فرع بهذا الاسم", branches_workBranch: "فرع البيع", branches_settingsTitle: "الفروع", branches_settingsSingle: "مغسلتك تعمل بفرع واحد. أضف فرعًا ثانيًا متى احتجت، وتظهر أدوات الفروع تلقائيًا.", branches_settingsMulti: "عندك {n} فروع نشطة.", branches_manage: "إدارة الفروع",
 
     home_welcomeBack: "أهلاً بك", home_salesToday: "مبيعات اليوم", home_ordersToday: "طلبات اليوم",
     home_readyOrders: "طلبات جاهزة", home_deliveryActive: "توصيل قيد التنفيذ",
@@ -1489,6 +1491,7 @@ const DICT = {
     nav_pos: "پوائنٹ آف سیل", nav_invoices: "جاری آرڈرز", nav_delivery: "جاری ڈیلیوری آرڈرز",
     nav_customers: "کسٹمر لیجر", nav_products: "پروڈکٹس", nav_purchases: "خریداری اور اخراجات",
     nav_promotions: "پرموشنز", nav_reports: "رپورٹس", nav_whatsapp: "واٹس ایپ", nav_settings: "سیٹنگز",
+    nav_branches: "برانچز", branches_title: "برانچز", branches_subtitle: "لانڈری کی برانچز کا انتظام", branches_add: "برانچ شامل کریں", branches_nameOptional: "برانچ کا نام (اختیاری)", branches_defaultName: "برانچ {n}", branches_autoNote: "برانچ کو خود بخود نمبر {n} ملتا ہے اور اس کی انوائسز B{n}- سے شروع ہوتی ہیں۔ نام بدلنے پر بھی نمبر نہیں بدلتا۔", branches_costNote: "برانچ شامل کرنے سے آپ کی ماہانہ سبسکرپشن بڑھ جاتی ہے۔", branches_numberCol: "نمبر", branches_nameCol: "برانچ", branches_prefixCol: "انوائس کا سابقہ", branches_noPrefix: "کوئی نہیں (اصل نمبرنگ)", branches_rename: "نام تبدیل کریں", branches_archive: "آرکائیو", branches_restore: "بحال کریں", branches_active: "فعال", branches_archived: "آرکائیو شدہ", branches_errCreate: "برانچ شامل نہیں ہو سکی، دوبارہ کوشش کریں۔", branches_errUpdate: "تبدیلی محفوظ نہیں ہو سکی، دوبارہ کوشش کریں۔", branches_picker_view: "ڈیٹا دیکھیں", branches_all: "تمام برانچز", branches_search: "برانچ تلاش کریں...", branches_noMatch: "اس نام کی کوئی برانچ نہیں", branches_workBranch: "سیل برانچ", branches_settingsTitle: "برانچز", branches_settingsSingle: "آپ کی لانڈری ایک برانچ پر چلتی ہے۔ جب چاہیں دوسری برانچ شامل کریں، برانچ ٹولز خود ظاہر ہو جائیں گے۔", branches_settingsMulti: "آپ کی {n} فعال برانچز ہیں۔", branches_manage: "برانچز کا انتظام",
 
     home_welcomeBack: "خوش آمدید", home_salesToday: "آج کی فروخت", home_ordersToday: "آج کے آرڈرز",
     home_readyOrders: "تیار آرڈرز", home_deliveryActive: "جاری ڈیلیوری",
@@ -1777,6 +1780,19 @@ function useLang() {
   return { lang: ctx.lang, setLang: ctx.setLang, dir: ctx.dir, t };
 }
 
+// Multi-branch support. A tenant always owns one main branch (number 1); the
+// branch UI (picker, "الفروع" tab, branch column/prefix) only exists once it
+// has 2+ active branches, so a single-branch shop sees no difference at all.
+// Customers, wallets, products and suppliers stay shared across branches;
+// invoices, wallet movements, purchases and expenses belong to one branch.
+const BranchCtx = createContext({
+  multi: false, branches: [], activeBranches: [], scope: "all", work: null, workName: null,
+  nameOf: () => null, selectBranch: () => {}, selectWork: () => {}, createBranch: async () => null, updateBranch: async () => {},
+});
+function useBranches() { return useContext(BranchCtx); }
+// Main branch keeps its original numbering (INV-1001); branch N>1 gets B<N>-.
+const branchPrefix = (branch) => (branch && branch.number > 1 ? `B${branch.number}-` : "");
+
 const NAV = [
   { key: "pos", labelKey: "nav_pos", icon: Shirt },
   { key: "invoices", labelKey: "nav_invoices", icon: ClipboardList },
@@ -1787,6 +1803,7 @@ const NAV = [
   { key: "promotions", labelKey: "nav_promotions", icon: Tag },
   { key: "reports", labelKey: "nav_reports", icon: BarChart3 },
   { key: "whatsapp", labelKey: "nav_whatsapp", icon: MessageCircle },
+  { key: "branches", labelKey: "nav_branches", icon: Store },
   { key: "settings", labelKey: "nav_settings", icon: Settings },
 ];
 
@@ -1795,8 +1812,52 @@ const NAV = [
 // calls it directly. onNavigate (closes the mobile drawer) still only fires
 // for an unlocked item's immediate nav, exactly like before: for a locked
 // one, the drawer stays open behind the PIN modal AppShell renders.
+function BranchPicker() {
+  const { t } = useLang();
+  const { activeBranches, scope, selectBranch, nameOf } = useBranches();
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [open]);
+  const q = query.trim().toLowerCase();
+  const list = activeBranches.filter((b) => b.name.toLowerCase().includes(q));
+  const pick = (id) => { selectBranch(id); setOpen(false); setQuery(""); };
+  const optCls = (active) => `flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm hover:bg-app-bg ${active ? "bg-brand-50 text-brand-700" : "text-app-text"}`;
+  return (
+    <div ref={ref} className="relative mx-3 mb-3">
+      <button onClick={() => setOpen((v) => !v)} aria-expanded={open}
+        className="flex w-full items-center gap-2.5 rounded-lg bg-navy-800 px-3 py-2.5 text-start ring-1 ring-inset ring-white/10 hover:bg-navy-700">
+        <div className="min-w-0 flex-1">
+          <div className="text-[10.5px] text-white/50">{t("branches_picker_view")}</div>
+          <div className="truncate text-[13px] font-bold text-white">{scope === "all" ? t("branches_all") : nameOf(scope)}</div>
+        </div>
+        <ChevronDown size={16} className="shrink-0 text-white/60" />
+      </button>
+      {open && (
+        <div className="absolute inset-x-0 top-full z-30 mt-1.5 rounded-xl border border-app-border bg-white p-2 shadow-app-lg">
+          <div className="relative mb-1.5">
+            <Search size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-app-text-subtle" />
+            <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("branches_search")} className={`${inputCls} pr-9`} />
+          </div>
+          <div className="max-h-64 space-y-0.5 overflow-y-auto">
+            {!q && <button onClick={() => pick("all")} className={optCls(scope === "all")}><b>{t("branches_all")}</b><span className="ms-auto text-xs text-app-text-muted">{activeBranches.length}</span></button>}
+            {list.map((b) => <button key={b.id} onClick={() => pick(b.id)} className={optCls(scope === b.id)}><span className="truncate">{b.name}</span></button>)}
+            {q && list.length === 0 && <div className="px-3 py-3 text-center text-xs text-app-text-subtle">{t("branches_noMatch")}</div>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Sidebar({ tab, setTab, sectionLocks, merchant, onNavigate = () => {} }) {
   const { t } = useLang();
+  const { multi } = useBranches();
 
   const handleNavClick = (key) => {
     setTab(key);
@@ -1812,8 +1873,9 @@ function Sidebar({ tab, setTab, sectionLocks, merchant, onNavigate = () => {} })
           <div className="text-[11px] font-semibold uppercase tracking-widest text-brand-400 mt-1">{t("app_tagline")}</div>
         </div>
       </button>
+      {multi && <BranchPicker />}
       <nav className="flex-1 space-y-1 px-3">
-        {NAV.map((n, i) => {
+        {NAV.filter((n) => n.key !== "branches" || multi).map((n, i) => {
           const Icon = n.icon;
           const active = tab === n.key;
           const locked = Boolean(sectionLocks[n.key]);
@@ -2323,6 +2385,7 @@ function promosOverlap(aStart, aEnd, bStart, bEnd) {
 
 function POSView({ categories, products, addons, customers, addCustomer, onCreateInvoice, merchant, promotions, enabledPayMethods, whatsappTemplate, whatsappEnabled, setTab }) {
   const { t } = useLang();
+  const branchUi = useBranches();
   const [activeCat, setActiveCat] = useState("all");
   const [productQuery, setProductQuery] = useState("");
   const [modalProduct, setModalProduct] = useState(null);
@@ -2476,7 +2539,7 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
     const nowIso = nowISO();
     setPrintDoc({
       kind: (finalPayMethod === "Wallet Balance" || vatExempt) ? "receipt" : "tax",
-      merchant, dateLabel: printDateLabel(nowIso), isoDateTime: nowIso, invoiceCode: invoice.code, customerName: customer?.name || "—",
+      merchant, dateLabel: printDateLabel(nowIso), isoDateTime: nowIso, invoiceCode: invoice.code, customerName: customer?.name || "—", branchName: branchUi.nameOf(invoice.branchId),
       customerPhone: customer?.mobile || null, whatsappTemplate, whatsappEnabled,
       items: docItems, totals: { net, discount: finalDiscount, vat, gross, paid, remaining, pieceCount },
       payMethodLabel: payMethodLabelText,
@@ -2557,6 +2620,12 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
                 sale grabs first, so it's intentionally omitted. */}
             <div className="mb-3 flex items-center justify-between">
               <span className="text-[13px] font-bold text-app-text-subtle">{t("pos_newOrder")}</span>
+              {branchUi.multi && (
+                <select value={branchUi.work?.id || ""} onChange={(e) => branchUi.selectWork(e.target.value)} aria-label={t("branches_workBranch")}
+                  className="max-w-[55%] truncate rounded-lg border border-brand-300 bg-brand-50 px-2 py-1 text-[11px] font-bold text-brand-700 focus:outline-none">
+                  {branchUi.activeBranches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                </select>
+              )}
             </div>
             <Field label={t("common_customer")}>
               <CustomerPicker customers={customers} customerId={customerId} onSelect={setCustomerId} onAddNew={() => setShowAddCustomer(true)} />
@@ -2719,6 +2788,7 @@ function LifecycleBar({ status }) {
 
 function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoice, merchant, zatcaRecord, customerPhone, whatsappTemplate, whatsappEnabled }) {
   const { t } = useLang();
+  const branchUi = useBranches();
   const status = invoiceOverallStatus(invoice);
   const [printDoc, setPrintDoc] = useState(null);
   const [printError, setPrintError] = useState("");
@@ -2731,7 +2801,7 @@ function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoi
     }
     setPrintError("");
     setPrintDoc({
-      kind: "delivery", merchant, dateLabel: printDateLabel(nowISO()), invoiceCode: invoice.code, customerName: invoice.customerName,
+      kind: "delivery", merchant, dateLabel: printDateLabel(nowISO()), invoiceCode: invoice.code, customerName: invoice.customerName, branchName: branchUi.nameOf(invoice.branchId),
       customerPhone: customerPhone || null, whatsappTemplate, whatsappEnabled,
       deliveredItems: delivered.map((it) => ({ name: it.name, service: it.service, deliveredAt: it.deliveredAt || nowISO() })),
     });
@@ -3330,6 +3400,7 @@ function lastOrderRelativeLabel(t, iso) {
 
 function CustomersView({ customers, updateCustomer, addCustomer, invoices, addInvoice, transactions, addTransaction, merchant, applyCustomerPayment, nextDocNumber, whatsappTemplate, whatsappEnabled }) {
   const { t } = useLang();
+  const branchUi = useBranches();
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(null);
   const [topUpFor, setTopUpFor] = useState(null);
@@ -3410,7 +3481,7 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
         const net = vatExempt ? duePayable : duePayable / (1 + VAT_RATE);
         const vat = vatExempt ? 0 : duePayable - net;
         setPrintDoc({
-          kind: vatExempt ? "receipt" : "tax", isTopUp: true, merchant, dateLabel: printDateLabel(now), isoDateTime: now, invoiceCode: code, customerName: customer.name,
+          kind: vatExempt ? "receipt" : "tax", isTopUp: true, merchant, dateLabel: printDateLabel(now), isoDateTime: now, invoiceCode: code, customerName: customer.name, branchName: branchUi.workName,
           customerPhone: customer.mobile || null, whatsappTemplate, whatsappEnabled,
           items: [{ name: t("customerDetail_topupType"), price: duePayable, qty: 1, lineTotal: duePayable }],
           totals: { net, discount: discountAmount, vat, gross: duePayable, paid: duePayable, remaining: 0, pieceCount: 1 },
@@ -5692,7 +5763,132 @@ function OwnerOnlySettings({ ownerPinSet, sectionLocks, enabledPayMethods, setEn
   );
 }
 
-function SettingsView({ merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, onLogout, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+function BranchesView() {
+  const { t } = useLang();
+  const { branches, createBranch, updateBranch } = useBranches();
+  const sorted = [...branches].sort((a, b) => a.number - b.number);
+  const nextNumber = (sorted[sorted.length - 1]?.number || 0) + 1;
+  const [showAdd, setShowAdd] = useState(false);
+  const [name, setName] = useState("");
+  const [renaming, setRenaming] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  const closeAdd = () => { setShowAdd(false); setName(""); setError(""); };
+  const submitAdd = async () => {
+    if (busy) return;
+    setBusy(true); setError("");
+    try { await createBranch(name.trim() || t("branches_defaultName", { n: nextNumber })); closeAdd(); }
+    catch { setError(t("branches_errCreate")); }
+    finally { setBusy(false); }
+  };
+  const submitRename = async () => {
+    if (busy || !renaming || !renaming.name.trim()) return;
+    setBusy(true); setError("");
+    try { await updateBranch(renaming.id, { name: renaming.name.trim() }); setRenaming(null); }
+    catch { setError(t("branches_errUpdate")); }
+    finally { setBusy(false); }
+  };
+  const toggleStatus = async (b) => {
+    setError("");
+    try { await updateBranch(b.id, { status: b.status === "active" ? "archived" : "active" }); }
+    catch { setError(t("branches_errUpdate")); }
+  };
+
+  return (
+    <div className="max-w-5xl">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <div className="f-display text-xl font-semibold text-app-text">{t("branches_title")}</div>
+          <div className="mt-1 text-sm text-app-text-muted">{t("branches_subtitle")}</div>
+        </div>
+        <button onClick={() => setShowAdd(true)} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">+ {t("branches_add")}</button>
+      </div>
+      <div className="mb-4 rounded-xl border border-warning-200 bg-warning-50 px-4 py-2.5 text-xs font-medium text-warning-800">{t("branches_costNote")}</div>
+      {error && !showAdd && !renaming && <div className="mb-3 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{error}</div>}
+      <div className="overflow-x-auto rounded-xl border border-app-border bg-app-surface">
+        <table className="w-full min-w-[560px] text-right text-[13px]">
+          <thead className="bg-app-bg/60 text-xs font-semibold uppercase tracking-wide text-app-text-muted">
+            <tr>
+              <th className="whitespace-nowrap px-4 py-3 text-center">{t("branches_numberCol")}</th>
+              <th className="whitespace-nowrap px-4 py-3 text-center">{t("branches_nameCol")}</th>
+              <th className="whitespace-nowrap px-4 py-3 text-center">{t("branches_prefixCol")}</th>
+              <th className="whitespace-nowrap px-4 py-3 text-center">{t("common_status")}</th>
+              <th className="whitespace-nowrap px-4 py-3 text-center"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-app-border">
+            {sorted.map((b) => (
+              <tr key={b.id} className="hover:bg-app-bg/60">
+                <td className="whitespace-nowrap px-4 py-3 text-center f-mono text-app-text-muted">#{b.number}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-center font-semibold text-app-text">{b.name}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-center text-app-text-muted">{b.number > 1 ? <span className="f-mono">{branchPrefix(b)}</span> : t("branches_noPrefix")}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-center">
+                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold ring-1 ring-inset ${b.status === "active" ? "bg-success-50 text-success-700" : "bg-app-bg text-app-text-muted"}`}>
+                    <span className="size-1.5 rounded-full bg-current" />{b.status === "active" ? t("branches_active") : t("branches_archived")}
+                  </span>
+                </td>
+                <td className="whitespace-nowrap px-4 py-3 text-center">
+                  <button onClick={() => { setError(""); setRenaming({ id: b.id, name: b.name }); }} className="rounded-lg border border-app-border px-3 py-1.5 text-[12.5px] font-semibold text-app-text hover:bg-app-bg">{t("branches_rename")}</button>
+                  {b.number > 1 && (
+                    <button onClick={() => toggleStatus(b)} className="ms-2 rounded-lg border border-app-border px-3 py-1.5 text-[12.5px] font-semibold text-app-text hover:bg-app-bg">
+                      {b.status === "active" ? t("branches_archive") : t("branches_restore")}
+                    </button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {showAdd && (
+        <Modal title={t("branches_add")} onClose={closeAdd} onSubmit={submitAdd} width="max-w-md">
+          <Field label={t("branches_nameOptional")}>
+            <input autoFocus value={name} maxLength={80} onChange={(e) => setName(e.target.value)} placeholder={t("branches_defaultName", { n: nextNumber })} className={inputCls} />
+          </Field>
+          <p className="mb-3 text-xs text-app-text-muted">{t("branches_autoNote", { n: nextNumber })}</p>
+          {error && <div className="mb-3 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{error}</div>}
+          <div className="flex justify-end gap-2">
+            <button onClick={closeAdd} className="rounded-lg px-4 py-2 text-sm font-medium text-app-text-muted hover:text-app-text">{t("common_cancel")}</button>
+            <button onClick={submitAdd} disabled={busy} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60">{t("branches_add")}</button>
+          </div>
+        </Modal>
+      )}
+      {renaming && (
+        <Modal title={t("branches_rename")} onClose={() => setRenaming(null)} onSubmit={submitRename} width="max-w-md">
+          <Field label={t("branches_nameCol")}>
+            <input autoFocus value={renaming.name} maxLength={80} onChange={(e) => setRenaming({ ...renaming, name: e.target.value })} className={inputCls} />
+          </Field>
+          {error && <div className="mb-3 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{error}</div>}
+          <div className="flex justify-end gap-2">
+            <button onClick={() => setRenaming(null)} className="rounded-lg px-4 py-2 text-sm font-medium text-app-text-muted hover:text-app-text">{t("common_cancel")}</button>
+            <button onClick={submitRename} disabled={busy || !renaming.name.trim()} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60">{t("common_save")}</button>
+          </div>
+        </Modal>
+      )}
+    </div>
+  );
+}
+
+// Settings entry point for the branches feature. For a single-branch shop this
+// card is the ONLY place branches show up anywhere in the app.
+function BranchesSettingsCard({ onOpen }) {
+  const { t } = useLang();
+  const { multi, activeBranches } = useBranches();
+  return (
+    <div className="mb-4 rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 text-sm font-semibold text-app-text"><Store size={16} className="text-brand-600" /> {t("branches_settingsTitle")}</div>
+          <p className="mt-1 text-xs text-app-text-subtle">{multi ? t("branches_settingsMulti", { n: activeBranches.length }) : t("branches_settingsSingle")}</p>
+        </div>
+        <button onClick={onOpen} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">{multi ? t("branches_manage") : t("branches_add")}</button>
+      </div>
+    </div>
+  );
+}
+
+function SettingsView({ merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, onLogout, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig, onOpenBranches }) {
   const { lang, setLang, t } = useLang();
   const options = [
     { code: "ar", key: "settings_lang_ar" },
@@ -5744,6 +5940,7 @@ function SettingsView({ merchant, setMerchant, ownerPinSet, sectionLocks, enable
     <div className="max-w-5xl space-y-6">
       <div>
         <div className="mb-4 f-display text-xl font-semibold text-app-text">{t("settings_title")}</div>
+        <BranchesSettingsCard onOpen={onOpenBranches} />
         <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
           <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-app-text"><Globe size={16} className="text-brand-600" /> {t("settings_language")}</div>
           <p className="mb-4 text-xs text-app-text-subtle">{t("settings_languageHint")}</p>
@@ -5936,6 +6133,12 @@ function HomeDashboardView({ invoices, merchant, setTab }) {
    ========================================================================= */
 function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { dir, t } = useLang();
+  // Branch scope for the owner's "view all / one branch" picker: sales, purchases
+  // and expenses follow it; customers, wallets and products are shared and never filtered.
+  const { scope: branchScope } = useBranches();
+  const scopedInvoices = useMemo(() => (branchScope === "all" ? invoices : invoices.filter((r) => r.branchId === branchScope)), [invoices, branchScope]);
+  const scopedPurchases = useMemo(() => (branchScope === "all" ? purchases : purchases.filter((r) => r.branchId === branchScope)), [purchases, branchScope]);
+  const scopedExpenses = useMemo(() => (branchScope === "all" ? expenses : expenses.filter((r) => r.branchId === branchScope)), [expenses, branchScope]);
   const isRtl = dir === "rtl";
   // The sidebar is a fixed off-canvas drawer below lg: (closed by default,
   // opened via the hamburger button, and closed again the moment any nav
@@ -5961,17 +6164,18 @@ function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pe
           <span className="font-bold text-navy-900">{t("app_name")}</span>
         </div>
         <main className="flex-1 overflow-y-auto p-6">
-        {tab === "home" && <HomeDashboardView invoices={invoices} merchant={merchant} setTab={setTab} />}
+        {tab === "home" && <HomeDashboardView invoices={scopedInvoices} merchant={merchant} setTab={setTab} />}
         {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promotions} enabledPayMethods={enabledPayMethods} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} setTab={setTab} />}
-        {tab === "invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} readyMessageEnabled={readyMessageEnabled} readyMessageTemplate={readyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} />}
-        {tab === "delivery_invoices" && <InvoicesView invoices={invoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} readyMessageEnabled={readyMessageEnabled} readyMessageTemplate={readyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} isDelivery />}
+        {tab === "invoices" && <InvoicesView invoices={scopedInvoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} readyMessageEnabled={readyMessageEnabled} readyMessageTemplate={readyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} />}
+        {tab === "delivery_invoices" && <InvoicesView invoices={scopedInvoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} readyMessageEnabled={readyMessageEnabled} readyMessageTemplate={readyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} isDelivery />}
         {tab === "customers" && <CustomersView customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} invoices={invoices} addInvoice={addInvoice} transactions={customerTransactions} addTransaction={addTransaction} merchant={merchant} applyCustomerPayment={applyCustomerPayment} nextDocNumber={nextDocNumber} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} />}
         {tab === "inventory" && <InventoryView categories={categories} addCategory={addCategory} products={products} addProduct={addProduct} updateProduct={updateProduct} addons={addons} addAddon={addAddon} removeAddon={removeAddon} serviceTypes={serviceTypes} addServiceType={addServiceType} />}
-        {tab === "purchases" && <PurchasesExpensesView tab={purchasesSubTab} setTab={(s) => navigateTab("purchases", s)} suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={purchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={expenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
+        {tab === "purchases" && <PurchasesExpensesView tab={purchasesSubTab} setTab={(s) => navigateTab("purchases", s)} suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={scopedPurchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={scopedExpenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
         {tab === "promotions" && <PromotionsView promotions={promotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
-        {tab === "reports" && <ReportsView tab={reportsSubTab} setTab={(s) => navigateTab("reports", s)} invoices={invoices} purchases={purchases} suppliers={suppliers} categories={categories} customers={customers} expenses={expenses} expenseCategories={expenseCategories} />}
+        {tab === "reports" && <ReportsView tab={reportsSubTab} setTab={(s) => navigateTab("reports", s)} invoices={scopedInvoices} purchases={scopedPurchases} suppliers={suppliers} categories={categories} customers={customers} expenses={scopedExpenses} expenseCategories={expenseCategories} />}
         {tab === "whatsapp" && <WhatsAppView whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} readyMessageEnabled={readyMessageEnabled} setReadyMessageEnabled={setReadyMessageEnabled} readyMessageTemplate={readyMessageTemplate} setReadyMessageTemplate={setReadyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} setWhatsappReadySendMode={setWhatsappReadySendMode} />}
-        {tab === "settings" && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
+        {tab === "branches" && <BranchesView />}
+        {tab === "settings" && <SettingsView onOpenBranches={() => navigateTab("branches")} merchant={merchant} setMerchant={setMerchant} ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
         </main>
       </div>
       {/* Same PIN-prompt-on-locked-nav flow the sidebar always had —
@@ -6029,6 +6233,50 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   const [expenses, setExpensesState] = useState([]);
   const [promotions, setPromotionsState] = useState([]);
 
+  // ===== Multi-branch (see BranchCtx). `scope` is what the owner is VIEWING
+  // ("all" or one branch); `work` is the branch new sales/top-ups/purchases/
+  // expenses are recorded under. Both are per-device choices kept in
+  // localStorage. With a single active branch nothing is sent (the database
+  // fills in the main branch), so single-branch shops are unaffected.
+  const [branches, setBranchesState] = useState([]);
+  const [branchSel, setBranchSel] = useState({ scope: "all", work: null });
+  const branchStoreKey = tenantId ? `ragwa_branch_${tenantId}` : null;
+  useEffect(() => {
+    if (!branchStoreKey) return;
+    try {
+      const raw = window.localStorage.getItem(branchStoreKey);
+      if (raw) setBranchSel(JSON.parse(raw));
+    } catch { /* storage unavailable or corrupt: keep defaults */ }
+  }, [branchStoreKey]);
+  const activeBranches = useMemo(() => branches.filter((b) => b.status === "active").sort((a, b) => a.number - b.number), [branches]);
+  const multiBranch = activeBranches.length > 1;
+  const workBranch = multiBranch ? (activeBranches.find((b) => b.id === branchSel.work) || activeBranches[0]) : null;
+  const branchScope = multiBranch && activeBranches.some((b) => b.id === branchSel.scope) ? branchSel.scope : "all";
+  const branchWriteFields = workBranch ? { branchId: workBranch.id } : {};
+  const persistBranchSel = (next) => {
+    setBranchSel(next);
+    try { window.localStorage.setItem(branchStoreKey, JSON.stringify(next)); } catch { /* selection just won't survive a reload */ }
+  };
+  const selectBranch = (id) => persistBranchSel(id === "all" ? { ...branchSel, scope: "all" } : { scope: id, work: id });
+  const selectWork = (id) => persistBranchSel({ ...branchSel, work: id });
+  const createBranch = async (name) => {
+    const { data, error } = await db.rpc("create_branch", { p_name: name || null });
+    if (error) { console.error("createBranch failed", error); throw error; }
+    const row = toCamelCase(data);
+    setBranchesState((prev) => (prev.some((b) => b.id === row.id) ? prev : [...prev, row]));
+    return row;
+  };
+  const updateBranch = async (id, patch) => {
+    const { error } = await db.from("branches").update(toSnakeCase(patch)).eq("id", id);
+    if (error) { console.error("updateBranch failed", error); throw error; }
+    setBranchesState((prev) => prev.map((b) => (b.id === id ? { ...b, ...patch } : b)));
+  };
+  const branchCtx = {
+    multi: multiBranch, branches, activeBranches, scope: branchScope, work: workBranch, workName: workBranch ? workBranch.name : null,
+    nameOf: (id) => (multiBranch ? branches.find((b) => b.id === id)?.name || null : null),
+    selectBranch, selectWork, createBranch, updateBranch,
+  };
+
   useEffect(() => {
     if (!tenantId) return;
     // Every table here is flat with a tenant_id column (Firestore's nested
@@ -6047,9 +6295,10 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     const unsubExpCat = subscribeToTable("expense_categories", "tenant_id", tenantId, setExpenseCategoriesState);
     const unsubExp = subscribeToTable("expenses", "tenant_id", tenantId, setExpensesState);
     const unsubPromo = subscribeToTable("promotions", "tenant_id", tenantId, setPromotionsState);
+    const unsubBranches = subscribeToTable("branches", "tenant_id", tenantId, setBranchesState);
     return () => {
       unsubCats(); unsubProds(); unsubInv(); unsubCust(); unsubTxn(); unsubAddons();
-      unsubSvc(); unsubSup(); unsubPur(); unsubExpCat(); unsubExp(); unsubPromo();
+      unsubSvc(); unsubSup(); unsubPur(); unsubExpCat(); unsubExp(); unsubPromo(); unsubBranches();
     };
   }, [tenantId]);
 
@@ -6113,7 +6362,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   };
   const addInvoice = (invoiceData) => {
     const id = newId();
-    const invoice = { ...invoiceData, id };
+    const invoice = { ...branchWriteFields, ...invoiceData, id };
     const row = { tenantId, ...invoice };
     setInvoicesState((prev) => [...prev, row]);
     db.from("invoices").upsert(toSnakeCase(row)).then(({ error }) => {
@@ -6135,7 +6384,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   const addCustomer = (data) => {
     const row = { tenantId, ...data };
     setCustomersState((prev) => [...prev, row]);
-    db.from("customers").upsert(toSnakeCase(row)).then(({ error }) => {
+    db.from("customers").insert(toSnakeCase(row)).then(({ error }) => {
       if (error) { console.error("addCustomer failed", error); setCustomersState((prev) => prev.filter((c) => c.id !== data.id)); }
     });
     return data;
@@ -6149,7 +6398,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   };
   const addTransaction = (data) => {
     const id = newId();
-    const txn = { ...data, id };
+    const txn = { ...branchWriteFields, ...data, id };
     const row = { tenantId, ...txn };
     setCustomerTransactionsState((prev) => [...prev, row]);
     db.from("customer_transactions").upsert(toSnakeCase(row)).then(({ error }) => {
@@ -6163,8 +6412,11 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   // Postgres sequence per tenant/doc-type, instead of the old
   // `1000 + array.length + 1` guess, which two terminals (or two fast
   // clicks) could both compute identically and mint duplicate codes.
-  const nextDocNumber = async (docType) => {
-    const { data, error } = await db.rpc("next_doc_number", { p_tenant_id: tenantId, p_doc_type: docType });
+  const nextDocNumber = async (docType, branch = null) => {
+    // Branch N>1 keeps its own counter ('B2:INV'); the main branch and every
+    // tenant-wide document type (receipts, top-ups, payments, POs) use the plain key.
+    const counterKey = branch && branch.number > 1 ? `B${branch.number}:${docType}` : docType;
+    const { data, error } = await db.rpc("next_doc_number", { p_tenant_id: tenantId, p_doc_type: counterKey });
     if (!error) return data;
     if (!isMissingRpcError(error)) { console.error("nextDocNumber failed", error); throw error; }
     // Fallback to the old (non-atomic) numbering scheme so sales keep
@@ -6221,15 +6473,16 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     purchases: setPurchasesState, expense_categories: setExpenseCategoriesState,
     expenses: setExpensesState, promotions: setPromotionsState,
   };
-  const addTo = (table) => (data) => {
+  const addTo = (table, perBranch = false) => (data) => {
     const id = newId();
-    const row = { id, tenantId, ...data };
+    const extra = perBranch ? branchWriteFields : {};
+    const row = { id, tenantId, ...extra, ...data };
     const setState = setStateByTable[table];
     if (setState) setState((prev) => [...prev, row]);
     db.from(table).upsert(toSnakeCase(row)).then(({ error }) => {
       if (error) { console.error(`add ${table} failed`, error); if (setState) setState((prev) => prev.filter((r) => r.id !== id)); }
     });
-    return { id, ...data };
+    return { id, ...extra, ...data };
   };
   const updateIn = (table) => (id, patch) => {
     const setState = setStateByTable[table];
@@ -6253,7 +6506,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   const addServiceType = addTo("service_types");
   const addSupplier = addTo("suppliers");
   const updateSupplier = updateIn("suppliers");
-  const addPurchase = addTo("purchases");
+  const addPurchase = addTo("purchases", true);
   // Atomic supplier balance change (credit purchases increase it, paying
   // it down decreases it) via adjust_supplier_balance() — same delta-based,
   // race-safe pattern as applyCustomerPayment above.
@@ -6280,7 +6533,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     return newBalance;
   };
   const addExpenseCategory = addTo("expense_categories");
-  const addExpense = addTo("expenses");
+  const addExpense = addTo("expenses", true);
   const addPromotion = addTo("promotions");
   const updatePromotion = updateIn("promotions");
 
@@ -6629,7 +6882,8 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
       throw e; // anything else (RPC missing, network, etc.) is NOT "insufficient funds" — let the caller show an accurate error instead of blaming the wallet
     }
 
-    const code = `${isDelivery ? "DLV" : "INV"}-${await nextDocNumber(isDelivery ? "DLV" : "INV")}`;
+    const docType = isDelivery ? "DLV" : "INV";
+    const code = `${branchPrefix(workBranch)}${docType}-${await nextDocNumber(docType, workBranch)}`;
     const invoice = {
       code, customerId, customerName: customer?.name || walkInLabel, payMethod, splitPayments, total: grandTotal, discount, isDelivery, deliveryFee, createdAt: nowISO(), closed: false,
       vatExempt: !merchant.taxNumber || !merchant.taxNumber.trim(),
@@ -6658,6 +6912,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
 
   return (
     <LangContext.Provider value={{ lang, setLang, dir }}>
+      <BranchCtx.Provider value={branchCtx}>
       <AppShell
         tab={tab} setTab={requestTab} navigateTab={navigateTab}
         reportsSubTab={reportsSubTab} purchasesSubTab={purchasesSubTab}
@@ -6688,6 +6943,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
         zatcaConfig={zatcaConfig} zatcaInvoices={zatcaInvoices} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig}
         pendingNav={pendingNav} setPendingNav={setPendingNav}
       />
+      </BranchCtx.Provider>
     </LangContext.Provider>
   );
 }

@@ -13,7 +13,7 @@ export const DASHBOARD_TAB_PATHS = {
   home: '/home', pos: '/pos', invoices: '/active-invoices',
   delivery_invoices: '/delivery-invoices', customers: '/customers',
   inventory: '/inventory', purchases: '/purchases', promotions: '/promotions',
-  reports: '/reports', whatsapp: '/whatsapp', settings: '/settings',
+  reports: '/reports', whatsapp: '/whatsapp', branches: '/branches', settings: '/settings',
 };
 export const REPORTS_SUBTAB_PATHS = { procurement: '/reports/procurement', expenses: '/reports/expenses', pl: '/reports/profit-loss', vat: '/reports/vat' };
 export const PURCHASES_SUBTAB_PATHS = { expenses: '/purchases/expenses' };
