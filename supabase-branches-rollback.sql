@@ -7,7 +7,7 @@
 -- =========================================================================
 
 -- Phase D objects (supabase-branches-phase-d.sql): discounts per branch, branch PIN
--- state, wallet usage. Branch-specific discounts are DELETED here because the old
+-- state. Branch-specific discounts are DELETED here because the old
 -- one-active-discount-per-shop constraint cannot represent them; the policies this
 -- phase changed (promotions, purchases, expenses, expense_categories, suppliers,
 -- storage "tenant or admin can read own documents") are restored by the policy
@@ -21,7 +21,6 @@ alter table promotions drop column if exists branch_id;
 alter table promotions add constraint no_overlapping_active_promos exclude using gist (tenant_id with =, period with &&) where (active);
 alter table branches drop column if exists pin_set;
 alter table branches drop column if exists locked_sections;
-alter table invoices drop column if exists wallet_used;
 delete from owner_pin_credentials where scope like 'b:%';
 
 -- Phase C objects (no-ops if phase C was never applied). Policies/functions

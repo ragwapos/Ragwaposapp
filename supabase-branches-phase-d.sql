@@ -10,9 +10,6 @@
 --   expense categories and suppliers, and can adjust supplier balances.
 -- * branches.pin_set / locked_sections: the branch manager's own PIN lock state
 --   (written only by api/verify-pin.js with the service-role key).
--- * invoices.wallet_used: how much of an invoice was paid from the customer's
---   wallet, so a branch can see wallet consumption (revenue itself is still
---   recognised at top-up, unchanged).
 -- * The owner can read files uploaded by their branch accounts.
 -- Rollback: supabase-branches-rollback.sql. Safe to run multiple times.
 -- =========================================================================
@@ -141,8 +138,7 @@ alter policy "tenant or admin can read own documents" on storage.objects using (
   ));
 
 -- -------------------------------------------------------------------------
--- 3) branch manager PIN state + wallet usage on invoices
+-- 3) branch manager PIN state
 -- -------------------------------------------------------------------------
 alter table branches add column if not exists pin_set boolean not null default false;
 alter table branches add column if not exists locked_sections jsonb not null default '[]'::jsonb;
-alter table invoices add column if not exists wallet_used numeric check (wallet_used is null or wallet_used >= 0);

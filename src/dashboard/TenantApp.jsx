@@ -927,7 +927,7 @@ const DICT = {
     nav_promotions: "Promotions", nav_reports: "Reports", nav_whatsapp: "WhatsApp", nav_settings: "Settings",
     nav_branches: "Branches", branches_title: "Branches", branches_subtitle: "Manage your laundry's branches", branches_add: "Add branch", branches_nameOptional: "Branch name (optional)", branches_defaultName: "Branch {n}", branches_autoNote: "The branch gets number {n} automatically and its invoices start with B{n}-. The number never changes, even if you rename the branch.", branches_costNote: "Adding a branch increases your monthly subscription.", branches_numberCol: "No.", branches_nameCol: "Branch", branches_prefixCol: "Invoice prefix", branches_noPrefix: "None (original numbering)", branches_rename: "Rename", branches_archive: "Archive", branches_restore: "Restore", branches_active: "Active", branches_archived: "Archived", branches_errCreate: "Couldn't add the branch. Please try again.", branches_errUpdate: "Couldn't save the change. Please try again.", branches_picker_view: "Viewing", branches_all: "All branches", branches_search: "Search branches...", branches_noMatch: "No branch with that name", branches_workBranch: "Sale branch", branches_settingsTitle: "Branches", branches_settingsSingle: "Your laundry runs one branch. Add a second branch whenever you need one and the branch tools appear automatically.", branches_settingsMulti: "You have {n} active branches.", branches_manage: "Manage branches",
     branches_accountCol: "Login", branches_noAccount: "No login yet", branches_createAccount: "Create login", branches_resetPassword: "New password", branches_credentialsTitle: "Branch login", branches_credentialsNote: "Give these to the manager of {name}. The password is shown only now; if it is lost, create a new one.", branches_username: "Username", branches_password: "Password", branches_copy: "Copy", branches_copied: "Copied", branches_done: "Done", branches_errAccount: "Couldn't update the branch login. Please try again.", branches_yourBranch: "Your branch",
-    branches_unlockTitle: "Owner PIN to view other branches", branches_needOwnerPin: "Set an owner PIN first (Settings) to view or sell as another branch.", branches_resetPin: "Reset branch PIN", branches_resetPinTitle: "Owner PIN to reset the PIN of {name}", branches_enterMasterTitle: "Branch manager PIN", branches_setMasterTitle: "Create the branch manager PIN", branches_lockHint: "Turn a section on to ask for your PIN before the branch staff can open it.", reports_kpi_outstandingDebtAll: "Outstanding Debt (all branches)", reports_kpi_walletUsed: "Spent from wallets", reports_wallet_title: "Wallet usage", reports_wallet_hint: "Revenue for wallet customers is recognised at top-up, in the branch that took the cash. This shows what each branch served from wallets.", reports_wallet_branch: "Branch", reports_wallet_topups: "Cash taken for top-ups", reports_wallet_consumed: "Services from wallets", reports_wallet_diff: "Difference",
+    branches_unlockTitle: "Owner PIN to view other branches", branches_needOwnerPin: "Set an owner PIN first (Settings) to view or sell as another branch.", branches_resetPin: "Reset branch PIN", branches_resetPinTitle: "Owner PIN to reset the PIN of {name}", branches_enterMasterTitle: "Branch manager PIN", branches_setMasterTitle: "Create the branch manager PIN", branches_lockHint: "Turn a section on to ask for your PIN before the branch staff can open it.", reports_kpi_outstandingDebtAll: "Outstanding Debt (all branches)",
 
     home_welcomeBack: "Welcome back", home_salesToday: "Today's Sales", home_ordersToday: "Today's Orders",
     home_readyOrders: "Ready Orders", home_deliveryActive: "Delivery In Progress",
@@ -1212,7 +1212,7 @@ const DICT = {
     nav_promotions: "العروض", nav_reports: "التقارير", nav_whatsapp: "واتس اب", nav_settings: "الإعدادات",
     nav_branches: "الفروع", branches_title: "الفروع", branches_subtitle: "إدارة فروع المغسلة", branches_add: "إضافة فرع", branches_nameOptional: "اسم الفرع (اختياري)", branches_defaultName: "فرع {n}", branches_autoNote: "يُعطى الفرع الرقم {n} تلقائيًا وتبدأ فواتيره بـ B{n}-. الرقم ثابت حتى لو غيّرت اسم الفرع.", branches_costNote: "إضافة فرع تزيد اشتراكك الشهري.", branches_numberCol: "الرقم", branches_nameCol: "الفرع", branches_prefixCol: "بادئة الفواتير", branches_noPrefix: "بدون (أرقام الفرع الأصلي)", branches_rename: "تعديل الاسم", branches_archive: "أرشفة", branches_restore: "استعادة", branches_active: "نشط", branches_archived: "مؤرشف", branches_errCreate: "تعذّر إضافة الفرع، حاول مرة ثانية.", branches_errUpdate: "تعذّر حفظ التغيير، حاول مرة ثانية.", branches_picker_view: "عرض بيانات", branches_all: "كل الفروع", branches_search: "ابحث عن فرع...", branches_noMatch: "لا يوجد فرع بهذا الاسم", branches_workBranch: "فرع البيع", branches_settingsTitle: "الفروع", branches_settingsSingle: "مغسلتك تعمل بفرع واحد. أضف فرعًا ثانيًا متى احتجت، وتظهر أدوات الفروع تلقائيًا.", branches_settingsMulti: "عندك {n} فروع نشطة.", branches_manage: "إدارة الفروع",
     branches_accountCol: "حساب الدخول", branches_noAccount: "لا يوجد حساب", branches_createAccount: "إنشاء حساب", branches_resetPassword: "كلمة مرور جديدة", branches_credentialsTitle: "حساب دخول الفرع", branches_credentialsNote: "سلّم هذه البيانات لمدير فرع {name}. كلمة المرور تظهر الآن فقط، وإن ضاعت أنشئ واحدة جديدة.", branches_username: "اسم المستخدم", branches_password: "كلمة المرور", branches_copy: "نسخ", branches_copied: "تم النسخ", branches_done: "تم", branches_errAccount: "تعذّر تحديث حساب دخول الفرع، حاول مرة ثانية.", branches_yourBranch: "فرعك",
-    branches_unlockTitle: "رمز المالك لعرض بقية الفروع", branches_needOwnerPin: "اضبط رمز المالك أولًا (الإعدادات) لعرض فرع آخر أو البيع باسمه.", branches_resetPin: "إعادة تعيين رمز الفرع", branches_resetPinTitle: "رمز المالك لإعادة تعيين رمز {name}", branches_enterMasterTitle: "رمز مدير الفرع", branches_setMasterTitle: "أنشئ رمز مدير الفرع", branches_lockHint: "فعّل أي قسم ليطلب رمزك قبل أن يفتحه موظفو الفرع.", reports_kpi_outstandingDebtAll: "إجمالي المستحق (كل الفروع)", reports_kpi_walletUsed: "مصروف من المحافظ", reports_wallet_title: "استهلاك المحافظ", reports_wallet_hint: "إيراد عملاء المحفظة يُحتسب عند الشحن في الفرع الذي استلم النقد. هنا ما قدّمه كل فرع من خدمات مدفوعة من المحافظ.", reports_wallet_branch: "الفرع", reports_wallet_topups: "نقد محصّل مقابل شحن", reports_wallet_consumed: "خدمات صُرفت من المحافظ", reports_wallet_diff: "الفرق",
+    branches_unlockTitle: "رمز المالك لعرض بقية الفروع", branches_needOwnerPin: "اضبط رمز المالك أولًا (الإعدادات) لعرض فرع آخر أو البيع باسمه.", branches_resetPin: "إعادة تعيين رمز الفرع", branches_resetPinTitle: "رمز المالك لإعادة تعيين رمز {name}", branches_enterMasterTitle: "رمز مدير الفرع", branches_setMasterTitle: "أنشئ رمز مدير الفرع", branches_lockHint: "فعّل أي قسم ليطلب رمزك قبل أن يفتحه موظفو الفرع.", reports_kpi_outstandingDebtAll: "إجمالي المستحق (كل الفروع)",
 
     home_welcomeBack: "أهلاً بك", home_salesToday: "مبيعات اليوم", home_ordersToday: "طلبات اليوم",
     home_readyOrders: "طلبات جاهزة", home_deliveryActive: "توصيل قيد التنفيذ",
@@ -1497,7 +1497,7 @@ const DICT = {
     nav_promotions: "پرموشنز", nav_reports: "رپورٹس", nav_whatsapp: "واٹس ایپ", nav_settings: "سیٹنگز",
     nav_branches: "برانچز", branches_title: "برانچز", branches_subtitle: "لانڈری کی برانچز کا انتظام", branches_add: "برانچ شامل کریں", branches_nameOptional: "برانچ کا نام (اختیاری)", branches_defaultName: "برانچ {n}", branches_autoNote: "برانچ کو خود بخود نمبر {n} ملتا ہے اور اس کی انوائسز B{n}- سے شروع ہوتی ہیں۔ نام بدلنے پر بھی نمبر نہیں بدلتا۔", branches_costNote: "برانچ شامل کرنے سے آپ کی ماہانہ سبسکرپشن بڑھ جاتی ہے۔", branches_numberCol: "نمبر", branches_nameCol: "برانچ", branches_prefixCol: "انوائس کا سابقہ", branches_noPrefix: "کوئی نہیں (اصل نمبرنگ)", branches_rename: "نام تبدیل کریں", branches_archive: "آرکائیو", branches_restore: "بحال کریں", branches_active: "فعال", branches_archived: "آرکائیو شدہ", branches_errCreate: "برانچ شامل نہیں ہو سکی، دوبارہ کوشش کریں۔", branches_errUpdate: "تبدیلی محفوظ نہیں ہو سکی، دوبارہ کوشش کریں۔", branches_picker_view: "ڈیٹا دیکھیں", branches_all: "تمام برانچز", branches_search: "برانچ تلاش کریں...", branches_noMatch: "اس نام کی کوئی برانچ نہیں", branches_workBranch: "سیل برانچ", branches_settingsTitle: "برانچز", branches_settingsSingle: "آپ کی لانڈری ایک برانچ پر چلتی ہے۔ جب چاہیں دوسری برانچ شامل کریں، برانچ ٹولز خود ظاہر ہو جائیں گے۔", branches_settingsMulti: "آپ کی {n} فعال برانچز ہیں۔", branches_manage: "برانچز کا انتظام",
     branches_accountCol: "لاگ ان", branches_noAccount: "ابھی لاگ ان نہیں", branches_createAccount: "لاگ ان بنائیں", branches_resetPassword: "نیا پاس ورڈ", branches_credentialsTitle: "برانچ لاگ ان", branches_credentialsNote: "یہ معلومات {name} کے مینیجر کو دیں۔ پاس ورڈ صرف ابھی نظر آتا ہے، گم ہو جائے تو نیا بنائیں۔", branches_username: "صارف نام", branches_password: "پاس ورڈ", branches_copy: "کاپی", branches_copied: "کاپی ہو گیا", branches_done: "ہو گیا", branches_errAccount: "برانچ لاگ ان اپ ڈیٹ نہیں ہو سکا، دوبارہ کوشش کریں۔", branches_yourBranch: "آپ کی برانچ",
-    branches_unlockTitle: "دوسری برانچز دیکھنے کے لیے مالک کا پن", branches_needOwnerPin: "دوسری برانچ دیکھنے یا اس کے نام پر بیچنے کے لیے پہلے مالک کا پن سیٹ کریں (سیٹنگز)۔", branches_resetPin: "برانچ کا پن ری سیٹ کریں", branches_resetPinTitle: "{name} کا پن ری سیٹ کرنے کے لیے مالک کا پن", branches_enterMasterTitle: "برانچ مینیجر کا پن", branches_setMasterTitle: "برانچ مینیجر کا پن بنائیں", branches_lockHint: "کسی حصے کو فعال کریں تاکہ برانچ کا عملہ اسے کھولنے سے پہلے آپ کا پن مانگے۔", reports_kpi_outstandingDebtAll: "کل واجب الادا (تمام برانچز)", reports_kpi_walletUsed: "والٹ سے خرچ", reports_wallet_title: "والٹ کا استعمال", reports_wallet_hint: "والٹ والے گاہکوں کی آمدنی ٹاپ اپ کے وقت اس برانچ میں شمار ہوتی ہے جس نے رقم لی۔ یہاں ہر برانچ کی والٹ سے دی گئی خدمات ہیں۔", reports_wallet_branch: "برانچ", reports_wallet_topups: "ٹاپ اپ پر لی گئی نقدی", reports_wallet_consumed: "والٹ سے دی گئی خدمات", reports_wallet_diff: "فرق",
+    branches_unlockTitle: "دوسری برانچز دیکھنے کے لیے مالک کا پن", branches_needOwnerPin: "دوسری برانچ دیکھنے یا اس کے نام پر بیچنے کے لیے پہلے مالک کا پن سیٹ کریں (سیٹنگز)۔", branches_resetPin: "برانچ کا پن ری سیٹ کریں", branches_resetPinTitle: "{name} کا پن ری سیٹ کرنے کے لیے مالک کا پن", branches_enterMasterTitle: "برانچ مینیجر کا پن", branches_setMasterTitle: "برانچ مینیجر کا پن بنائیں", branches_lockHint: "کسی حصے کو فعال کریں تاکہ برانچ کا عملہ اسے کھولنے سے پہلے آپ کا پن مانگے۔", reports_kpi_outstandingDebtAll: "کل واجب الادا (تمام برانچز)",
 
     home_welcomeBack: "خوش آمدید", home_salesToday: "آج کی فروخت", home_ordersToday: "آج کے آرڈرز",
     home_readyOrders: "تیار آرڈرز", home_deliveryActive: "جاری ڈیلیوری",
@@ -4577,58 +4577,6 @@ function inDateRange(iso, rangeStart, rangeEnd) {
 // and its sub-tab paths (/reports/vat, etc.) are real, bookmarkable,
 // browser-back-forward-able URLs — this component no longer owns that
 // state itself.
-// The wallet is shared across branches but revenue (and VAT) is recognised where
-// the customer TOPS UP, so a branch that serves wallet customers shows no revenue
-// for those sales. This card shows the consumption per branch and, for the owner's
-// "all branches" view, who collected the cash versus who delivered the service.
-function invoiceWalletUsed(inv) {
-  if (inv.walletUsed !== undefined && inv.walletUsed !== null) return Number(inv.walletUsed);
-  if (inv.payMethod === "Wallet Balance") return inv.total;
-  if (inv.payMethod === "Split") return (inv.splitPayments || []).filter((sp) => sp.method === "Wallet Balance").reduce((sum, sp) => sum + sp.amount, 0);
-  return 0;
-}
-
-function WalletUsageCard({ invoices, transactions, start, end }) {
-  const { t } = useLang();
-  const { scope, branches } = useBranches();
-  const consumed = (list) => list.filter((i) => inDateRange(i.createdAt, start, end)).reduce((sum, i) => sum + invoiceWalletUsed(i), 0);
-  const rows = scope === "all"
-    ? [...branches].sort((a, b) => a.number - b.number).map((b) => {
-        const topups = transactions.filter((x) => x.type === "topup" && x.branchId === b.id && inDateRange(x.date, start, end)).reduce((sum, x) => sum + x.paidAmount, 0);
-        const used = consumed(invoices.filter((i) => i.branchId === b.id));
-        return { b, topups, used, diff: topups - used };
-      })
-    : null;
-  const thCls = "whitespace-nowrap px-4 py-3 text-center";
-  const tdCls = "whitespace-nowrap px-4 py-3 text-center f-mono";
-  return (
-    <div className="mb-6 rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
-      <div className="mb-1 f-display text-base font-semibold text-app-text">{t("reports_wallet_title")}</div>
-      <p className="mb-3 text-xs text-app-text-subtle">{t("reports_wallet_hint")}</p>
-      <div className="text-sm text-app-text-muted">{t("reports_kpi_walletUsed")}: <span className="f-mono font-bold text-app-text">{sar(consumed(invoices))}</span></div>
-      {rows && (
-        <div className="mt-3 overflow-x-auto rounded-xl border border-app-border">
-          <table className="w-full min-w-[480px] text-right text-[13px]">
-            <thead className="bg-app-bg/60 text-xs font-semibold text-app-text-muted">
-              <tr><th className={thCls}>{t("reports_wallet_branch")}</th><th className={thCls}>{t("reports_wallet_topups")}</th><th className={thCls}>{t("reports_wallet_consumed")}</th><th className={thCls}>{t("reports_wallet_diff")}</th></tr>
-            </thead>
-            <tbody className="divide-y divide-app-border">
-              {rows.map((r) => (
-                <tr key={r.b.id}>
-                  <td className="whitespace-nowrap px-4 py-3 text-center font-semibold text-app-text">{r.b.name}</td>
-                  <td className={tdCls}>{sar(r.topups)}</td>
-                  <td className={tdCls}>{sar(r.used)}</td>
-                  <td className={`${tdCls} ${r.diff > 0 ? "text-warning-700" : r.diff < 0 ? "text-success-700" : "text-app-text-muted"}`}>{r.diff > 0 ? "+" : ""}{sar(r.diff)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function ReportsView({ tab, setTab, invoices, transactions, purchases, suppliers, categories, customers, expenses, expenseCategories }) {
   const { t } = useLang();
   const { multi: multiBranch, scope: viewScope } = useBranches();
@@ -4845,7 +4793,6 @@ function ReportsView({ tab, setTab, invoices, transactions, purchases, suppliers
             {kpiTile(t("reports_kpi_netRevenue"), sar(net), "success", null, true)}
             {kpiTile(multiBranch && viewScope !== "all" ? t("reports_kpi_outstandingDebtAll") : t("reports_kpi_outstandingDebt"), sar(debt), "warning", null, true)}
           </div>
-          {multiBranch && <WalletUsageCard invoices={invoices} transactions={transactions} start={start} end={end} />}
           <button onClick={() => setSalesFiltersOpen((v) => !v)} className="mb-3 flex w-full items-center justify-between gap-2 rounded-lg border border-app-border-strong bg-app-surface px-3.5 py-2.5 text-[13px] font-bold text-app-text sm:hidden">
             <span className="flex items-center gap-2"><SlidersHorizontal className="size-4" />{t("reports_filtersToggle")}</span>
             <ChevronDown className={`size-4 transition-transform ${salesFiltersOpen ? "rotate-180" : ""}`} />
@@ -6061,6 +6008,7 @@ function BranchesSettingsCard({ onOpen }) {
 // on purchases/expenses and discounts (same master-PIN-then-section-PIN flow the
 // owner uses, but the credentials are the branch's own), plus logging out.
 const BRANCH_LOCK_SECTIONS = [
+  { key: "customers", labelKey: "nav_customers" },
   { key: "purchases", labelKey: "nav_purchases" },
   { key: "promotions", labelKey: "nav_promotions" },
 ];
@@ -7151,11 +7099,6 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   const createInvoice = async ({ customerId, items, total, discount = 0, payMethod, isDelivery = false, deliveryFee = 0, splitPayments = null, walletDeduct = 0 }) => {
     const customer = customers.find((c) => c.id === customerId);
     const grandTotal = Math.max(0, total - discount) + (isDelivery ? deliveryFee : 0);
-    // How much of this sale came out of the customer's wallet (revenue for it was
-    // recognised at top-up; this only records the consumption, per branch).
-    const walletUsed = payMethod === "Wallet Balance" ? grandTotal
-      : payMethod === "Split" && splitPayments ? splitPayments.filter((sp) => sp.method === "Wallet Balance").reduce((sum, sp) => sum + sp.amount, 0)
-      : walletDeduct;
 
     if (walletDeduct > 0 && (!customer || customer.walletBalance < walletDeduct)) return null; // quick client-side check — DB call below is the real guard
 
@@ -7184,7 +7127,7 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     const docType = isDelivery ? "DLV" : "INV";
     const code = `${branchPrefix(workBranch)}${docType}-${await nextDocNumber(docType, workBranch)}`;
     const invoice = {
-      code, customerId, customerName: customer?.name || walkInLabel, payMethod, splitPayments, walletUsed, total: grandTotal, discount, isDelivery, deliveryFee, createdAt: nowISO(), closed: false,
+      code, customerId, customerName: customer?.name || walkInLabel, payMethod, splitPayments, total: grandTotal, discount, isDelivery, deliveryFee, createdAt: nowISO(), closed: false,
       vatExempt: !merchant.taxNumber || !merchant.taxNumber.trim(),
       items: items.map((it) => ({ itemId: uid("item"), name: it.name, service: it.service, addons: it.addons, price: it.servicePrice + it.addons.reduce((s, a) => s + a.price, 0), qty: it.qty, lineTotal: it.lineTotal, notes: it.notes || "", status: "Received", urgent: false, deliveredAt: null })),
     };
