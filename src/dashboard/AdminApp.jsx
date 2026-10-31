@@ -894,7 +894,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
       }
       const { error: updErr } = await db.from("payment_requests").update({ status: "approved", decided_at: new Date().toISOString() }).eq("id", p.id);
       if (updErr) throw updErr;
-    } catch (e) { console.error("acceptPayment failed", e); setPaymentError("تعذر قبول الدفع، حاول مرة ثانية."); }
+    } catch (e) { console.error("acceptPayment failed", e); setPaymentError(`تعذر قبول الدفع، حاول مرة ثانية.${e?.message ? ` (${e.message})` : ""}`); }
     setPaymentBusy(false);
   };
   const rejectPayment = async () => {
