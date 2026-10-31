@@ -36,6 +36,8 @@ create table if not exists branch_members (
 
 alter table branch_members enable row level security;
 revoke all on branch_members from anon;
+grant select on table branch_members to authenticated;
+grant select, insert, update, delete on table branch_members to service_role;
 
 drop policy if exists branch_members_select on branch_members;
 create policy branch_members_select on branch_members for select

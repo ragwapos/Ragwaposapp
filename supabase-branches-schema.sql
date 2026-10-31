@@ -40,6 +40,10 @@ create table if not exists branches (
 
 alter table branches enable row level security;
 revoke all on branches from anon;
+-- Table privileges (RLS below decides which rows): owners read/rename, creation is via
+-- create_branch(), clients never delete. Without these the table is unreadable.
+grant select, update on table branches to authenticated;
+grant select, insert, update, delete on table branches to service_role;
 
 drop policy if exists branches_select on branches;
 create policy branches_select on branches for select
