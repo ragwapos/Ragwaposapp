@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_URL } from './_supabaseConfig.js';
 import { Resend } from 'resend';
 import { checkRateLimit, clientIp } from './_rateLimit.js';
 import { Sentry } from './_sentry.js';
@@ -10,7 +11,7 @@ import { verifyTurnstile } from './_turnstile.js';
 // bundled into the public client JS). This function is the only place in
 // the project allowed to hold either of them.
 const supabaseAdmin = createClient(
-  'https://qepsmlnozznqfybavyix.supabase.co',
+  SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 const resend = new Resend(process.env.RESEND_API_KEY);

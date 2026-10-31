@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_URL } from './_supabaseConfig.js';
 import { Sentry } from './_sentry.js';
 import { applyCors } from './_cors.js';
 import { checkRateLimit } from './_rateLimit.js';
@@ -9,7 +10,7 @@ import { checkRateLimit } from './_rateLimit.js';
 // supabase-owner-pin-hardening.sql. The hash/salt for a tenant's PINs never
 // leave this file: every response below is { success, error? } only.
 const supabaseAdmin = createClient(
-  'https://qepsmlnozznqfybavyix.supabase.co',
+  SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 

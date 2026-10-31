@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './_supabaseConfig.js';
 
 // Plain uptime-check endpoint for an external monitor (UptimeRobot,
 // BetterStack, etc.) to poll. Deliberately uses the public anon key, not
@@ -6,8 +7,8 @@ import { createClient } from '@supabase/supabase-js';
 // touch anything privileged. platform_config's SELECT policy is already
 // open to anon (see supabase RLS), so this is a trivial, harmless read.
 const supabase = createClient(
-  'https://qepsmlnozznqfybavyix.supabase.co',
-  'sb_publishable_xhU8bp5pS45Brd5HqDJ9sA_zeMidsGk'
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
 );
 
 export default async function handler(req, res) {

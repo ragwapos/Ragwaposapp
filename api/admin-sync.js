@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_URL } from './_supabaseConfig.js';
 import { Sentry } from './_sentry.js';
 import { applyCors } from './_cors.js';
 
@@ -14,7 +15,7 @@ import { applyCors } from './_cors.js';
 // gate passes) but every actual write (maintenance toggle, sales-inquiry
 // status, etc.) silently fails RLS, since is_admin() is false for them.
 const supabaseAdmin = createClient(
-  'https://qepsmlnozznqfybavyix.supabase.co',
+  SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 

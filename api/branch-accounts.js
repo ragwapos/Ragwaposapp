@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_URL } from './_supabaseConfig.js';
 import { Sentry } from './_sentry.js';
 import { applyCors } from './_cors.js';
 import { checkRateLimit } from './_rateLimit.js';
@@ -12,7 +13,7 @@ import { checkRateLimit } from './_rateLimit.js';
 // (a user whose id IS a tenants row) can manage that tenant's branch accounts
 // -- never a branch account itself, never anyone for another tenant.
 const supabaseAdmin = createClient(
-  'https://qepsmlnozznqfybavyix.supabase.co',
+  SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 

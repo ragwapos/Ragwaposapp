@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_URL } from './_supabaseConfig.js';
 import { checkRateLimit, clientIp } from './_rateLimit.js';
 import { Sentry } from './_sentry.js';
 import { applyCors } from './_cors.js';
@@ -12,7 +13,7 @@ import { verifyTurnstile } from './_turnstile.js';
 // that off (see supabase-close-anon-sales-inquiries.sql, which drops that
 // policy now that nothing needs it) and adds real abuse protection.
 const supabaseAdmin = createClient(
-  'https://qepsmlnozznqfybavyix.supabase.co',
+  SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
