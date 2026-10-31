@@ -1024,7 +1024,7 @@ const DICT = {
     settle_exceedsDebtError: "Amount exceeds the maximum outstanding debt ({amount})",
     settle_remaining: "Remaining Debt After Payment", settle_confirm: "Confirm Payment & Close",
 
-    products_newProduct: "New Product", lib_open: "Product library", lib_title: "Product library", lib_hint: "Pick products, adjust names and prices, then save — they are added straight to your products.", lib_introTitle: "We know adding products takes time. Want to add them from the product library?", lib_introBody: "Choose ready-made products from our library, tweak their names, prices and options, and add them all in one go.", lib_fromLibrary: "From the product library", lib_myself: "I'll add them myself", lib_selectAll: "Select all", lib_clearAll: "Clear selection", lib_selectGroup: "Select group", lib_clearGroup: "Clear group", lib_selected: "{n} selected", lib_added: "Added", lib_addSelected: "Add selected ({n})", lib_adding: "Adding…", lib_addOption: "Add option", lib_optionName: "Option name", lib_priceFor: "Price", lib_errName: "Every selected product needs a name.", lib_errService: "Every selected product needs at least one service price.", lib_failed: "Some products could not be added, please try again.", lib_loading: "Loading the library…", products_image: "Image", products_upload: "Upload (250×250)",
+    products_newProduct: "New Product", lib_open: "Product library", lib_title: "Product library", lib_hint: "Pick products, adjust names and prices, then save — they are added straight to your products.", lib_introTitle: "We know adding products takes time. Want to add them from the product library?", lib_introBody: "Choose ready-made products from our library, tweak their names, prices and options, and add them all in one go.", lib_fromLibrary: "From the product library", lib_myself: "I'll add them myself", lib_selectAll: "Select all", lib_clearAll: "Clear selection", lib_selectGroup: "Select group", lib_clearGroup: "Clear group", lib_selected: "{n} selected", lib_added: "Added", lib_addSelected: "Add selected ({n})", lib_adding: "Adding…", lib_addOption: "Add option", lib_optionName: "Option name", lib_rushTitle: "Rush options", lib_priceFor: "Price", lib_errName: "Every selected product needs a name.", lib_errService: "Every selected product needs at least one service price.", lib_failed: "Some products could not be added, please try again.", lib_loading: "Loading the library…", products_image: "Image", products_upload: "Upload (250×250)",
     products_name: "Product Name", products_servicePrices: "Service Prices",
     products_servicePricesHint: "(fill in at least one)", products_noServiceTypes: "No service types yet.",
     products_addServiceType: "Add Service Type", products_newServiceName: "New service name",
@@ -1309,7 +1309,7 @@ const DICT = {
     settle_exceedsDebtError: "المبلغ يتجاوز الحد الأقصى المستحق ({amount})",
     settle_remaining: "الدين المتبقي بعد الدفع", settle_confirm: "تأكيد الدفع والإغلاق",
 
-    products_newProduct: "منتج جديد", lib_open: "مكتبة المنتجات", lib_title: "مكتبة المنتجات", lib_hint: "اختر المنتجات وعدّل الأسماء والأسعار ثم احفظ، وتنضاف مباشرة لمنتجاتك.", lib_introTitle: "ندري إن إضافة المنتجات قروشة وتاخذ وقت، وش رايك تضيفها من مكتبة المنتجات؟", lib_introBody: "اختر من منتجات جاهزة بصورها وأسعارها، عدّل الأسماء والأسعار والخيارات، وأضفها كلها مرة وحدة.", lib_fromLibrary: "من مكتبة المنتجات", lib_myself: "أضيفها بنفسي", lib_selectAll: "تحديد الكل", lib_clearAll: "إلغاء التحديد", lib_selectGroup: "تحديد المجموعة", lib_clearGroup: "إلغاء المجموعة", lib_selected: "تم تحديد {n}", lib_added: "مضاف", lib_addSelected: "إضافة المحدد ({n})", lib_adding: "جارٍ الإضافة…", lib_addOption: "إضافة خيار", lib_optionName: "اسم الخيار", lib_priceFor: "السعر", lib_errName: "كل منتج محدد لازم يكون له اسم.", lib_errService: "كل منتج محدد لازم يكون له سعر خدمة واحد على الأقل.", lib_failed: "تعذرت إضافة بعض المنتجات، حاول مرة ثانية.", lib_loading: "جارٍ تحميل المكتبة…", products_image: "الصورة", products_upload: "رفع صورة (250×250)",
+    products_newProduct: "منتج جديد", lib_open: "مكتبة المنتجات", lib_title: "مكتبة المنتجات", lib_hint: "اختر المنتجات وعدّل الأسماء والأسعار ثم احفظ، وتنضاف مباشرة لمنتجاتك.", lib_introTitle: "ندري إن إضافة المنتجات قروشة وتاخذ وقت، وش رايك تضيفها من مكتبة المنتجات؟", lib_introBody: "اختر من منتجات جاهزة بصورها وأسعارها، عدّل الأسماء والأسعار والخيارات، وأضفها كلها مرة وحدة.", lib_fromLibrary: "من مكتبة المنتجات", lib_myself: "أضيفها بنفسي", lib_selectAll: "تحديد الكل", lib_clearAll: "إلغاء التحديد", lib_selectGroup: "تحديد المجموعة", lib_clearGroup: "إلغاء المجموعة", lib_selected: "تم تحديد {n}", lib_added: "مضاف", lib_addSelected: "إضافة المحدد ({n})", lib_adding: "جارٍ الإضافة…", lib_addOption: "إضافة خيار", lib_optionName: "اسم الخيار", lib_rushTitle: "خيارات الاستعجال", lib_priceFor: "السعر", lib_errName: "كل منتج محدد لازم يكون له اسم.", lib_errService: "كل منتج محدد لازم يكون له سعر خدمة واحد على الأقل.", lib_failed: "تعذرت إضافة بعض المنتجات، حاول مرة ثانية.", lib_loading: "جارٍ تحميل المكتبة…", products_image: "الصورة", products_upload: "رفع صورة (250×250)",
     products_name: "اسم المنتج", products_servicePrices: "أسعار الخدمات",
     products_servicePricesHint: "(حدد سعر واحد على الأقل)", products_noServiceTypes: "لا توجد أنواع خدمات بعد.",
     products_addServiceType: "إضافة نوع خدمة", products_newServiceName: "اسم خدمة جديدة",
@@ -1594,7 +1594,7 @@ const DICT = {
     settle_exceedsDebtError: "رقم زیادہ سے زیادہ واجب الادا حد ({amount}) سے تجاوز کر گئی ہے",
     settle_remaining: "ادائیگی کے بعد باقی ادھار", settle_confirm: "ادائیگی کی تصدیق اور بند کریں",
 
-    products_newProduct: "نیا پروڈکٹ", lib_open: "پروڈکٹ لائبریری", lib_title: "پروڈکٹ لائبریری", lib_hint: "پروڈکٹس منتخب کریں، نام اور قیمتیں بدلیں، پھر محفوظ کریں — وہ سیدھے آپ کی پروڈکٹس میں شامل ہو جائیں گی۔", lib_introTitle: "ہمیں معلوم ہے پروڈکٹس شامل کرنے میں وقت لگتا ہے۔ کیوں نہ انہیں پروڈکٹ لائبریری سے شامل کریں؟", lib_introBody: "تیار پروڈکٹس میں سے چنیں، نام، قیمتیں اور آپشنز بدلیں اور سب ایک ساتھ شامل کریں۔", lib_fromLibrary: "پروڈکٹ لائبریری سے", lib_myself: "میں خود شامل کروں گا", lib_selectAll: "سب منتخب کریں", lib_clearAll: "انتخاب ختم کریں", lib_selectGroup: "گروپ منتخب کریں", lib_clearGroup: "گروپ کا انتخاب ختم کریں", lib_selected: "{n} منتخب", lib_added: "شامل ہے", lib_addSelected: "منتخب شامل کریں ({n})", lib_adding: "شامل ہو رہا ہے…", lib_addOption: "آپشن شامل کریں", lib_optionName: "آپشن کا نام", lib_priceFor: "قیمت", lib_errName: "ہر منتخب پروڈکٹ کا نام ہونا ضروری ہے۔", lib_errService: "ہر منتخب پروڈکٹ کی کم از کم ایک سروس قیمت ضروری ہے۔", lib_failed: "کچھ پروڈکٹس شامل نہ ہو سکیں، دوبارہ کوشش کریں۔", lib_loading: "لائبریری لوڈ ہو رہی ہے…", products_image: "تصویر", products_upload: "تصویر اپ لوڈ کریں (250×250)",
+    products_newProduct: "نیا پروڈکٹ", lib_open: "پروڈکٹ لائبریری", lib_title: "پروڈکٹ لائبریری", lib_hint: "پروڈکٹس منتخب کریں، نام اور قیمتیں بدلیں، پھر محفوظ کریں — وہ سیدھے آپ کی پروڈکٹس میں شامل ہو جائیں گی۔", lib_introTitle: "ہمیں معلوم ہے پروڈکٹس شامل کرنے میں وقت لگتا ہے۔ کیوں نہ انہیں پروڈکٹ لائبریری سے شامل کریں؟", lib_introBody: "تیار پروڈکٹس میں سے چنیں، نام، قیمتیں اور آپشنز بدلیں اور سب ایک ساتھ شامل کریں۔", lib_fromLibrary: "پروڈکٹ لائبریری سے", lib_myself: "میں خود شامل کروں گا", lib_selectAll: "سب منتخب کریں", lib_clearAll: "انتخاب ختم کریں", lib_selectGroup: "گروپ منتخب کریں", lib_clearGroup: "گروپ کا انتخاب ختم کریں", lib_selected: "{n} منتخب", lib_added: "شامل ہے", lib_addSelected: "منتخب شامل کریں ({n})", lib_adding: "شامل ہو رہا ہے…", lib_addOption: "آپشن شامل کریں", lib_optionName: "آپشن کا نام", lib_rushTitle: "فوری آپشنز", lib_priceFor: "قیمت", lib_errName: "ہر منتخب پروڈکٹ کا نام ہونا ضروری ہے۔", lib_errService: "ہر منتخب پروڈکٹ کی کم از کم ایک سروس قیمت ضروری ہے۔", lib_failed: "کچھ پروڈکٹس شامل نہ ہو سکیں، دوبارہ کوشش کریں۔", lib_loading: "لائبریری لوڈ ہو رہی ہے…", products_image: "تصویر", products_upload: "تصویر اپ لوڈ کریں (250×250)",
     products_name: "پروڈکٹ کا نام", products_servicePrices: "سروس کی قیمتیں",
     products_servicePricesHint: "(کم از کم ایک قیمت درج کریں)", products_noServiceTypes: "ابھی کوئی سروس ٹائپ موجود نہیں۔",
     products_addServiceType: "سروس ٹائپ شامل کریں", products_newServiceName: "نئی سروس کا نام",
@@ -3833,6 +3833,8 @@ async function waitForCategories(ids) {
   return false;
 }
 
+const libInputCls = "rounded-lg border border-stone-300 px-2.5 py-1.5 text-sm text-slate-900 focus:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-100";
+
 function ProductLibraryModal({ categories, addCategory, products, addProduct, serviceTypes, addServiceType, onClose }) {
   const { t } = useLang();
   const [rows, setRows] = useState(null);
@@ -3939,27 +3941,32 @@ function ProductLibraryModal({ categories, addCategory, products, addProduct, se
                         <div className="flex items-center gap-3">
                           <input type="checkbox" disabled={r.exists} checked={r.selected} onChange={(e) => patchRow(r.key, { selected: e.target.checked })} className="size-4 shrink-0 accent-brand-500" />
                           <img src={`/product-library/${r.image}`} alt="" loading="lazy" className="size-14 shrink-0 rounded-lg border border-app-border object-cover" />
-                          <input value={r.name} disabled={r.exists} onChange={(e) => patchRow(r.key, { name: e.target.value })} className={`${inputCls} flex-1 font-semibold`} />
+                          <input value={r.name} disabled={r.exists} onChange={(e) => patchRow(r.key, { name: e.target.value })} className={`${libInputCls} min-w-0 flex-1 font-semibold`} />
                           {r.exists && <span className="shrink-0 rounded-full bg-success-50 px-2.5 py-1 text-[11px] font-bold text-success-700">{t("lib_added")}</span>}
                         </div>
                         {!r.exists && (
-                          <div className="mt-3 space-y-2 ps-7">
-                            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                          <div className="mt-3 space-y-3 ps-7">
+                            <div className="flex flex-wrap gap-3">
                               {Object.keys(r.services).map((svc) => (
                                 <label key={svc} className="block">
                                   <span className="mb-1 block text-[11px] font-semibold text-app-text-muted">{svc}</span>
-                                  <input type="number" min="0" step="0.5" value={r.services[svc]} onChange={(e) => patchRow(r.key, { services: { ...r.services, [svc]: e.target.value } })} className={inputCls} />
+                                  <input type="number" min="0" step="0.5" value={r.services[svc]} onChange={(e) => patchRow(r.key, { services: { ...r.services, [svc]: e.target.value } })} className={`${libInputCls} w-24 text-center`} />
                                 </label>
                               ))}
                             </div>
-                            {r.addons.map((a) => (
-                              <div key={a.id} className="flex items-center gap-2">
-                                <input value={a.name} placeholder={t("lib_optionName")} onChange={(e) => patchRow(r.key, { addons: r.addons.map((x) => (x.id === a.id ? { ...x, name: e.target.value } : x)) })} className={`${inputCls} flex-1`} />
-                                <input type="number" min="0" step="0.5" value={a.price} onChange={(e) => patchRow(r.key, { addons: r.addons.map((x) => (x.id === a.id ? { ...x, price: e.target.value } : x)) })} className={`${inputCls} w-24`} />
-                                <button onClick={() => patchRow(r.key, { addons: r.addons.filter((x) => x.id !== a.id) })} className="rounded-lg p-2 text-app-text-subtle hover:bg-danger-50 hover:text-danger-600"><Trash2 size={15} /></button>
+                            <div>
+                              <div className="mb-1.5 text-[11px] font-semibold text-app-text-muted">{t("lib_rushTitle")}</div>
+                              <div className="space-y-1.5">
+                                {r.addons.map((a) => (
+                                  <div key={a.id} className="flex items-center gap-2">
+                                    <input value={a.name} placeholder={t("lib_optionName")} onChange={(e) => patchRow(r.key, { addons: r.addons.map((x) => (x.id === a.id ? { ...x, name: e.target.value } : x)) })} className={`${libInputCls} min-w-0 flex-1`} />
+                                    <input type="number" min="0" step="0.5" value={a.price} onChange={(e) => patchRow(r.key, { addons: r.addons.map((x) => (x.id === a.id ? { ...x, price: e.target.value } : x)) })} className={`${libInputCls} w-20 shrink-0 text-center`} />
+                                    <button onClick={() => patchRow(r.key, { addons: r.addons.filter((x) => x.id !== a.id) })} className="shrink-0 rounded-lg p-1.5 text-app-text-subtle hover:bg-danger-50 hover:text-danger-600"><Trash2 size={15} /></button>
+                                  </div>
+                                ))}
                               </div>
-                            ))}
-                            <button onClick={() => patchRow(r.key, { addons: [...r.addons, { id: uid("padd"), name: "", price: "0" }] })} className="flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700"><Plus size={13} /> {t("lib_addOption")}</button>
+                              <button onClick={() => patchRow(r.key, { addons: [...r.addons, { id: uid("padd"), name: "", price: "0" }] })} className="mt-2 flex items-center gap-1 text-xs font-semibold text-brand-600 hover:text-brand-700"><Plus size={13} /> {t("lib_addOption")}</button>
+                            </div>
                           </div>
                         )}
                       </div>
