@@ -133,7 +133,7 @@ export const LANDING_TEXT = {
     faq: [
       { q: 'هل رغوة يحتاج جهاز أو سيرفر خاص؟', a: 'لا، يشتغل من أي متصفح على كمبيوتر أو جوال أو تابلت، بدون تركيب أي برنامج أو سيرفر خاص.' },
       { q: 'هل يدعم الفوترة الإلكترونية؟', a: 'نعم، رغوة مبني على التوافق مع متطلبات الفوترة الإلكترونية بالمملكة.' },
-      { q: 'أقدر أدير أكثر من فرع؟', a: 'نعم. تقدر تضيف فروع غير محدودة داخل حساب واحد: لكل فرع مبيعاته وفواتيره ومصروفاته وخصوماته المنفصلة، وحساب دخول مستقل لموظفيه، مع عملاء ومنتجات مشتركة وتقارير تجمع كل الفروع للمالك. الفرع الإضافي يُحتسب بتكلفة إضافية، تواصل معنا لتفاصيلها.' },
+      { q: 'أقدر أدير أكثر من فرع؟', a: 'نعم. تقدر تضيف فروع غير محدودة داخل حساب واحد: لكل فرع مبيعاته وفواتيره ومصروفاته وخصوماته المنفصلة، وحساب دخول مستقل لموظفيه، مع عملاء ومنتجات مشتركة وتقارير تجمع كل الفروع للمالك. كل فرع إضافي بـ 200 ريال في السنة (يُحسب بالتناسب مع المتبقي من اشتراكك ويتجدد معه)، ويُضاف بعد تأكيد الدفع.' },
       { q: 'لازم أغيّر طريقة شغلي بالكامل عشان أبدأ؟', a: 'لا، تصميم رغوة بسيط ومباشر — تقدر تبدأ البيع بنفس اليوم بدون ما تغيّر طريقة شغلك من جذورها.' },
       { q: 'كيف أبدأ التجربة المجانية؟', a: 'اضغط «ابدأ التجربة المجانية»، سجّل بيانات محلك، وابدأ البيع مباشرة لمدة 14 يومًا بكل المميزات.' },
     ],
@@ -273,7 +273,7 @@ export const LANDING_TEXT = {
     faq: [
       { q: 'Does Ragwa need special hardware or a server?', a: 'No — it runs in any browser on a computer, phone, or tablet, with no installation or special server needed.' },
       { q: 'Does it support e-invoicing?', a: "Yes, Ragwa is built around Saudi e-invoicing compliance requirements." },
-      { q: 'Can I manage more than one branch?', a: "Yes. You can add as many branches as you need inside one account: each branch has its own sales, invoices, expenses and discounts, and its own login for its staff, while customers and products stay shared and the owner gets reports across all branches. Extra branches are charged separately, so contact us for details." },
+      { q: 'Can I manage more than one branch?', a: "Yes. You can add as many branches as you need inside one account: each branch has its own sales, invoices, expenses and discounts, and its own login for its staff, while customers and products stay shared and the owner gets reports across all branches. Each extra branch is 200 SAR per year (pro-rated to the time left on your subscription and renewed with it) and is added once payment is confirmed." },
       { q: 'Do I need to change how I work completely to get started?', a: "No — Ragwa is simple and direct. You can start selling the same day, without a complete overhaul of how you work." },
       { q: 'How do I start the free trial?', a: 'Click "Start the free trial", register your shop, and start selling right away for 14 days with every feature.' },
     ],

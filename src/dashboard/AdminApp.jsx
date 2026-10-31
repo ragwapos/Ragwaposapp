@@ -862,6 +862,13 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   const acceptPayment = async (p) => {
     setPaymentBusy(true); setPaymentError("");
     try {
+      if (p.plan === "branch") {
+        // creates the branch and marks the request approved in one transaction
+        const { error } = await db.rpc("approve_branch_payment", { p_request: p.id });
+        if (error) throw error;
+        setPaymentBusy(false);
+        return;
+      }
       const reg = registrationRequests.find((r) => r.uid === p.userId);
       const ten = tenants.find((t) => t.id === p.userId);
       // Renewal: extend from the later of now / current end. First payment: create the shop.
@@ -1309,7 +1316,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
                       <tr key={p.id}>
                         <td className="px-4 py-3"><div className="font-medium">{who.shop}</div><div className="text-xs text-gray-500" dir="ltr">{who.email}</div></td>
                         <td className="px-4 py-3 text-gray-300" dir="ltr">{who.mobile}</td>
-                        <td className="px-4 py-3 text-gray-300">{who.isRenewal ? "تجديد / ترقية" : "اشتراك جديد"}</td>
+                        <td className="px-4 py-3 text-gray-300">{p.plan === "branch" ? `فرع إضافي: ${p.branchName || "—"}` : who.isRenewal ? "تجديد / ترقية" : "اشتراك جديد"}</td>
                         <td className="px-4 py-3 font-mono">{Number(p.amount).toFixed(2)}</td>
                         <td className="px-4 py-3 text-gray-400 text-xs" dir="ltr">{new Date(p.createdAt).toLocaleString("en-GB")}</td>
                         <td className="px-4 py-3">{statusBadge(p.status, { pending: "قيد المراجعة", approved: "مقبول", rejected: "مرفوض" })}{p.status === "rejected" && p.rejectReason && <div className="mt-1 text-[11px] text-gray-500">{p.rejectReason}</div>}</td>
