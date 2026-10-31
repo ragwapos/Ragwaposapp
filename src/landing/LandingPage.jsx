@@ -3,7 +3,7 @@
 // renderToString and ship the real designed markup in index.html, instead
 // of waiting for the JS bundle before anything styled appears.
 import React, { useState, useRef, useEffect } from "react";
-import { Shirt, MessageCircle, Smartphone, Car, QrCode, MapPin } from "lucide-react";
+import { Shirt, MessageCircle, Smartphone, Car, QrCode, MapPin, Check } from "lucide-react";
 import { LANDING_TEXT } from "../../content/landing.mjs";
 import { preloadTurnstile } from "../utils/turnstile.js";
 
@@ -14,6 +14,7 @@ export default function LandingPage(props) {
     lang, onOpenTerms, prerender } = props;
   const goLogin = (e) => { e.preventDefault(); navigate('login', '/login'); };
   const goSignup = (e) => { e.preventDefault(); navigate('signup', '/signup'); };
+  const goPlan = (plan) => (e) => { e.preventDefault(); navigate('signup', `/signup?plan=${plan}`); };
   const goLang = (l) => (e) => { e.preventDefault(); navigate('landing', l === 'en' ? '/en' : '/'); };
   // Anti-bot: `website` is a honeypot a real visitor never sees or fills
   // (hidden below); `formStartedAtRef` marks when the modal actually
@@ -90,6 +91,7 @@ export default function LandingPage(props) {
             <button onClick={() => scrollTo('features')} className="hover:text-landing-ink transition">{t.navFeatures}</button>
             <button onClick={() => scrollTo('how-it-works')} className="hover:text-landing-ink transition">{t.navHow}</button>
             <button onClick={() => scrollTo('why')} className="hover:text-landing-ink transition">{t.navWhy}</button>
+            <button onClick={() => scrollTo('pricing')} className="hover:text-landing-ink transition">{t.navPricing}</button>
             <button onClick={() => scrollTo('faq')} className="hover:text-landing-ink transition">{t.navFaq}</button>
             {/* /guides is a separate static-HTML section outside the SPA
                 (see PROJECT_REFERENCE.md §19), so a real <a href> instead
@@ -331,18 +333,11 @@ export default function LandingPage(props) {
             ))}
           </div>
 
-          {/* Pricing status + a plain-language note on what "subscriptions"/
-              "deferred payment" in the site description actually mean —
-              real product features (customer wallet/debt, §4 of
-              PROJECT_REFERENCE.md) the shop owner offers THEIR customers,
-              not Ragwa's own billing model. No invented SAR figures here —
-              real pricing isn't published yet. */}
-          <div className="mt-14 grid md:grid-cols-2 gap-6 text-start">
-            <div className="bg-white border border-slate-100 rounded-2xl p-7 shadow-soft">
-              <span className="inline-block text-xs font-bold text-brand-600 bg-brand-50 rounded-full px-4 py-1.5 mb-4">{t.pricingEyebrow}</span>
-              <h3 className="text-lg font-bold mb-2">{t.pricingTitle}</h3>
-              <p className="text-landing-ink-muted text-sm leading-relaxed">{t.pricingDesc}</p>
-            </div>
+          {/* A plain-language note on what "subscriptions"/"deferred payment" in the
+              site description actually mean: real product features (customer
+              wallet/debt, §4 of PROJECT_REFERENCE.md) the shop owner offers THEIR
+              customers, not Ragwa's own billing model. Real pricing is in #pricing. */}
+          <div className="mt-14 max-w-xl mx-auto text-start">
             <div className="bg-white border border-slate-100 rounded-2xl p-7 shadow-soft">
               <h3 className="text-lg font-bold mb-2">{t.walletDebtTitle}</h3>
               <p className="text-landing-ink-muted text-sm leading-relaxed mb-3">{t.walletDebtDesc}</p>
@@ -350,6 +345,71 @@ export default function LandingPage(props) {
                 {t.walletDebtLinkText} {dir === 'rtl' ? '←' : '→'}
               </a>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Pricing */}
+      <div id="pricing" className="bg-navy-900 py-24 px-6 scroll-mt-20">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">{t.pricing.title}</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">{t.pricing.subtitle}</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 items-stretch">
+            {[
+              { key: 'trial', popular: false, onClick: goPlan('trial'), btn: 'border-2 border-white/25 text-white hover:bg-white/10' },
+              { key: 'annual', popular: true, onClick: goPlan('annual'), btn: 'bg-gradient-to-r from-amber-300 to-amber-500 text-slate-900 hover:from-amber-200 hover:to-amber-400' },
+              { key: 'enterprise', popular: false, href: 'https://wa.me/966592299405', btn: 'bg-[#25D366] text-slate-900 hover:bg-[#3ae07a]' },
+            ].map((card) => {
+              const plan = t.pricing[card.key];
+              const isContact = card.key === 'enterprise';
+              return (
+                <div key={card.key} className={`relative flex flex-col rounded-3xl border bg-white/[0.04] p-7 ${card.popular ? 'border-amber-400/70 shadow-[0_0_40px_-12px_rgba(251,191,36,0.45)]' : 'border-white/10'}`}>
+                  {card.popular && (
+                    <span className="absolute -top-3.5 start-6 rounded-full bg-amber-400 px-4 py-1 text-xs font-extrabold text-slate-900">{t.pricing.popularBadge}</span>
+                  )}
+                  <h3 className="text-2xl font-extrabold text-white">{plan.name}</h3>
+                  <p className="mt-1.5 min-h-[2.75rem] text-sm leading-relaxed text-gray-400">{plan.tagline}</p>
+
+                  <div className="mt-6">
+                    <div className="flex items-baseline gap-2">
+                      <span className={`font-extrabold text-white ${isContact ? 'text-3xl' : 'text-5xl'}`}>{plan.price}</span>
+                      {plan.unit && <span className="text-base font-semibold text-gray-300">{plan.unit}</span>}
+                    </div>
+                    <div className="mt-1 text-xs text-gray-400">{plan.note}</div>
+                  </div>
+
+                  <ul className="mt-6 flex-1 space-y-3">
+                    {plan.bullets.map((b, i) => (
+                      <li key={i} className="flex items-start gap-2.5 text-sm text-gray-200">
+                        <Check size={16} className="mt-0.5 shrink-0 text-emerald-400" />
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {isContact ? (
+                    <a href={card.href} target="_blank" rel="noopener noreferrer" className={`mt-8 block rounded-xl px-5 py-3.5 text-center text-sm font-bold transition ${card.btn}`}>{plan.cta}</a>
+                  ) : (
+                    <a href={`/signup?plan=${card.key}`} onClick={card.onClick} className={`mt-8 block rounded-xl px-5 py-3.5 text-center text-sm font-bold transition ${card.btn}`}>{plan.cta}</a>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-12 rounded-3xl border border-white/10 bg-white/[0.03] p-7 md:p-9">
+            <h3 className="mb-6 text-center text-lg font-bold text-white md:text-xl">{t.pricing.includesTitle}</h3>
+            <ul className="grid gap-x-8 gap-y-3.5 sm:grid-cols-2">
+              {t.pricing.features.map((f, i) => (
+                <li key={i} className="flex items-start gap-2.5 text-sm text-gray-200">
+                  <Check size={16} className="mt-0.5 shrink-0 text-emerald-400" />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </div>
@@ -410,6 +470,7 @@ export default function LandingPage(props) {
           <div className="flex items-center justify-center gap-6 flex-wrap text-sm text-gray-400">
             <button onClick={() => scrollTo('features')} className="hover:text-white transition">{t.navFeatures}</button>
             <button onClick={() => scrollTo('how-it-works')} className="hover:text-white transition">{t.navHow}</button>
+            <button onClick={() => scrollTo('pricing')} className="hover:text-white transition">{t.navPricing}</button>
             <button onClick={() => scrollTo('faq')} className="hover:text-white transition">{t.navFaq}</button>
             <a href="/terms" onClick={(e) => { e.preventDefault(); onOpenTerms(); }} className="hover:text-white transition">
               {lang === 'ar' ? 'الشروط والأحكام' : 'Terms & Conditions'}

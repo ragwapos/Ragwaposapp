@@ -22,6 +22,7 @@ import { ALL_DASHBOARD_PATHS } from "./utils/dashboardPaths.js";
 const loadTenantApp = () => import('./dashboard/TenantApp.jsx');
 const LaundryOpsApp = lazy(loadTenantApp);
 const AdminDashboard = lazy(() => import('./dashboard/AdminApp.jsx'));
+const PaymentPanel = lazy(() => import('./payment/PaymentPanel.jsx'));
 // Minimal, dependency-free fallback shown only for the (usually brief) time
 // it takes to fetch the lazy chunk after a successful login — deliberately
 // unstyled by Tailwind/Cairo so it renders instantly regardless of what else
@@ -367,7 +368,7 @@ function EmailVerificationPage({ email, onVerified, onBack }) {
 function SignupPage(props) {
   const { navigate, signupShop, setSignupShop, signupEmail, setSignupEmail,
     signupMobile, setSignupMobile, signupAddress, setSignupAddress, signupPassword, setSignupPassword,
-    signupAgree, setSignupAgree, handleSignup, signupError, signupLoading, onOpenTerms } = props;
+    signupAgree, setSignupAgree, handleSignup, signupError, signupLoading, onOpenTerms, signupPlan, setSignupPlan } = props;
   // Same honeypot + minimum-fill-time anti-bot pattern as the landing
   // page's contact form (see LandingPage) — checked server-side in
   // api/send-verification-email.js.
@@ -386,6 +387,15 @@ function SignupPage(props) {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">إنشاء حساب</h1>
           <p className="text-gray-400 text-sm">ابدأ مع رغوة الآن</p>
+        </div>
+
+        <div className="mb-5 grid grid-cols-2 gap-2 rounded-xl border border-slate-800 bg-slate-900/60 p-1.5 text-center text-sm font-semibold">
+          {[['trial', 'تجربة مجانية 14 يوم'], ['annual', 'سنوي 350 ريال']].map(([key, label]) => (
+            <button key={key} type="button" onClick={() => setSignupPlan(key)} className={`rounded-lg px-3 py-2.5 transition ${signupPlan === key ? 'bg-cyan-500 text-slate-950' : 'text-gray-300 hover:text-white'}`}>{label}</button>
+          ))}
+          <p className="col-span-2 px-2 pb-1 pt-1 text-xs font-normal text-gray-400">
+            {signupPlan === 'annual' ? 'بعد تأكيد بريدك تحوّل المبلغ وترفق الإيصال، ونفعّل حسابك بعد المراجعة.' : 'تدخل النظام مباشرة بعد تأكيد بريدك بكل المميزات.'}
+          </p>
         </div>
 
         <div className="bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
@@ -780,6 +790,7 @@ const LaundryPOS = () => {
   const navigate = (page, path) => {
     window.history.pushState({}, '', path);
     setCurrentPage(page);
+    if (page === 'signup') setSignupPlan(new URLSearchParams(path.split('?')[1] || '').get('plan') === 'annual' ? 'annual' : 'trial');
     // '/' and '/en' are the two language variants of the landing page —
     // keep siteLang in lockstep with whichever one we just navigated to.
     if (path === '/en') setSiteLang('en');
@@ -890,7 +901,12 @@ const LaundryPOS = () => {
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
+  // Free-trial / annual subscription state for the signed-in shop (null until loaded; plan null = legacy shop, never restricted).
+  const [subscription, setSubscription] = useState(null);
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const [signupShop, setSignupShop] = useState('');
+  // Chosen on the landing page pricing cards (/signup?plan=annual); anything else is the free trial.
+  const [signupPlan, setSignupPlan] = useState(() => (new URLSearchParams(window.location.search).get('plan') === 'annual' ? 'annual' : 'trial'));
   const [signupEmail, setSignupEmail] = useState('');
   const [signupMobile, setSignupMobile] = useState('');
   const [signupAddress, setSignupAddress] = useState('');
@@ -990,6 +1006,8 @@ const LaundryPOS = () => {
     if (memberRow) return { page: 'dashboard', tenantId: memberRow.tenant_id, branchId: memberRow.branch_id };
     const req = reqRows && reqRows[0] ? toCamelCase(reqRows[0]) : null;
     if (req && req.status === 'rejected') return { page: 'rejected', reason: req.rejectReason };
+    // The annual plan is activated by an admin after the bank transfer receipt is reviewed.
+    if (req && req.plan === 'annual') return { page: 'payment' };
     return { page: 'pending' };
   };
 
@@ -1053,9 +1071,9 @@ const LaundryPOS = () => {
         } else if (dest.page === 'admin') {
           setShowEmailVerification(false); setPendingSignup(null);
           setCurrentPage('admin');
-        } else if (dest.page === 'pending') {
+        } else if (dest.page === 'pending' || dest.page === 'payment') {
           setShowEmailVerification(false); setPendingSignup(null);
-          setCurrentPage((p) => (p === 'landing' || p === 'login' || p === 'signup') ? 'pending' : p);
+          setCurrentPage((p) => (p === 'landing' || p === 'login' || p === 'signup') ? dest.page : p);
         }
       } catch (e) {
         console.error('auth state resolve failed', e);
@@ -1105,8 +1123,8 @@ const LaundryPOS = () => {
       } else if (dest.page === 'rejected') {
         setLoginError(`تم رفض طلب تسجيلك${dest.reason ? `: ${dest.reason}` : '.'}`);
         await auth.signOut();
-      } else if (dest.page === 'pending') {
-        setCurrentPage('pending');
+      } else if (dest.page === 'pending' || dest.page === 'payment') {
+        setCurrentPage(dest.page);
       } else {
         setTenantId(dest.tenantId);
         setBranchId(dest.branchId || null);
@@ -1161,7 +1179,7 @@ const LaundryPOS = () => {
       const turnstileToken = await getTurnstileToken();
       const resp = await fetch('/api/send-verification-email', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailNorm, password: signupPassword, shopName, mobile: signupMobile, address, website, formStartedAt, turnstileToken }),
+        body: JSON.stringify({ email: emailNorm, password: signupPassword, shopName, mobile: signupMobile, address, website, formStartedAt, turnstileToken, plan: signupPlan }),
       });
       const result = await resp.json();
       if (!result.success) throw { message: result.error, code: result.code };
@@ -1186,8 +1204,18 @@ const LaundryPOS = () => {
     const dest = await resolveDestination(user);
     if (dest.page === 'dashboard') { setTenantId(dest.tenantId); setBranchId(dest.branchId || null); setCurrentPage('dashboard'); }
     else if (dest.page === 'admin') setCurrentPage('admin');
-    else setCurrentPage('pending');
+    else setCurrentPage(dest.page === 'payment' ? 'payment' : 'pending');
   };
+
+  const loadSubscription = async () => {
+    const { data } = await db.rpc('my_subscription');
+    const row = Array.isArray(data) ? data[0] : data;
+    setSubscription(row ? { plan: row.plan || null, endsAt: row.subscription_ends_at || null } : { plan: null, endsAt: null });
+  };
+  useEffect(() => {
+    if (currentPage !== 'dashboard' || !tenantId) { setSubscription(null); setShowUpgrade(false); return; }
+    loadSubscription().catch(() => setSubscription({ plan: null, endsAt: null }));
+  }, [currentPage, tenantId]);
 
   const handleLogout = async () => {
     const { error: err } = await auth.signOut();
@@ -1272,6 +1300,10 @@ const LaundryPOS = () => {
       onVerified={completeSignupAfterVerification}
       onBack={async () => { const { error: err } = await auth.signOut(); if (err) console.error(err); setShowEmailVerification(false); setPendingSignup(null); }}
     />
+  ) : currentPage === 'payment' ? (
+    <Suspense fallback={<DashboardLoading />}>
+      <PaymentPanel onRefresh={completeSignupAfterVerification} onLogout={handleLogout} />
+    </Suspense>
   ) : currentPage === 'pending' ? (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md text-center bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
@@ -1314,7 +1346,7 @@ const LaundryPOS = () => {
       signupPassword={signupPassword} setSignupPassword={setSignupPassword}
       signupAgree={signupAgree} setSignupAgree={setSignupAgree}
       handleSignup={handleSignup} signupError={signupError} signupLoading={signupLoading}
-      onOpenTerms={openTerms}
+      onOpenTerms={openTerms} signupPlan={signupPlan} setSignupPlan={setSignupPlan}
     />
   ) : currentPage === 'notFound' ? (
     <NotFoundPage navigate={navigate} />
@@ -1333,7 +1365,31 @@ const LaundryPOS = () => {
     </Suspense>
   ) : (
     <Suspense fallback={<DashboardLoading />}>
-      <LaundryOpsApp tenantId={tenantId} branchId={branchId} onLogout={handleLogout} initialLang={siteLang} />
+      {(() => {
+        const endsMs = subscription?.plan && subscription.endsAt ? new Date(subscription.endsAt).getTime() : null;
+        const expired = endsMs !== null && endsMs < Date.now();
+        const daysLeft = endsMs !== null && !expired ? Math.ceil((endsMs - Date.now()) / 86400000) : null;
+        if (expired || showUpgrade) {
+          return (
+            <PaymentPanel
+              renewal={expired} planKind={subscription?.plan}
+              onBack={expired ? null : () => setShowUpgrade(false)}
+              onRefresh={() => loadSubscription().catch(() => {})} onLogout={handleLogout}
+            />
+          );
+        }
+        return (
+          <>
+            <LaundryOpsApp tenantId={tenantId} branchId={branchId} onLogout={handleLogout} initialLang={siteLang} />
+            {!branchId && subscription?.plan === 'trial' && daysLeft !== null && (
+              <button onClick={() => setShowUpgrade(true)} className="fixed bottom-4 left-4 z-[60] flex items-center gap-2 rounded-full bg-slate-900/95 px-4 py-2 text-xs font-semibold text-white shadow-lg ring-1 ring-cyan-400/40 transition hover:bg-slate-800">
+                <span className="size-2 rounded-full bg-cyan-400" />
+                باقي {daysLeft} {daysLeft === 1 ? 'يوم' : 'أيام'} من التجربة المجانية — اشترك الآن
+              </button>
+            )}
+          </>
+        );
+      })()}
     </Suspense>
   )}
     </>

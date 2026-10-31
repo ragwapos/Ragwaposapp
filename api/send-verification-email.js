@@ -64,7 +64,9 @@ export default async function handler(req, res) {
   if (applyCors(req, res)) return;
   if (req.method !== 'POST') return res.status(405).json({ success: false, error: 'Method not allowed' });
 
-  const { email, password, shopName, mobile, address, website, formStartedAt, turnstileToken } = req.body || {};
+  const { email, password, shopName, mobile, address, website, formStartedAt, turnstileToken, plan: planRaw } = req.body || {};
+  // Only the two public plans exist; anything else is treated as the free trial.
+  const plan = planRaw === 'annual' ? 'annual' : 'trial';
   if (!email || !password) return res.status(400).json({ success: false, error: 'email and password are required' });
 
   // Honeypot + minimum-fill-time — same anti-bot pattern as submit-contact.js.
@@ -142,11 +144,14 @@ export default async function handler(req, res) {
     // policies now that nothing needs them.
     const { data: cfgRow, error: cfgErr } = await supabaseAdmin.from('platform_config').select('auto_approve').eq('id', true).maybeSingle();
     if (cfgErr) throw cfgErr;
-    const approved = cfgRow?.auto_approve ?? true;
+    // The annual plan is never auto-approved: it waits for the bank transfer
+    // receipt to be reviewed in the admin console. The free trial follows the
+    // platform's auto-approve switch as before.
+    const approved = plan === 'trial' && (cfgRow?.auto_approve ?? true);
 
     const { error: reqErr } = await supabaseAdmin.from('registration_requests').insert({
       uid: createdUid, shop_name: shopName || '—', mobile: mobile || '—', email, address: address || '—',
-      date: new Date().toISOString(), status: approved ? 'approved' : 'pending', reject_reason: '',
+      date: new Date().toISOString(), status: approved ? 'approved' : 'pending', reject_reason: '', plan,
     });
     if (reqErr) throw reqErr;
 
@@ -154,6 +159,7 @@ export default async function handler(req, res) {
       const { error: tenantErr } = await supabaseAdmin.from('tenants').insert({
         id: createdUid, shop_name: shopName || '—', mobile: mobile || '—', email, address: address || '—',
         approved_date: new Date().toISOString(),
+        plan: 'trial', subscription_ends_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
       });
       if (tenantErr) throw tenantErr;
     }
