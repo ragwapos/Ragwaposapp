@@ -526,7 +526,7 @@ function TermsPage({ onBack, scrollTarget }) {
               <li>توليد التقارير والإحصائيات الشاملة</li>
               <li>تحليل بيانات الاستخدام لاتخاذ قرارات أفضل</li>
             </ul>
-            <p>تقتصر الخدمة على مستخدم واحد لكل حساب لضمان الأمان والسيطرة. تحتفظ الشركة بحقها في تطوير وتحسين وإضافة ميزات جديدة للمنصة في أي وقت لتطورها باستمرار وتلبية احتياجاتك المتغيرة.</p>
+            <p>الحساب الواحد يخص مالك المحل، ويمكن للمالك إنشاء حسابات دخول مستقلة لفروعه ضمن نفس الحساب. تحتفظ الشركة بحقها في تطوير وتحسين وإضافة ميزات جديدة للمنصة في أي وقت لتطورها باستمرار وتلبية احتياجاتك المتغيرة.</p>
           </section>
 
           <section>
@@ -542,7 +542,7 @@ function TermsPage({ onBack, scrollTarget }) {
             <h3 className="font-semibold text-white mt-3 mb-1">5.2 فرصة حقيقية للمستخدمين الأوائل</h3>
             <p>كنت من أوائل من يستخدم المنصة، وهذا يعني:</p>
             <ul className="space-y-1">
-              <li>✓ الخدمة مجانية تماماً خلال هذه المرحلة</li>
+              <li>✓ تجربة مجانية لمدة 14 يومًا بكامل المميزات قبل الاشتراك</li>
               <li>✓ تأثيرك المباشر على تطوير الميزات القادمة</li>
               <li>✓ دعم شخصي من فريقنا</li>
               <li>✓ تحسين مستمر بناءً على احتياجاتك</li>
@@ -693,8 +693,27 @@ function TermsPage({ onBack, scrollTarget }) {
             </ul>
           </section>
 
+          <section>
+            <h2 className="text-xl font-bold text-white mb-2">البند الرابع عشر: الاشتراكات والرسوم وسياسة الاسترجاع</h2>
+            <h3 className="font-semibold text-white mt-3 mb-1">14.1 التجربة المجانية</h3>
+            <p>نوفر لكل عميل جديد تجربة مجانية لمدة 14 يومًا بكامل مميزات النظام ودون الحاجة إلى بطاقة بنكية، وذلك ليتمكن من تقييم النظام والتأكد من ملاءمته لنشاطه قبل أي التزام مالي.</p>
+            <h3 className="font-semibold text-white mt-3 mb-1">14.2 الاشتراك السنوي</h3>
+            <p>رسم الاشتراك السنوي 350 ريالًا سعوديًا شاملًا ضريبة القيمة المضافة، ومدته 365 يومًا تبدأ من تاريخ تأكيد الدفع وتفعيل الحساب من قبل الشركة. يتم السداد حاليًا بالتحويل البنكي مع إرفاق إيصال التحويل عبر النظام، ويُفعَّل الاشتراك بعد مراجعة الإيصال.</p>
+            <h3 className="font-semibold text-white mt-3 mb-1">14.3 سياسة الاسترجاع</h3>
+            <p>بما أن العميل يستخدم النظام كاملًا طوال فترة التجربة المجانية قبل الدفع، فإن الرسوم المدفوعة غير قابلة للاسترداد بعد تأكيد الدفع وتفعيل الاشتراك، ويقر العميل بإتمامه الدفع أنه اطّلع على النظام وتحقق من ملاءمته لاحتياجه. وتستثنى من ذلك الحالات الآتية:</p>
+            <ul className="list-disc pr-6 space-y-1">
+              <li>المبالغ المحوّلة بالخطأ أو المكررة، فيُعاد المبلغ الزائد كاملًا</li>
+              <li>تعذّر تقديم الخدمة بسبب خلل فني من جهة الشركة لم يُعالج خلال مدة معقولة</li>
+            </ul>
+            <p>ولا يخل هذا البند بأي حقوق مقررة للمستهلك بموجب الأنظمة المعمول بها في المملكة العربية السعودية ولا يجوز التنازل عنها.</p>
+            <h3 className="font-semibold text-white mt-3 mb-1">14.4 التنبيه والتجديد</h3>
+            <p>ننبّه العميل داخل النظام قبل 6 أيام من انتهاء الاشتراك، ويمكنه التواصل مع خدمة العملاء للتجديد. عند انتهاء الاشتراك يتوقف الدخول إلى النظام مؤقتًا مع الاحتفاظ ببيانات الحساب لإتاحة التجديد، وفق ما ورد في البند التاسع.</p>
+            <h3 className="font-semibold text-white mt-3 mb-1">14.5 الفروع الإضافية وتعديل الأسعار</h3>
+            <p>تُحتسب الفروع الإضافية برسوم إضافية يتم الاتفاق عليها مع العميل. وقد تُعدَّل الأسعار مستقبلًا، ولا يسري أي تعديل على اشتراك ساري حتى انتهاء مدته.</p>
+          </section>
+
           <p className="text-center text-white font-semibold pt-4">شكراً لاستخدامك منصة رغوة! 🙏</p>
-          <p className="text-center text-gray-500 text-xs">آخر تحديث: 25/08/2026</p>
+          <p className="text-center text-gray-500 text-xs">آخر تحديث: 31/10/2026</p>
         </div>
       </div>
     </div>
@@ -904,6 +923,7 @@ const LaundryPOS = () => {
   // Free-trial / annual subscription state for the signed-in shop (null until loaded; plan null = legacy shop, never restricted).
   const [subscription, setSubscription] = useState(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [dismissedExpiryNotice, setDismissedExpiryNotice] = useState(() => { try { return sessionStorage.getItem('ragwa_expiry_notice') === '1'; } catch { return false; } });
   const [signupShop, setSignupShop] = useState('');
   // Chosen on the landing page pricing cards (/signup?plan=annual); anything else is the free trial.
   const [signupPlan, setSignupPlan] = useState(() => (new URLSearchParams(window.location.search).get('plan') === 'annual' ? 'annual' : 'trial'));
@@ -1210,7 +1230,7 @@ const LaundryPOS = () => {
   const loadSubscription = async () => {
     const { data } = await db.rpc('my_subscription');
     const row = Array.isArray(data) ? data[0] : data;
-    setSubscription(row ? { plan: row.plan || null, endsAt: row.subscription_ends_at || null } : { plan: null, endsAt: null });
+    setSubscription(row ? { plan: row.plan || null, endsAt: row.subscription_ends_at || null, shopName: row.shop_name || '' } : { plan: null, endsAt: null });
   };
   useEffect(() => {
     if (currentPage !== 'dashboard' || !tenantId) { setSubscription(null); setShowUpgrade(false); return; }
@@ -1381,11 +1401,29 @@ const LaundryPOS = () => {
         return (
           <>
             <LaundryOpsApp tenantId={tenantId} branchId={branchId} onLogout={handleLogout} initialLang={siteLang} />
-            {!branchId && subscription?.plan === 'trial' && daysLeft !== null && (
-              <button onClick={() => setShowUpgrade(true)} className="fixed bottom-4 left-4 z-[60] flex items-center gap-2 rounded-full bg-slate-900/95 px-4 py-2 text-xs font-semibold text-white shadow-lg ring-1 ring-cyan-400/40 transition hover:bg-slate-800">
-                <span className="size-2 rounded-full bg-cyan-400" />
-                باقي {daysLeft} {daysLeft === 1 ? 'يوم' : 'أيام'} من التجربة المجانية — اشترك الآن
-              </button>
+            {!branchId && subscription?.plan && daysLeft !== null && daysLeft <= 6 && (
+              <>
+                <button onClick={() => setShowUpgrade(true)} className="fixed bottom-4 left-4 z-[60] flex items-center gap-2 rounded-full bg-slate-900/95 px-4 py-2 text-xs font-semibold text-white shadow-lg ring-1 ring-amber-400/50 transition hover:bg-slate-800">
+                  <span className="size-2 rounded-full bg-amber-400" />
+                  باقي {daysLeft} {daysLeft === 1 ? 'يوم' : 'أيام'} على انتهاء {subscription.plan === 'trial' ? 'التجربة المجانية' : 'الاشتراك'} — جدّد الآن
+                </button>
+                {!dismissedExpiryNotice && (
+                  <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4" dir="rtl">
+                    <div className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-6 text-center shadow-2xl">
+                      <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-amber-500/15 text-2xl">⏳</div>
+                      <h2 className="text-lg font-bold text-white">باقي {daysLeft} {daysLeft === 1 ? 'يوم' : 'أيام'} على انتهاء اشتراكك</h2>
+                      <p className="mt-2 text-sm leading-relaxed text-gray-400">جدّد الآن لتستمر في استخدام رغوة بدون انقطاع. بياناتك محفوظة وآمنة.</p>
+                      <a
+                        href={`https://wa.me/966592299405?text=${encodeURIComponent('السلام عليكم، أرغب في تجديد اشتراك رغوة' + (subscription.shopName ? ` لمحل (${subscription.shopName})` : '') + `. المتبقي ${daysLeft} أيام.`)}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="mt-5 block rounded-xl bg-[#25D366] px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#3ae07a]"
+                      >تواصل مع خدمة العملاء للتجديد</a>
+                      <button onClick={() => { setDismissedExpiryNotice(true); setShowUpgrade(true); }} className="mt-2.5 block w-full rounded-xl border border-slate-700 px-5 py-2.5 text-sm font-semibold text-gray-200 transition hover:border-cyan-400">الدفع بالتحويل البنكي</button>
+                      <button onClick={() => { setDismissedExpiryNotice(true); try { sessionStorage.setItem('ragwa_expiry_notice', '1'); } catch {} }} className="mt-2 w-full py-2 text-xs text-gray-500 transition hover:text-gray-300">لاحقًا</button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </>
         );

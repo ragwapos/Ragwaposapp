@@ -812,6 +812,11 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   // write silently failed had zero indication anything went wrong.
   const [settingsError, setSettingsError] = useState("");
   const [editingTenant, setEditingTenant] = useState(null);
+  const [durationTenant, setDurationTenant] = useState(null);
+  const [durationDays, setDurationDays] = useState("");
+  const [durationPlan, setDurationPlan] = useState("annual");
+  const [durationBusy, setDurationBusy] = useState(false);
+  const [durationError, setDurationError] = useState("");
   const [editMobile, setEditMobile] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editError, setEditError] = useState("");
@@ -860,7 +865,9 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
       const reg = registrationRequests.find((r) => r.uid === p.userId);
       const ten = tenants.find((t) => t.id === p.userId);
       // Renewal: extend from the later of now / current end. First payment: create the shop.
-      const base = ten?.subscriptionEndsAt ? Math.max(Date.now(), new Date(ten.subscriptionEndsAt).getTime()) : Date.now();
+      // The 365 days start at confirmation. Only an annual plan that is still running is extended from its current end, so a renewal never costs the customer paid days.
+      const activeAnnualEnd = ten?.plan === "annual" && ten.subscriptionEndsAt ? new Date(ten.subscriptionEndsAt).getTime() : 0;
+      const base = Math.max(Date.now(), activeAnnualEnd);
       const ends = new Date(base + YEAR_MS).toISOString();
       if (ten) {
         const { error } = await db.from("tenants").update({ plan: "annual", subscription_ends_at: ends }).eq("id", p.userId);
@@ -998,6 +1005,23 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   const markInquiryReplied = (id) => db.from("sales_inquiries").update({ status: "replied" }).eq("id", id).then(({ error }) => { if (error) console.error("markInquiryReplied failed", error); });
   const addInquiryNote = (id, note) => db.from("sales_inquiries").update({ note }).eq("id", id).then(({ error }) => { if (error) console.error("addInquiryNote failed", error); });
 
+  const daysLeftOf = (t) => (t.subscriptionEndsAt ? Math.ceil((new Date(t.subscriptionEndsAt).getTime() - Date.now()) / 86400000) : null);
+  const openDuration = (c) => {
+    const left = daysLeftOf(c);
+    setDurationTenant(c);
+    setDurationDays(left !== null && left > 0 ? String(left) : "0");
+    setDurationPlan(c.plan || "annual");
+    setDurationError("");
+  };
+  const saveDuration = async () => {
+    const n = Number(durationDays);
+    if (!Number.isFinite(n) || n < 0 || n > 3650 || !Number.isInteger(n)) { setDurationError("اكتب عددًا صحيحًا من الأيام بين 0 و3650."); return; }
+    setDurationBusy(true); setDurationError("");
+    const { error } = await db.from("tenants").update({ plan: durationPlan, subscription_ends_at: new Date(Date.now() + n * 86400000).toISOString() }).eq("id", durationTenant.id);
+    setDurationBusy(false);
+    if (error) { console.error("saveDuration failed", error); setDurationError("تعذر الحفظ، حاول مرة ثانية."); return; }
+    setDurationTenant(null);
+  };
   const openEditTenant = (c) => {
     setEditingTenant(c);
     setEditMobile(c.mobile);
@@ -1215,7 +1239,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
             <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-slate-800/50 text-gray-400 text-xs uppercase">
-                  <tr><th className="px-4 py-3 text-right">اسم المغسلة</th><th className="px-4 py-3 text-right">العنوان</th><th className="px-4 py-3 text-right">الجوال</th><th className="px-4 py-3 text-right">البريد</th><th className="px-4 py-3 text-right">تاريخ الموافقة</th><th className="px-4 py-3"></th></tr>
+                  <tr><th className="px-4 py-3 text-right">اسم المغسلة</th><th className="px-4 py-3 text-right">العنوان</th><th className="px-4 py-3 text-right">الجوال</th><th className="px-4 py-3 text-right">البريد</th><th className="px-4 py-3 text-right">تاريخ الموافقة</th><th className="px-4 py-3 text-right">الاشتراك</th><th className="px-4 py-3"></th></tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
                   {tenants.map((c) => (
@@ -1225,15 +1249,29 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
                       <td className="px-4 py-3 font-mono" dir="ltr">{c.mobile}</td>
                       <td className="px-4 py-3 font-mono" dir="ltr">{c.email}</td>
                       <td className="px-4 py-3 text-gray-400 text-xs font-mono" dir="ltr">{new Date(c.approvedDate).toLocaleDateString("en-GB")}</td>
+                      <td className="px-4 py-3 whitespace-nowrap">
+                        {(() => {
+                          const left = daysLeftOf(c);
+                          if (!c.plan || left === null) return <span className="text-xs text-gray-500">بدون اشتراك محدد</span>;
+                          const tone = left <= 0 ? "bg-rose-500/20 text-rose-400" : left <= 6 ? "bg-amber-500/20 text-amber-400" : "bg-green-500/20 text-green-400";
+                          return (
+                            <div>
+                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${tone}`}>{left <= 0 ? "منتهٍ" : `باقي ${left} يوم`}</span>
+                              <div className="mt-1 text-[11px] text-gray-500">{c.plan === "annual" ? "سنوي" : "تجربة"} · <span dir="ltr" className="font-mono">{new Date(c.subscriptionEndsAt).toLocaleDateString("en-GB")}</span></div>
+                            </div>
+                          );
+                        })()}
+                      </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex gap-1.5 justify-end">
+                          <button onClick={() => openDuration(c)} className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs whitespace-nowrap">📅 المدة</button>
                           <button onClick={() => openEditTenant(c)} className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs whitespace-nowrap">✏️ تعديل</button>
                           <button onClick={() => setDeletingTenant(c)} className="px-2 py-1 rounded bg-slate-800 hover:bg-rose-700 text-xs whitespace-nowrap">🗑️ حذف</button>
                         </div>
                       </td>
                     </tr>
                   ))}
-                  {tenants.length === 0 && <tr><td colSpan={6} className="px-4 py-10 text-center text-gray-500">ما فيه عملاء معتمدين بعد — وافق على طلب تسجيل من "الطلبات والاستفسارات" عشان يظهر هنا.</td></tr>}
+                  {tenants.length === 0 && <tr><td colSpan={7} className="px-4 py-10 text-center text-gray-500">ما فيه عملاء معتمدين بعد — وافق على طلب تسجيل من "الطلبات والاستفسارات" عشان يظهر هنا.</td></tr>}
                 </tbody>
               </table>
             </div>
@@ -1434,6 +1472,36 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
         </AdminModal>
       )}
 
+      {durationTenant && (
+        <AdminModal title={`مدة اشتراك ${durationTenant.shopName}`} onClose={() => setDurationTenant(null)} onSubmit={saveDuration}>
+          <div className="space-y-3">
+            <div className="text-xs text-gray-400">
+              الانتهاء الحالي: {durationTenant.subscriptionEndsAt ? <span dir="ltr" className="font-mono text-gray-200">{new Date(durationTenant.subscriptionEndsAt).toLocaleDateString("en-GB")}</span> : "غير محدد"}
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">الباقة</label>
+              <div className="grid grid-cols-2 gap-2">
+                {[["trial", "تجربة"], ["annual", "سنوي"]].map(([key, label]) => (
+                  <button key={key} type="button" onClick={() => setDurationPlan(key)} className={`rounded-lg px-3 py-2 text-sm font-medium ${durationPlan === key ? "bg-cyan-500 text-slate-950" : "bg-slate-800 text-gray-300 hover:bg-slate-700"}`}>{label}</button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs text-gray-400 mb-1">الأيام المتبقية من اليوم</label>
+              <input type="number" min="0" max="3650" value={durationDays} onChange={(e) => setDurationDays(e.target.value)} dir="ltr" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm focus:border-cyan-400 outline-none" />
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {[["+30", 30], ["+365", 365]].map(([label, add]) => (
+                  <button key={label} type="button" onClick={() => setDurationDays(String((Number(durationDays) || 0) + add))} className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs">{label} يوم</button>
+                ))}
+                <button type="button" onClick={() => setDurationDays("365")} className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs">365 من اليوم</button>
+                <button type="button" onClick={() => setDurationDays("0")} className="px-2 py-1 rounded bg-slate-800 hover:bg-rose-700 text-xs">إنهاء الآن</button>
+              </div>
+            </div>
+            {durationError && <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 px-3 py-2 text-xs text-rose-400">{durationError}</div>}
+            <button onClick={saveDuration} disabled={durationBusy} className="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 rounded-lg py-2.5 text-sm font-semibold disabled:opacity-50">{durationBusy ? "جارٍ الحفظ..." : "حفظ المدة"}</button>
+          </div>
+        </AdminModal>
+      )}
       {editingTenant && (
         <AdminModal title={`تعديل بيانات ${editingTenant.shopName}`} onClose={() => setEditingTenant(null)} onSubmit={saveTenantEdit}>
           <label className="block text-xs text-gray-400 mb-1.5">رقم الجوال</label>

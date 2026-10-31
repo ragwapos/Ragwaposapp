@@ -55,14 +55,15 @@ grant select, insert, update, delete on table payment_requests to service_role;
 
 -- A branch login cannot read its owner's tenants row (RLS), yet the whole
 -- shop shares one subscription, so the app asks this function instead.
+drop function if exists my_subscription();
 create or replace function my_subscription()
-returns table (plan text, subscription_ends_at timestamptz)
+returns table (plan text, subscription_ends_at timestamptz, shop_name text)
 language sql
 stable
 security definer
 set search_path = public
 as $$
-  select t.plan, t.subscription_ends_at from tenants t where t.id = my_tenant_id();
+  select t.plan, t.subscription_ends_at, t.shop_name from tenants t where t.id = my_tenant_id();
 $$;
 revoke execute on function my_subscription() from anon, public;
 grant execute on function my_subscription() to authenticated;
