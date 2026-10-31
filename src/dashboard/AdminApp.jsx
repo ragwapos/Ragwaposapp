@@ -836,6 +836,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   const [paymentRejectReason, setPaymentRejectReason] = useState("");
   const [paymentBusy, setPaymentBusy] = useState(false);
   const [paymentError, setPaymentError] = useState("");
+  const [paymentNotice, setPaymentNotice] = useState("");
   const [bank, setBank] = useState({ bankName: "", bankBeneficiary: "", bankIban: "", bankQrUrl: "" });
   const [bankSaved, setBankSaved] = useState(false);
   const [bankBusy, setBankBusy] = useState(false);
@@ -862,13 +863,20 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
     } catch (e) { console.error("openReceipt failed", e); setPaymentError("تعذر فتح الإيصال."); }
   };
   const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
+  // Reflect the decision right away instead of waiting for the realtime echo.
+  const markPaymentApproved = (p, notice) => {
+    setPaymentRequests((prev) => prev.map((r) => (r.id === p.id ? { ...r, status: "approved" } : r)));
+    setPaymentNotice(notice);
+    setTimeout(() => setPaymentNotice(""), 6000);
+  };
   const acceptPayment = async (p) => {
-    setPaymentBusy(true); setPaymentError("");
+    setPaymentBusy(true); setPaymentError(""); setPaymentNotice("");
     try {
       if (p.plan === "branch") {
         // creates the branch and marks the request approved in one transaction
         const { error } = await db.rpc("approve_branch_payment", { p_request: p.id });
         if (error) throw error;
+        markPaymentApproved(p, `تم قبول الدفع وإضافة الفرع «${p.branchName || ""}».`);
         setPaymentBusy(false);
         return;
       }
@@ -894,6 +902,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
       }
       const { error: updErr } = await db.from("payment_requests").update({ status: "approved", decided_at: new Date().toISOString() }).eq("id", p.id);
       if (updErr) throw updErr;
+      markPaymentApproved(p, "تم قبول الدفع وتفعيل الاشتراك.");
     } catch (e) { console.error("acceptPayment failed", e); setPaymentError(`تعذر قبول الدفع، حاول مرة ثانية.${e?.message ? ` (${e.message})` : ""}`); }
     setPaymentBusy(false);
   };
@@ -1298,6 +1307,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
         {tab === "payments" && (
           <div className="space-y-6">
             <h1 className="text-2xl font-bold">المدفوعات (الاشتراك السنوي)</h1>
+            {paymentNotice && <div className="rounded-lg bg-green-500/10 border border-green-500/30 px-4 py-2.5 text-sm text-green-400">{paymentNotice}</div>}
             {paymentError && <div className="rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{paymentError}</div>}
             <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
               <table className="w-full text-sm">
