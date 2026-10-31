@@ -15,6 +15,7 @@ import { toSnakeCase, toCamelCase } from "../utils/transforms.js";
 import { normalizeSaudiMobile, isValidSaudiMobile } from "../utils/phone.js";
 import { subscribeToTable, subscribeToRow } from "../utils/dbSubscribe.js";
 import { newId } from "../utils/uuid.js";
+import { branchFee } from "../payment/pricing.js";
 import { uploadTenantFile, deleteTenantFile, getSignedUrl } from "../utils/storage.js";
 
 const STAGES = ["Received", "Washing", "Pressing", "Ready", "Delivered"];
@@ -851,11 +852,13 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
     const ten = tenants.find((t) => t.id === p.userId);
     return { shop: reg?.shopName || ten?.shopName || "—", email: reg?.email || ten?.email || "—", mobile: reg?.mobile || ten?.mobile || "—", isRenewal: Boolean(ten) };
   };
+  // What an extra branch should have cost when the customer filed the request (pro-rated to their remaining subscription).
+  const expectedBranchFee = (p) => branchFee(tenants.find((t) => t.id === p.userId)?.subscriptionEndsAt, new Date(p.createdAt).getTime());
   const openReceipt = async (p) => {
     setPaymentError("");
     try {
       const url = await getSignedUrl(p.receiptPath);
-      setViewingReceipt({ name: p.receiptName, url, isPdf: /\.pdf$/i.test(p.receiptPath) });
+      setViewingReceipt({ name: p.receiptName, url, isPdf: /\.pdf$/i.test(p.receiptPath), expected: p.plan === "branch" ? expectedBranchFee(p) : null, paid: Number(p.amount) });
     } catch (e) { console.error("openReceipt failed", e); setPaymentError("تعذر فتح الإيصال."); }
   };
   const YEAR_MS = 365 * 24 * 60 * 60 * 1000;
@@ -1317,7 +1320,10 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
                         <td className="px-4 py-3"><div className="font-medium">{who.shop}</div><div className="text-xs text-gray-500" dir="ltr">{who.email}</div></td>
                         <td className="px-4 py-3 text-gray-300" dir="ltr">{who.mobile}</td>
                         <td className="px-4 py-3 text-gray-300">{p.plan === "branch" ? `فرع إضافي: ${p.branchName || "—"}` : who.isRenewal ? "تجديد / ترقية" : "اشتراك جديد"}</td>
-                        <td className="px-4 py-3 font-mono">{Number(p.amount).toFixed(2)}</td>
+                        <td className="px-4 py-3 font-mono">
+                          {Number(p.amount).toFixed(2)}
+                          {p.plan === "branch" && (() => { const exp = expectedBranchFee(p); const ok = exp === Number(p.amount); return <div className={`mt-1 text-[11px] font-sans ${ok ? "text-green-400" : "text-rose-400"}`}>المطلوب: {exp} ريال{ok ? " ✓" : " ⚠ لا يطابق"}</div>; })()}
+                        </td>
                         <td className="px-4 py-3 text-gray-400 text-xs" dir="ltr">{new Date(p.createdAt).toLocaleString("en-GB")}</td>
                         <td className="px-4 py-3">{statusBadge(p.status, { pending: "قيد المراجعة", approved: "مقبول", rejected: "مرفوض" })}{p.status === "rejected" && p.rejectReason && <div className="mt-1 text-[11px] text-gray-500">{p.rejectReason}</div>}</td>
                         <td className="px-4 py-3">
@@ -1446,6 +1452,11 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
 
       {viewingReceipt && (
         <AdminModal title={viewingReceipt.name || "الإيصال"} onClose={() => setViewingReceipt(null)}>
+          {viewingReceipt.expected !== null && (
+            <div className={`mb-3 rounded-lg px-4 py-2.5 text-sm font-semibold ${viewingReceipt.expected === viewingReceipt.paid ? "bg-green-500/10 text-green-300" : "bg-rose-500/10 text-rose-300"}`}>
+              المبلغ المطلوب للفرع: {viewingReceipt.expected} ريال — المسجّل من العميل: {viewingReceipt.paid} ريال{viewingReceipt.expected === viewingReceipt.paid ? "" : " (لا يطابق)"}
+            </div>
+          )}
           {viewingReceipt.isPdf
             ? <iframe src={viewingReceipt.url} title="receipt" className="w-full h-[70vh] rounded-lg bg-white" />
             : <img src={viewingReceipt.url} alt="receipt" className="max-h-[70vh] w-full object-contain rounded-lg" />}
