@@ -927,6 +927,7 @@ const DICT = {
     nav_promotions: "Promotions", nav_reports: "Reports", nav_whatsapp: "WhatsApp", nav_settings: "Settings",
     nav_branches: "Branches", branches_title: "Branches", branches_subtitle: "Manage your laundry's branches", branches_add: "Add branch", branches_nameOptional: "Branch name (optional)", branches_defaultName: "Branch {n}", branches_autoNote: "The branch gets number {n} automatically and its invoices start with B{n}-. The number never changes, even if you rename the branch.", branches_costNote: "Adding a branch increases your monthly subscription.", branches_numberCol: "No.", branches_nameCol: "Branch", branches_prefixCol: "Invoice prefix", branches_noPrefix: "None (original numbering)", branches_rename: "Rename", branches_archive: "Archive", branches_restore: "Restore", branches_active: "Active", branches_archived: "Archived", branches_errCreate: "Couldn't add the branch. Please try again.", branches_errUpdate: "Couldn't save the change. Please try again.", branches_picker_view: "Viewing", branches_all: "All branches", branches_search: "Search branches...", branches_noMatch: "No branch with that name", branches_workBranch: "Sale branch", branches_settingsTitle: "Branches", branches_settingsSingle: "Your laundry runs one branch. Add a second branch whenever you need one and the branch tools appear automatically.", branches_settingsMulti: "You have {n} active branches.", branches_manage: "Manage branches",
     branches_accountCol: "Login", branches_noAccount: "No login yet", branches_createAccount: "Create login", branches_resetPassword: "New password", branches_credentialsTitle: "Branch login", branches_credentialsNote: "Give these to the manager of {name}. The password is shown only now; if it is lost, create a new one.", branches_username: "Username", branches_password: "Password", branches_copy: "Copy", branches_copied: "Copied", branches_done: "Done", branches_errAccount: "Couldn't update the branch login. Please try again.", branches_yourBranch: "Your branch",
+    branches_unlockTitle: "Owner PIN to view other branches", branches_needOwnerPin: "Set an owner PIN first (Settings) to view or sell as another branch.", branches_resetPin: "Reset branch PIN", branches_resetPinTitle: "Owner PIN to reset the PIN of {name}", branches_enterMasterTitle: "Branch manager PIN", branches_setMasterTitle: "Create the branch manager PIN", branches_lockHint: "Turn a section on to ask for your PIN before the branch staff can open it.", reports_kpi_outstandingDebtAll: "Outstanding Debt (all branches)", reports_kpi_walletUsed: "Spent from wallets", reports_wallet_title: "Wallet usage", reports_wallet_hint: "Revenue for wallet customers is recognised at top-up, in the branch that took the cash. This shows what each branch served from wallets.", reports_wallet_branch: "Branch", reports_wallet_topups: "Cash taken for top-ups", reports_wallet_consumed: "Services from wallets", reports_wallet_diff: "Difference",
 
     home_welcomeBack: "Welcome back", home_salesToday: "Today's Sales", home_ordersToday: "Today's Orders",
     home_readyOrders: "Ready Orders", home_deliveryActive: "Delivery In Progress",
@@ -1211,6 +1212,7 @@ const DICT = {
     nav_promotions: "العروض", nav_reports: "التقارير", nav_whatsapp: "واتس اب", nav_settings: "الإعدادات",
     nav_branches: "الفروع", branches_title: "الفروع", branches_subtitle: "إدارة فروع المغسلة", branches_add: "إضافة فرع", branches_nameOptional: "اسم الفرع (اختياري)", branches_defaultName: "فرع {n}", branches_autoNote: "يُعطى الفرع الرقم {n} تلقائيًا وتبدأ فواتيره بـ B{n}-. الرقم ثابت حتى لو غيّرت اسم الفرع.", branches_costNote: "إضافة فرع تزيد اشتراكك الشهري.", branches_numberCol: "الرقم", branches_nameCol: "الفرع", branches_prefixCol: "بادئة الفواتير", branches_noPrefix: "بدون (أرقام الفرع الأصلي)", branches_rename: "تعديل الاسم", branches_archive: "أرشفة", branches_restore: "استعادة", branches_active: "نشط", branches_archived: "مؤرشف", branches_errCreate: "تعذّر إضافة الفرع، حاول مرة ثانية.", branches_errUpdate: "تعذّر حفظ التغيير، حاول مرة ثانية.", branches_picker_view: "عرض بيانات", branches_all: "كل الفروع", branches_search: "ابحث عن فرع...", branches_noMatch: "لا يوجد فرع بهذا الاسم", branches_workBranch: "فرع البيع", branches_settingsTitle: "الفروع", branches_settingsSingle: "مغسلتك تعمل بفرع واحد. أضف فرعًا ثانيًا متى احتجت، وتظهر أدوات الفروع تلقائيًا.", branches_settingsMulti: "عندك {n} فروع نشطة.", branches_manage: "إدارة الفروع",
     branches_accountCol: "حساب الدخول", branches_noAccount: "لا يوجد حساب", branches_createAccount: "إنشاء حساب", branches_resetPassword: "كلمة مرور جديدة", branches_credentialsTitle: "حساب دخول الفرع", branches_credentialsNote: "سلّم هذه البيانات لمدير فرع {name}. كلمة المرور تظهر الآن فقط، وإن ضاعت أنشئ واحدة جديدة.", branches_username: "اسم المستخدم", branches_password: "كلمة المرور", branches_copy: "نسخ", branches_copied: "تم النسخ", branches_done: "تم", branches_errAccount: "تعذّر تحديث حساب دخول الفرع، حاول مرة ثانية.", branches_yourBranch: "فرعك",
+    branches_unlockTitle: "رمز المالك لعرض بقية الفروع", branches_needOwnerPin: "اضبط رمز المالك أولًا (الإعدادات) لعرض فرع آخر أو البيع باسمه.", branches_resetPin: "إعادة تعيين رمز الفرع", branches_resetPinTitle: "رمز المالك لإعادة تعيين رمز {name}", branches_enterMasterTitle: "رمز مدير الفرع", branches_setMasterTitle: "أنشئ رمز مدير الفرع", branches_lockHint: "فعّل أي قسم ليطلب رمزك قبل أن يفتحه موظفو الفرع.", reports_kpi_outstandingDebtAll: "إجمالي المستحق (كل الفروع)", reports_kpi_walletUsed: "مصروف من المحافظ", reports_wallet_title: "استهلاك المحافظ", reports_wallet_hint: "إيراد عملاء المحفظة يُحتسب عند الشحن في الفرع الذي استلم النقد. هنا ما قدّمه كل فرع من خدمات مدفوعة من المحافظ.", reports_wallet_branch: "الفرع", reports_wallet_topups: "نقد محصّل مقابل شحن", reports_wallet_consumed: "خدمات صُرفت من المحافظ", reports_wallet_diff: "الفرق",
 
     home_welcomeBack: "أهلاً بك", home_salesToday: "مبيعات اليوم", home_ordersToday: "طلبات اليوم",
     home_readyOrders: "طلبات جاهزة", home_deliveryActive: "توصيل قيد التنفيذ",
@@ -1495,6 +1497,7 @@ const DICT = {
     nav_promotions: "پرموشنز", nav_reports: "رپورٹس", nav_whatsapp: "واٹس ایپ", nav_settings: "سیٹنگز",
     nav_branches: "برانچز", branches_title: "برانچز", branches_subtitle: "لانڈری کی برانچز کا انتظام", branches_add: "برانچ شامل کریں", branches_nameOptional: "برانچ کا نام (اختیاری)", branches_defaultName: "برانچ {n}", branches_autoNote: "برانچ کو خود بخود نمبر {n} ملتا ہے اور اس کی انوائسز B{n}- سے شروع ہوتی ہیں۔ نام بدلنے پر بھی نمبر نہیں بدلتا۔", branches_costNote: "برانچ شامل کرنے سے آپ کی ماہانہ سبسکرپشن بڑھ جاتی ہے۔", branches_numberCol: "نمبر", branches_nameCol: "برانچ", branches_prefixCol: "انوائس کا سابقہ", branches_noPrefix: "کوئی نہیں (اصل نمبرنگ)", branches_rename: "نام تبدیل کریں", branches_archive: "آرکائیو", branches_restore: "بحال کریں", branches_active: "فعال", branches_archived: "آرکائیو شدہ", branches_errCreate: "برانچ شامل نہیں ہو سکی، دوبارہ کوشش کریں۔", branches_errUpdate: "تبدیلی محفوظ نہیں ہو سکی، دوبارہ کوشش کریں۔", branches_picker_view: "ڈیٹا دیکھیں", branches_all: "تمام برانچز", branches_search: "برانچ تلاش کریں...", branches_noMatch: "اس نام کی کوئی برانچ نہیں", branches_workBranch: "سیل برانچ", branches_settingsTitle: "برانچز", branches_settingsSingle: "آپ کی لانڈری ایک برانچ پر چلتی ہے۔ جب چاہیں دوسری برانچ شامل کریں، برانچ ٹولز خود ظاہر ہو جائیں گے۔", branches_settingsMulti: "آپ کی {n} فعال برانچز ہیں۔", branches_manage: "برانچز کا انتظام",
     branches_accountCol: "لاگ ان", branches_noAccount: "ابھی لاگ ان نہیں", branches_createAccount: "لاگ ان بنائیں", branches_resetPassword: "نیا پاس ورڈ", branches_credentialsTitle: "برانچ لاگ ان", branches_credentialsNote: "یہ معلومات {name} کے مینیجر کو دیں۔ پاس ورڈ صرف ابھی نظر آتا ہے، گم ہو جائے تو نیا بنائیں۔", branches_username: "صارف نام", branches_password: "پاس ورڈ", branches_copy: "کاپی", branches_copied: "کاپی ہو گیا", branches_done: "ہو گیا", branches_errAccount: "برانچ لاگ ان اپ ڈیٹ نہیں ہو سکا، دوبارہ کوشش کریں۔", branches_yourBranch: "آپ کی برانچ",
+    branches_unlockTitle: "دوسری برانچز دیکھنے کے لیے مالک کا پن", branches_needOwnerPin: "دوسری برانچ دیکھنے یا اس کے نام پر بیچنے کے لیے پہلے مالک کا پن سیٹ کریں (سیٹنگز)۔", branches_resetPin: "برانچ کا پن ری سیٹ کریں", branches_resetPinTitle: "{name} کا پن ری سیٹ کرنے کے لیے مالک کا پن", branches_enterMasterTitle: "برانچ مینیجر کا پن", branches_setMasterTitle: "برانچ مینیجر کا پن بنائیں", branches_lockHint: "کسی حصے کو فعال کریں تاکہ برانچ کا عملہ اسے کھولنے سے پہلے آپ کا پن مانگے۔", reports_kpi_outstandingDebtAll: "کل واجب الادا (تمام برانچز)", reports_kpi_walletUsed: "والٹ سے خرچ", reports_wallet_title: "والٹ کا استعمال", reports_wallet_hint: "والٹ والے گاہکوں کی آمدنی ٹاپ اپ کے وقت اس برانچ میں شمار ہوتی ہے جس نے رقم لی۔ یہاں ہر برانچ کی والٹ سے دی گئی خدمات ہیں۔", reports_wallet_branch: "برانچ", reports_wallet_topups: "ٹاپ اپ پر لی گئی نقدی", reports_wallet_consumed: "والٹ سے دی گئی خدمات", reports_wallet_diff: "فرق",
 
     home_welcomeBack: "خوش آمدید", home_salesToday: "آج کی فروخت", home_ordersToday: "آج کے آرڈرز",
     home_readyOrders: "تیار آرڈرز", home_deliveryActive: "جاری ڈیلیوری",
@@ -1790,13 +1793,14 @@ function useLang() {
 // invoices, wallet movements, purchases and expenses belong to one branch.
 const BranchCtx = createContext({
   multi: false, branches: [], activeBranches: [], scope: "all", work: null, workName: null, isBranchAccount: false, members: [],
-  nameOf: () => null, selectBranch: () => {}, selectWork: () => {}, createBranch: async () => null, updateBranch: async () => {},
+  mainBranchId: null, ownerPinSet: false, viewUnlocked: true, promoBranchId: null,
+  nameOf: () => null, selectBranch: () => {}, unlockView: () => {}, refreshBranches: async () => {}, createBranch: async () => null, updateBranch: async () => {},
   createBranchAccount: async () => null, resetBranchPassword: async () => null, setBranchStatus: async () => {},
 });
 // A branch login (one shared account per branch) sees only its own branch and
 // the sections a cashier needs; the database enforces the same split, so these
 // are hidden rather than left to fail silently on write.
-const BRANCH_ACCOUNT_HIDDEN = new Set(["branches", "settings", "inventory", "purchases", "promotions", "whatsapp"]);
+const BRANCH_ACCOUNT_HIDDEN = new Set(["branches", "inventory", "whatsapp"]);
 function useBranches() { return useContext(BranchCtx); }
 // Main branch keeps its original numbering (INV-1001); branch N>1 gets B<N>-.
 const branchPrefix = (branch) => (branch && branch.number > 1 ? `B${branch.number}-` : "");
@@ -1822,9 +1826,11 @@ const NAV = [
 // one, the drawer stays open behind the PIN modal AppShell renders.
 function BranchPicker() {
   const { t } = useLang();
-  const { activeBranches, scope, selectBranch, nameOf } = useBranches();
+  const { activeBranches, scope, selectBranch, nameOf, mainBranchId, ownerPinSet, viewUnlocked, unlockView } = useBranches();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [pendingPick, setPendingPick] = useState(null);
+  const [needPin, setNeedPin] = useState(false);
   const ref = useRef(null);
   useEffect(() => {
     if (!open) return;
@@ -1834,7 +1840,14 @@ function BranchPicker() {
   }, [open]);
   const q = query.trim().toLowerCase();
   const list = activeBranches.filter((b) => b.name.toLowerCase().includes(q));
-  const pick = (id) => { selectBranch(id); setOpen(false); setQuery(""); };
+  const finish = (id) => { selectBranch(id); setOpen(false); setQuery(""); setNeedPin(false); };
+  // This login is shared by the owner and the first branch's staff, so any
+  // view other than the main branch needs the owner PIN (once per session).
+  const pick = (id) => {
+    if (id === mainBranchId || viewUnlocked) { finish(id); return; }
+    if (!ownerPinSet) { setNeedPin(true); return; }
+    setPendingPick(id);
+  };
   const optCls = (active) => `flex w-full items-center gap-2 rounded-lg px-3 py-2 text-start text-sm hover:bg-app-bg ${active ? "bg-brand-50 text-brand-700" : "text-app-text"}`;
   return (
     <div ref={ref} className="relative mx-3 mb-3">
@@ -1844,6 +1857,7 @@ function BranchPicker() {
           <div className="text-[10.5px] text-white/50">{t("branches_picker_view")}</div>
           <div className="truncate text-[13px] font-bold text-white">{scope === "all" ? t("branches_all") : nameOf(scope)}</div>
         </div>
+        {!viewUnlocked && <Lock size={13} className="shrink-0 text-amber-400" />}
         <ChevronDown size={16} className="shrink-0 text-white/60" />
       </button>
       {open && (
@@ -1853,11 +1867,21 @@ function BranchPicker() {
             <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("branches_search")} className={`${inputCls} pr-9`} />
           </div>
           <div className="max-h-64 space-y-0.5 overflow-y-auto">
-            {!q && <button onClick={() => pick("all")} className={optCls(scope === "all")}><b>{t("branches_all")}</b><span className="ms-auto text-xs text-app-text-muted">{activeBranches.length}</span></button>}
-            {list.map((b) => <button key={b.id} onClick={() => pick(b.id)} className={optCls(scope === b.id)}><span className="truncate">{b.name}</span></button>)}
+            {!q && <button onClick={() => pick("all")} className={optCls(scope === "all")}><b>{t("branches_all")}</b>{!viewUnlocked && <Lock size={12} className="text-warning-600" />}<span className="ms-auto text-xs text-app-text-muted">{activeBranches.length}</span></button>}
+            {list.map((b) => <button key={b.id} onClick={() => pick(b.id)} className={optCls(scope === b.id)}><span className="truncate">{b.name}</span>{!viewUnlocked && b.id !== mainBranchId && <Lock size={12} className="ms-auto shrink-0 text-warning-600" />}</button>)}
             {q && list.length === 0 && <div className="px-3 py-3 text-center text-xs text-app-text-subtle">{t("branches_noMatch")}</div>}
           </div>
+          {needPin && <div className="mt-2 rounded-lg border border-warning-200 bg-warning-50 px-3 py-2 text-xs font-medium text-warning-800">{t("branches_needOwnerPin")}</div>}
         </div>
+      )}
+      {pendingPick && (
+        <PinPromptModal
+          title={t("branches_unlockTitle")}
+          mode="enter"
+          onSubmitPin={async (pin) => (await callVerifyPin({ action: "verify", scope: "master", pin })).success}
+          onDone={() => { unlockView(); finish(pendingPick); setPendingPick(null); }}
+          onClose={() => setPendingPick(null)}
+        />
       )}
     </div>
   );
@@ -2642,14 +2666,8 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
                 sale grabs first, so it's intentionally omitted. */}
             <div className="mb-3 flex items-center justify-between">
               <span className="text-[13px] font-bold text-app-text-subtle">{t("pos_newOrder")}</span>
-              {branchUi.multi && branchUi.isBranchAccount && (
+              {branchUi.multi && (
                 <span className="max-w-[55%] truncate rounded-lg border border-brand-300 bg-brand-50 px-2 py-1 text-[11px] font-bold text-brand-700">{branchUi.workName}</span>
-              )}
-              {branchUi.multi && !branchUi.isBranchAccount && (
-                <select value={branchUi.work?.id || ""} onChange={(e) => branchUi.selectWork(e.target.value)} aria-label={t("branches_workBranch")}
-                  className="max-w-[55%] truncate rounded-lg border border-brand-300 bg-brand-50 px-2 py-1 text-[11px] font-bold text-brand-700 focus:outline-none">
-                  {branchUi.activeBranches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
-                </select>
               )}
             </div>
             <Field label={t("common_customer")}>
@@ -4403,6 +4421,10 @@ const PROMOTION_STATUS_TONE = {
 
 function PromotionsView({ promotions, addPromotion, updatePromotion }) {
   const { t } = useLang();
+  const branchUi = useBranches();
+  // A branch manager can read the all-branches discounts but never change them.
+  const canEdit = (p) => !(branchUi.isBranchAccount && !p.branchId);
+  const branchBadge = (p) => (branchUi.multi ? <span className="ms-2 rounded-full bg-app-bg px-2 py-0.5 text-[11px] font-semibold text-app-text-muted">{p.branchId ? branchUi.nameOf(p.branchId) : t("branches_all")}</span> : null);
   const [showModal, setShowModal] = useState(false);
   const [editingPromo, setEditingPromo] = useState(null);
 
@@ -4438,7 +4460,7 @@ function PromotionsView({ promotions, addPromotion, updatePromotion }) {
               const statusLabel = status === "scheduled" ? t("promotions_scheduled") : status === "expired" ? t("common_expired") : t("common_active");
               return (
                 <tr key={p.id} className="hover:bg-app-bg/60">
-                  <td className="px-4 py-3 font-medium text-app-text truncate">{p.name}</td>
+                  <td className="px-4 py-3 font-medium text-app-text truncate">{p.name}{branchBadge(p)}</td>
                   <td className="px-4 py-3">{p.couponOn ? <span className="f-mono text-xs tracking-wide text-app-text-muted">{p.coupon}</span> : <span className="text-app-text-subtle text-xs">—</span>}</td>
                   <td className="px-4 py-3 text-app-text-muted">{p.isPercent ? t("promotions_typePercent") : t("promotions_typeFixed")}</td>
                   <td className="px-4 py-3 f-mono font-medium text-app-text">{p.isPercent ? `${p.value}%` : sar(p.value)}</td>
@@ -4450,10 +4472,12 @@ function PromotionsView({ promotions, addPromotion, updatePromotion }) {
                     </span>
                   </td>
                   <td className="px-4 py-3">
+                    {canEdit(p) && (
                     <div className="flex justify-end gap-2">
                       <button onClick={() => setEditingPromo(p)} className="rounded-lg border border-app-border-strong px-2.5 py-1.5 text-xs font-medium text-app-text-muted hover:bg-app-bg"><Pencil size={12} className="inline mr-1" />{t("promotions_edit")}</button>
                       {!cancelled && <button onClick={() => cancelPromotion(p)} className="rounded-lg border border-danger-300 bg-danger-50 px-2.5 py-1.5 text-xs font-medium text-danger-600 hover:bg-danger-100"><Ban size={12} className="inline mr-1" />{t("promotions_cancel")}</button>}
                     </div>
+                    )}
                   </td>
                 </tr>
               );
@@ -4470,7 +4494,7 @@ function PromotionsView({ promotions, addPromotion, updatePromotion }) {
           return (
             <div key={p.id} className="rounded-xl border border-app-border bg-app-surface p-4 shadow-app-xs">
               <div className="mb-3 flex items-center justify-between gap-2">
-                <span className="font-medium text-app-text truncate">{p.name}</span>
+                <span className="font-medium text-app-text truncate">{p.name}{branchBadge(p)}</span>
                 <span className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold ring-1 ring-inset ${PROMOTION_STATUS_TONE[status]}`}>
                   <span className="size-1.5 rounded-full bg-current" />{statusLabel}
                 </span>
@@ -4497,7 +4521,9 @@ function PromotionsView({ promotions, addPromotion, updatePromotion }) {
                   <div className="f-mono text-app-text">{p.endDate ? fmtDate(p.endDate) : "—"}</div>
                 </div>
               </div>
+              {canEdit(p) && (
               <button onClick={() => setEditingPromo(p)} className="mt-3 w-full rounded-lg border border-app-border-strong px-3 py-2 text-sm font-medium text-app-text-muted hover:bg-app-bg"><Pencil size={12} className="inline mr-1" />{t("promotions_edit")}</button>
+              )}
             </div>
           );
         })}
@@ -4551,8 +4577,61 @@ function inDateRange(iso, rangeStart, rangeEnd) {
 // and its sub-tab paths (/reports/vat, etc.) are real, bookmarkable,
 // browser-back-forward-able URLs — this component no longer owns that
 // state itself.
-function ReportsView({ tab, setTab, invoices, purchases, suppliers, categories, customers, expenses, expenseCategories }) {
+// The wallet is shared across branches but revenue (and VAT) is recognised where
+// the customer TOPS UP, so a branch that serves wallet customers shows no revenue
+// for those sales. This card shows the consumption per branch and, for the owner's
+// "all branches" view, who collected the cash versus who delivered the service.
+function invoiceWalletUsed(inv) {
+  if (inv.walletUsed !== undefined && inv.walletUsed !== null) return Number(inv.walletUsed);
+  if (inv.payMethod === "Wallet Balance") return inv.total;
+  if (inv.payMethod === "Split") return (inv.splitPayments || []).filter((sp) => sp.method === "Wallet Balance").reduce((sum, sp) => sum + sp.amount, 0);
+  return 0;
+}
+
+function WalletUsageCard({ invoices, transactions, start, end }) {
   const { t } = useLang();
+  const { scope, branches } = useBranches();
+  const consumed = (list) => list.filter((i) => inDateRange(i.createdAt, start, end)).reduce((sum, i) => sum + invoiceWalletUsed(i), 0);
+  const rows = scope === "all"
+    ? [...branches].sort((a, b) => a.number - b.number).map((b) => {
+        const topups = transactions.filter((x) => x.type === "topup" && x.branchId === b.id && inDateRange(x.date, start, end)).reduce((sum, x) => sum + x.paidAmount, 0);
+        const used = consumed(invoices.filter((i) => i.branchId === b.id));
+        return { b, topups, used, diff: topups - used };
+      })
+    : null;
+  const thCls = "whitespace-nowrap px-4 py-3 text-center";
+  const tdCls = "whitespace-nowrap px-4 py-3 text-center f-mono";
+  return (
+    <div className="mb-6 rounded-xl border border-app-border bg-app-surface p-5 shadow-app-sm">
+      <div className="mb-1 f-display text-base font-semibold text-app-text">{t("reports_wallet_title")}</div>
+      <p className="mb-3 text-xs text-app-text-subtle">{t("reports_wallet_hint")}</p>
+      <div className="text-sm text-app-text-muted">{t("reports_kpi_walletUsed")}: <span className="f-mono font-bold text-app-text">{sar(consumed(invoices))}</span></div>
+      {rows && (
+        <div className="mt-3 overflow-x-auto rounded-xl border border-app-border">
+          <table className="w-full min-w-[480px] text-right text-[13px]">
+            <thead className="bg-app-bg/60 text-xs font-semibold text-app-text-muted">
+              <tr><th className={thCls}>{t("reports_wallet_branch")}</th><th className={thCls}>{t("reports_wallet_topups")}</th><th className={thCls}>{t("reports_wallet_consumed")}</th><th className={thCls}>{t("reports_wallet_diff")}</th></tr>
+            </thead>
+            <tbody className="divide-y divide-app-border">
+              {rows.map((r) => (
+                <tr key={r.b.id}>
+                  <td className="whitespace-nowrap px-4 py-3 text-center font-semibold text-app-text">{r.b.name}</td>
+                  <td className={tdCls}>{sar(r.topups)}</td>
+                  <td className={tdCls}>{sar(r.used)}</td>
+                  <td className={`${tdCls} ${r.diff > 0 ? "text-warning-700" : r.diff < 0 ? "text-success-700" : "text-app-text-muted"}`}>{r.diff > 0 ? "+" : ""}{sar(r.diff)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ReportsView({ tab, setTab, invoices, transactions, purchases, suppliers, categories, customers, expenses, expenseCategories }) {
+  const { t } = useLang();
+  const { multi: multiBranch, scope: viewScope } = useBranches();
   const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
 
   // Each filter bar collapses behind its own "الفلاتر والتصدير" toggle on
@@ -4764,8 +4843,9 @@ function ReportsView({ tab, setTab, invoices, purchases, suppliers, categories, 
             {kpiTile(t("reports_kpi_grossSales"), sar(gross), "brand", null, true)}
             {kpiTile(t("reports_kpi_vatCollected"), sar(vat), "info", null, true)}
             {kpiTile(t("reports_kpi_netRevenue"), sar(net), "success", null, true)}
-            {kpiTile(t("reports_kpi_outstandingDebt"), sar(debt), "warning", null, true)}
+            {kpiTile(multiBranch && viewScope !== "all" ? t("reports_kpi_outstandingDebtAll") : t("reports_kpi_outstandingDebt"), sar(debt), "warning", null, true)}
           </div>
+          {multiBranch && <WalletUsageCard invoices={invoices} transactions={transactions} start={start} end={end} />}
           <button onClick={() => setSalesFiltersOpen((v) => !v)} className="mb-3 flex w-full items-center justify-between gap-2 rounded-lg border border-app-border-strong bg-app-surface px-3.5 py-2.5 text-[13px] font-bold text-app-text sm:hidden">
             <span className="flex items-center gap-2"><SlidersHorizontal className="size-4" />{t("reports_filtersToggle")}</span>
             <ChevronDown className={`size-4 transition-transform ${salesFiltersOpen ? "rotate-180" : ""}`} />
@@ -5802,7 +5882,7 @@ function OwnerOnlySettings({ ownerPinSet, sectionLocks, enabledPayMethods, setEn
 
 function BranchesView() {
   const { t } = useLang();
-  const { branches, members, createBranch, updateBranch, createBranchAccount, resetBranchPassword, setBranchStatus } = useBranches();
+  const { branches, members, ownerPinSet, refreshBranches, createBranch, updateBranch, createBranchAccount, resetBranchPassword, setBranchStatus } = useBranches();
   const sorted = [...branches].sort((a, b) => a.number - b.number);
   const nextNumber = (sorted[sorted.length - 1]?.number || 0) + 1;
   const memberOf = (b) => members.find((m) => m.branchId === b.id);
@@ -5810,6 +5890,7 @@ function BranchesView() {
   const [name, setName] = useState("");
   const [renaming, setRenaming] = useState(null);
   const [credentials, setCredentials] = useState(null);
+  const [resettingPin, setResettingPin] = useState(null);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -5894,6 +5975,7 @@ function BranchesView() {
                     {b.status === "active" && (m
                       ? <button onClick={() => runAccount(b, resetBranchPassword)} className={`ms-2 ${btnCls}`}>{t("branches_resetPassword")}</button>
                       : <button onClick={() => runAccount(b, createBranchAccount)} className={`ms-2 ${btnCls}`}>{t("branches_createAccount")}</button>)}
+                    {b.pinSet && ownerPinSet && <button onClick={() => setResettingPin(b)} className={`ms-2 ${btnCls}`}>{t("branches_resetPin")}</button>}
                     {b.number > 1 && (
                       <button onClick={() => toggleStatus(b)} className={`ms-2 ${btnCls}`}>
                         {b.status === "active" ? t("branches_archive") : t("branches_restore")}
@@ -5944,6 +6026,15 @@ function BranchesView() {
           </div>
         </Modal>
       )}
+      {resettingPin && (
+        <PinPromptModal
+          title={t("branches_resetPinTitle", { name: resettingPin.name })}
+          mode="enter"
+          onSubmitPin={async (pin) => (await callVerifyPin({ action: "reset_branch_pin", branchId: resettingPin.id, masterPin: pin })).success}
+          onDone={() => { setResettingPin(null); refreshBranches(); }}
+          onClose={() => setResettingPin(null)}
+        />
+      )}
     </div>
   );
 }
@@ -5962,6 +6053,91 @@ function BranchesSettingsCard({ onOpen }) {
         </div>
         <button onClick={onOpen} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">{multi ? t("branches_manage") : t("branches_add")}</button>
       </div>
+    </div>
+  );
+}
+
+// The branch manager's own, much smaller version of Settings: just the PIN lock
+// on purchases/expenses and discounts (same master-PIN-then-section-PIN flow the
+// owner uses, but the credentials are the branch's own), plus logging out.
+const BRANCH_LOCK_SECTIONS = [
+  { key: "purchases", labelKey: "nav_purchases" },
+  { key: "promotions", labelKey: "nav_promotions" },
+];
+
+function BranchSettingsView({ ownerPinSet, sectionLocks, onLogout }) {
+  const { t } = useLang();
+  const { refreshBranches } = useBranches();
+  const [showMasterPin, setShowMasterPin] = useState(false);
+  const [pendingKey, setPendingKey] = useState(null);
+  const [pendingSection, setPendingSection] = useState(null);
+  const [verifiedMasterPin, setVerifiedMasterPin] = useState(null);
+  const [disablingKey, setDisablingKey] = useState(null);
+  const [error, setError] = useState("");
+
+  const requestToggle = (key) => { setError(""); setPendingKey(key); setShowMasterPin(true); };
+  const handleMasterDone = (pin) => {
+    setShowMasterPin(false);
+    const key = pendingKey;
+    setPendingKey(null);
+    if (sectionLocks[key]) {
+      setDisablingKey(key);
+      callVerifyPin({ action: "disable_section", masterPin: pin, scope: key })
+        .then((r) => { if (!r.success) setError(t("owner_pinOpFailed")); return refreshBranches(); })
+        .finally(() => setDisablingKey(null));
+    } else {
+      setVerifiedMasterPin(pin);
+      setPendingSection(key);
+    }
+  };
+  const sectionLabel = (key) => t(BRANCH_LOCK_SECTIONS.find((s) => s.key === key).labelKey);
+
+  return (
+    <div className="max-w-2xl space-y-6">
+      <div className="f-display text-xl font-semibold text-app-text">{t("settings_title")}</div>
+      <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+        <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-app-text"><Lock size={16} className="text-brand-600" /> {t("owner_sectionLockTitle")}</div>
+        <p className="mb-4 text-xs text-app-text-subtle">{t("branches_lockHint")}</p>
+        <div className="space-y-2">
+          {BRANCH_LOCK_SECTIONS.map((s) => (
+            <div key={s.key} className="flex items-center justify-between rounded-lg border border-app-border px-3 py-2.5">
+              <span className="flex items-center gap-2 text-sm text-app-text"><Lock size={13} className={sectionLocks[s.key] ? "text-warning-600" : "text-app-text-subtle"} />{t(s.labelKey)}</span>
+              {disablingKey === s.key ? <Loader2 size={16} className="animate-spin text-app-text-subtle" /> : <Toggle checked={Boolean(sectionLocks[s.key])} onChange={() => requestToggle(s.key)} />}
+            </div>
+          ))}
+        </div>
+        {error && <div className="mt-2 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{error}</div>}
+      </div>
+      <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
+        <button onClick={onLogout} className="flex items-center gap-2 rounded-lg border border-app-border-strong px-4 py-2 text-sm font-semibold text-danger-600 hover:bg-danger-50"><LogOut size={15} /> {t("settings_logout")}</button>
+      </div>
+      {showMasterPin && (
+        <PinPromptModal
+          title={ownerPinSet ? t("branches_enterMasterTitle") : t("branches_setMasterTitle")}
+          mode={ownerPinSet ? "enter" : "set"}
+          onSubmitPin={async (pin) => {
+            setError("");
+            const body = ownerPinSet ? { action: "verify", scope: "master", pin } : { action: "set_master", pin };
+            return (await callVerifyPin(body)).success;
+          }}
+          onDone={handleMasterDone}
+          onClose={() => { setShowMasterPin(false); setPendingKey(null); }}
+        />
+      )}
+      {pendingSection && (
+        <PinPromptModal
+          title={t("owner_setSectionTitle", { section: sectionLabel(pendingSection) })}
+          mode="set"
+          onSubmitPin={async (newPin) => {
+            setError("");
+            const r = await callVerifyPin({ action: "set_section", masterPin: verifiedMasterPin, scope: pendingSection, newPin });
+            if (!r.success) setError(t("owner_pinOpFailed"));
+            return r.success;
+          }}
+          onDone={() => { setVerifiedMasterPin(null); setPendingSection(null); refreshBranches(); }}
+          onClose={() => { setPendingSection(null); setVerifiedMasterPin(null); }}
+        />
+      )}
     </div>
   );
 }
@@ -6213,9 +6389,13 @@ function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pe
   const { dir, t } = useLang();
   // Branch scope for the owner's "view all / one branch" picker: sales, purchases
   // and expenses follow it; customers, wallets and products are shared and never filtered.
-  const { scope: branchScope } = useBranches();
+  const { scope: branchScope, work: workBranch, isBranchAccount } = useBranches();
   const scopedInvoices = useMemo(() => (branchScope === "all" ? invoices : invoices.filter((r) => r.branchId === branchScope)), [invoices, branchScope]);
   const scopedPurchases = useMemo(() => (branchScope === "all" ? purchases : purchases.filter((r) => r.branchId === branchScope)), [purchases, branchScope]);
+  // Discounts: the list follows the picker (a branch's own + the all-branches ones); at the
+  // register only those that apply to the branch the sale is recorded under.
+  const scopedPromotions = useMemo(() => (branchScope === "all" ? promotions : promotions.filter((p) => !p.branchId || p.branchId === branchScope)), [promotions, branchScope]);
+  const promosForSale = useMemo(() => promotions.filter((p) => !p.branchId || p.branchId === workBranch?.id), [promotions, workBranch]);
   const scopedExpenses = useMemo(() => (branchScope === "all" ? expenses : expenses.filter((r) => r.branchId === branchScope)), [expenses, branchScope]);
   const isRtl = dir === "rtl";
   // The sidebar is a fixed off-canvas drawer below lg: (closed by default,
@@ -6243,17 +6423,18 @@ function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pe
         </div>
         <main className="flex-1 overflow-y-auto p-6">
         {tab === "home" && <HomeDashboardView invoices={scopedInvoices} merchant={merchant} setTab={setTab} />}
-        {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promotions} enabledPayMethods={enabledPayMethods} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} setTab={setTab} />}
+        {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promosForSale} enabledPayMethods={enabledPayMethods} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} setTab={setTab} />}
         {tab === "invoices" && <InvoicesView invoices={scopedInvoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} readyMessageEnabled={readyMessageEnabled} readyMessageTemplate={readyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} />}
         {tab === "delivery_invoices" && <InvoicesView invoices={scopedInvoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} readyMessageEnabled={readyMessageEnabled} readyMessageTemplate={readyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} isDelivery />}
         {tab === "customers" && <CustomersView customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} invoices={invoices} addInvoice={addInvoice} transactions={customerTransactions} addTransaction={addTransaction} merchant={merchant} applyCustomerPayment={applyCustomerPayment} nextDocNumber={nextDocNumber} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} />}
         {tab === "inventory" && <InventoryView categories={categories} addCategory={addCategory} products={products} addProduct={addProduct} updateProduct={updateProduct} addons={addons} addAddon={addAddon} removeAddon={removeAddon} serviceTypes={serviceTypes} addServiceType={addServiceType} />}
         {tab === "purchases" && <PurchasesExpensesView tab={purchasesSubTab} setTab={(s) => navigateTab("purchases", s)} suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={scopedPurchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={scopedExpenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
-        {tab === "promotions" && <PromotionsView promotions={promotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
-        {tab === "reports" && <ReportsView tab={reportsSubTab} setTab={(s) => navigateTab("reports", s)} invoices={scopedInvoices} purchases={scopedPurchases} suppliers={suppliers} categories={categories} customers={customers} expenses={scopedExpenses} expenseCategories={expenseCategories} />}
+        {tab === "promotions" && <PromotionsView promotions={scopedPromotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
+        {tab === "reports" && <ReportsView tab={reportsSubTab} setTab={(s) => navigateTab("reports", s)} invoices={scopedInvoices} transactions={customerTransactions} purchases={scopedPurchases} suppliers={suppliers} categories={categories} customers={customers} expenses={scopedExpenses} expenseCategories={expenseCategories} />}
         {tab === "whatsapp" && <WhatsAppView whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} readyMessageEnabled={readyMessageEnabled} setReadyMessageEnabled={setReadyMessageEnabled} readyMessageTemplate={readyMessageTemplate} setReadyMessageTemplate={setReadyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} setWhatsappReadySendMode={setWhatsappReadySendMode} />}
         {tab === "branches" && <BranchesView />}
-        {tab === "settings" && <SettingsView onOpenBranches={() => navigateTab("branches")} merchant={merchant} setMerchant={setMerchant} ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
+        {tab === "settings" && isBranchAccount && <BranchSettingsView ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} onLogout={onLogout} />}
+        {tab === "settings" && !isBranchAccount && <SettingsView onOpenBranches={() => navigateTab("branches")} merchant={merchant} setMerchant={setMerchant} ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
         </main>
       </div>
       {/* Same PIN-prompt-on-locked-nav flow the sidebar always had —
@@ -6329,22 +6510,36 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   const activeBranches = useMemo(() => branches.filter((b) => b.status === "active").sort((a, b) => a.number - b.number), [branches]);
   const multiBranch = activeBranches.length > 1;
   // A branch login is pinned to its own branch for both viewing and selling.
+  // The owner login (shared with the first branch's staff) starts on the main
+  // branch each session and needs the owner PIN to view or sell as any other.
+  const [branchViewUnlocked, setBranchViewUnlocked] = useState(false);
+  const mainBranch = activeBranches.find((b) => b.number === 1) || activeBranches[0] || null;
+  const viewLocked = !branchId && multiBranch && !branchViewUnlocked;
   const workBranch = branchId ? (activeBranches.find((b) => b.id === branchId) || null)
+    : viewLocked ? mainBranch
     : multiBranch ? (activeBranches.find((b) => b.id === branchSel.work) || activeBranches[0]) : null;
-  const branchScope = branchId || (multiBranch && activeBranches.some((b) => b.id === branchSel.scope) ? branchSel.scope : "all");
+  const branchScope = branchId || (viewLocked ? (mainBranch ? mainBranch.id : "all")
+    : multiBranch && activeBranches.some((b) => b.id === branchSel.scope) ? branchSel.scope : "all");
+  // Stamped on a new discount: a branch login -> its branch; the owner viewing
+  // "all branches" -> null (applies to every branch); the owner on one branch -> that branch.
+  const promoBranchId = branchId || (multiBranch && branchScope !== "all" ? branchScope : null);
   const branchWriteFields = workBranch ? { branchId: workBranch.id } : {};
   const persistBranchSel = (next) => {
     setBranchSel(next);
     try { window.localStorage.setItem(branchStoreKey, JSON.stringify(next)); } catch { /* selection just won't survive a reload */ }
   };
   const selectBranch = (id) => persistBranchSel(id === "all" ? { ...branchSel, scope: "all" } : { scope: id, work: id });
-  const selectWork = (id) => persistBranchSel({ ...branchSel, work: id });
   const createBranch = async (name) => {
     const { data, error } = await db.rpc("create_branch", { p_name: name || null });
     if (error) { console.error("createBranch failed", error); throw error; }
     const row = toCamelCase(data);
     setBranchesState((prev) => (prev.some((b) => b.id === row.id) ? prev : [...prev, row]));
     return row;
+  };
+  const refreshBranches = async () => {
+    const { data, error } = await db.from("branches").select("*").eq("tenant_id", tenantId);
+    if (error) { console.error("branches reload failed", error); return; }
+    setBranchesState((data || []).map(toCamelCase));
   };
   const updateBranch = async (id, patch) => {
     const { error } = await db.from("branches").update(toSnakeCase(patch)).eq("id", id);
@@ -6373,12 +6568,6 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     await callBranchAccounts({ action: "set_status", branchId: id, status });
     setBranchesState((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
     await refreshBranchMembers();
-  };
-  const branchCtx = {
-    multi: multiBranch, branches, activeBranches, scope: branchScope, work: workBranch, workName: workBranch ? workBranch.name : null,
-    isBranchAccount: Boolean(branchId), members: branchMembers,
-    nameOf: (id) => (multiBranch ? branches.find((b) => b.id === id)?.name || null : null),
-    selectBranch, selectWork, createBranch, updateBranch, createBranchAccount, resetBranchPassword, setBranchStatus,
   };
 
   useEffect(() => {
@@ -6638,7 +6827,7 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   };
   const addExpenseCategory = addTo("expense_categories");
   const addExpense = addTo("expenses", true);
-  const addPromotion = addTo("promotions");
+  const addPromotion = (data) => addTo("promotions")({ branchId: promoBranchId, ...data });
   const updatePromotion = updateIn("promotions");
 
   // Shop settings (merchant profile, owner PIN, section locks, enabled pay
@@ -6688,8 +6877,8 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
       if (d) {
         setSettingsRowId(d.id);
         if (d.merchant) setMerchant(d.merchant);
-        if (d.ownerPinSet !== undefined) setOwnerPinSet(Boolean(d.ownerPinSet));
-        if (d.lockedSections) {
+        if (!branchId && d.ownerPinSet !== undefined) setOwnerPinSet(Boolean(d.ownerPinSet));
+        if (!branchId && d.lockedSections) {
           const locked = new Set(d.lockedSections);
           setSectionLocks(Object.fromEntries(OWNER_SECTIONS.map((s) => [s.key, locked.has(s.key)])));
         }
@@ -6962,6 +7151,11 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   const createInvoice = async ({ customerId, items, total, discount = 0, payMethod, isDelivery = false, deliveryFee = 0, splitPayments = null, walletDeduct = 0 }) => {
     const customer = customers.find((c) => c.id === customerId);
     const grandTotal = Math.max(0, total - discount) + (isDelivery ? deliveryFee : 0);
+    // How much of this sale came out of the customer's wallet (revenue for it was
+    // recognised at top-up; this only records the consumption, per branch).
+    const walletUsed = payMethod === "Wallet Balance" ? grandTotal
+      : payMethod === "Split" && splitPayments ? splitPayments.filter((sp) => sp.method === "Wallet Balance").reduce((sum, sp) => sum + sp.amount, 0)
+      : walletDeduct;
 
     if (walletDeduct > 0 && (!customer || customer.walletBalance < walletDeduct)) return null; // quick client-side check — DB call below is the real guard
 
@@ -6990,7 +7184,7 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     const docType = isDelivery ? "DLV" : "INV";
     const code = `${branchPrefix(workBranch)}${docType}-${await nextDocNumber(docType, workBranch)}`;
     const invoice = {
-      code, customerId, customerName: customer?.name || walkInLabel, payMethod, splitPayments, total: grandTotal, discount, isDelivery, deliveryFee, createdAt: nowISO(), closed: false,
+      code, customerId, customerName: customer?.name || walkInLabel, payMethod, splitPayments, walletUsed, total: grandTotal, discount, isDelivery, deliveryFee, createdAt: nowISO(), closed: false,
       vatExempt: !merchant.taxNumber || !merchant.taxNumber.trim(),
       items: items.map((it) => ({ itemId: uid("item"), name: it.name, service: it.service, addons: it.addons, price: it.servicePrice + it.addons.reduce((s, a) => s + a.price, 0), qty: it.qty, lineTotal: it.lineTotal, notes: it.notes || "", status: "Received", urgent: false, deliveredAt: null })),
     };
@@ -7013,6 +7207,26 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
       }
     }
     return { ...savedInvoice, zatcaQr };
+  };
+
+  // A branch login's PIN lock state comes from its own branch row (its manager's
+  // PIN), never from the shop-wide owner locks.
+  const ownBranch = branchId ? branches.find((b) => b.id === branchId) : null;
+  const ownBranchLocks = JSON.stringify(ownBranch?.lockedSections || []);
+  useEffect(() => {
+    if (!branchId) return;
+    const locked = new Set(JSON.parse(ownBranchLocks));
+    setSectionLocks(Object.fromEntries(OWNER_SECTIONS.map((s) => [s.key, locked.has(s.key)])));
+    setOwnerPinSet(Boolean(ownBranch?.pinSet));
+  }, [branchId, ownBranchLocks, ownBranch?.pinSet]);
+
+  const branchCtx = {
+    multi: multiBranch, branches, activeBranches, scope: branchScope, work: workBranch, workName: workBranch ? workBranch.name : null,
+    isBranchAccount: Boolean(branchId), members: branchMembers, mainBranchId: mainBranch ? mainBranch.id : null,
+    ownerPinSet, viewUnlocked: !viewLocked, promoBranchId,
+    nameOf: (id) => (multiBranch ? branches.find((b) => b.id === id)?.name || null : null),
+    selectBranch, unlockView: () => setBranchViewUnlocked(true), refreshBranches,
+    createBranch, updateBranch, createBranchAccount, resetBranchPassword, setBranchStatus,
   };
 
   return (
