@@ -926,6 +926,7 @@ const DICT = {
     nav_customers: "Customer Ledger", nav_products: "Products", nav_purchases: "Purchases & Expenses",
     nav_promotions: "Promotions", nav_reports: "Reports", nav_whatsapp: "WhatsApp", nav_settings: "Settings",
     nav_branches: "Branches", branches_title: "Branches", branches_subtitle: "Manage your laundry's branches", branches_add: "Add branch", branches_nameOptional: "Branch name (optional)", branches_defaultName: "Branch {n}", branches_autoNote: "The branch gets number {n} automatically and its invoices start with B{n}-. The number never changes, even if you rename the branch.", branches_costNote: "Adding a branch increases your monthly subscription.", branches_numberCol: "No.", branches_nameCol: "Branch", branches_prefixCol: "Invoice prefix", branches_noPrefix: "None (original numbering)", branches_rename: "Rename", branches_archive: "Archive", branches_restore: "Restore", branches_active: "Active", branches_archived: "Archived", branches_errCreate: "Couldn't add the branch. Please try again.", branches_errUpdate: "Couldn't save the change. Please try again.", branches_picker_view: "Viewing", branches_all: "All branches", branches_search: "Search branches...", branches_noMatch: "No branch with that name", branches_workBranch: "Sale branch", branches_settingsTitle: "Branches", branches_settingsSingle: "Your laundry runs one branch. Add a second branch whenever you need one and the branch tools appear automatically.", branches_settingsMulti: "You have {n} active branches.", branches_manage: "Manage branches",
+    branches_accountCol: "Login", branches_noAccount: "No login yet", branches_createAccount: "Create login", branches_resetPassword: "New password", branches_credentialsTitle: "Branch login", branches_credentialsNote: "Give these to the manager of {name}. The password is shown only now; if it is lost, create a new one.", branches_username: "Username", branches_password: "Password", branches_copy: "Copy", branches_copied: "Copied", branches_done: "Done", branches_errAccount: "Couldn't update the branch login. Please try again.", branches_yourBranch: "Your branch",
 
     home_welcomeBack: "Welcome back", home_salesToday: "Today's Sales", home_ordersToday: "Today's Orders",
     home_readyOrders: "Ready Orders", home_deliveryActive: "Delivery In Progress",
@@ -1209,6 +1210,7 @@ const DICT = {
     nav_customers: "سجل العملاء", nav_products: "المنتجات", nav_purchases: "المشتريات والمصروفات",
     nav_promotions: "العروض", nav_reports: "التقارير", nav_whatsapp: "واتس اب", nav_settings: "الإعدادات",
     nav_branches: "الفروع", branches_title: "الفروع", branches_subtitle: "إدارة فروع المغسلة", branches_add: "إضافة فرع", branches_nameOptional: "اسم الفرع (اختياري)", branches_defaultName: "فرع {n}", branches_autoNote: "يُعطى الفرع الرقم {n} تلقائيًا وتبدأ فواتيره بـ B{n}-. الرقم ثابت حتى لو غيّرت اسم الفرع.", branches_costNote: "إضافة فرع تزيد اشتراكك الشهري.", branches_numberCol: "الرقم", branches_nameCol: "الفرع", branches_prefixCol: "بادئة الفواتير", branches_noPrefix: "بدون (أرقام الفرع الأصلي)", branches_rename: "تعديل الاسم", branches_archive: "أرشفة", branches_restore: "استعادة", branches_active: "نشط", branches_archived: "مؤرشف", branches_errCreate: "تعذّر إضافة الفرع، حاول مرة ثانية.", branches_errUpdate: "تعذّر حفظ التغيير، حاول مرة ثانية.", branches_picker_view: "عرض بيانات", branches_all: "كل الفروع", branches_search: "ابحث عن فرع...", branches_noMatch: "لا يوجد فرع بهذا الاسم", branches_workBranch: "فرع البيع", branches_settingsTitle: "الفروع", branches_settingsSingle: "مغسلتك تعمل بفرع واحد. أضف فرعًا ثانيًا متى احتجت، وتظهر أدوات الفروع تلقائيًا.", branches_settingsMulti: "عندك {n} فروع نشطة.", branches_manage: "إدارة الفروع",
+    branches_accountCol: "حساب الدخول", branches_noAccount: "لا يوجد حساب", branches_createAccount: "إنشاء حساب", branches_resetPassword: "كلمة مرور جديدة", branches_credentialsTitle: "حساب دخول الفرع", branches_credentialsNote: "سلّم هذه البيانات لمدير فرع {name}. كلمة المرور تظهر الآن فقط، وإن ضاعت أنشئ واحدة جديدة.", branches_username: "اسم المستخدم", branches_password: "كلمة المرور", branches_copy: "نسخ", branches_copied: "تم النسخ", branches_done: "تم", branches_errAccount: "تعذّر تحديث حساب دخول الفرع، حاول مرة ثانية.", branches_yourBranch: "فرعك",
 
     home_welcomeBack: "أهلاً بك", home_salesToday: "مبيعات اليوم", home_ordersToday: "طلبات اليوم",
     home_readyOrders: "طلبات جاهزة", home_deliveryActive: "توصيل قيد التنفيذ",
@@ -1492,6 +1494,7 @@ const DICT = {
     nav_customers: "کسٹمر لیجر", nav_products: "پروڈکٹس", nav_purchases: "خریداری اور اخراجات",
     nav_promotions: "پرموشنز", nav_reports: "رپورٹس", nav_whatsapp: "واٹس ایپ", nav_settings: "سیٹنگز",
     nav_branches: "برانچز", branches_title: "برانچز", branches_subtitle: "لانڈری کی برانچز کا انتظام", branches_add: "برانچ شامل کریں", branches_nameOptional: "برانچ کا نام (اختیاری)", branches_defaultName: "برانچ {n}", branches_autoNote: "برانچ کو خود بخود نمبر {n} ملتا ہے اور اس کی انوائسز B{n}- سے شروع ہوتی ہیں۔ نام بدلنے پر بھی نمبر نہیں بدلتا۔", branches_costNote: "برانچ شامل کرنے سے آپ کی ماہانہ سبسکرپشن بڑھ جاتی ہے۔", branches_numberCol: "نمبر", branches_nameCol: "برانچ", branches_prefixCol: "انوائس کا سابقہ", branches_noPrefix: "کوئی نہیں (اصل نمبرنگ)", branches_rename: "نام تبدیل کریں", branches_archive: "آرکائیو", branches_restore: "بحال کریں", branches_active: "فعال", branches_archived: "آرکائیو شدہ", branches_errCreate: "برانچ شامل نہیں ہو سکی، دوبارہ کوشش کریں۔", branches_errUpdate: "تبدیلی محفوظ نہیں ہو سکی، دوبارہ کوشش کریں۔", branches_picker_view: "ڈیٹا دیکھیں", branches_all: "تمام برانچز", branches_search: "برانچ تلاش کریں...", branches_noMatch: "اس نام کی کوئی برانچ نہیں", branches_workBranch: "سیل برانچ", branches_settingsTitle: "برانچز", branches_settingsSingle: "آپ کی لانڈری ایک برانچ پر چلتی ہے۔ جب چاہیں دوسری برانچ شامل کریں، برانچ ٹولز خود ظاہر ہو جائیں گے۔", branches_settingsMulti: "آپ کی {n} فعال برانچز ہیں۔", branches_manage: "برانچز کا انتظام",
+    branches_accountCol: "لاگ ان", branches_noAccount: "ابھی لاگ ان نہیں", branches_createAccount: "لاگ ان بنائیں", branches_resetPassword: "نیا پاس ورڈ", branches_credentialsTitle: "برانچ لاگ ان", branches_credentialsNote: "یہ معلومات {name} کے مینیجر کو دیں۔ پاس ورڈ صرف ابھی نظر آتا ہے، گم ہو جائے تو نیا بنائیں۔", branches_username: "صارف نام", branches_password: "پاس ورڈ", branches_copy: "کاپی", branches_copied: "کاپی ہو گیا", branches_done: "ہو گیا", branches_errAccount: "برانچ لاگ ان اپ ڈیٹ نہیں ہو سکا، دوبارہ کوشش کریں۔", branches_yourBranch: "آپ کی برانچ",
 
     home_welcomeBack: "خوش آمدید", home_salesToday: "آج کی فروخت", home_ordersToday: "آج کے آرڈرز",
     home_readyOrders: "تیار آرڈرز", home_deliveryActive: "جاری ڈیلیوری",
@@ -1786,9 +1789,14 @@ function useLang() {
 // Customers, wallets, products and suppliers stay shared across branches;
 // invoices, wallet movements, purchases and expenses belong to one branch.
 const BranchCtx = createContext({
-  multi: false, branches: [], activeBranches: [], scope: "all", work: null, workName: null,
+  multi: false, branches: [], activeBranches: [], scope: "all", work: null, workName: null, isBranchAccount: false, members: [],
   nameOf: () => null, selectBranch: () => {}, selectWork: () => {}, createBranch: async () => null, updateBranch: async () => {},
+  createBranchAccount: async () => null, resetBranchPassword: async () => null, setBranchStatus: async () => {},
 });
+// A branch login (one shared account per branch) sees only its own branch and
+// the sections a cashier needs; the database enforces the same split, so these
+// are hidden rather than left to fail silently on write.
+const BRANCH_ACCOUNT_HIDDEN = new Set(["branches", "settings", "inventory", "purchases", "promotions", "whatsapp"]);
 function useBranches() { return useContext(BranchCtx); }
 // Main branch keeps its original numbering (INV-1001); branch N>1 gets B<N>-.
 const branchPrefix = (branch) => (branch && branch.number > 1 ? `B${branch.number}-` : "");
@@ -1855,9 +1863,9 @@ function BranchPicker() {
   );
 }
 
-function Sidebar({ tab, setTab, sectionLocks, merchant, onNavigate = () => {} }) {
+function Sidebar({ tab, setTab, sectionLocks, merchant, onNavigate = () => {}, onLogout }) {
   const { t } = useLang();
-  const { multi } = useBranches();
+  const { multi, isBranchAccount, work } = useBranches();
 
   const handleNavClick = (key) => {
     setTab(key);
@@ -1873,9 +1881,18 @@ function Sidebar({ tab, setTab, sectionLocks, merchant, onNavigate = () => {} })
           <div className="text-[11px] font-semibold uppercase tracking-widest text-brand-400 mt-1">{t("app_tagline")}</div>
         </div>
       </button>
-      {multi && <BranchPicker />}
+      {multi && !isBranchAccount && <BranchPicker />}
+      {multi && isBranchAccount && work && (
+        <div className="mx-3 mb-3 flex items-center gap-2.5 rounded-lg bg-navy-800 px-3 py-2.5">
+          <div className="min-w-0 flex-1">
+            <div className="text-[10.5px] text-white/50">{t("branches_yourBranch")}</div>
+            <div className="truncate text-[13px] font-bold text-white">{work.name}</div>
+          </div>
+          <Lock size={14} className="shrink-0 text-amber-400" />
+        </div>
+      )}
       <nav className="flex-1 space-y-1 px-3">
-        {NAV.filter((n) => n.key !== "branches" || multi).map((n, i) => {
+        {NAV.filter((n) => !(isBranchAccount && BRANCH_ACCOUNT_HIDDEN.has(n.key))).filter((n) => n.key !== "branches" || multi).map((n, i) => {
           const Icon = n.icon;
           const active = tab === n.key;
           const locked = Boolean(sectionLocks[n.key]);
@@ -1899,6 +1916,11 @@ function Sidebar({ tab, setTab, sectionLocks, merchant, onNavigate = () => {} })
       </div>
       <div className="px-5 py-4 border-t border-navy-800">
         <div className="truncate text-sm font-semibold text-white">{merchant?.name || t("app_name")}</div>
+        {isBranchAccount && (
+          <button onClick={onLogout} className="mt-2 flex items-center gap-2 text-xs font-medium text-white/60 hover:text-white">
+            <LogOut size={13} /> {t("settings_logout")}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -2620,7 +2642,10 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
                 sale grabs first, so it's intentionally omitted. */}
             <div className="mb-3 flex items-center justify-between">
               <span className="text-[13px] font-bold text-app-text-subtle">{t("pos_newOrder")}</span>
-              {branchUi.multi && (
+              {branchUi.multi && branchUi.isBranchAccount && (
+                <span className="max-w-[55%] truncate rounded-lg border border-brand-300 bg-brand-50 px-2 py-1 text-[11px] font-bold text-brand-700">{branchUi.workName}</span>
+              )}
+              {branchUi.multi && !branchUi.isBranchAccount && (
                 <select value={branchUi.work?.id || ""} onChange={(e) => branchUi.selectWork(e.target.value)} aria-label={t("branches_workBranch")}
                   className="max-w-[55%] truncate rounded-lg border border-brand-300 bg-brand-50 px-2 py-1 text-[11px] font-bold text-brand-700 focus:outline-none">
                   {branchUi.activeBranches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -5061,6 +5086,18 @@ function ReportsView({ tab, setTab, invoices, purchases, suppliers, categories, 
 // Owner/section PIN check now happens server-side (api/verify-pin.js) --
 // the hash/salt never touch the browser. See supabase-owner-pin-hardening.sql
 // and PROJECT_REFERENCE.md's PIN hardening section for the full design.
+async function callBranchAccounts(body) {
+  const { data: { session } } = await auth.getSession();
+  const res = await fetch("/api/branch-accounts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${session?.access_token || ""}` },
+    body: JSON.stringify(body),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok || !json.success) throw new Error(json.error || "request_failed");
+  return json;
+}
+
 async function callVerifyPin(body) {
   const { data: { session } } = await auth.getSession();
   try {
@@ -5765,22 +5802,35 @@ function OwnerOnlySettings({ ownerPinSet, sectionLocks, enabledPayMethods, setEn
 
 function BranchesView() {
   const { t } = useLang();
-  const { branches, createBranch, updateBranch } = useBranches();
+  const { branches, members, createBranch, updateBranch, createBranchAccount, resetBranchPassword, setBranchStatus } = useBranches();
   const sorted = [...branches].sort((a, b) => a.number - b.number);
   const nextNumber = (sorted[sorted.length - 1]?.number || 0) + 1;
+  const memberOf = (b) => members.find((m) => m.branchId === b.id);
   const [showAdd, setShowAdd] = useState(false);
   const [name, setName] = useState("");
   const [renaming, setRenaming] = useState(null);
+  const [credentials, setCredentials] = useState(null);
+  const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   const closeAdd = () => { setShowAdd(false); setName(""); setError(""); };
+  const closeCredentials = () => { setCredentials(null); setCopied(false); };
+  // The login password is shown exactly once, right after it is generated.
+  const runAccount = async (b, action) => {
+    setError("");
+    try { setCredentials({ branchName: b.name, ...(await action(b.id)) }); }
+    catch { setError(t("branches_errAccount")); }
+  };
   const submitAdd = async () => {
     if (busy) return;
     setBusy(true); setError("");
-    try { await createBranch(name.trim() || t("branches_defaultName", { n: nextNumber })); closeAdd(); }
-    catch { setError(t("branches_errCreate")); }
-    finally { setBusy(false); }
+    let row;
+    try { row = await createBranch(name.trim() || t("branches_defaultName", { n: nextNumber })); }
+    catch { setError(t("branches_errCreate")); setBusy(false); return; }
+    closeAdd();
+    await runAccount(row, createBranchAccount);
+    setBusy(false);
   };
   const submitRename = async () => {
     if (busy || !renaming || !renaming.name.trim()) return;
@@ -5791,9 +5841,14 @@ function BranchesView() {
   };
   const toggleStatus = async (b) => {
     setError("");
-    try { await updateBranch(b.id, { status: b.status === "active" ? "archived" : "active" }); }
+    try { await setBranchStatus(b.id, b.status === "active" ? "archived" : "active"); }
     catch { setError(t("branches_errUpdate")); }
   };
+  const copyCredentials = async () => {
+    try { await navigator.clipboard.writeText(`${credentials.username}\n${credentials.password}`); setCopied(true); }
+    catch { /* clipboard refused: the values are shown selectable below */ }
+  };
+  const btnCls = "rounded-lg border border-app-border px-3 py-1.5 text-[12.5px] font-semibold text-app-text hover:bg-app-bg";
 
   return (
     <div className="max-w-5xl">
@@ -5807,37 +5862,47 @@ function BranchesView() {
       <div className="mb-4 rounded-xl border border-warning-200 bg-warning-50 px-4 py-2.5 text-xs font-medium text-warning-800">{t("branches_costNote")}</div>
       {error && !showAdd && !renaming && <div className="mb-3 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{error}</div>}
       <div className="overflow-x-auto rounded-xl border border-app-border bg-app-surface">
-        <table className="w-full min-w-[560px] text-right text-[13px]">
+        <table className="w-full min-w-[720px] text-right text-[13px]">
           <thead className="bg-app-bg/60 text-xs font-semibold uppercase tracking-wide text-app-text-muted">
             <tr>
               <th className="whitespace-nowrap px-4 py-3 text-center">{t("branches_numberCol")}</th>
               <th className="whitespace-nowrap px-4 py-3 text-center">{t("branches_nameCol")}</th>
               <th className="whitespace-nowrap px-4 py-3 text-center">{t("branches_prefixCol")}</th>
+              <th className="whitespace-nowrap px-4 py-3 text-center">{t("branches_accountCol")}</th>
               <th className="whitespace-nowrap px-4 py-3 text-center">{t("common_status")}</th>
               <th className="whitespace-nowrap px-4 py-3 text-center"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-app-border">
-            {sorted.map((b) => (
-              <tr key={b.id} className="hover:bg-app-bg/60">
-                <td className="whitespace-nowrap px-4 py-3 text-center f-mono text-app-text-muted">#{b.number}</td>
-                <td className="whitespace-nowrap px-4 py-3 text-center font-semibold text-app-text">{b.name}</td>
-                <td className="whitespace-nowrap px-4 py-3 text-center text-app-text-muted">{b.number > 1 ? <span className="f-mono">{branchPrefix(b)}</span> : t("branches_noPrefix")}</td>
-                <td className="whitespace-nowrap px-4 py-3 text-center">
-                  <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold ring-1 ring-inset ${b.status === "active" ? "bg-success-50 text-success-700" : "bg-app-bg text-app-text-muted"}`}>
-                    <span className="size-1.5 rounded-full bg-current" />{b.status === "active" ? t("branches_active") : t("branches_archived")}
-                  </span>
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-center">
-                  <button onClick={() => { setError(""); setRenaming({ id: b.id, name: b.name }); }} className="rounded-lg border border-app-border px-3 py-1.5 text-[12.5px] font-semibold text-app-text hover:bg-app-bg">{t("branches_rename")}</button>
-                  {b.number > 1 && (
-                    <button onClick={() => toggleStatus(b)} className="ms-2 rounded-lg border border-app-border px-3 py-1.5 text-[12.5px] font-semibold text-app-text hover:bg-app-bg">
-                      {b.status === "active" ? t("branches_archive") : t("branches_restore")}
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {sorted.map((b) => {
+              const m = memberOf(b);
+              return (
+                <tr key={b.id} className="hover:bg-app-bg/60">
+                  <td className="whitespace-nowrap px-4 py-3 text-center f-mono text-app-text-muted">#{b.number}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-center font-semibold text-app-text">{b.name}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-center text-app-text-muted">{b.number > 1 ? <span className="f-mono">{branchPrefix(b)}</span> : t("branches_noPrefix")}</td>
+                  <td className="whitespace-nowrap px-4 py-3 text-center">
+                    {m ? <span className="f-mono text-app-text">{m.username}</span> : <span className="text-app-text-subtle">{t("branches_noAccount")}</span>}
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-center">
+                    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold ring-1 ring-inset ${b.status === "active" ? "bg-success-50 text-success-700" : "bg-app-bg text-app-text-muted"}`}>
+                      <span className="size-1.5 rounded-full bg-current" />{b.status === "active" ? t("branches_active") : t("branches_archived")}
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap px-4 py-3 text-center">
+                    <button onClick={() => { setError(""); setRenaming({ id: b.id, name: b.name }); }} className={btnCls}>{t("branches_rename")}</button>
+                    {b.status === "active" && (m
+                      ? <button onClick={() => runAccount(b, resetBranchPassword)} className={`ms-2 ${btnCls}`}>{t("branches_resetPassword")}</button>
+                      : <button onClick={() => runAccount(b, createBranchAccount)} className={`ms-2 ${btnCls}`}>{t("branches_createAccount")}</button>)}
+                    {b.number > 1 && (
+                      <button onClick={() => toggleStatus(b)} className={`ms-2 ${btnCls}`}>
+                        {b.status === "active" ? t("branches_archive") : t("branches_restore")}
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -5863,6 +5928,19 @@ function BranchesView() {
           <div className="flex justify-end gap-2">
             <button onClick={() => setRenaming(null)} className="rounded-lg px-4 py-2 text-sm font-medium text-app-text-muted hover:text-app-text">{t("common_cancel")}</button>
             <button onClick={submitRename} disabled={busy || !renaming.name.trim()} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-60">{t("common_save")}</button>
+          </div>
+        </Modal>
+      )}
+      {credentials && (
+        <Modal title={t("branches_credentialsTitle")} onClose={closeCredentials} onSubmit={closeCredentials} width="max-w-md">
+          <p className="mb-3 text-sm text-app-text-muted">{t("branches_credentialsNote", { name: credentials.branchName })}</p>
+          <div className="mb-4 space-y-2 rounded-lg border border-app-border bg-app-bg p-4 text-sm">
+            <div className="flex items-center justify-between gap-3"><span className="text-app-text-muted">{t("branches_username")}</span><b className="f-mono select-all">{credentials.username}</b></div>
+            <div className="flex items-center justify-between gap-3"><span className="text-app-text-muted">{t("branches_password")}</span><b className="f-mono select-all">{credentials.password}</b></div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <button onClick={copyCredentials} className="rounded-lg border border-app-border-strong px-4 py-2 text-sm font-semibold text-app-text hover:bg-app-bg">{copied ? t("branches_copied") : t("branches_copy")}</button>
+            <button onClick={closeCredentials} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">{t("branches_done")}</button>
           </div>
         </Modal>
       )}
@@ -6156,7 +6234,7 @@ function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pe
         <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setMobileNavOpen(false)} />
       )}
       <div className={`fixed inset-y-0 z-50 transition-transform duration-200 lg:static lg:z-auto lg:translate-x-0 ${isRtl ? "right-0" : "left-0"} ${mobileNavOpen ? "translate-x-0" : isRtl ? "translate-x-full" : "-translate-x-full"}`}>
-        <Sidebar tab={tab} setTab={setTab} sectionLocks={sectionLocks} merchant={merchant} onNavigate={() => setMobileNavOpen(false)} />
+        <Sidebar tab={tab} setTab={setTab} sectionLocks={sectionLocks} merchant={merchant} onNavigate={() => setMobileNavOpen(false)} onLogout={onLogout} />
       </div>
       <div className="flex flex-1 flex-col overflow-hidden">
         <div className="flex items-center gap-3 border-b border-stone-200 bg-white px-4 py-3 lg:hidden">
@@ -6195,7 +6273,7 @@ function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pe
   );
 }
 
-function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
+function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   // Always starts at "home", even for a deep link like /reports -- NOT a
   // shortcut we can take. sectionLocks loads asynchronously from
   // tenant_settings (starts out as "nothing locked" until that real data
@@ -6250,8 +6328,10 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   }, [branchStoreKey]);
   const activeBranches = useMemo(() => branches.filter((b) => b.status === "active").sort((a, b) => a.number - b.number), [branches]);
   const multiBranch = activeBranches.length > 1;
-  const workBranch = multiBranch ? (activeBranches.find((b) => b.id === branchSel.work) || activeBranches[0]) : null;
-  const branchScope = multiBranch && activeBranches.some((b) => b.id === branchSel.scope) ? branchSel.scope : "all";
+  // A branch login is pinned to its own branch for both viewing and selling.
+  const workBranch = branchId ? (activeBranches.find((b) => b.id === branchId) || null)
+    : multiBranch ? (activeBranches.find((b) => b.id === branchSel.work) || activeBranches[0]) : null;
+  const branchScope = branchId || (multiBranch && activeBranches.some((b) => b.id === branchSel.scope) ? branchSel.scope : "all");
   const branchWriteFields = workBranch ? { branchId: workBranch.id } : {};
   const persistBranchSel = (next) => {
     setBranchSel(next);
@@ -6271,10 +6351,34 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
     if (error) { console.error("updateBranch failed", error); throw error; }
     setBranchesState((prev) => prev.map((b) => (b.id === id ? { ...b, ...patch } : b)));
   };
+  // Branch logins (owner only): one shared account per branch, managed through
+  // api/branch-accounts.js; the list comes from branch_members (RLS: owner sees all).
+  const [branchMembers, setBranchMembersState] = useState([]);
+  const refreshBranchMembers = async () => {
+    const { data, error } = await db.from("branch_members").select("*").eq("tenant_id", tenantId);
+    if (error) { console.error("branch members load failed", error); return; }
+    setBranchMembersState((data || []).map(toCamelCase));
+  };
+  useEffect(() => { if (tenantId && !branchId) refreshBranchMembers(); }, [tenantId, branchId]);
+  const createBranchAccount = async (id) => {
+    const out = await callBranchAccounts({ action: "create", branchId: id });
+    await refreshBranchMembers();
+    return { username: out.username, password: out.password };
+  };
+  const resetBranchPassword = async (id) => {
+    const out = await callBranchAccounts({ action: "reset_password", branchId: id });
+    return { username: out.username, password: out.password };
+  };
+  const setBranchStatus = async (id, status) => {
+    await callBranchAccounts({ action: "set_status", branchId: id, status });
+    setBranchesState((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
+    await refreshBranchMembers();
+  };
   const branchCtx = {
     multi: multiBranch, branches, activeBranches, scope: branchScope, work: workBranch, workName: workBranch ? workBranch.name : null,
+    isBranchAccount: Boolean(branchId), members: branchMembers,
     nameOf: (id) => (multiBranch ? branches.find((b) => b.id === id)?.name || null : null),
-    selectBranch, selectWork, createBranch, updateBranch,
+    selectBranch, selectWork, createBranch, updateBranch, createBranchAccount, resetBranchPassword, setBranchStatus,
   };
 
   useEffect(() => {
@@ -6608,6 +6712,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   // nav control (sidebar, home's quick actions, in-page sub-tab switches)
   // routes through here so the URL never drifts from what's rendered.
   const navigateTab = (newTab, subTab) => {
+    if (branchId && BRANCH_ACCOUNT_HIDDEN.has(newTab)) return;
     window.history.pushState({}, '', pathForTab(newTab, subTab));
     setTab(newTab);
     if (newTab === 'reports') setReportsSubTab(subTab || 'sales');
@@ -6631,7 +6736,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   useEffect(() => {
     const onPopState = () => {
       const resolved = tabForPath(window.location.pathname);
-      if (!resolved) return;
+      if (!resolved || (branchId && BRANCH_ACCOUNT_HIDDEN.has(resolved.tab))) return;
       setTab(resolved.tab);
       if (resolved.tab === 'reports') setReportsSubTab(resolved.subTab || 'sales');
       else if (resolved.tab === 'purchases') setPurchasesSubTab(resolved.subTab || 'purchases');
@@ -6657,7 +6762,7 @@ function LaundryOpsApp({ tenantId, onLogout, initialLang }) {
   }, [settingsLoaded]);
 
   useEffect(() => {
-    if (!tenantId || !settingsLoaded) return;
+    if (!tenantId || !settingsLoaded || branchId) return;
     const rowId = settingsRowId || newId();
     if (!settingsRowId) setSettingsRowId(rowId);
     // Debounced -- a burst of rapid changes to this same row (e.g. clicking

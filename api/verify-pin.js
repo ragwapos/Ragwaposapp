@@ -44,6 +44,16 @@ function hexEquals(aHex, bHex) {
   return crypto.timingSafeEqual(a, b);
 }
 
+// A branch account (supabase-branches-accounts.sql) belongs to its owner's
+// tenant. PINs are the OWNER's: a branch login may verify them (to open a
+// section the owner locked) but must never set, change or remove them.
+async function resolveTenant(userId) {
+  const { data, error } = await supabaseAdmin.from('branch_members').select('tenant_id').eq('user_id', userId).eq('active', true).maybeSingle();
+  // 42P01: table not created yet (this code deployed before the SQL ran) -> plain owner.
+  if (error && error.code !== '42P01') throw error;
+  return data ? { tenantId: data.tenant_id, isBranchAccount: true } : { tenantId: userId, isBranchAccount: false };
+}
+
 async function getCredRow(tenantId, scope) {
   const { data, error } = await supabaseAdmin
     .from('owner_pin_credentials')
@@ -168,7 +178,8 @@ export default async function handler(req, res) {
   try {
     const { data: { user: caller }, error: callerErr } = await supabaseAdmin.auth.getUser(token);
     if (callerErr || !caller) return res.status(401).json({ success: false, error: 'invalid_token' });
-    const tenantId = caller.id;
+    const { tenantId, isBranchAccount } = await resolveTenant(caller.id);
+    if (isBranchAccount && action !== 'verify') return res.status(403).json({ success: false, error: 'not_authorized' });
 
     if (action === 'verify') {
       if (!SCOPES.has(scope) || !isPin(pin)) return res.status(400).json({ success: false, error: 'invalid_request' });

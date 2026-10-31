@@ -800,6 +800,7 @@ const LaundryPOS = () => {
   // zone until its own declaration line runs, regardless of the effect
   // callback itself only executing later.
   const [tenantId, setTenantId] = useState(null);
+  const [branchId, setBranchId] = useState(null);
   // Browser back/forward doesn't call navigate() (pushState doesn't fire
   // popstate), so it needs its own re-derivation straight from the URL —
   // same source of truth as the initial-mount lazy inits above.
@@ -983,6 +984,10 @@ const LaundryPOS = () => {
       db.from('registration_requests').select().eq('uid', user.id),
     ]);
     if (tenantRow) return { page: 'dashboard', tenantId: user.id };
+    // A branch account (supabase-branches-accounts.sql) has no tenants row of
+    // its own: it belongs to its owner's tenant and to one branch of it.
+    const { data: memberRow } = await db.from('branch_members').select('tenant_id, branch_id').eq('user_id', user.id).eq('active', true).maybeSingle();
+    if (memberRow) return { page: 'dashboard', tenantId: memberRow.tenant_id, branchId: memberRow.branch_id };
     const req = reqRows && reqRows[0] ? toCamelCase(reqRows[0]) : null;
     if (req && req.status === 'rejected') return { page: 'rejected', reason: req.rejectReason };
     return { page: 'pending' };
@@ -1043,6 +1048,7 @@ const LaundryPOS = () => {
           // "check your email" after the app already knows they're in.
           setShowEmailVerification(false); setPendingSignup(null);
           setTenantId(dest.tenantId);
+          setBranchId(dest.branchId || null);
           setCurrentPage('dashboard');
         } else if (dest.page === 'admin') {
           setShowEmailVerification(false); setPendingSignup(null);
@@ -1061,8 +1067,11 @@ const LaundryPOS = () => {
 
   const handleLogin = async () => {
     setLoginError('');
-    const emailNorm = loginEmail.trim().toLowerCase();
-    if (!emailNorm) { setLoginError('حط البريد الإلكتروني.'); return; }
+    const loginId = loginEmail.trim().toLowerCase();
+    if (!loginId) { setLoginError('حط البريد الإلكتروني.'); return; }
+    // A branch login is typed as a bare username; its real address is on the
+    // platform's branch domain (must match BRANCH_EMAIL_DOMAIN in api/branch-accounts.js).
+    const emailNorm = loginId.includes('@') ? loginId : `${loginId}@branches.ragwapos.com`;
     setLoginLoading(true);
     try {
       if (isAdminEmail(emailNorm)) {
@@ -1100,6 +1109,7 @@ const LaundryPOS = () => {
         setCurrentPage('pending');
       } else {
         setTenantId(dest.tenantId);
+        setBranchId(dest.branchId || null);
         setCurrentPage(dest.page);
       }
     } catch (e) {
@@ -1174,7 +1184,7 @@ const LaundryPOS = () => {
     setShowEmailVerification(false);
     setPendingSignup(null);
     const dest = await resolveDestination(user);
-    if (dest.page === 'dashboard') { setTenantId(dest.tenantId); setCurrentPage('dashboard'); }
+    if (dest.page === 'dashboard') { setTenantId(dest.tenantId); setBranchId(dest.branchId || null); setCurrentPage('dashboard'); }
     else if (dest.page === 'admin') setCurrentPage('admin');
     else setCurrentPage('pending');
   };
@@ -1184,6 +1194,7 @@ const LaundryPOS = () => {
     if (err) console.error(err);
     navigate('landing', '/');
     setTenantId(null);
+    setBranchId(null);
     setLoginEmail(''); setLoginPassword(''); setLoginError('');
   };
 
@@ -1322,7 +1333,7 @@ const LaundryPOS = () => {
     </Suspense>
   ) : (
     <Suspense fallback={<DashboardLoading />}>
-      <LaundryOpsApp tenantId={tenantId} onLogout={handleLogout} initialLang={siteLang} />
+      <LaundryOpsApp tenantId={tenantId} branchId={branchId} onLogout={handleLogout} initialLang={siteLang} />
     </Suspense>
   )}
     </>
