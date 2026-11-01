@@ -168,8 +168,8 @@ async function verifyScope(tenantId, scope, pin) {
   return { success: true };
 }
 
-// ---- branch manager PINs (a branch account's own lock on purchases/expenses and discounts) ----
-const BRANCH_SCOPES = new Set(['master', 'customers', 'purchases', 'promotions']);
+// ---- branch manager PINs (a branch account's own lock on customers, purchases/expenses, discounts and reports) ----
+const BRANCH_SCOPES = new Set(['master', 'customers', 'purchases', 'promotions', 'reports']);
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const branchScope = (branchId, scope) => `b:${branchId}:${scope}`;
 

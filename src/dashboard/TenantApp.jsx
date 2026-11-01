@@ -926,7 +926,7 @@ const DICT = {
     nav_pos: "Point of Sale", nav_invoices: "Active Invoices", nav_delivery: "Active Delivery Invoices",
     nav_customers: "Customer Ledger", nav_products: "Products", nav_purchases: "Purchases & Expenses",
     nav_promotions: "Promotions", nav_reports: "Reports", nav_whatsapp: "WhatsApp", nav_settings: "Settings",
-    nav_branches: "Branches", branches_title: "Branches", branches_subtitle: "Manage your laundry's branches", branches_add: "Add branch", branches_nameOptional: "Branch name (optional)", branches_defaultName: "Branch {n}", branches_autoNote: "The branch gets number {n} automatically and its invoices start with B{n}-. The number never changes, even if you rename the branch.", branches_costNote: "Each extra branch costs {n} SAR per year, pro-rated to the time left on your subscription, and renews with it.", branches_numberCol: "No.", branches_nameCol: "Branch", branches_prefixCol: "Invoice prefix", branches_noPrefix: "None (original numbering)", branches_rename: "Rename", branches_archive: "Archive", branches_restore: "Restore", branches_active: "Active", branches_archived: "Archived", branches_feeNote: "Extra branch fee for the rest of your subscription: {fee} SAR (VAT included). The branch is added after our team confirms your bank transfer.", branches_continuePay: "Continue to payment", branches_errTrial: "Free trial accounts cannot add branches. Subscribe to the annual plan first.", branches_pending: "Your request for branch '{name}' is under review. It will be added once payment is confirmed.", branches_rejected: "The payment for branch '{name}' was not accepted", branches_errUpdate: "Couldn't save the change. Please try again.", branches_picker_view: "Viewing", branches_all: "All branches", branches_search: "Search branches...", branches_noMatch: "No branch with that name", branches_workBranch: "Sale branch", branches_settingsTitle: "Branches", branches_settingsSingle: "Your laundry runs one branch. Add a second branch whenever you need one and the branch tools appear automatically.", branches_settingsMulti: "You have {n} active branches.", branches_manage: "Manage branches",
+    nav_branches: "Branches", branches_title: "Branches", branches_subtitle: "Manage your laundry's branches", branches_add: "Add branch", branches_nameOptional: "Branch name (optional)", branches_defaultName: "Branch {n}", branches_autoNote: "The branch gets number {n} automatically and its invoices start with B{n}-. The number never changes, even if you rename the branch.", branches_costNote: "Each extra branch costs {n} SAR per year, pro-rated to the time left on your subscription, and renews with it.", branches_numberCol: "No.", branches_nameCol: "Branch", branches_prefixCol: "Invoice prefix", branches_noPrefix: "None (original numbering)", branches_rename: "Rename", branches_archive: "Archive", branches_restore: "Restore", branches_active: "Active", branches_archived: "Archived", branches_feeNote: "Extra branch fee for the rest of your subscription: {fee} SAR (VAT included). The branch is added after our team confirms your bank transfer.", branches_continuePay: "Continue to payment", branches_errTrial: "Free trial accounts cannot add branches. Subscribe to the annual plan first.", branches_pending: "Your request for branch '{name}' is under review. It will be added once payment is confirmed.", branches_rejected: "The payment for branch '{name}' was not accepted", branches_errUpdate: "Couldn't save the change. Please try again.", branches_picker_view: "Viewing", branches_all: "All branches", branches_search: "Search branches...", branches_noMatch: "No branch with that name", branches_workBranch: "Sale branch", 
     branches_accountCol: "Login", branches_noAccount: "No login yet", branches_createAccount: "Create login", branches_resetPassword: "New password", branches_credentialsTitle: "Branch login", branches_credentialsNote: "Give these to the manager of {name}. The password is shown only now; if it is lost, create a new one.", branches_username: "Username", branches_password: "Password", branches_copy: "Copy", branches_copied: "Copied", branches_done: "Done", branches_errAccount: "Couldn't update the branch login. Please try again.", branches_yourBranch: "Your branch",
     branches_unlockTitle: "Owner PIN to view other branches", branches_needOwnerPin: "Set an owner PIN first (Settings) to view or sell as another branch.", branches_resetPin: "Reset branch PIN", branches_resetPinTitle: "Owner PIN to reset the PIN of {name}", branches_enterMasterTitle: "Branch manager PIN", branches_setMasterTitle: "Create the branch manager PIN", branches_lockHint: "Turn a section on to ask for your PIN before the branch staff can open it.", reports_kpi_outstandingDebtAll: "Outstanding Debt (all branches)",
 
@@ -1211,7 +1211,7 @@ const DICT = {
     nav_pos: "نقطة البيع", nav_invoices: "الفواتير النشطة", nav_delivery: "فواتير التوصيل النشطة",
     nav_customers: "سجل العملاء", nav_products: "المنتجات", nav_purchases: "المشتريات والمصروفات",
     nav_promotions: "العروض", nav_reports: "التقارير", nav_whatsapp: "واتس اب", nav_settings: "الإعدادات",
-    nav_branches: "الفروع", branches_title: "الفروع", branches_subtitle: "إدارة فروع المغسلة", branches_add: "إضافة فرع", branches_nameOptional: "اسم الفرع (اختياري)", branches_defaultName: "فرع {n}", branches_autoNote: "يُعطى الفرع الرقم {n} تلقائيًا وتبدأ فواتيره بـ B{n}-. الرقم ثابت حتى لو غيّرت اسم الفرع.", branches_costNote: "كل فرع إضافي بـ {n} ريال في السنة، يُحسب بالتناسب مع المتبقي من اشتراكك ويتجدد معه.", branches_numberCol: "الرقم", branches_nameCol: "الفرع", branches_prefixCol: "بادئة الفواتير", branches_noPrefix: "بدون (أرقام الفرع الأصلي)", branches_rename: "تعديل الاسم", branches_archive: "أرشفة", branches_restore: "استعادة", branches_active: "نشط", branches_archived: "مؤرشف", branches_feeNote: "رسوم الفرع الإضافي لباقي مدة اشتراكك: {fee} ريال (شامل الضريبة). يُضاف الفرع بعد تأكيد فريقنا للتحويل البنكي.", branches_continuePay: "متابعة للدفع", branches_errTrial: "حسابات التجربة المجانية لا تستطيع إضافة فروع. اشترك في الباقة السنوية أولًا.", branches_pending: "طلب الفرع «{name}» قيد المراجعة. سيُضاف فور تأكيد الدفع.", branches_rejected: "لم يُقبل دفع الفرع «{name}»", branches_errUpdate: "تعذّر حفظ التغيير، حاول مرة ثانية.", branches_picker_view: "عرض بيانات", branches_all: "كل الفروع", branches_search: "ابحث عن فرع...", branches_noMatch: "لا يوجد فرع بهذا الاسم", branches_workBranch: "فرع البيع", branches_settingsTitle: "الفروع", branches_settingsSingle: "مغسلتك تعمل بفرع واحد. أضف فرعًا ثانيًا متى احتجت، وتظهر أدوات الفروع تلقائيًا.", branches_settingsMulti: "عندك {n} فروع نشطة.", branches_manage: "إدارة الفروع",
+    nav_branches: "الفروع", branches_title: "الفروع", branches_subtitle: "إدارة فروع المغسلة", branches_add: "إضافة فرع", branches_nameOptional: "اسم الفرع (اختياري)", branches_defaultName: "فرع {n}", branches_autoNote: "يُعطى الفرع الرقم {n} تلقائيًا وتبدأ فواتيره بـ B{n}-. الرقم ثابت حتى لو غيّرت اسم الفرع.", branches_costNote: "كل فرع إضافي بـ {n} ريال في السنة، يُحسب بالتناسب مع المتبقي من اشتراكك ويتجدد معه.", branches_numberCol: "الرقم", branches_nameCol: "الفرع", branches_prefixCol: "بادئة الفواتير", branches_noPrefix: "بدون (أرقام الفرع الأصلي)", branches_rename: "تعديل الاسم", branches_archive: "أرشفة", branches_restore: "استعادة", branches_active: "نشط", branches_archived: "مؤرشف", branches_feeNote: "رسوم الفرع الإضافي لباقي مدة اشتراكك: {fee} ريال (شامل الضريبة). يُضاف الفرع بعد تأكيد فريقنا للتحويل البنكي.", branches_continuePay: "متابعة للدفع", branches_errTrial: "حسابات التجربة المجانية لا تستطيع إضافة فروع. اشترك في الباقة السنوية أولًا.", branches_pending: "طلب الفرع «{name}» قيد المراجعة. سيُضاف فور تأكيد الدفع.", branches_rejected: "لم يُقبل دفع الفرع «{name}»", branches_errUpdate: "تعذّر حفظ التغيير، حاول مرة ثانية.", branches_picker_view: "عرض بيانات", branches_all: "كل الفروع", branches_search: "ابحث عن فرع...", branches_noMatch: "لا يوجد فرع بهذا الاسم", branches_workBranch: "فرع البيع", 
     branches_accountCol: "حساب الدخول", branches_noAccount: "لا يوجد حساب", branches_createAccount: "إنشاء حساب", branches_resetPassword: "كلمة مرور جديدة", branches_credentialsTitle: "حساب دخول الفرع", branches_credentialsNote: "سلّم هذه البيانات لمدير فرع {name}. كلمة المرور تظهر الآن فقط، وإن ضاعت أنشئ واحدة جديدة.", branches_username: "اسم المستخدم", branches_password: "كلمة المرور", branches_copy: "نسخ", branches_copied: "تم النسخ", branches_done: "تم", branches_errAccount: "تعذّر تحديث حساب دخول الفرع، حاول مرة ثانية.", branches_yourBranch: "فرعك",
     branches_unlockTitle: "رمز المالك لعرض بقية الفروع", branches_needOwnerPin: "اضبط رمز المالك أولًا (الإعدادات) لعرض فرع آخر أو البيع باسمه.", branches_resetPin: "إعادة تعيين رمز الفرع", branches_resetPinTitle: "رمز المالك لإعادة تعيين رمز {name}", branches_enterMasterTitle: "رمز مدير الفرع", branches_setMasterTitle: "أنشئ رمز مدير الفرع", branches_lockHint: "فعّل أي قسم ليطلب رمزك قبل أن يفتحه موظفو الفرع.", reports_kpi_outstandingDebtAll: "إجمالي المستحق (كل الفروع)",
 
@@ -1496,7 +1496,7 @@ const DICT = {
     nav_pos: "پوائنٹ آف سیل", nav_invoices: "جاری آرڈرز", nav_delivery: "جاری ڈیلیوری آرڈرز",
     nav_customers: "کسٹمر لیجر", nav_products: "پروڈکٹس", nav_purchases: "خریداری اور اخراجات",
     nav_promotions: "پرموشنز", nav_reports: "رپورٹس", nav_whatsapp: "واٹس ایپ", nav_settings: "سیٹنگز",
-    nav_branches: "برانچز", branches_title: "برانچز", branches_subtitle: "لانڈری کی برانچز کا انتظام", branches_add: "برانچ شامل کریں", branches_nameOptional: "برانچ کا نام (اختیاری)", branches_defaultName: "برانچ {n}", branches_autoNote: "برانچ کو خود بخود نمبر {n} ملتا ہے اور اس کی انوائسز B{n}- سے شروع ہوتی ہیں۔ نام بدلنے پر بھی نمبر نہیں بدلتا۔", branches_costNote: "ہر اضافی برانچ کی فیس سالانہ {n} ریال ہے، جو آپ کی سبسکرپشن کے باقی وقت کے حساب سے لگتی ہے اور اسی کے ساتھ تجدید ہوتی ہے۔", branches_numberCol: "نمبر", branches_nameCol: "برانچ", branches_prefixCol: "انوائس کا سابقہ", branches_noPrefix: "کوئی نہیں (اصل نمبرنگ)", branches_rename: "نام تبدیل کریں", branches_archive: "آرکائیو", branches_restore: "بحال کریں", branches_active: "فعال", branches_archived: "آرکائیو شدہ", branches_feeNote: "آپ کی سبسکرپشن کی باقی مدت کے لیے اضافی برانچ کی فیس: {fee} ریال (VAT سمیت)۔ ہماری ٹیم بینک ٹرانسفر کی تصدیق کے بعد برانچ شامل کرے گی۔", branches_continuePay: "ادائیگی کے لیے آگے بڑھیں", branches_errTrial: "مفت ٹرائل اکاؤنٹس برانچ شامل نہیں کر سکتے۔ پہلے سالانہ پلان لیں۔", branches_pending: "برانچ «{name}» کی درخواست زیرِ جائزہ ہے۔ ادائیگی کی تصدیق کے بعد شامل ہو جائے گی۔", branches_rejected: "برانچ «{name}» کی ادائیگی قبول نہیں ہوئی", branches_errUpdate: "تبدیلی محفوظ نہیں ہو سکی، دوبارہ کوشش کریں۔", branches_picker_view: "ڈیٹا دیکھیں", branches_all: "تمام برانچز", branches_search: "برانچ تلاش کریں...", branches_noMatch: "اس نام کی کوئی برانچ نہیں", branches_workBranch: "سیل برانچ", branches_settingsTitle: "برانچز", branches_settingsSingle: "آپ کی لانڈری ایک برانچ پر چلتی ہے۔ جب چاہیں دوسری برانچ شامل کریں، برانچ ٹولز خود ظاہر ہو جائیں گے۔", branches_settingsMulti: "آپ کی {n} فعال برانچز ہیں۔", branches_manage: "برانچز کا انتظام",
+    nav_branches: "برانچز", branches_title: "برانچز", branches_subtitle: "لانڈری کی برانچز کا انتظام", branches_add: "برانچ شامل کریں", branches_nameOptional: "برانچ کا نام (اختیاری)", branches_defaultName: "برانچ {n}", branches_autoNote: "برانچ کو خود بخود نمبر {n} ملتا ہے اور اس کی انوائسز B{n}- سے شروع ہوتی ہیں۔ نام بدلنے پر بھی نمبر نہیں بدلتا۔", branches_costNote: "ہر اضافی برانچ کی فیس سالانہ {n} ریال ہے، جو آپ کی سبسکرپشن کے باقی وقت کے حساب سے لگتی ہے اور اسی کے ساتھ تجدید ہوتی ہے۔", branches_numberCol: "نمبر", branches_nameCol: "برانچ", branches_prefixCol: "انوائس کا سابقہ", branches_noPrefix: "کوئی نہیں (اصل نمبرنگ)", branches_rename: "نام تبدیل کریں", branches_archive: "آرکائیو", branches_restore: "بحال کریں", branches_active: "فعال", branches_archived: "آرکائیو شدہ", branches_feeNote: "آپ کی سبسکرپشن کی باقی مدت کے لیے اضافی برانچ کی فیس: {fee} ریال (VAT سمیت)۔ ہماری ٹیم بینک ٹرانسفر کی تصدیق کے بعد برانچ شامل کرے گی۔", branches_continuePay: "ادائیگی کے لیے آگے بڑھیں", branches_errTrial: "مفت ٹرائل اکاؤنٹس برانچ شامل نہیں کر سکتے۔ پہلے سالانہ پلان لیں۔", branches_pending: "برانچ «{name}» کی درخواست زیرِ جائزہ ہے۔ ادائیگی کی تصدیق کے بعد شامل ہو جائے گی۔", branches_rejected: "برانچ «{name}» کی ادائیگی قبول نہیں ہوئی", branches_errUpdate: "تبدیلی محفوظ نہیں ہو سکی، دوبارہ کوشش کریں۔", branches_picker_view: "ڈیٹا دیکھیں", branches_all: "تمام برانچز", branches_search: "برانچ تلاش کریں...", branches_noMatch: "اس نام کی کوئی برانچ نہیں", branches_workBranch: "سیل برانچ", 
     branches_accountCol: "لاگ ان", branches_noAccount: "ابھی لاگ ان نہیں", branches_createAccount: "لاگ ان بنائیں", branches_resetPassword: "نیا پاس ورڈ", branches_credentialsTitle: "برانچ لاگ ان", branches_credentialsNote: "یہ معلومات {name} کے مینیجر کو دیں۔ پاس ورڈ صرف ابھی نظر آتا ہے، گم ہو جائے تو نیا بنائیں۔", branches_username: "صارف نام", branches_password: "پاس ورڈ", branches_copy: "کاپی", branches_copied: "کاپی ہو گیا", branches_done: "ہو گیا", branches_errAccount: "برانچ لاگ ان اپ ڈیٹ نہیں ہو سکا، دوبارہ کوشش کریں۔", branches_yourBranch: "آپ کی برانچ",
     branches_unlockTitle: "دوسری برانچز دیکھنے کے لیے مالک کا پن", branches_needOwnerPin: "دوسری برانچ دیکھنے یا اس کے نام پر بیچنے کے لیے پہلے مالک کا پن سیٹ کریں (سیٹنگز)۔", branches_resetPin: "برانچ کا پن ری سیٹ کریں", branches_resetPinTitle: "{name} کا پن ری سیٹ کرنے کے لیے مالک کا پن", branches_enterMasterTitle: "برانچ مینیجر کا پن", branches_setMasterTitle: "برانچ مینیجر کا پن بنائیں", branches_lockHint: "کسی حصے کو فعال کریں تاکہ برانچ کا عملہ اسے کھولنے سے پہلے آپ کا پن مانگے۔", reports_kpi_outstandingDebtAll: "کل واجب الادا (تمام برانچز)",
 
@@ -1787,9 +1787,9 @@ function useLang() {
   return { lang: ctx.lang, setLang: ctx.setLang, dir: ctx.dir, t };
 }
 
-// Multi-branch support. A tenant always owns one main branch (number 1); the
-// branch UI (picker, "الفروع" tab, branch column/prefix) only exists once it
-// has 2+ active branches, so a single-branch shop sees no difference at all.
+// Multi-branch support. A tenant always owns one main branch (number 1). The
+// "الفروع" tab is always there for the owner; the rest of the branch UI (picker,
+// branch column/prefix) only exists once it has 2+ active branches.
 // Customers, wallets, products and suppliers stay shared across branches;
 // invoices, wallet movements, purchases and expenses belong to one branch.
 const BranchCtx = createContext({
@@ -1917,7 +1917,7 @@ function Sidebar({ tab, setTab, sectionLocks, merchant, onNavigate = () => {}, o
         </div>
       )}
       <nav className="flex-1 space-y-1 px-3">
-        {NAV.filter((n) => !(isBranchAccount && BRANCH_ACCOUNT_HIDDEN.has(n.key))).filter((n) => n.key !== "branches" || multi).map((n, i) => {
+        {NAV.filter((n) => !(isBranchAccount && BRANCH_ACCOUNT_HIDDEN.has(n.key))).map((n, i) => {
           const Icon = n.icon;
           const active = tab === n.key;
           const locked = Boolean(sectionLocks[n.key]);
@@ -6222,31 +6222,15 @@ function BranchesView() {
   );
 }
 
-// Settings entry point for the branches feature. For a single-branch shop this
-// card is the ONLY place branches show up anywhere in the app.
-function BranchesSettingsCard({ onOpen }) {
-  const { t } = useLang();
-  const { multi, activeBranches } = useBranches();
-  return (
-    <div className="mb-4 rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2 text-sm font-semibold text-app-text"><Store size={16} className="text-brand-600" /> {t("branches_settingsTitle")}</div>
-          <p className="mt-1 text-xs text-app-text-subtle">{multi ? t("branches_settingsMulti", { n: activeBranches.length }) : t("branches_settingsSingle")}</p>
-        </div>
-        <button onClick={onOpen} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">{multi ? t("branches_manage") : t("branches_add")}</button>
-      </div>
-    </div>
-  );
-}
-
 // The branch manager's own, much smaller version of Settings: just the PIN lock
-// on purchases/expenses and discounts (same master-PIN-then-section-PIN flow the
-// owner uses, but the credentials are the branch's own), plus logging out.
+// on customers, purchases/expenses, discounts and reports (same master-PIN-then-
+// section-PIN flow the owner uses, but the credentials are the branch's own),
+// plus logging out.
 const BRANCH_LOCK_SECTIONS = [
   { key: "customers", labelKey: "nav_customers" },
   { key: "purchases", labelKey: "nav_purchases" },
   { key: "promotions", labelKey: "nav_promotions" },
+  { key: "reports", labelKey: "nav_reports" },
 ];
 
 function BranchSettingsView({ ownerPinSet, sectionLocks, onLogout }) {
@@ -6326,7 +6310,7 @@ function BranchSettingsView({ ownerPinSet, sectionLocks, onLogout }) {
   );
 }
 
-function SettingsView({ merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, onLogout, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig, onOpenBranches }) {
+function SettingsView({ merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, onLogout, zatcaConfig, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { lang, setLang, t } = useLang();
   const options = [
     { code: "ar", key: "settings_lang_ar" },
@@ -6378,7 +6362,6 @@ function SettingsView({ merchant, setMerchant, ownerPinSet, sectionLocks, enable
     <div className="max-w-5xl space-y-6">
       <div>
         <div className="mb-4 f-display text-xl font-semibold text-app-text">{t("settings_title")}</div>
-        <BranchesSettingsCard onOpen={onOpenBranches} />
         <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
           <div className="mb-1 flex items-center gap-2 text-sm font-semibold text-app-text"><Globe size={16} className="text-brand-600" /> {t("settings_language")}</div>
           <p className="mb-4 text-xs text-app-text-subtle">{t("settings_languageHint")}</p>
@@ -6618,7 +6601,7 @@ function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pe
         {tab === "whatsapp" && <WhatsAppView whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} readyMessageEnabled={readyMessageEnabled} setReadyMessageEnabled={setReadyMessageEnabled} readyMessageTemplate={readyMessageTemplate} setReadyMessageTemplate={setReadyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} setWhatsappReadySendMode={setWhatsappReadySendMode} />}
         {tab === "branches" && <BranchesView />}
         {tab === "settings" && isBranchAccount && <BranchSettingsView ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} onLogout={onLogout} />}
-        {tab === "settings" && !isBranchAccount && <SettingsView onOpenBranches={() => navigateTab("branches")} merchant={merchant} setMerchant={setMerchant} ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
+        {tab === "settings" && !isBranchAccount && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
         </main>
       </div>
       {/* Same PIN-prompt-on-locked-nav flow the sidebar always had —
@@ -7118,15 +7101,19 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   // run any earlier. Runs once: initialDeepLinkResolved guards against
   // sectionLocks changing again later (e.g. the owner edits a lock
   // remotely while this tab is already open) suddenly popping a PIN prompt
-  // for whatever screen is already showing.
+  // for whatever screen is already showing. A branch login's locks come from
+  // its branch row instead (see below), which loads separately, so it also
+  // waits for branchLocksReady: otherwise a refresh on /reports would see every
+  // section as unlocked and skip the PIN.
   const initialDeepLinkResolved = useRef(false);
+  const [branchLocksReady, setBranchLocksReady] = useState(false);
   useEffect(() => {
-    if (initialDeepLinkResolved.current || !settingsLoaded) return;
+    if (initialDeepLinkResolved.current || !settingsLoaded || (branchId && !branchLocksReady)) return;
     initialDeepLinkResolved.current = true;
     const resolved = tabForPath(window.location.pathname);
     if (!resolved || resolved.tab === 'home') return;
     requestTab(resolved.tab, resolved.subTab);
-  }, [settingsLoaded]);
+  }, [settingsLoaded, branchLocksReady]);
 
   useEffect(() => {
     if (!tenantId || !settingsLoaded || branchId) return;
@@ -7391,7 +7378,8 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     const locked = new Set(JSON.parse(ownBranchLocks));
     setSectionLocks(Object.fromEntries(OWNER_SECTIONS.map((s) => [s.key, locked.has(s.key)])));
     setOwnerPinSet(Boolean(ownBranch?.pinSet));
-  }, [branchId, ownBranchLocks, ownBranch?.pinSet]);
+    if (ownBranch) setBranchLocksReady(true);
+  }, [branchId, ownBranchLocks, ownBranch?.pinSet, Boolean(ownBranch)]);
 
   const branchCtx = {
     multi: multiBranch, branches, activeBranches, scope: branchScope, work: workBranch, workName: workBranch ? workBranch.name : null,
