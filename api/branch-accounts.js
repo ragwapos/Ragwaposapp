@@ -4,6 +4,7 @@ import { SUPABASE_URL } from './_supabaseConfig.js';
 import { Sentry } from './_sentry.js';
 import { applyCors } from './_cors.js';
 import { checkRateLimit } from './_rateLimit.js';
+import { isPin, verifyScope } from './_ownerPin.js';
 
 // Owner-only management of branch logins (supabase-branches-accounts.sql).
 // A branch account is a Supabase auth user that belongs to ONE branch of the
@@ -11,7 +12,9 @@ import { checkRateLimit } from './_rateLimit.js';
 // only creates / resets / (de)activates it. It needs the service-role key
 // (auth.admin), so the caller is verified here first: only the tenant owner
 // (a user whose id IS a tenants row) can manage that tenant's branch accounts
-// -- never a branch account itself, never anyone for another tenant.
+// -- never a branch account itself, never anyone for another tenant. The owner
+// login may be open on a shared counter device, so every action here also needs
+// the owner's master PIN.
 const supabaseAdmin = createClient(
   SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -42,8 +45,8 @@ export default async function handler(req, res) {
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   if (!token) return res.status(401).json({ success: false, error: 'missing_token' });
 
-  const { action, branchId, status } = req.body || {};
-  if (!['create', 'reset_password', 'set_status'].includes(action) || typeof branchId !== 'string') {
+  const { action, branchId, status, masterPin } = req.body || {};
+  if (!['create', 'reset_password', 'set_status'].includes(action) || typeof branchId !== 'string' || !isPin(masterPin)) {
     return res.status(400).json({ success: false, error: 'invalid_request' });
   }
 
@@ -58,6 +61,12 @@ export default async function handler(req, res) {
     const { data: tenantRow, error: tenantErr } = await supabaseAdmin.from('tenants').select('id').eq('id', tenantId).maybeSingle();
     if (tenantErr) throw tenantErr;
     if (!tenantRow) return res.status(403).json({ success: false, error: 'not_authorized' });
+
+    // Checked only after the owner test above, so a branch login can't burn the
+    // owner PIN's failed-attempt counter from here.
+    if (!(await checkRateLimit(res, 'pin-manage', `${tenantId}:master`, 10, '1 m'))) return;
+    const masterCheck = await verifyScope(tenantId, 'master', masterPin);
+    if (!masterCheck.success) return res.status(403).json({ success: false, error: masterCheck.error === 'not_set' ? 'owner_pin_required' : 'master_pin_invalid' });
 
     // The branch must belong to the caller's own tenant.
     const { data: branch, error: branchErr } = await supabaseAdmin

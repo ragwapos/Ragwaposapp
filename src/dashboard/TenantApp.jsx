@@ -926,8 +926,8 @@ const DICT = {
     nav_pos: "Point of Sale", nav_invoices: "Active Invoices", nav_delivery: "Active Delivery Invoices",
     nav_customers: "Customer Ledger", nav_products: "Products", nav_purchases: "Purchases & Expenses",
     nav_promotions: "Promotions", nav_reports: "Reports", nav_whatsapp: "WhatsApp", nav_settings: "Settings",
-    nav_branches: "Branches", branches_title: "Branches", branches_subtitle: "Manage your laundry's branches", branches_add: "Add branch", branches_nameOptional: "Branch name (optional)", branches_defaultName: "Branch {n}", branches_autoNote: "The branch gets number {n} automatically and its invoices start with B{n}-. The number never changes, even if you rename the branch.", branches_costNote: "Each extra branch costs {n} SAR per year, pro-rated to the time left on your subscription, and renews with it.", branches_numberCol: "No.", branches_nameCol: "Branch", branches_prefixCol: "Invoice prefix", branches_noPrefix: "None (original numbering)", branches_rename: "Rename", branches_archive: "Archive", branches_restore: "Restore", branches_active: "Active", branches_archived: "Archived", branches_feeNote: "Extra branch fee for the rest of your subscription: {fee} SAR (VAT included). The branch is added after our team confirms your bank transfer.", branches_continuePay: "Continue to payment", branches_errTrial: "Free trial accounts cannot add branches. Subscribe to the annual plan first.", branches_pending: "Your request for branch '{name}' is under review. It will be added once payment is confirmed.", branches_rejected: "The payment for branch '{name}' was not accepted", branches_errUpdate: "Couldn't save the change. Please try again.", branches_picker_view: "Viewing", branches_all: "All branches", branches_search: "Search branches...", branches_noMatch: "No branch with that name", branches_workBranch: "Sale branch", 
-    branches_accountCol: "Login", branches_noAccount: "No login yet", branches_createAccount: "Create login", branches_resetPassword: "New password", branches_credentialsTitle: "Branch login", branches_credentialsNote: "Give these to the manager of {name}. The password is shown only now; if it is lost, create a new one.", branches_username: "Username", branches_password: "Password", branches_copy: "Copy", branches_copied: "Copied", branches_done: "Done", branches_errAccount: "Couldn't update the branch login. Please try again.", branches_yourBranch: "Your branch",
+    nav_branches: "Branches", branches_title: "Branches", branches_subtitle: "Manage your laundry's branches", branches_add: "Add branch", branches_nameOptional: "Branch name (optional)", branches_defaultName: "Branch {n}", branches_autoNote: "The branch gets number {n} automatically and its invoices start with B{n}-. The number never changes, even if you rename the branch.", branches_costNote: "Each extra branch costs {n} SAR per year, pro-rated to the time left on your subscription, and renews with it.", branches_staffNote: "“Create login” gives your staff a separate login from yours, even with one branch and at no charge. It doesn't show the overview or your settings.", branches_ownerPinRequired: "Set the owner PIN in Settings first, then try again.", branches_ownerPinTitle: "Owner PIN to manage branches and logins", branches_numberCol: "No.", branches_nameCol: "Branch", branches_prefixCol: "Invoice prefix", branches_noPrefix: "None (original numbering)", branches_rename: "Rename", branches_archive: "Archive", branches_restore: "Restore", branches_active: "Active", branches_archived: "Archived", branches_feeNote: "Extra branch fee for the rest of your subscription: {fee} SAR (VAT included). The branch is added after our team confirms your bank transfer.", branches_continuePay: "Continue to payment", branches_errTrial: "Free trial accounts cannot add branches. Subscribe to the annual plan first.", branches_pending: "Your request for branch '{name}' is under review. It will be added once payment is confirmed.", branches_rejected: "The payment for branch '{name}' was not accepted", branches_errUpdate: "Couldn't save the change. Please try again.", branches_picker_view: "Viewing", branches_all: "All branches", branches_search: "Search branches...", branches_noMatch: "No branch with that name", branches_workBranch: "Sale branch", 
+    branches_accountCol: "Login", branches_noAccount: "No login yet", branches_createAccount: "Create login", branches_resetPassword: "New password", branches_credentialsTitle: "Branch login", branches_credentialsNote: "Give these to the staff of {name}. The password is shown only now; if it is lost, create a new one.", branches_username: "Username", branches_password: "Password", branches_copy: "Copy", branches_copied: "Copied", branches_done: "Done", branches_errAccount: "Couldn't update the branch login. Please try again.", branches_yourBranch: "Your branch",
     branches_unlockTitle: "Owner PIN to view other branches", branches_needOwnerPin: "Set an owner PIN first (Settings) to view or sell as another branch.", branches_resetPin: "Reset branch PIN", branches_resetPinTitle: "Owner PIN to reset the PIN of {name}", branches_enterMasterTitle: "Branch manager PIN", branches_setMasterTitle: "Create the branch manager PIN", branches_lockHint: "Turn a section on to ask for your PIN before the branch staff can open it.", reports_kpi_outstandingDebtAll: "Outstanding Debt (all branches)",
 
     home_welcomeBack: "Welcome back", home_salesToday: "Today's Sales", home_ordersToday: "Today's Orders",
@@ -1211,8 +1211,8 @@ const DICT = {
     nav_pos: "نقطة البيع", nav_invoices: "الفواتير النشطة", nav_delivery: "فواتير التوصيل النشطة",
     nav_customers: "سجل العملاء", nav_products: "المنتجات", nav_purchases: "المشتريات والمصروفات",
     nav_promotions: "العروض", nav_reports: "التقارير", nav_whatsapp: "واتس اب", nav_settings: "الإعدادات",
-    nav_branches: "الفروع", branches_title: "الفروع", branches_subtitle: "إدارة فروع المغسلة", branches_add: "إضافة فرع", branches_nameOptional: "اسم الفرع (اختياري)", branches_defaultName: "فرع {n}", branches_autoNote: "يُعطى الفرع الرقم {n} تلقائيًا وتبدأ فواتيره بـ B{n}-. الرقم ثابت حتى لو غيّرت اسم الفرع.", branches_costNote: "كل فرع إضافي بـ {n} ريال في السنة، يُحسب بالتناسب مع المتبقي من اشتراكك ويتجدد معه.", branches_numberCol: "الرقم", branches_nameCol: "الفرع", branches_prefixCol: "بادئة الفواتير", branches_noPrefix: "بدون (أرقام الفرع الأصلي)", branches_rename: "تعديل الاسم", branches_archive: "أرشفة", branches_restore: "استعادة", branches_active: "نشط", branches_archived: "مؤرشف", branches_feeNote: "رسوم الفرع الإضافي لباقي مدة اشتراكك: {fee} ريال (شامل الضريبة). يُضاف الفرع بعد تأكيد فريقنا للتحويل البنكي.", branches_continuePay: "متابعة للدفع", branches_errTrial: "حسابات التجربة المجانية لا تستطيع إضافة فروع. اشترك في الباقة السنوية أولًا.", branches_pending: "طلب الفرع «{name}» قيد المراجعة. سيُضاف فور تأكيد الدفع.", branches_rejected: "لم يُقبل دفع الفرع «{name}»", branches_errUpdate: "تعذّر حفظ التغيير، حاول مرة ثانية.", branches_picker_view: "عرض بيانات", branches_all: "كل الفروع", branches_search: "ابحث عن فرع...", branches_noMatch: "لا يوجد فرع بهذا الاسم", branches_workBranch: "فرع البيع", 
-    branches_accountCol: "حساب الدخول", branches_noAccount: "لا يوجد حساب", branches_createAccount: "إنشاء حساب", branches_resetPassword: "كلمة مرور جديدة", branches_credentialsTitle: "حساب دخول الفرع", branches_credentialsNote: "سلّم هذه البيانات لمدير فرع {name}. كلمة المرور تظهر الآن فقط، وإن ضاعت أنشئ واحدة جديدة.", branches_username: "اسم المستخدم", branches_password: "كلمة المرور", branches_copy: "نسخ", branches_copied: "تم النسخ", branches_done: "تم", branches_errAccount: "تعذّر تحديث حساب دخول الفرع، حاول مرة ثانية.", branches_yourBranch: "فرعك",
+    nav_branches: "الفروع", branches_title: "الفروع", branches_subtitle: "إدارة فروع المغسلة", branches_add: "إضافة فرع", branches_nameOptional: "اسم الفرع (اختياري)", branches_defaultName: "فرع {n}", branches_autoNote: "يُعطى الفرع الرقم {n} تلقائيًا وتبدأ فواتيره بـ B{n}-. الرقم ثابت حتى لو غيّرت اسم الفرع.", branches_costNote: "كل فرع إضافي بـ {n} ريال في السنة، يُحسب بالتناسب مع المتبقي من اشتراكك ويتجدد معه.", branches_staffNote: "«إنشاء حساب» يعطي موظفيك دخولًا منفصلًا عن حسابك، حتى لو عندك فرع واحد وبدون رسوم. لا يعرض النظرة العامة ولا إعداداتك.", branches_ownerPinRequired: "اضبط رمز المالك أولًا من الإعدادات، ثم أعد المحاولة.", branches_ownerPinTitle: "رمز المالك لإدارة الفروع والحسابات", branches_numberCol: "الرقم", branches_nameCol: "الفرع", branches_prefixCol: "بادئة الفواتير", branches_noPrefix: "بدون (أرقام الفرع الأصلي)", branches_rename: "تعديل الاسم", branches_archive: "أرشفة", branches_restore: "استعادة", branches_active: "نشط", branches_archived: "مؤرشف", branches_feeNote: "رسوم الفرع الإضافي لباقي مدة اشتراكك: {fee} ريال (شامل الضريبة). يُضاف الفرع بعد تأكيد فريقنا للتحويل البنكي.", branches_continuePay: "متابعة للدفع", branches_errTrial: "حسابات التجربة المجانية لا تستطيع إضافة فروع. اشترك في الباقة السنوية أولًا.", branches_pending: "طلب الفرع «{name}» قيد المراجعة. سيُضاف فور تأكيد الدفع.", branches_rejected: "لم يُقبل دفع الفرع «{name}»", branches_errUpdate: "تعذّر حفظ التغيير، حاول مرة ثانية.", branches_picker_view: "عرض بيانات", branches_all: "كل الفروع", branches_search: "ابحث عن فرع...", branches_noMatch: "لا يوجد فرع بهذا الاسم", branches_workBranch: "فرع البيع", 
+    branches_accountCol: "حساب الدخول", branches_noAccount: "لا يوجد حساب", branches_createAccount: "إنشاء حساب", branches_resetPassword: "كلمة مرور جديدة", branches_credentialsTitle: "حساب دخول الفرع", branches_credentialsNote: "سلّم هذه البيانات لموظفي {name}. كلمة المرور تظهر الآن فقط، وإن ضاعت أنشئ واحدة جديدة.", branches_username: "اسم المستخدم", branches_password: "كلمة المرور", branches_copy: "نسخ", branches_copied: "تم النسخ", branches_done: "تم", branches_errAccount: "تعذّر تحديث حساب دخول الفرع، حاول مرة ثانية.", branches_yourBranch: "فرعك",
     branches_unlockTitle: "رمز المالك لعرض بقية الفروع", branches_needOwnerPin: "اضبط رمز المالك أولًا (الإعدادات) لعرض فرع آخر أو البيع باسمه.", branches_resetPin: "إعادة تعيين رمز الفرع", branches_resetPinTitle: "رمز المالك لإعادة تعيين رمز {name}", branches_enterMasterTitle: "رمز مدير الفرع", branches_setMasterTitle: "أنشئ رمز مدير الفرع", branches_lockHint: "فعّل أي قسم ليطلب رمزك قبل أن يفتحه موظفو الفرع.", reports_kpi_outstandingDebtAll: "إجمالي المستحق (كل الفروع)",
 
     home_welcomeBack: "أهلاً بك", home_salesToday: "مبيعات اليوم", home_ordersToday: "طلبات اليوم",
@@ -1496,8 +1496,8 @@ const DICT = {
     nav_pos: "پوائنٹ آف سیل", nav_invoices: "جاری آرڈرز", nav_delivery: "جاری ڈیلیوری آرڈرز",
     nav_customers: "کسٹمر لیجر", nav_products: "پروڈکٹس", nav_purchases: "خریداری اور اخراجات",
     nav_promotions: "پرموشنز", nav_reports: "رپورٹس", nav_whatsapp: "واٹس ایپ", nav_settings: "سیٹنگز",
-    nav_branches: "برانچز", branches_title: "برانچز", branches_subtitle: "لانڈری کی برانچز کا انتظام", branches_add: "برانچ شامل کریں", branches_nameOptional: "برانچ کا نام (اختیاری)", branches_defaultName: "برانچ {n}", branches_autoNote: "برانچ کو خود بخود نمبر {n} ملتا ہے اور اس کی انوائسز B{n}- سے شروع ہوتی ہیں۔ نام بدلنے پر بھی نمبر نہیں بدلتا۔", branches_costNote: "ہر اضافی برانچ کی فیس سالانہ {n} ریال ہے، جو آپ کی سبسکرپشن کے باقی وقت کے حساب سے لگتی ہے اور اسی کے ساتھ تجدید ہوتی ہے۔", branches_numberCol: "نمبر", branches_nameCol: "برانچ", branches_prefixCol: "انوائس کا سابقہ", branches_noPrefix: "کوئی نہیں (اصل نمبرنگ)", branches_rename: "نام تبدیل کریں", branches_archive: "آرکائیو", branches_restore: "بحال کریں", branches_active: "فعال", branches_archived: "آرکائیو شدہ", branches_feeNote: "آپ کی سبسکرپشن کی باقی مدت کے لیے اضافی برانچ کی فیس: {fee} ریال (VAT سمیت)۔ ہماری ٹیم بینک ٹرانسفر کی تصدیق کے بعد برانچ شامل کرے گی۔", branches_continuePay: "ادائیگی کے لیے آگے بڑھیں", branches_errTrial: "مفت ٹرائل اکاؤنٹس برانچ شامل نہیں کر سکتے۔ پہلے سالانہ پلان لیں۔", branches_pending: "برانچ «{name}» کی درخواست زیرِ جائزہ ہے۔ ادائیگی کی تصدیق کے بعد شامل ہو جائے گی۔", branches_rejected: "برانچ «{name}» کی ادائیگی قبول نہیں ہوئی", branches_errUpdate: "تبدیلی محفوظ نہیں ہو سکی، دوبارہ کوشش کریں۔", branches_picker_view: "ڈیٹا دیکھیں", branches_all: "تمام برانچز", branches_search: "برانچ تلاش کریں...", branches_noMatch: "اس نام کی کوئی برانچ نہیں", branches_workBranch: "سیل برانچ", 
-    branches_accountCol: "لاگ ان", branches_noAccount: "ابھی لاگ ان نہیں", branches_createAccount: "لاگ ان بنائیں", branches_resetPassword: "نیا پاس ورڈ", branches_credentialsTitle: "برانچ لاگ ان", branches_credentialsNote: "یہ معلومات {name} کے مینیجر کو دیں۔ پاس ورڈ صرف ابھی نظر آتا ہے، گم ہو جائے تو نیا بنائیں۔", branches_username: "صارف نام", branches_password: "پاس ورڈ", branches_copy: "کاپی", branches_copied: "کاپی ہو گیا", branches_done: "ہو گیا", branches_errAccount: "برانچ لاگ ان اپ ڈیٹ نہیں ہو سکا، دوبارہ کوشش کریں۔", branches_yourBranch: "آپ کی برانچ",
+    nav_branches: "برانچز", branches_title: "برانچز", branches_subtitle: "لانڈری کی برانچز کا انتظام", branches_add: "برانچ شامل کریں", branches_nameOptional: "برانچ کا نام (اختیاری)", branches_defaultName: "برانچ {n}", branches_autoNote: "برانچ کو خود بخود نمبر {n} ملتا ہے اور اس کی انوائسز B{n}- سے شروع ہوتی ہیں۔ نام بدلنے پر بھی نمبر نہیں بدلتا۔", branches_costNote: "ہر اضافی برانچ کی فیس سالانہ {n} ریال ہے، جو آپ کی سبسکرپشن کے باقی وقت کے حساب سے لگتی ہے اور اسی کے ساتھ تجدید ہوتی ہے۔", branches_staffNote: "«لاگ ان بنائیں» سے آپ کے عملے کو آپ سے الگ لاگ ان ملتا ہے، ایک برانچ پر بھی اور بغیر فیس کے۔ اس میں جائزہ اور آپ کی سیٹنگز نظر نہیں آتیں۔", branches_ownerPinRequired: "پہلے سیٹنگز میں مالک کا PIN سیٹ کریں، پھر دوبارہ کوشش کریں۔", branches_ownerPinTitle: "برانچز اور لاگ ان کے انتظام کے لیے مالک کا PIN", branches_numberCol: "نمبر", branches_nameCol: "برانچ", branches_prefixCol: "انوائس کا سابقہ", branches_noPrefix: "کوئی نہیں (اصل نمبرنگ)", branches_rename: "نام تبدیل کریں", branches_archive: "آرکائیو", branches_restore: "بحال کریں", branches_active: "فعال", branches_archived: "آرکائیو شدہ", branches_feeNote: "آپ کی سبسکرپشن کی باقی مدت کے لیے اضافی برانچ کی فیس: {fee} ریال (VAT سمیت)۔ ہماری ٹیم بینک ٹرانسفر کی تصدیق کے بعد برانچ شامل کرے گی۔", branches_continuePay: "ادائیگی کے لیے آگے بڑھیں", branches_errTrial: "مفت ٹرائل اکاؤنٹس برانچ شامل نہیں کر سکتے۔ پہلے سالانہ پلان لیں۔", branches_pending: "برانچ «{name}» کی درخواست زیرِ جائزہ ہے۔ ادائیگی کی تصدیق کے بعد شامل ہو جائے گی۔", branches_rejected: "برانچ «{name}» کی ادائیگی قبول نہیں ہوئی", branches_errUpdate: "تبدیلی محفوظ نہیں ہو سکی، دوبارہ کوشش کریں۔", branches_picker_view: "ڈیٹا دیکھیں", branches_all: "تمام برانچز", branches_search: "برانچ تلاش کریں...", branches_noMatch: "اس نام کی کوئی برانچ نہیں", branches_workBranch: "سیل برانچ", 
+    branches_accountCol: "لاگ ان", branches_noAccount: "ابھی لاگ ان نہیں", branches_createAccount: "لاگ ان بنائیں", branches_resetPassword: "نیا پاس ورڈ", branches_credentialsTitle: "برانچ لاگ ان", branches_credentialsNote: "یہ معلومات {name} کے عملے کو دیں۔ پاس ورڈ صرف ابھی نظر آتا ہے، گم ہو جائے تو نیا بنائیں۔", branches_username: "صارف نام", branches_password: "پاس ورڈ", branches_copy: "کاپی", branches_copied: "کاپی ہو گیا", branches_done: "ہو گیا", branches_errAccount: "برانچ لاگ ان اپ ڈیٹ نہیں ہو سکا، دوبارہ کوشش کریں۔", branches_yourBranch: "آپ کی برانچ",
     branches_unlockTitle: "دوسری برانچز دیکھنے کے لیے مالک کا پن", branches_needOwnerPin: "دوسری برانچ دیکھنے یا اس کے نام پر بیچنے کے لیے پہلے مالک کا پن سیٹ کریں (سیٹنگز)۔", branches_resetPin: "برانچ کا پن ری سیٹ کریں", branches_resetPinTitle: "{name} کا پن ری سیٹ کرنے کے لیے مالک کا پن", branches_enterMasterTitle: "برانچ مینیجر کا پن", branches_setMasterTitle: "برانچ مینیجر کا پن بنائیں", branches_lockHint: "کسی حصے کو فعال کریں تاکہ برانچ کا عملہ اسے کھولنے سے پہلے آپ کا پن مانگے۔", reports_kpi_outstandingDebtAll: "کل واجب الادا (تمام برانچز)",
 
     home_welcomeBack: "خوش آمدید", home_salesToday: "آج کی فروخت", home_ordersToday: "آج کے آرڈرز",
@@ -1800,8 +1800,9 @@ const BranchCtx = createContext({
 });
 // A branch login (one shared account per branch) sees only its own branch and
 // the sections a cashier needs; the database enforces the same split, so these
-// are hidden rather than left to fail silently on write.
-const BRANCH_ACCOUNT_HIDDEN = new Set(["branches", "inventory", "whatsapp"]);
+// are hidden rather than left to fail silently on write. "home" is the owner's
+// overview, so a branch login lands on the register instead.
+const BRANCH_ACCOUNT_HIDDEN = new Set(["home", "branches", "inventory", "whatsapp"]);
 function useBranches() { return useContext(BranchCtx); }
 // Main branch keeps its original numbering (INV-1001); branch N>1 gets B<N>-.
 const branchPrefix = (branch) => (branch && branch.number > 1 ? `B${branch.number}-` : "");
@@ -1899,7 +1900,7 @@ function Sidebar({ tab, setTab, sectionLocks, merchant, onNavigate = () => {}, o
 
   return (
     <div className="flex h-full w-60 shrink-0 flex-col bg-navy-900 text-stone-200 f-body">
-      <button onClick={() => { setTab("home"); onNavigate(); }} className="flex items-center gap-3 px-5 py-6 text-left hover:bg-navy-800/60 transition">
+      <button onClick={() => { setTab(isBranchAccount ? "pos" : "home"); onNavigate(); }} className="flex items-center gap-3 px-5 py-6 text-left hover:bg-navy-800/60 transition">
         <img src={LOGO_DATA_URI} alt="Ragwa" className="h-11 w-11 shrink-0 object-contain drop-shadow-md" />
         <div>
           <div className="f-display text-2xl font-bold tracking-tight text-white leading-none">{t("app_name")}</div>
@@ -1907,7 +1908,7 @@ function Sidebar({ tab, setTab, sectionLocks, merchant, onNavigate = () => {}, o
         </div>
       </button>
       {multi && !isBranchAccount && <BranchPicker />}
-      {multi && isBranchAccount && work && (
+      {isBranchAccount && work && (
         <div className="mx-3 mb-3 flex items-center gap-2.5 rounded-lg bg-navy-800 px-3 py-2.5">
           <div className="min-w-0 flex-1">
             <div className="text-[10.5px] text-white/50">{t("branches_yourBranch")}</div>
@@ -1932,13 +1933,15 @@ function Sidebar({ tab, setTab, sectionLocks, merchant, onNavigate = () => {}, o
           );
         })}
       </nav>
-      <div className="border-t border-navy-800 px-3 pt-1">
-        <button onClick={() => { setTab("home"); onNavigate(); }}
-          className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${tab === "home" ? "text-white" : "text-white/50 hover:text-white"}`}>
-          <Home size={16} />
-          <span>{t("nav_home")}</span>
-        </button>
-      </div>
+      {!isBranchAccount && (
+        <div className="border-t border-navy-800 px-3 pt-1">
+          <button onClick={() => { setTab("home"); onNavigate(); }}
+            className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${tab === "home" ? "text-white" : "text-white/50 hover:text-white"}`}>
+            <Home size={16} />
+            <span>{t("nav_home")}</span>
+          </button>
+        </div>
+      )}
       <div className="px-5 py-4 border-t border-navy-800">
         <div className="truncate text-sm font-semibold text-white">{merchant?.name || t("app_name")}</div>
         {isBranchAccount && (
@@ -6056,6 +6059,7 @@ function BranchesView() {
   const [paying, setPaying] = useState(null); // { name, fee } while the payment page is open
   const [request, setRequest] = useState(null); // latest extra-branch payment request
   const [sub, setSub] = useState(null);
+  const [ownerAction, setOwnerAction] = useState(null); // { run, done, errKey } while the owner PIN prompt is open
 
   // An extra branch is created by the platform admin once the payment receipt is approved.
   const loadRequest = async () => {
@@ -6074,12 +6078,30 @@ function BranchesView() {
 
   const closeAdd = () => { setShowAdd(false); setName(""); setError(""); };
   const closeCredentials = () => { setCredentials(null); setCopied(false); };
-  // The login password is shown exactly once, right after it is generated.
-  const runAccount = async (b, action) => {
+  // Adding a branch or touching a login needs the owner PIN every time: the owner
+  // login may be open on a device staff use. api/branch-accounts.js checks it again.
+  const askOwnerPin = (run, done = () => {}, errKey = "branches_errAccount") => {
     setError("");
-    try { setCredentials({ branchName: b.name, ...(await action(b.id)) }); }
-    catch { setError(t("branches_errAccount")); }
+    if (!ownerPinSet) { setError(t("branches_ownerPinRequired")); return; }
+    setOwnerAction({ run, done, errKey });
   };
+  const submitOwnerPin = async (pin) => {
+    try { await ownerAction.run(pin); return true; }
+    catch (e) {
+      if (e.message === "master_pin_invalid") return false;
+      setError(t(e.message === "owner_pin_required" ? "branches_ownerPinRequired" : ownerAction.errKey));
+      setOwnerAction(null);
+      return false;
+    }
+  };
+  // The login password is shown exactly once, right after it is generated.
+  const runAccount = (b, action) => {
+    let created = null;
+    askOwnerPin(async (pin) => { created = await action(b.id, pin); }, () => setCredentials({ branchName: b.name, ...created }));
+  };
+  const openAdd = () => askOwnerPin(async (pin) => {
+    if (!(await callVerifyPin({ action: "verify", scope: "master", pin })).success) throw new Error("master_pin_invalid");
+  }, () => setShowAdd(true));
   const submitAdd = () => {
     if (sub?.plan === "trial") { setError(t("branches_errTrial")); return; }
     setPaying({ name: name.trim() || t("branches_defaultName", { n: nextNumber }), fee: branchFee(sub?.subscriptionEndsAt) });
@@ -6093,11 +6115,7 @@ function BranchesView() {
     catch { setError(t("branches_errUpdate")); }
     finally { setBusy(false); }
   };
-  const toggleStatus = async (b) => {
-    setError("");
-    try { await setBranchStatus(b.id, b.status === "active" ? "archived" : "active"); }
-    catch { setError(t("branches_errUpdate")); }
-  };
+  const toggleStatus = (b) => askOwnerPin((pin) => setBranchStatus(b.id, b.status === "active" ? "archived" : "active", pin), undefined, "branches_errUpdate");
   const copyCredentials = async () => {
     try { await navigator.clipboard.writeText(`${credentials.username}\n${credentials.password}`); setCopied(true); }
     catch { /* clipboard refused: the values are shown selectable below */ }
@@ -6111,9 +6129,10 @@ function BranchesView() {
           <div className="f-display text-xl font-semibold text-app-text">{t("branches_title")}</div>
           <div className="mt-1 text-sm text-app-text-muted">{t("branches_subtitle")}</div>
         </div>
-        <button onClick={() => setShowAdd(true)} disabled={request?.status === "pending"} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50">+ {t("branches_add")}</button>
+        <button onClick={openAdd} disabled={request?.status === "pending"} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600 disabled:opacity-50">+ {t("branches_add")}</button>
       </div>
       <div className="mb-4 rounded-xl border border-warning-200 bg-warning-50 px-4 py-2.5 text-xs font-medium text-warning-800">{t("branches_costNote", { n: BRANCH_PRICE })}</div>
+      <div className="mb-4 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-xs font-medium text-brand-800">{t("branches_staffNote")}</div>
       {request?.status === "pending" && <div className="mb-4 rounded-xl border border-brand-200 bg-brand-50 px-4 py-2.5 text-xs font-medium text-brand-800">{t("branches_pending", { name: request.branchName })}</div>}
       {request?.status === "rejected" && <div className="mb-4 rounded-xl border border-danger-200 bg-danger-50 px-4 py-2.5 text-xs font-medium text-danger-700">{t("branches_rejected", { name: request.branchName })}{request.rejectReason ? `: ${request.rejectReason}` : ""}</div>}
       {error && !showAdd && !renaming && <div className="mb-3 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{error}</div>}
@@ -6208,6 +6227,15 @@ function BranchesView() {
             <button onClick={closeCredentials} className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-600">{t("branches_done")}</button>
           </div>
         </Modal>
+      )}
+      {ownerAction && (
+        <PinPromptModal
+          title={t("branches_ownerPinTitle")}
+          mode="enter"
+          onSubmitPin={submitOwnerPin}
+          onDone={() => { ownerAction.done(); setOwnerAction(null); }}
+          onClose={() => setOwnerAction(null)}
+        />
       )}
       {resettingPin && (
         <PinPromptModal
@@ -6556,13 +6584,14 @@ function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pe
   const { dir, t } = useLang();
   // Branch scope for the owner's "view all / one branch" picker: sales, purchases
   // and expenses follow it; customers, wallets and products are shared and never filtered.
-  const { scope: branchScope, work: workBranch, isBranchAccount } = useBranches();
+  const { multi, scope: branchScope, work: workBranch, isBranchAccount } = useBranches();
   const scopedInvoices = useMemo(() => (branchScope === "all" ? invoices : invoices.filter((r) => r.branchId === branchScope)), [invoices, branchScope]);
   const scopedPurchases = useMemo(() => (branchScope === "all" ? purchases : purchases.filter((r) => r.branchId === branchScope)), [purchases, branchScope]);
   // Discounts: the list follows the picker (a branch's own + the all-branches ones); at the
-  // register only those that apply to the branch the sale is recorded under.
+  // register only those that apply to the branch the sale is recorded under. With one
+  // branch the owner has no working branch, so a discount a staff login made applies too.
   const scopedPromotions = useMemo(() => (branchScope === "all" ? promotions : promotions.filter((p) => !p.branchId || p.branchId === branchScope)), [promotions, branchScope]);
-  const promosForSale = useMemo(() => promotions.filter((p) => !p.branchId || p.branchId === workBranch?.id), [promotions, workBranch]);
+  const promosForSale = useMemo(() => promotions.filter((p) => !multi || !p.branchId || p.branchId === workBranch?.id), [promotions, workBranch, multi]);
   const scopedExpenses = useMemo(() => (branchScope === "all" ? expenses : expenses.filter((r) => r.branchId === branchScope)), [expenses, branchScope]);
   const isRtl = dir === "rtl";
   // The sidebar is a fixed off-canvas drawer below lg: (closed by default,
@@ -6614,7 +6643,11 @@ function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pe
           mode="enter"
           onSubmitPin={async (pin) => (await callVerifyPin({ action: "verify", scope: pendingNav.key, pin })).success}
           onDone={() => { navigateTab(pendingNav.key, pendingNav.subTab); setPendingNav(null); }}
-          onClose={() => setPendingNav(null)}
+          onClose={() => {
+            // Cancelled: keep the URL on what is actually showing, not the locked section.
+            setPendingNav(null);
+            window.history.replaceState({}, '', pathForTab(tab, tab === "reports" ? reportsSubTab : tab === "purchases" ? purchasesSubTab : undefined));
+          }}
         />
       )}
     </div>
@@ -6629,8 +6662,11 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   // requested tab would render a locked section's real data for however
   // long that fetch takes. The actual jump (direct if unlocked, a PIN
   // prompt first if locked) only happens once settingsLoaded is true — see
-  // the effect below.
-  const [tab, setTab] = useState("home");
+  // the effect below. A branch login has no "home" (BRANCH_ACCOUNT_HIDDEN), so
+  // it shows the register instead; derived rather than a different initial
+  // value because branchId can arrive after the first render.
+  const [tabState, setTab] = useState("home");
+  const tab = branchId && tabState === "home" ? "pos" : tabState;
   const [reportsSubTab, setReportsSubTab] = useState("sales");
   const [purchasesSubTab, setPurchasesSubTab] = useState("purchases");
   // A locked section requested either via the sidebar or a direct/deep
@@ -6716,17 +6752,17 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     setBranchMembersState((data || []).map(toCamelCase));
   };
   useEffect(() => { if (tenantId && !branchId) refreshBranchMembers(); }, [tenantId, branchId]);
-  const createBranchAccount = async (id) => {
-    const out = await callBranchAccounts({ action: "create", branchId: id });
+  const createBranchAccount = async (id, masterPin) => {
+    const out = await callBranchAccounts({ action: "create", branchId: id, masterPin });
     await refreshBranchMembers();
     return { username: out.username, password: out.password };
   };
-  const resetBranchPassword = async (id) => {
-    const out = await callBranchAccounts({ action: "reset_password", branchId: id });
+  const resetBranchPassword = async (id, masterPin) => {
+    const out = await callBranchAccounts({ action: "reset_password", branchId: id, masterPin });
     return { username: out.username, password: out.password };
   };
-  const setBranchStatus = async (id, status) => {
-    await callBranchAccounts({ action: "set_status", branchId: id, status });
+  const setBranchStatus = async (id, status, masterPin) => {
+    await callBranchAccounts({ action: "set_status", branchId: id, status, masterPin });
     setBranchesState((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
     await refreshBranchMembers();
   };
@@ -7079,21 +7115,27 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
 
   // Browser back/forward doesn't fire navigateTab (pushState doesn't
   // trigger popstate), so it needs its own re-derivation straight from the
-  // URL. Deliberately bypasses the PIN gate: getting here at all means the
-  // browser history already has this state — i.e. it was unlocked once
-  // already this session, or was never locked — so re-prompting on every
-  // back/forward tap would just be annoying, not a real security gain.
+  // URL. A locked section closes the moment you leave it: coming back through
+  // history asks for its PIN again, because on a shared device the next person
+  // could press Back on what the manager just unlocked. Moving between sub-tabs
+  // of the section you are already in doesn't count as leaving. The listener
+  // outlives renders, so it reads current state from navState.
+  const navState = useRef(null);
+  navState.current = { tab, sectionLocks };
   useEffect(() => {
     const onPopState = () => {
       const resolved = tabForPath(window.location.pathname);
       if (!resolved || (branchId && BRANCH_ACCOUNT_HIDDEN.has(resolved.tab))) return;
+      const { tab: currentTab, sectionLocks: locks } = navState.current;
+      if (resolved.tab !== currentTab && locks[resolved.tab]) { setPendingNav({ key: resolved.tab, subTab: resolved.subTab }); return; }
+      setPendingNav(null);
       setTab(resolved.tab);
       if (resolved.tab === 'reports') setReportsSubTab(resolved.subTab || 'sales');
       else if (resolved.tab === 'purchases') setPurchasesSubTab(resolved.subTab || 'purchases');
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, []);
+  }, [branchId]);
 
   // Resolves whatever tab the user actually landed on (a deep link, or a
   // refresh) exactly once real sectionLocks data has loaded — see the
@@ -7111,7 +7153,11 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     if (initialDeepLinkResolved.current || !settingsLoaded || (branchId && !branchLocksReady)) return;
     initialDeepLinkResolved.current = true;
     const resolved = tabForPath(window.location.pathname);
-    if (!resolved || resolved.tab === 'home') return;
+    if (!resolved) return;
+    if (resolved.tab === 'home') {
+      if (branchId) window.history.replaceState({}, '', pathForTab('pos'));
+      return;
+    }
     requestTab(resolved.tab, resolved.subTab);
   }, [settingsLoaded, branchLocksReady]);
 
