@@ -27,20 +27,32 @@ export function cleanPhoneForWhatsApp(mobile) {
   return normalizeSaudiMobile(mobile);
 }
 
-export const DEFAULT_WHATSAPP_TEMPLATE =
+const DEFAULT_WHATSAPP_TEMPLATE =
   "مرحبًا {customer_name} 👋\nهذي فاتورتك من {store_name} — رقم الفاتورة {invoice_id}، بإجمالي {total_amount} ريال.\nتقدر تحمّل نسخة الفاتورة من هنا:\n{invoice_url}\n\nشكرًا لثقتك فينا!";
 
-export const DEFAULT_READY_MESSAGE_TEMPLATE =
+const DEFAULT_READY_MESSAGE_TEMPLATE =
   "مرحبًا {customer_name} 👋\nطلبك رقم {order_id} من {store_name} أصبح جاهزًا للاستلام.\nنسعد بخدمتك 🤍";
+
+const DEFAULT_WHATSAPP_TEMPLATE_EN =
+  "Hello {customer_name} 👋\nHere's your invoice from {store_name}: invoice {invoice_id}, total {total_amount} SAR.\nYou can download a copy here:\n{invoice_url}\n\nThank you for choosing us!";
+
+const DEFAULT_READY_MESSAGE_TEMPLATE_EN =
+  "Hello {customer_name} 👋\nYour order {order_id} from {store_name} is ready for pickup.\nWe're happy to serve you 🤍";
+
+// Built-in message text for a shop that never customized it: English for an
+// English UI, Arabic otherwise (Urdu-speaking staff still message Arabic customers).
+export function whatsAppDefaults(lang) {
+  return lang === "en"
+    ? { invoice: DEFAULT_WHATSAPP_TEMPLATE_EN, ready: DEFAULT_READY_MESSAGE_TEMPLATE_EN }
+    : { invoice: DEFAULT_WHATSAPP_TEMPLATE, ready: DEFAULT_READY_MESSAGE_TEMPLATE };
+}
 
 // Replaces every {tag} in the template with its value from `vars`; any tag
 // with no matching key (or a null/undefined value) is left blank rather
 // than left as literal "{tag}" text in the message the customer receives.
-// `fallback` lets other WhatsApp message kinds (e.g. the "order ready"
-// notification) reuse this same fill logic with their own default text
-// instead of the invoice one -- existing call sites that omit it are
-// unaffected.
-export function fillWhatsAppTemplate(template, vars, fallback = DEFAULT_WHATSAPP_TEMPLATE) {
+// `fallback` is the built-in text (see whatsAppDefaults) used when the shop
+// hasn't saved its own template for this message kind.
+export function fillWhatsAppTemplate(template, vars, fallback) {
   const text = template && template.trim() ? template : fallback;
   return text.replace(/\{(\w+)\}/g, (match, key) => {
     const value = vars ? vars[key] : undefined;
