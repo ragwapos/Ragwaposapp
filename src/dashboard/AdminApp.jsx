@@ -818,6 +818,10 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
   const [durationPlan, setDurationPlan] = useState("annual");
   const [durationBusy, setDurationBusy] = useState(false);
   const [durationError, setDurationError] = useState("");
+  // AI connection switch: value saved by this screen, per shop, until the tenants list itself shows a change.
+  const [mcpSaved, setMcpSaved] = useState({});
+  const [mcpBusyId, setMcpBusyId] = useState(null);
+  const [mcpError, setMcpError] = useState("");
   const [editMobile, setEditMobile] = useState("");
   const [editEmail, setEditEmail] = useState("");
   const [editError, setEditError] = useState("");
@@ -1041,6 +1045,22 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
     if (error) { console.error("saveDuration failed", error); setDurationError("تعذر الحفظ، حاول مرة ثانية."); return; }
     setDurationTenant(null);
   };
+  // Per-shop switch for the AI connection (MCP). Only an admin can change it (DB trigger).
+  // The saved value comes back from the update and is shown at once. It is used only while
+  // the list still holds the same row object it had when saving; any live update or reload
+  // replaces that object, and from then on the list wins (same value or newer).
+  const mcpValueOf = (c) => {
+    const saved = mcpSaved[c.id];
+    return saved && saved.row === c ? saved.value : c.mcpEnabled === true;
+  };
+  const toggleMcp = async (c) => {
+    const current = mcpValueOf(c);
+    setMcpBusyId(c.id); setMcpError("");
+    const { data, error } = await db.from("tenants").update({ mcp_enabled: !current }).eq("id", c.id).select("mcp_enabled").maybeSingle();
+    setMcpBusyId(null);
+    if (error || !data) { console.error("toggleMcp failed", error); setMcpError(`تعذر حفظ إعداد الربط مع الذكاء الاصطناعي لـ${c.shopName}، حاول مرة ثانية.`); return; }
+    setMcpSaved((prev) => ({ ...prev, [c.id]: { value: data.mcp_enabled === true, row: c } }));
+  };
   const openEditTenant = (c) => {
     setEditingTenant(c);
     setEditMobile(c.mobile);
@@ -1255,10 +1275,11 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
         {tab === "customers" && (
           <div>
             <h1 className="text-2xl font-bold mb-6">العملاء</h1>
+            {mcpError && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-3 py-2 text-sm text-rose-400">{mcpError}</div>}
             <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-slate-800/50 text-gray-400 text-xs uppercase">
-                  <tr><th className="px-4 py-3 text-right">اسم المغسلة</th><th className="px-4 py-3 text-right">العنوان</th><th className="px-4 py-3 text-right">الجوال</th><th className="px-4 py-3 text-right">البريد</th><th className="px-4 py-3 text-right">تاريخ الموافقة</th><th className="px-4 py-3 text-right">الاشتراك</th><th className="px-4 py-3"></th></tr>
+                  <tr><th className="px-4 py-3 text-right">اسم المغسلة</th><th className="px-4 py-3 text-right">العنوان</th><th className="px-4 py-3 text-right">الجوال</th><th className="px-4 py-3 text-right">البريد</th><th className="px-4 py-3 text-right">تاريخ الموافقة</th><th className="px-4 py-3 text-right">الاشتراك</th><th className="px-4 py-3 text-right">الربط مع الذكاء الاصطناعي</th><th className="px-4 py-3"></th></tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
                   {tenants.map((c) => (
@@ -1281,6 +1302,11 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
                           );
                         })()}
                       </td>
+                      <td className="px-4 py-3">
+                        <button type="button" role="switch" aria-checked={mcpValueOf(c)} aria-label={`السماح باستخدام الربط مع الذكاء الاصطناعي: ${c.shopName}`} onClick={() => toggleMcp(c)} disabled={mcpBusyId === c.id} className={`flex h-5 w-9 items-center rounded-full px-0.5 transition disabled:opacity-50 ${mcpValueOf(c) ? "bg-cyan-500 justify-end" : "bg-slate-700 justify-start"}`}>
+                          <span className="block h-4 w-4 rounded-full bg-white" />
+                        </button>
+                      </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex gap-1.5 justify-end">
                           <button onClick={() => openDuration(c)} className="px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-xs whitespace-nowrap">📅 المدة</button>
@@ -1290,7 +1316,7 @@ function AdminDashboard({ registrationRequests, salesInquiries, tenants, adminEm
                       </td>
                     </tr>
                   ))}
-                  {tenants.length === 0 && <tr><td colSpan={7} className="px-4 py-10 text-center text-gray-500">ما فيه عملاء معتمدين بعد — وافق على طلب تسجيل من "الطلبات والاستفسارات" عشان يظهر هنا.</td></tr>}
+                  {tenants.length === 0 && <tr><td colSpan={8} className="px-4 py-10 text-center text-gray-500">ما فيه عملاء معتمدين بعد — وافق على طلب تسجيل من "الطلبات والاستفسارات" عشان يظهر هنا.</td></tr>}
                 </tbody>
               </table>
             </div>
