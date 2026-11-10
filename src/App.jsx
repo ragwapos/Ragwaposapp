@@ -853,7 +853,7 @@ function getPageMeta(page, termsScrollTarget, siteLang) {
     case 'terms': return { title: 'الشروط والأحكام | رغوة', description: 'الشروط والأحكام الخاصة باستخدام منصة رغوة.', path: '/terms', robots: null };
     case 'notFound': return { title: 'الصفحة غير موجودة | رغوة', description: 'الصفحة اللي تدور عليها مو موجودة.', path: window.location.pathname, robots: 'noindex,follow' };
     case 'dashboard': return { title: 'لوحة التحكم | رغوة', description: 'لوحة تحكم رغوة لإدارة المغسلة.', path: window.location.pathname, robots: 'noindex,nofollow' };
-    default: return { title: 'رغوة | نظام نقطة بيع لمغاسل الملابس', description: 'رغوة: نظام نقطة بيع لمغاسل الملابس يجمع البيع، تتبع الطلبات، الاشتراكات، والدفع الآجل في مكان واحد. جرّب رغوة مجاناً.', path: '/', robots: null };
+    default: return { title: 'رغوة | برنامج كاشير ونظام نقطة بيع لمغاسل الملابس في السعودية', description: 'رغوة برنامج سحابي لأصحاب مغاسل الملابس: نقطة بيع سريعة، تتبع كل قطعة، فواتير برمز QR، واتساب للعميل، ومناديب التوصيل. جرّب مجاناً 14 يوم بدون بطاقة.', path: '/', robots: null };
   }
 }
 function setMetaTag(selector, create, attrs) {
