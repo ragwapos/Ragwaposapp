@@ -29,7 +29,7 @@
 - الأدلة تُولَّد وقت البناء من `content/guides.mjs` بواسطة `scripts/build-guides.mjs` إلى `public/guides/` (مُتجاهَل في git). لا تُعدَّل المخرجات يدويًا.
 - الهبوط يُرندر مسبقًا بـ`scripts/build-landing-prerender.mjs` (ar + en + hreflang + FAQ JSON-LD).
 - `public/sitemap.xml` يدوي (13 رابطًا). `public/robots.txt` يسمح بكل شيء. `public/llms.txt` موجود.
-- Search Console: خاصية نطاق `sc-domain:ragwapos.com` موثقة (تعليق في `index.html`). لا بيانات منها متاحة للوكيل حاليًا.
+- Search Console: خاصية نطاق `sc-domain:ragwapos.com` موثقة (تعليق في `index.html`). متاحة للوكيل عبر Composio (`GOOGLE_SEARCH_CONSOLE_*`، قراءة فقط) منذ 2026-11-10، وخط الأساس في `seo/gsc-baseline-2026-11-10.md`.
 
 ## المنافسون (معتمدون من المالك في 2026-11-10)
 المنافس المباشر: كلين سيستم (cleansystem.sa). ثم 7 متخصصين في المغاسل، ثم برامج متعددة القطاعات. القائمة الكاملة في `seo/competitors/list.md`.

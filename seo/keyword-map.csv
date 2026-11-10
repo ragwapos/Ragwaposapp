@@ -1,16 +1,18 @@
 query,intent,monthly_volume,difficulty,target_url,status,current_position,last_checked
-برنامج مغسلة ملابس,commercial,not verified,not verified,/,live (homepage generic),not verified (not in top 10 of one Firecrawl search),2026-11-10
-نظام كاشير مغسلة,commercial,not verified,not verified,/guides/best-cashier-system-laundry-saudi,live,not verified,2026-11-10
-أفضل برنامج كاشير للمغاسل,commercial investigation,not verified,not verified,/guides/best-cashier-system-laundry-saudi,live,not verified,2026-11-10
-فاتورة إلكترونية مغسلة ملابس,informational,not verified,not verified,/guides/zatca-e-invoicing-laundry-shops,live,not verified,2026-11-10
-كيف أفتح مغسلة ملابس في السعودية,informational,not verified,not verified,/guides/open-laundry-shop-saudi-guide,live,not verified,2026-11-10
-برنامج تتبع طلبات المغسلة,commercial,not verified,not verified,/guides/order-customer-tracking-system-laundry,live,not verified,2026-11-10
-إدارة رصيد العملاء والدفع الآجل في المغسلة,informational,not verified,not verified,/guides/wallet-debt-management-laundry-customers,live,not verified,2026-11-10
-إدارة مناديب التوصيل للمغسلة,informational,not verified,not verified,/guides/delivery-driver-management-laundry-saudi,live,not verified,2026-11-10
-برنامج مغسلة بدل الدفتر والإكسل,commercial investigation,not verified,not verified,/guides/ragwa-vs-traditional-notebook-excel,live,not verified,2026-11-10
-laundry POS software Saudi Arabia,commercial,not verified,not verified,/en,live (homepage),not verified (not in top 10 of one Firecrawl search),2026-11-10
-سعر برنامج مغسلة ملابس,commercial,not verified,not verified,none,gap,not verified,2026-11-10
-بدائل برنامج مغسلة (مقارنة رغوة مع منافسين),commercial investigation,not verified,not verified,none,gap,not verified,2026-11-10
-برنامج مغسلة متعدد الفروع,commercial,not verified,not verified,none,gap,not verified,2026-11-10
-برنامج مغسلة يرسل واتساب للعميل,commercial,not verified,not verified,none,gap,not verified,2026-11-10
-حاسبة تسعير غسيل الملابس (أداة مجانية),informational,not verified,not verified,none,gap,not verified,2026-11-10
+برنامج مغسلة ملابس,commercial,not verified,not verified,/,live (homepage generic),no impressions in GSC (90d),2026-11-10
+نظام كاشير مغسلة,commercial,not verified,not verified,/guides/best-cashier-system-laundry-saudi,live,no impressions in GSC (90d),2026-11-10
+أفضل برنامج كاشير للمغاسل,commercial investigation,not verified,not verified,/guides/best-cashier-system-laundry-saudi,live,no impressions in GSC (90d),2026-11-10
+فاتورة إلكترونية مغسلة ملابس,informational,not verified,not verified,/guides/zatca-e-invoicing-laundry-shops,live,no impressions in GSC (90d),2026-11-10
+كيف أفتح مغسلة ملابس في السعودية,informational,not verified,not verified,/guides/open-laundry-shop-saudi-guide,live,page avg 21.6 (48 impressions; related queries: شروط فتح مغسلة ملابس في السعودية pos 21),2026-11-10
+how to start laundry business in saudi arabia,informational,not verified,not verified,/guides/open-laundry-shop-saudi-guide,live (Arabic page only),83 (2 impressions),2026-11-10
+برنامج تتبع طلبات المغسلة,commercial,not verified,not verified,/guides/order-customer-tracking-system-laundry,live,no impressions in GSC (90d),2026-11-10
+إدارة رصيد العملاء والدفع الآجل في المغسلة,informational,not verified,not verified,/guides/wallet-debt-management-laundry-customers,live,no impressions in GSC (90d),2026-11-10
+إدارة مناديب التوصيل للمغسلة,informational,not verified,not verified,/guides/delivery-driver-management-laundry-saudi,live,no impressions in GSC (90d),2026-11-10
+برنامج مغسلة بدل الدفتر والإكسل,commercial investigation,not verified,not verified,/guides/ragwa-vs-traditional-notebook-excel,live,no impressions in GSC (90d),2026-11-10
+laundry POS software Saudi Arabia,commercial,not verified,not verified,/en,live (homepage),no impressions in GSC (90d),2026-11-10
+رغوة / مغسلة رغوة (اسم العلامة),navigational (possibly other laundries named Ragwa),not verified,not verified,/,live,"6-14 for main variants (96+50+45 impressions)",2026-11-10
+سعر برنامج مغسلة ملابس,commercial,not verified,not verified,none,gap,no impressions in GSC (90d),2026-11-10
+بدائل برنامج مغسلة (مقارنة رغوة مع منافسين),commercial investigation,not verified,not verified,none,gap,no impressions in GSC (90d),2026-11-10
+برنامج مغسلة متعدد الفروع,commercial,not verified,not verified,none,gap,no impressions in GSC (90d),2026-11-10
+برنامج مغسلة يرسل واتساب للعميل,commercial,not verified,not verified,none,gap,no impressions in GSC (90d),2026-11-10
+حاسبة تسعير غسيل الملابس (أداة مجانية),informational,not verified,not verified,none,gap,no impressions in GSC (90d),2026-11-10
