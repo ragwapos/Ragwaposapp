@@ -68,6 +68,13 @@ const SHARED_STYLE = `
   .guide-card:hover { box-shadow: 0 12px 24px -8px rgba(11,35,49,.12); }
   .guide-card h2 { margin: 0 0 8px; font-size: 1.1rem; }
   .guide-card p { margin: 0; color: #5b7381; font-size: .92rem; }
+  .related { margin-top: 44px; }
+  .related h2 { margin-bottom: 16px; }
+  .end-cta {
+    margin-top: 36px; padding: 24px; border-radius: 16px; background: #ffffff;
+    border: 1px solid #e6eaed; text-align: center;
+  }
+  .end-cta p { margin: 0 0 14px; font-weight: 700; color: #0b2331; }
   .index-hero { margin-bottom: 32px; }
   .index-hero h1 { font-size: 1.7rem; font-weight: 800; margin: 0 0 10px; }
   .index-hero p { color: #5b7381; margin: 0; }
@@ -131,6 +138,14 @@ ${bodyHtml}
 `;
 }
 
+// Up to 3 other guides, taken in list order after the current one (wrapping
+// around), so every article links to others and every article gets linked to.
+function relatedGuides(guide) {
+  const i = guides.findIndex((g) => g.slug === guide.slug);
+  const others = [...guides.slice(i + 1), ...guides.slice(0, i)];
+  return others.slice(0, 3);
+}
+
 function renderArticleBody(guide) {
   const sections = guide.sections
     .map((s) => {
@@ -145,7 +160,34 @@ function renderArticleBody(guide) {
   return `<div class="breadcrumb"><a href="/guides">كل الأدلة</a> ← ${esc(guide.title)}</div>
 <h1 class="article-title">${esc(guide.title)}</h1>
 <p class="meta">تاريخ النشر: ${esc(guide.datePublished)}</p>
-${sections}`;
+${sections}
+<section class="related">
+  <h2>اقرأ أيضًا</h2>
+${relatedGuides(guide)
+  .map(
+    (g) => `  <a class="guide-card" href="/guides/${esc(g.slug)}">
+    <h2>${esc(g.title)}</h2>
+    <p>${esc(g.description)}</p>
+  </a>`
+  )
+  .join('\n')}
+</section>
+<div class="end-cta">
+  <p>جاهز تجرّب رغوة في مغسلتك؟</p>
+  <a class="cta-btn" href="/signup">جرّب رغوة مجاناً</a>
+</div>`;
+}
+
+function breadcrumbJsonLd(guide) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'رغوة', item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: 'أدلة رغوة', item: `${SITE_URL}/guides` },
+      { '@type': 'ListItem', position: 3, name: guide.title, item: `${SITE_URL}/guides/${guide.slug}` },
+    ],
+  };
 }
 
 function articleJsonLd(guide) {
@@ -206,7 +248,7 @@ function main() {
       title: `${guide.title} | رغوة`,
       description: guide.description,
       canonicalPath: `/guides/${guide.slug}`,
-      jsonLd: articleJsonLd(guide),
+      jsonLd: [articleJsonLd(guide), breadcrumbJsonLd(guide)],
       bodyHtml: renderArticleBody(guide),
     });
     writeFileSync(path.join(OUT_DIR, `${guide.slug}.html`), html, 'utf8');
