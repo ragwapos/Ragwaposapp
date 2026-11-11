@@ -21,7 +21,7 @@ import QRCode from "qrcode";
 import { auth, db } from "../supabase";
 import { toSnakeCase, toCamelCase } from "../utils/transforms.js";
 import { BRANCH_PRICE, branchFee } from "../payment/pricing.js";
-import { normalizeSaudiMobile, isValidSaudiMobile, cleanPhoneForWhatsApp, fillWhatsAppTemplate, DEFAULT_WHATSAPP_TEMPLATE, DEFAULT_READY_MESSAGE_TEMPLATE } from "../utils/phone.js";
+import { normalizeSaudiMobile, isValidSaudiMobile, cleanPhoneForWhatsApp, fillWhatsAppTemplate, whatsAppDefaults } from "../utils/phone.js";
 import { generateInvoiceImage } from "../utils/invoiceImage.js";
 import { uploadTenantFile, deleteTenantFile, uploadPrivateFile, deletePrivateFile, getSignedUrl } from "../utils/storage.js";
 import { subscribeToTable, subscribeToRow } from "../utils/dbSubscribe.js";
@@ -418,29 +418,33 @@ function RealQR({ value }) {
 
 // Fixed print-document vocabulary — deliberately NOT tied to useLang()/t().
 // A tax invoice / receipt is a legal commercial document, so it always
-// prints in Arabic (with the small English labels from the reference
-// template) no matter which UI language the staff currently has selected.
+// prints bilingually: the Arabic label ZATCA requires, with a small English
+// label next to or under it, no matter which UI language staff have selected.
 const PRINT = {
   addressEn: "Address:", addressAr: "العنوان",
   phoneEn: "Phone Num:", phoneAr: "رقم الهاتف",
   dateEn: "Date:", dateAr: "التاريخ",
   invNumEn: "Inv Num:", invNumAr: "رقم الفاتورة",
   cashier: "Casher_1",
-  branchAr: "الفرع", branchValueAr: "الفرع الرئيسي",
-  customerAr: "اسم العميل",
+  branchAr: "الفرع",
+  customerAr: "اسم العميل", customerEn: "Customer:",
   taxInvoiceAr: "فاتورة ضريبية مبسطة", taxInvoiceEn: "Simplified Tax Invoice",
-  productAr: "المنتج", priceAr: "السعر", totalAr: "الإجمالي",
-  deliveredDateAr: "تاريخ التسليم",
-  subtotalAr: "الإجمالي (غير شامل الضريبة)", discountAr: "الخصم", vatAr: "الضريبة (15%)", grandTotalAr: "الإجمالي (شامل الضريبة)",
-  paidAr: "المدفوع", remainingAr: "المتبقي", pieceCountAr: "عدد القطع", payMethodAr: "طريقة الدفع", dueDateAr: "تاريخ الاستحقاق",
-  deliverFirstAr: "الرجاء تسليم قطعة واحدة على الأقل أولًا حتى يمكن طباعة الإيصال.",
+  productAr: "المنتج", productEn: "Item", priceAr: "السعر", priceEn: "Price", totalAr: "الإجمالي", totalEn: "Total",
+  deliveredDateAr: "تاريخ التسليم", deliveredDateEn: "Delivered",
+  subtotalAr: "الإجمالي (غير شامل الضريبة)", subtotalEn: "Subtotal (excl. VAT)", discountAr: "الخصم", discountEn: "Discount",
+  vatAr: "الضريبة (15%)", vatEn: "VAT (15%)", grandTotalAr: "الإجمالي (شامل الضريبة)", grandTotalEn: "Total (incl. VAT)",
+  paidAr: "المدفوع", paidEn: "Paid", remainingAr: "المتبقي", remainingEn: "Remaining", pieceCountAr: "عدد القطع", pieceCountEn: "Pieces",
+  payMethodAr: "طريقة الدفع", payMethodEn: "Payment method", dueDateAr: "تاريخ الاستحقاق", dueDateEn: "Due date",
 };
+// The branch line: the untouched default main-branch name (or no branch name
+// at all, for a single-branch shop) prints bilingually like the labels.
+const printBranchName = (name) => (!name || name === MAIN_BRANCH_DEFAULT_NAME || name === DICT.en.branches_mainDefault ? `${MAIN_BRANCH_DEFAULT_NAME} / ${DICT.en.branches_mainDefault}` : name);
 
 function payMethodPrintLabel(_t, method) {
-  if (method === "Cash") return "نقدًا";
-  if (method === "External Network") return "شبكة خارجية";
-  if (method === "Wallet Balance") return "رصيد العميل";
-  if (method === "Credit (On Account)") return "دفع آجل";
+  if (method === "Cash") return "نقدًا / Cash";
+  if (method === "External Network") return "شبكة خارجية / External Network";
+  if (method === "Wallet Balance") return "رصيد العميل / Wallet";
+  if (method === "Credit (On Account)") return "دفع آجل / On account";
   return method;
 }
 
@@ -472,7 +476,8 @@ function buildPrintableHtml(doc) {
       <td style="text-align:center; width:34%; padding:2px 0;">${esc(center)}</td>
       <td style="text-align:right; font-weight:600; width:33%; padding:2px 0;">${esc(ar)}</td>
     </tr>`;
-  const totalsRow = (num, label, bold) => `<div style="display:flex;justify-content:space-between;font-size:13px;${bold ? "font-weight:700;" : ""}"><span style="font-family:'Courier New',monospace;direction:ltr;">${esc(num)}</span><span>${esc(label)}</span></div>`;
+  const totalsRow = (num, ar, en, bold) => `<div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;${bold ? "font-weight:700;" : ""}"><span style="font-family:'Courier New',monospace;direction:ltr;">${esc(num)}</span><span style="text-align:right;">${esc(ar)}<br><span style="font-size:10px;font-weight:400;color:#64748b;">${esc(en)}</span></span></div>`;
+  const th = (ar, en) => `<th style="text-align:right;padding:6px 8px;">${ar}<br><span style="font-size:10px;font-weight:400;color:#64748b;">${en}</span></th>`;
 
   const header = `
     <div style="text-align:center;margin-bottom:14px;">
@@ -485,8 +490,8 @@ function buildPrintableHtml(doc) {
       ${row3(PRINT.phoneEn, doc.merchant.phone || "—", PRINT.phoneAr)}
       ${row3(PRINT.dateEn, doc.dateLabel, PRINT.dateAr)}
       ${row3(PRINT.invNumEn, doc.invoiceCode, PRINT.invNumAr)}
-      ${row3(PRINT.cashier, esc(doc.branchName || PRINT.branchValueAr), PRINT.branchAr)}
-      ${row3("", doc.customerName, PRINT.customerAr)}
+      ${row3(PRINT.cashier, printBranchName(doc.branchName), PRINT.branchAr)}
+      ${row3(PRINT.customerEn, doc.customerName, PRINT.customerAr)}
     </table>
     <hr style="border:none;border-top:1px solid #1e293b;margin:10px 0;">
   `;
@@ -495,7 +500,7 @@ function buildPrintableHtml(doc) {
   if (isDelivery) {
     body = `
       <table dir="rtl" style="width:100%;font-size:13px;border-collapse:collapse;border:1px solid #1e293b;">
-        <thead><tr style="border-bottom:1px solid #1e293b;"><th style="text-align:right;padding:6px 8px;">${PRINT.deliveredDateAr}</th><th style="text-align:right;padding:6px 8px;">${PRINT.productAr}</th></tr></thead>
+        <thead><tr style="border-bottom:1px solid #1e293b;">${th(PRINT.deliveredDateAr, PRINT.deliveredDateEn)}${th(PRINT.productAr, PRINT.productEn)}</tr></thead>
         <tbody>${doc.deliveredItems.map((it) => `<tr style="border-bottom:1px solid #e2e8f0;"><td style="padding:6px 8px;font-family:'Courier New',monospace;font-size:12px;direction:ltr;text-align:right;">${esc(fmtDateSec(it.deliveredAt))}</td><td style="padding:6px 8px;">${esc(it.name)}${it.service ? " — " + esc(it.service) : ""}</td></tr>`).join("")}</tbody>
       </table>`;
   } else {
@@ -514,22 +519,22 @@ function buildPrintableHtml(doc) {
     body = `
       ${taxBlock}
       <table dir="rtl" style="width:100%;font-size:13px;border-collapse:collapse;border:1px solid #1e293b;margin-bottom:10px;">
-        <thead><tr style="border-bottom:1px solid #1e293b;"><th style="text-align:right;padding:6px 8px;">${PRINT.productAr}</th><th style="text-align:right;padding:6px 8px;">${PRINT.priceAr}</th><th style="text-align:right;padding:6px 8px;">${PRINT.totalAr}</th></tr></thead>
+        <thead><tr style="border-bottom:1px solid #1e293b;">${th(PRINT.productAr, PRINT.productEn)}${th(PRINT.priceAr, PRINT.priceEn)}${th(PRINT.totalAr, PRINT.totalEn)}</tr></thead>
         <tbody>${itemsRows}</tbody>
       </table>
       <div style="margin-bottom:10px;">
-        ${totalsRow(doc.totals.net.toFixed(2), PRINT.subtotalAr)}
-        ${totalsRow(doc.totals.discount.toFixed(2), PRINT.discountAr)}
-        ${totalsRow(doc.totals.vat.toFixed(2), PRINT.vatAr)}
-        ${totalsRow(doc.totals.gross.toFixed(2), PRINT.grandTotalAr, true)}
+        ${totalsRow(doc.totals.net.toFixed(2), PRINT.subtotalAr, PRINT.subtotalEn)}
+        ${totalsRow(doc.totals.discount.toFixed(2), PRINT.discountAr, PRINT.discountEn)}
+        ${totalsRow(doc.totals.vat.toFixed(2), PRINT.vatAr, PRINT.vatEn)}
+        ${totalsRow(doc.totals.gross.toFixed(2), PRINT.grandTotalAr, PRINT.grandTotalEn, true)}
       </div>
       <hr style="border:none;border-top:1px solid #1e293b;margin:10px 0;">
       <div>
-        ${totalsRow(doc.totals.paid.toFixed(2), PRINT.paidAr, true)}
-        ${totalsRow(doc.totals.remaining.toFixed(2), PRINT.remainingAr)}
-        ${totalsRow(doc.totals.pieceCount, PRINT.pieceCountAr)}
-        ${totalsRow(doc.payMethodLabel, PRINT.payMethodAr)}
-        ${doc.dueDate ? totalsRow(doc.dueDate, PRINT.dueDateAr) : ""}
+        ${totalsRow(doc.totals.paid.toFixed(2), PRINT.paidAr, PRINT.paidEn, true)}
+        ${totalsRow(doc.totals.remaining.toFixed(2), PRINT.remainingAr, PRINT.remainingEn)}
+        ${totalsRow(doc.totals.pieceCount, PRINT.pieceCountAr, PRINT.pieceCountEn)}
+        ${totalsRow(doc.payMethodLabel, PRINT.payMethodAr, PRINT.payMethodEn)}
+        ${doc.dueDate ? totalsRow(doc.dueDate, PRINT.dueDateAr, PRINT.dueDateEn) : ""}
       </div>
       ${isTax ? `<div style="margin-top:16px;">${buildQrSvgString(doc.zatcaQrOverride || buildZatcaQrFromDoc(doc))}</div>` : ""}
     `;
@@ -590,8 +595,22 @@ function openWhatsApp(phone, message) {
   }, 1200);
 }
 
+// Bilingual table header / totals line for the on-screen invoice preview,
+// mirroring the th()/totalsRow() helpers in buildPrintableHtml.
+function PrintTh({ ar, en }) {
+  return <th className="px-2 py-1.5 text-right">{ar}<span className="block text-[10px] font-normal text-slate-500">{en}</span></th>;
+}
+function PrintTotal({ value, ar, en, className = "", mono = true }) {
+  return (
+    <div className={`flex items-center justify-between ${className}`}>
+      <span className={mono ? "f-mono" : ""}>{value}</span>
+      <span className="text-right">{ar}<span className="block text-[10px] font-normal text-slate-500">{en}</span></span>
+    </div>
+  );
+}
+
 function PrintDocumentModal({ doc, onClose }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const isTax = doc.kind === "tax";
   const isDelivery = doc.kind === "delivery";
 
@@ -737,7 +756,7 @@ function PrintDocumentModal({ doc, onClose }) {
         store_name: doc.merchant?.storeName || doc.merchant?.name || "",
         invoice_url: url,
         total_amount: doc.totals?.gross != null ? doc.totals.gross.toFixed(2) : "",
-      });
+      }, whatsAppDefaults(lang).invoice);
       openWhatsApp(cleanPhoneForWhatsApp(doc.customerPhone), message);
     } catch (e) {
       console.error("shareOnWhatsApp failed", e);
@@ -777,8 +796,8 @@ function PrintDocumentModal({ doc, onClose }) {
               [PRINT.phoneEn, doc.merchant.phone || "—", PRINT.phoneAr, true],
               [PRINT.dateEn, doc.dateLabel, PRINT.dateAr, true],
               [PRINT.invNumEn, doc.invoiceCode, PRINT.invNumAr, true],
-              [PRINT.cashier, doc.branchName || PRINT.branchValueAr, PRINT.branchAr],
-              ["", doc.customerName, PRINT.customerAr],
+              [PRINT.cashier, printBranchName(doc.branchName), PRINT.branchAr],
+              [PRINT.customerEn, doc.customerName, PRINT.customerAr],
             ].map(([en, center, ar, mono], i) => (
               <div key={i} className="flex items-center justify-between gap-2">
                 <span className="w-1/3 text-left font-semibold">{en}</span>
@@ -793,7 +812,7 @@ function PrintDocumentModal({ doc, onClose }) {
           {isDelivery ? (
             <div dir="rtl" className="overflow-hidden rounded border border-slate-800 mb-3">
               <table className="w-full text-[13px]">
-                <thead><tr className="border-b border-slate-800"><th className="px-2 py-1.5 text-right">{PRINT.deliveredDateAr}</th><th className="px-2 py-1.5 text-right">{PRINT.productAr}</th></tr></thead>
+                <thead><tr className="border-b border-slate-800"><PrintTh ar={PRINT.deliveredDateAr} en={PRINT.deliveredDateEn} /><PrintTh ar={PRINT.productAr} en={PRINT.productEn} /></tr></thead>
                 <tbody>
                   {doc.deliveredItems.map((it, i) => (
                     <tr key={i} className="border-b border-slate-200 last:border-0">
@@ -815,7 +834,7 @@ function PrintDocumentModal({ doc, onClose }) {
               )}
               <div dir="rtl" className="overflow-hidden rounded border border-slate-800 mb-3">
                 <table className="w-full text-[13px]">
-                  <thead><tr className="border-b border-slate-800"><th className="px-2 py-1.5 text-right">{PRINT.productAr}</th><th className="px-2 py-1.5 text-right">{PRINT.priceAr}</th><th className="px-2 py-1.5 text-right">{PRINT.totalAr}</th></tr></thead>
+                  <thead><tr className="border-b border-slate-800"><PrintTh ar={PRINT.productAr} en={PRINT.productEn} /><PrintTh ar={PRINT.priceAr} en={PRINT.priceEn} /><PrintTh ar={PRINT.totalAr} en={PRINT.totalEn} /></tr></thead>
                   <tbody>
                     {doc.items.map((it, i) => (
                       <tr key={i} className="border-b border-slate-200 last:border-0">
@@ -829,18 +848,18 @@ function PrintDocumentModal({ doc, onClose }) {
               </div>
 
               <div className="space-y-1 text-[13px]">
-                <div className="flex justify-between"><span className="f-mono">{doc.totals.net.toFixed(2)}</span><span>{PRINT.subtotalAr}</span></div>
-                <div className="flex justify-between"><span className="f-mono">{doc.totals.discount.toFixed(2)}</span><span>{PRINT.discountAr}</span></div>
-                <div className="flex justify-between"><span className="f-mono">{doc.totals.vat.toFixed(2)}</span><span>{PRINT.vatAr}</span></div>
-                <div className="flex justify-between font-bold"><span className="f-mono">{doc.totals.gross.toFixed(2)}</span><span>{PRINT.grandTotalAr}</span></div>
+                <PrintTotal value={doc.totals.net.toFixed(2)} ar={PRINT.subtotalAr} en={PRINT.subtotalEn} />
+                <PrintTotal value={doc.totals.discount.toFixed(2)} ar={PRINT.discountAr} en={PRINT.discountEn} />
+                <PrintTotal value={doc.totals.vat.toFixed(2)} ar={PRINT.vatAr} en={PRINT.vatEn} />
+                <PrintTotal value={doc.totals.gross.toFixed(2)} ar={PRINT.grandTotalAr} en={PRINT.grandTotalEn} className="font-bold" />
               </div>
               <hr className="my-3 border-slate-800" />
               <div className="space-y-1 text-[13px]">
-                <div className="flex justify-between font-semibold"><span className="f-mono">{doc.totals.paid.toFixed(2)}</span><span>{PRINT.paidAr}</span></div>
-                <div className="flex justify-between"><span className="f-mono">{doc.totals.remaining.toFixed(2)}</span><span>{PRINT.remainingAr}</span></div>
-                <div className="flex justify-between"><span className="f-mono">{doc.totals.pieceCount}</span><span>{PRINT.pieceCountAr}</span></div>
-                <div className="flex justify-between"><span>{doc.payMethodLabel}</span><span>{PRINT.payMethodAr}</span></div>
-                {doc.dueDate && <div className="flex justify-between"><span className="f-mono">{doc.dueDate}</span><span>{PRINT.dueDateAr}</span></div>}
+                <PrintTotal value={doc.totals.paid.toFixed(2)} ar={PRINT.paidAr} en={PRINT.paidEn} className="font-semibold" />
+                <PrintTotal value={doc.totals.remaining.toFixed(2)} ar={PRINT.remainingAr} en={PRINT.remainingEn} />
+                <PrintTotal value={doc.totals.pieceCount} ar={PRINT.pieceCountAr} en={PRINT.pieceCountEn} />
+                <PrintTotal value={doc.payMethodLabel} ar={PRINT.payMethodAr} en={PRINT.payMethodEn} mono={false} />
+                {doc.dueDate && <PrintTotal value={doc.dueDate} ar={PRINT.dueDateAr} en={PRINT.dueDateEn} />}
               </div>
               {isTax && <div className="mt-4"><RealQR value={doc.zatcaQrOverride || buildZatcaQrFromDoc(doc)} /></div>}
             </>
@@ -926,7 +945,7 @@ const DICT = {
     nav_pos: "Point of Sale", nav_invoices: "Active Invoices", nav_delivery: "Active Delivery Invoices",
     nav_customers: "Customer Ledger", nav_products: "Products", nav_purchases: "Purchases & Expenses",
     nav_promotions: "Promotions", nav_reports: "Reports", nav_whatsapp: "WhatsApp", nav_settings: "Settings",
-    nav_branches: "Branches", branches_title: "Branches", branches_subtitle: "Manage your laundry's branches", branches_add: "Add branch", branches_nameOptional: "Branch name (optional)", branches_defaultName: "Branch {n}", branches_autoNote: "The branch gets number {n} automatically and its invoices start with B{n}-. The number never changes, even if you rename the branch.", branches_costNote: "Each extra branch costs {n} SAR per year, pro-rated to the time left on your subscription, and renews with it.", branches_staffNote: "“Create login” gives your staff a separate login from yours, even with one branch and at no charge. It doesn't show the overview or your settings.", branches_ownerPinRequired: "Set the owner PIN in Settings first, then try again.", branches_ownerPinTitle: "Owner PIN to manage branches and logins", branches_numberCol: "No.", branches_nameCol: "Branch", branches_prefixCol: "Invoice prefix", branches_noPrefix: "None (original numbering)", branches_rename: "Rename", branches_archive: "Archive", branches_restore: "Restore", branches_active: "Active", branches_archived: "Archived", branches_feeNote: "Extra branch fee for the rest of your subscription: {fee} SAR (VAT included). The branch is added after our team confirms your bank transfer.", branches_continuePay: "Continue to payment", branches_errTrial: "Free trial accounts cannot add branches. Subscribe to the annual plan first.", branches_pending: "Your request for branch '{name}' is under review. It will be added once payment is confirmed.", branches_rejected: "The payment for branch '{name}' was not accepted", branches_errUpdate: "Couldn't save the change. Please try again.", branches_picker_view: "Viewing", branches_all: "All branches", branches_search: "Search branches...", branches_noMatch: "No branch with that name", branches_workBranch: "Sale branch", 
+    nav_branches: "Branches", branches_title: "Branches", branches_subtitle: "Manage your laundry's branches", branches_add: "Add branch", branches_nameOptional: "Branch name (optional)", branches_defaultName: "Branch {n}", branches_mainDefault: "Main Branch", branches_autoNote: "The branch gets number {n} automatically and its invoices start with B{n}-. The number never changes, even if you rename the branch.", branches_costNote: "Each extra branch costs {n} SAR per year, pro-rated to the time left on your subscription, and renews with it.", branches_staffNote: "“Create login” gives your staff a separate login from yours, even with one branch and at no charge. It doesn't show the overview or your settings.", branches_ownerPinRequired: "Set the owner PIN in Settings first, then try again.", branches_ownerPinTitle: "Owner PIN to manage branches and logins", branches_numberCol: "No.", branches_nameCol: "Branch", branches_prefixCol: "Invoice prefix", branches_noPrefix: "None (original numbering)", branches_rename: "Rename", branches_archive: "Archive", branches_restore: "Restore", branches_active: "Active", branches_archived: "Archived", branches_feeNote: "Extra branch fee for the rest of your subscription: {fee} SAR (VAT included). The branch is added after our team confirms your bank transfer.", branches_continuePay: "Continue to payment", branches_errTrial: "Free trial accounts cannot add branches. Subscribe to the annual plan first.", branches_pending: "Your request for branch '{name}' is under review. It will be added once payment is confirmed.", branches_rejected: "The payment for branch '{name}' was not accepted", branches_errUpdate: "Couldn't save the change. Please try again.", branches_picker_view: "Viewing", branches_all: "All branches", branches_search: "Search branches...", branches_noMatch: "No branch with that name", branches_workBranch: "Sale branch", 
     branches_accountCol: "Login", branches_noAccount: "No login yet", branches_createAccount: "Create login", branches_resetPassword: "New password", branches_credentialsTitle: "Branch login", branches_credentialsNote: "Give these to the staff of {name}. The password is shown only now; if it is lost, create a new one.", branches_username: "Username", branches_password: "Password", branches_copy: "Copy", branches_copied: "Copied", branches_done: "Done", branches_errAccount: "Couldn't update the branch login. Please try again.", branches_yourBranch: "Your branch",
     branches_unlockTitle: "Owner PIN to view other branches", branches_needOwnerPin: "Set an owner PIN first (Settings) to view or sell as another branch.", branches_resetPin: "Reset branch PIN", branches_resetPinTitle: "Owner PIN to reset the PIN of {name}", branches_enterMasterTitle: "Branch manager PIN", branches_setMasterTitle: "Create the branch manager PIN", branches_lockHint: "Turn a section on to ask for your PIN before the branch staff can open it.", reports_kpi_outstandingDebtAll: "Outstanding Debt (all branches)",
 
@@ -957,7 +976,7 @@ const DICT = {
     pos_noProductsInCategory: "No products in this category yet.",
     pos_noProductsTitle: "No products yet", pos_noProductsSubtitle: "Add your products first from the \"Products\" page so they show up here and you can start selling.",
     pos_deliveryOrder: "Delivery Order", pos_pickupOrder: "Counter / Pickup Order",
-    pos_deliveryFeeLabel: "Delivery Fee (based on customer location):", pos_deliveryFeePlaceholder: "Enter fee manually",
+    pos_deliveryFeeLabel: "Delivery fee:", pos_deliveryFeePlaceholder: "Enter fee",
     pos_deliveryFee: "Delivery Fee", pos_total: "Total", pos_completeSale: "Complete Sale",
     pos_searchCustomerPlaceholder: "Search by name / mobile / #ID...", pos_noMatchingCustomers: "No matching customers",
     pos_wallet: "Wallet", pos_debt: "Debt", pos_customerRequired: "A customer must be selected before checkout",
@@ -1781,7 +1800,7 @@ function useLang() {
   const ctx = useContext(LangContext);
   const t = (key, vars) => {
     let str = (DICT[ctx.lang] && DICT[ctx.lang][key]) || DICT.en[key] || key;
-    if (vars) Object.keys(vars).forEach((k) => { str = str.replace(`{${k}}`, vars[k]); });
+    if (vars) Object.keys(vars).forEach((k) => { str = str.split(`{${k}}`).join(vars[k]); });
     return str;
   };
   return { lang: ctx.lang, setLang: ctx.setLang, dir: ctx.dir, t };
@@ -1805,6 +1824,8 @@ const BranchCtx = createContext({
 const BRANCH_ACCOUNT_HIDDEN = new Set(["home", "branches", "inventory", "whatsapp"]);
 function useBranches() { return useContext(BranchCtx); }
 // Main branch keeps its original numbering (INV-1001); branch N>1 gets B<N>-.
+// Name the database gives every main branch (see supabase-branches-schema.sql).
+const MAIN_BRANCH_DEFAULT_NAME = "الفرع الرئيسي";
 const branchPrefix = (branch) => (branch && branch.number > 1 ? `B${branch.number}-` : "");
 
 const NAV = [
@@ -2727,10 +2748,10 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
               </div>
             </Field>
             {isDelivery && (
-              <div className="flex items-center gap-2 rounded-lg border border-warning-200 bg-warning-50 px-3 py-2.5">
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-warning-200 bg-warning-50 px-3 py-2.5">
                 <Truck size={14} className="shrink-0 text-warning-700" />
                 <span className="shrink-0 text-xs font-medium text-warning-800">{t("pos_deliveryFeeLabel")}</span>
-                <input type="number" min="0" autoFocus value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} placeholder={t("pos_deliveryFeePlaceholder")} className={`${inputCls} flex-1`} />
+                <input type="number" min="0" autoFocus value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} placeholder={t("pos_deliveryFeePlaceholder")} className={`${inputCls} min-w-[7rem] flex-1`} />
               </div>
             )}
             {walletInsufficient && <div className="rounded-lg bg-danger-50 border border-danger-200 px-3 py-2 text-xs font-medium text-danger-700">{t("pos_walletInsufficient")}</div>}
@@ -3039,7 +3060,7 @@ function deliveryStatusMeta(t, inv) {
 }
 
 function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, merchant, zatcaInvoices = [], whatsappTemplate, whatsappEnabled, readyMessageEnabled, readyMessageTemplate, whatsappReadySendMode }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [openId, setOpenId] = useState(null);
   const [customerFilter, setCustomerFilter] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
@@ -3073,7 +3094,7 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
     const cleanedPhone = cleanPhoneForWhatsApp(phone);
     const message = fillWhatsAppTemplate(readyMessageTemplate, {
       customer_name: inv.customerName || "", store_name: merchant?.storeName || merchant?.name || "", order_id: inv.code || "",
-    }, DEFAULT_READY_MESSAGE_TEMPLATE);
+    }, whatsAppDefaults(lang).ready);
     if (whatsappReadySendMode === "auto") { openWhatsApp(cleanedPhone, message); return; }
     setReadyConfirm({ phone: cleanedPhone, message });
   };
@@ -5740,7 +5761,7 @@ function MessageTemplateCard({ icon: Icon, tone, title, description, enabled, on
         <Toggle checked={enabled} onChange={onToggleEnabled} />
       </div>
 
-      <div className="mt-3 rounded-lg bg-app-bg px-3 py-2.5 text-sm leading-relaxed text-app-text" dir="rtl">
+      <div className="mt-3 rounded-lg bg-app-bg px-3 py-2.5 text-sm leading-relaxed text-app-text" dir="auto">
         {renderTemplatePreview(template && template.trim() ? template : defaultTemplate)}
       </div>
 
@@ -5760,7 +5781,7 @@ function MessageTemplateCard({ icon: Icon, tone, title, description, enabled, on
             onChange={(e) => setDraft(e.target.value)}
             placeholder={defaultTemplate}
             rows={5}
-            dir="rtl"
+            dir="auto"
             className="w-full rounded-lg border border-app-border-strong bg-app-surface px-3 py-2 text-sm text-app-text outline-none focus:border-brand-500"
           />
           <div className="mt-2">
@@ -5800,7 +5821,7 @@ function WhatsAppReadyConfirmModal({ message, onSend, onSkip }) {
         </div>
         <h3 className="f-display text-lg font-semibold text-app-text">{t("wa_confirmTitle")}</h3>
         <p className="mt-1 text-sm text-app-text-muted">{t("wa_confirmQuestion")}</p>
-        <div className="mt-4 whitespace-pre-line rounded-lg bg-app-bg px-3 py-2.5 text-start text-sm leading-relaxed text-app-text" dir="rtl">
+        <div className="mt-4 whitespace-pre-line rounded-lg bg-app-bg px-3 py-2.5 text-start text-sm leading-relaxed text-app-text" dir="auto">
           {message}
         </div>
         <div className="mt-4 flex gap-2">
@@ -5827,7 +5848,8 @@ const WHATSAPP_SEND_MODES = [
 // radios are the new "order ready" feature (see InvoicesView.updateItemStatus
 // for where whatsappReadySendMode actually gets read).
 function WhatsAppView({ whatsappEnabled, setWhatsappEnabled, whatsappTemplate, setWhatsappTemplate, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const defaults = whatsAppDefaults(lang);
   return (
     <div className="max-w-3xl space-y-6">
       <div>
@@ -5843,14 +5865,14 @@ function WhatsAppView({ whatsappEnabled, setWhatsappEnabled, whatsappTemplate, s
             icon={ReceiptText} tone="brand"
             title={t("wa_invoiceCardTitle")} description={t("wa_invoiceCardDesc")}
             enabled={whatsappEnabled} onToggleEnabled={setWhatsappEnabled}
-            template={whatsappTemplate} defaultTemplate={DEFAULT_WHATSAPP_TEMPLATE}
+            template={whatsappTemplate} defaultTemplate={defaults.invoice}
             tags={WHATSAPP_TAGS} onSave={setWhatsappTemplate}
           />
           <MessageTemplateCard
             icon={Bell} tone="warning"
             title={t("wa_readyCardTitle")} description={t("wa_readyCardDesc")}
             enabled={readyMessageEnabled} onToggleEnabled={setReadyMessageEnabled}
-            template={readyMessageTemplate} defaultTemplate={DEFAULT_READY_MESSAGE_TEMPLATE}
+            template={readyMessageTemplate} defaultTemplate={defaults.ready}
             tags={READY_MESSAGE_TAGS} onSave={setReadyMessageTemplate}
           />
         </div>
@@ -6043,7 +6065,7 @@ function OwnerOnlySettings({ ownerPinSet, sectionLocks, enabledPayMethods, setEn
 const PaymentPanel = lazy(() => import("../payment/PaymentPanel.jsx"));
 
 function BranchesView() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const { branches, members, ownerPinSet, refreshBranches, updateBranch, createBranchAccount, resetBranchPassword, setBranchStatus } = useBranches();
   const sorted = [...branches].sort((a, b) => a.number - b.number);
   const nextNumber = (sorted[sorted.length - 1]?.number || 0) + 1;
@@ -6199,7 +6221,7 @@ function BranchesView() {
       {paying && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <Suspense fallback={<div className="flex min-h-screen items-center justify-center bg-slate-950 text-gray-300">…</div>}>
-            <PaymentPanel kind="branch" branchName={paying.name} branchFee={paying.fee} onBack={closePayment} onRefresh={() => loadRequest().catch(() => {})} />
+            <PaymentPanel kind="branch" lang={lang} branchName={paying.name} branchFee={paying.fee} onBack={closePayment} onRefresh={() => loadRequest().catch(() => {})} />
           </Suspense>
         </div>
       )}
@@ -6677,6 +6699,8 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   // load below, so a returning user's own explicit choice always wins.
   const [lang, setLang] = useState(initialLang || "en");
   const dir = lang === "en" ? "ltr" : "rtl";
+  // Screen readers, browser translation and main.jsx's crash screen read this.
+  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
 
   // Every piece of shop data lives in Firestore under this tenant's own
   // subcollections — onSnapshot keeps these local mirrors live and in sync
@@ -6701,7 +6725,12 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   // expenses are recorded under. Both are per-device choices kept in
   // localStorage. With a single active branch nothing is sent (the database
   // fills in the main branch), so single-branch shops are unaffected.
-  const [branches, setBranchesState] = useState([]);
+  const [branchRows, setBranchesState] = useState([]);
+  // The database names every shop's main branch MAIN_BRANCH_DEFAULT_NAME at
+  // signup; an English UI shows it as "Main Branch" until the owner renames it.
+  const branches = useMemo(() => (lang === "en"
+    ? branchRows.map((b) => (b.number === 1 && b.name === MAIN_BRANCH_DEFAULT_NAME ? { ...b, name: DICT.en.branches_mainDefault } : b))
+    : branchRows), [branchRows, lang]);
   const [branchSel, setBranchSel] = useState({ scope: "all", work: null });
   const branchStoreKey = tenantId ? `ragwa_branch_${tenantId}` : null;
   useEffect(() => {
@@ -7039,7 +7068,7 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   const [ownerPinSet, setOwnerPinSet] = useState(false);
   const [sectionLocks, setSectionLocks] = useState({ customers: false, inventory: false, purchases: false, promotions: false, reports: false });
   const [enabledPayMethods, setEnabledPayMethods] = useState({ Cash: true, "External Network": true, "Wallet Balance": true, "Credit (On Account)": true, Split: true });
-  // Empty string means "use DEFAULT_WHATSAPP_TEMPLATE" (see src/utils/phone.js)
+  // Empty string means "use the built-in default" (whatsAppDefaults in src/utils/phone.js)
   // rather than storing the default text itself, so a future change to the
   // built-in default keeps applying to every tenant who never customized it.
   const [whatsappTemplate, setWhatsappTemplate] = useState("");

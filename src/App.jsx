@@ -41,11 +41,94 @@ function DashboardLoading() {
    ========================================================================= */
 const ADMIN_EMAILS_DEFAULT = ["ragwapos@gmail.com"];
 
-// Supabase Auth error codes → Arabic messages shown in the login/signup forms.
+// Every user-facing string on the pre-login pages (login, signup, email
+// verification, password reset, 404, pending, expiry notice), in the two
+// languages the landing page offers. Picked by `siteLang`, so a visitor who
+// chose English on /en stays in English all the way into the dashboard.
+const AUTH_TEXT = {
+  ar: {
+    dir: 'rtl', back: '← العودة', brand: 'رغوة', tagline: 'نظام إدارة مغاسل الملابس', loading: 'جارٍ التحميل...',
+    email: 'البريد الإلكتروني', password: 'كلمة المرور',
+    loginTitle: 'دخول', loginSubtitle: 'الدخول إلى لوحة التحكم', loginBtn: 'دخول', loggingIn: 'جارٍ الدخول...',
+    forgot: 'نسيت كلمة المرور؟', noAccount: 'ليس لديك حساب؟', createAccount: 'إنشاء حساب',
+    forgotTitle: 'استرجاع كلمة المرور', forgotSent: 'تم إرسال رابط استرجاع كلمة المرور لبريدك — افتحه من نفس الجهاز اللي بتحط فيه كلمة المرور الجديدة.',
+    forgotIntro: 'حط بريدك الإلكتروني وبنرسل لك رابط لتعيين كلمة مرور جديدة.', sending: 'جارٍ الإرسال...', sendReset: 'إرسال رابط الاسترجاع',
+    backToLogin: 'رجوع لتسجيل الدخول', notFound: 'هذي الصفحة غير موجودة — يمكن الرابط قديم أو فيه خطأ إملائي.', backHome: 'رجوع للصفحة الرئيسية',
+    resetTitle: 'تعيين كلمة مرور جديدة', resetIntro: 'حط كلمة المرور الجديدة اللي بتستخدمها من الحين.', newPassword: 'كلمة المرور الجديدة',
+    confirmPassword: 'تأكيد كلمة المرور', saving: 'جارٍ الحفظ...', savePassword: 'حفظ كلمة المرور',
+    maintenance: 'النظام حاليًا بصيانة مجدولة — بعض الميزات قد لا تعمل مؤقتًا.',
+    verifyTitle: 'تأكيد البريد الإلكتروني', verifySubtitle: 'خطوة أخيرة قبل الدخول للوحة التحكم', verifySentTo: 'أرسلنا رمز تحقق إلى',
+    verifyHint: 'افتح بريدك، وحط الرمز اللي وصلك بالمربع تحت.', codeResent: 'تم إرسال رمز جديد.', verifying: 'جارٍ التحقق...', confirm: 'تأكيد',
+    resendCode: 'إعادة إرسال الرمز', backPlain: 'رجوع',
+    signupTitle: 'إنشاء حساب', signupSubtitle: 'ابدأ مع رغوة الآن', planTrial: 'تجربة مجانية 14 يوم', planAnnual: 'سنوي 350 ريال',
+    planAnnualNote: 'بعد تأكيد بريدك تحوّل المبلغ وترفق الإيصال، ونفعّل حسابك بعد المراجعة.', planTrialNote: 'تدخل النظام مباشرة بعد تأكيد بريدك بكل المميزات.',
+    shopName: 'اسم المحل', shopNamePh: 'اسم مغسلتك', address: 'العنوان', addressPh: 'المدينة، الحي', mobile: 'رقم الجوال',
+    mobileHint: 'يبدأ تلقائيًا بـ 966 — اكتب رقمك كالمعتاد (05... أو 5...)', agree: 'أوافق على', terms: 'شروط الخدمة',
+    creating: 'جارٍ الإنشاء...', createBtn: 'إنشاء الحساب', haveAccount: 'لديك حساب؟',
+    pendingTitle: 'طلبك قيد المراجعة', pendingBody: 'تم تأكيد بريدك الإلكتروني بنجاح. حسابك الآن بانتظار موافقة الإدارة، بترجع تقدر تدخل بمجرد ما توافق الإدارة.',
+    errEnterEmail: 'حط البريد الإلكتروني.', errRejected: 'تم رفض طلب تسجيلك', errAgree: 'لازم توافق على شروط الخدمة.', errMobile: 'رقم الجوال غير صحيح.',
+    errEmailValid: 'حط بريد إلكتروني صحيح.', errPasswordEmpty: 'حط كلمة مرور.', errEmailEmpty: 'حط بريدك الإلكتروني.',
+    errPasswordShort: 'كلمة المرور لازم تكون 6 أحرف على الأقل.', errPasswordMismatch: 'كلمتا المرور غير متطابقتين.',
+    errExists: 'هذا البريد مسجل مسبقًا — سجل دخول بدل إنشاء حساب جديد.', errEmailInvalid: 'بريد إلكتروني غير صحيح.',
+    errWeak: 'كلمة المرور ضعيفة — لازم 6 أحرف على الأقل.', errCredentials: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
+    errRate: 'محاولات كثيرة فاشلة — انتظر شوي وحاول مرة ثانية.', errRequest: 'تعذر إتمام الطلب — حاول مرة ثانية.', errGeneric: 'صار خطأ غير متوقع — حاول مرة ثانية.',
+    expiryBanner: (d, trial) => `باقي ${d} ${d === 1 ? 'يوم' : 'أيام'} على انتهاء ${trial ? 'التجربة المجانية' : 'الاشتراك'} — جدّد الآن`,
+    expiryTitle: (d) => `باقي ${d} ${d === 1 ? 'يوم' : 'أيام'} على انتهاء اشتراكك`,
+    expiryBody: 'جدّد الآن لتستمر في استخدام رغوة بدون انقطاع. بياناتك محفوظة وآمنة.',
+    expiryWa: (shop, d) => 'السلام عليكم، أرغب في تجديد اشتراك رغوة' + (shop ? ` لمحل (${shop})` : '') + `. المتبقي ${d} أيام.`,
+    expiryContact: 'تواصل مع خدمة العملاء للتجديد', expiryBank: 'الدفع بالتحويل البنكي', later: 'لاحقًا',
+  },
+  en: {
+    dir: 'ltr', back: '← Back', brand: 'Ragwa', tagline: 'Laundry shop management system', loading: 'Loading...',
+    email: 'Email', password: 'Password',
+    loginTitle: 'Log in', loginSubtitle: 'Sign in to your dashboard', loginBtn: 'Log in', loggingIn: 'Logging in...',
+    forgot: 'Forgot password?', noAccount: "Don't have an account?", createAccount: 'Sign up',
+    forgotTitle: 'Reset your password', forgotSent: "We've sent a password reset link to your email. Open it on the same device where you'll set the new password.",
+    forgotIntro: "Enter your email and we'll send you a link to set a new password.", sending: 'Sending...', sendReset: 'Send reset link',
+    backToLogin: 'Back to login', notFound: "This page doesn't exist. The link may be old or mistyped.", backHome: 'Back to the home page',
+    resetTitle: 'Set a new password', resetIntro: "Enter the new password you'll use from now on.", newPassword: 'New password',
+    confirmPassword: 'Confirm password', saving: 'Saving...', savePassword: 'Save password',
+    maintenance: 'Scheduled maintenance is in progress. Some features may not work for a while.',
+    verifyTitle: 'Confirm your email', verifySubtitle: 'One last step before your dashboard', verifySentTo: 'We sent a verification code to',
+    verifyHint: 'Open your inbox and enter the code in the box below.', codeResent: 'A new code has been sent.', verifying: 'Verifying...', confirm: 'Confirm',
+    resendCode: 'Resend code', backPlain: 'Back',
+    signupTitle: 'Create an account', signupSubtitle: 'Get started with Ragwa today', planTrial: '14-day free trial', planAnnual: 'Annual, 350 SAR',
+    planAnnualNote: "After confirming your email, transfer the amount and attach the receipt. We'll activate your account once it's reviewed.", planTrialNote: 'You get full access right after confirming your email.',
+    shopName: 'Shop name', shopNamePh: 'Your laundry name', address: 'Address', addressPh: 'City, district', mobile: 'Mobile number',
+    mobileHint: 'Starts with 966 automatically. Type your number as usual (05... or 5...)', agree: 'I agree to the', terms: 'Terms of Service',
+    creating: 'Creating...', createBtn: 'Create account', haveAccount: 'Already have an account?',
+    pendingTitle: 'Your request is under review', pendingBody: "Your email is confirmed. Your account is waiting for approval, and you'll be able to log in as soon as it's approved.",
+    errEnterEmail: 'Enter your email.', errRejected: 'Your registration request was rejected', errAgree: 'You need to agree to the Terms of Service.', errMobile: 'Invalid mobile number.',
+    errEmailValid: 'Enter a valid email.', errPasswordEmpty: 'Enter a password.', errEmailEmpty: 'Enter your email.',
+    errPasswordShort: 'The password must be at least 6 characters.', errPasswordMismatch: "The passwords don't match.",
+    errExists: 'This email is already registered. Log in instead of creating a new account.', errEmailInvalid: 'Invalid email address.',
+    errWeak: 'The password is too weak. Use at least 6 characters.', errCredentials: 'Incorrect email or password.',
+    errRate: 'Too many failed attempts. Wait a moment and try again.', errRequest: "Couldn't complete the request. Please try again.", errGeneric: 'Something went wrong. Please try again.',
+    expiryBanner: (d, trial) => `${d} ${d === 1 ? 'day' : 'days'} left on your ${trial ? 'free trial' : 'subscription'}. Renew now`,
+    expiryTitle: (d) => `${d} ${d === 1 ? 'day' : 'days'} left on your subscription`,
+    expiryBody: 'Renew now to keep using Ragwa without interruption. Your data is safe.',
+    expiryWa: (shop, d) => "Hello, I'd like to renew my Ragwa subscription" + (shop ? ` for (${shop})` : '') + `. ${d} days left.`,
+    expiryContact: 'Contact support to renew', expiryBank: 'Pay by bank transfer', later: 'Later',
+  },
+};
+
+// The language the visitor picked on the landing page, remembered across
+// reloads of /login, /signup etc. Only ever 'ar' or 'en'; anything else in
+// storage is ignored.
+const SITE_LANG_KEY = 'ragwa_site_lang';
+function initialSiteLang() {
+  const path = window.location.pathname;
+  if (path === '/en') return 'en';
+  if (path === '/') return 'ar';
+  try { return localStorage.getItem(SITE_LANG_KEY) === 'en' ? 'en' : 'ar'; } catch { return 'ar'; }
+}
+
+// Supabase Auth error codes → messages shown in the login/signup forms.
 // Unlike Firebase, Supabase never distinguishes "wrong password" from "no such
 // account" on sign-in (both come back as invalid_credentials, by design, for
 // enumeration protection) — so there is no separate "user not found" case here.
-const authErrorMessage = (error) => {
+const authErrorMessage = (error, lang = 'ar') => {
+  const T = AUTH_TEXT[lang];
   const code = error && error.code;
   switch (code) {
     // Confirmed live: Supabase's admin.generateLink({type:'signup'}) actually
@@ -54,82 +137,81 @@ const authErrorMessage = (error) => {
     // the real value, so this branch was silently dead and every duplicate-
     // signup attempt fell through to the raw English Supabase message below.
     case "email_exists":
-    case "user_already_exists": return "هذا البريد مسجل مسبقًا — سجل دخول بدل إنشاء حساب جديد.";
-    case "email_address_invalid": return "بريد إلكتروني غير صحيح.";
-    case "weak_password": return "كلمة المرور ضعيفة — لازم 6 أحرف على الأقل.";
-    case "invalid_credentials": return "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+    case "user_already_exists": return T.errExists;
+    case "email_address_invalid": return T.errEmailInvalid;
+    case "weak_password": return T.errWeak;
+    case "invalid_credentials": return T.errCredentials;
     case "over_request_rate_limit":
-    case "over_email_send_rate_limit": return "محاولات كثيرة فاشلة — انتظر شوي وحاول مرة ثانية.";
+    case "over_email_send_rate_limit": return T.errRate;
     // Not a Supabase auth code — these are api/send-verification-email.js's
     // own error strings (no `code` field on that response), so `error.message`
     // below would otherwise leak the raw machine string to the user.
     case undefined:
-      if (error && error.message === "invalid_email") return "بريد إلكتروني غير صحيح.";
-      if (error && error.message === "invalid_request") return "تعذر إتمام الطلب — حاول مرة ثانية.";
-      return (error && typeof error.message === "string" && error.message) || "صار خطأ غير متوقع — حاول مرة ثانية.";
+      if (error && error.message === "invalid_email") return T.errEmailInvalid;
+      if (error && error.message === "invalid_request") return T.errRequest;
+      return (error && typeof error.message === "string" && error.message) || T.errGeneric;
     // No matching Supabase auth code — this is most likely an error relayed
     // as-is from /api/send-verification-email (Resend/service-role failures
     // have their own message text, not a Supabase auth code), so show it
     // instead of masking it behind the generic fallback below.
-    default: return (error && typeof error.message === "string" && error.message) || "صار خطأ غير متوقع — حاول مرة ثانية.";
+    default: return (error && typeof error.message === "string" && error.message) || T.errGeneric;
   }
 };
 
-
-
-
-  function LoginPage(props) {
+function LoginPage(props) {
   const { navigate, showPassword, setShowPassword, loginEmail, setLoginEmail,
-    loginPassword, setLoginPassword, handleLogin, loginError, loginLoading } = props;
+    loginPassword, setLoginPassword, handleLogin, loginError, loginLoading, lang } = props;
+  const T = AUTH_TEXT[lang];
+  const home = lang === 'en' ? '/en' : '/';
   // Start downloading the dashboard chunk while the owner is still typing, so
   // it's ready the moment sign-in succeeds instead of being fetched after.
   useEffect(() => { loadTenantApp().catch(() => {}); }, []);
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
-      <div className="absolute top-6 right-6">
-        <a href="/" onClick={(e) => { e.preventDefault(); navigate('landing', '/'); }} className="px-4 py-2 text-gray-300 hover:text-white transition">
-          ← العودة
+    <div dir={T.dir} className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
+      <div className="absolute top-6 end-6">
+        <a href={home} onClick={(e) => { e.preventDefault(); navigate('landing', home); }} className="px-4 py-2 text-gray-300 hover:text-white transition">
+          {T.back}
         </a>
       </div>
 
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <img src="/logo.png" alt="Ragwa" className="inline-block w-16 h-16 rounded-2xl object-contain mb-4 shadow-lg" />
-          <h1 className="text-3xl font-bold text-white mb-2">رغوة</h1>
-          <p className="text-gray-400 text-sm">نظام إدارة مغاسل الملابس</p>
+          <h1 className="text-3xl font-bold text-white mb-2">{T.brand}</h1>
+          <p className="text-gray-400 text-sm">{T.tagline}</p>
         </div>
 
         <div className="bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
-          <h2 className="text-2xl font-bold text-center mb-1">دخول</h2>
-          <p className="text-gray-400 text-center text-sm mb-8">الدخول إلى لوحة التحكم</p>
+          <h2 className="text-2xl font-bold text-center mb-1">{T.loginTitle}</h2>
+          <p className="text-gray-400 text-center text-sm mb-8">{T.loginSubtitle}</p>
 
           <div className="mb-6">
-            <label className="block text-gray-300 text-sm font-semibold mb-3">البريد الإلكتروني</label>
-            <input type="text" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="name@example.com" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" dir="rtl" />
+            <label className="block text-gray-300 text-sm font-semibold mb-3">{T.email}</label>
+            <input type="text" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="name@example.com" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" dir="ltr" />
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-300 text-sm font-semibold mb-3">كلمة المرور</label>
+            <label className="block text-gray-300 text-sm font-semibold mb-3">{T.password}</label>
             <div className="relative">
-              <input type={showPassword ? 'text' : 'password'} value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-800 border border-slate-700 rounded-lg pr-4 pl-12 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
-              <button onClick={() => setShowPassword(!showPassword)} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">
+              <input type={showPassword ? 'text' : 'password'} value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-800 border border-slate-700 rounded-lg ps-4 pe-12 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
+              <button onClick={() => setShowPassword(!showPassword)} className="absolute end-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">
                 {showPassword ? '🙈' : '👁'}
               </button>
             </div>
           </div>
 
-          <div className="text-left mb-4 -mt-2">
-            <a href="/forgot-password" onClick={(e) => { e.preventDefault(); navigate('forgotPassword', '/forgot-password'); }} className="text-cyan-400 hover:text-cyan-300 text-xs">نسيت كلمة المرور؟</a>
+          <div className="text-end mb-4 -mt-2">
+            <a href="/forgot-password" onClick={(e) => { e.preventDefault(); navigate('forgotPassword', '/forgot-password'); }} className="text-cyan-400 hover:text-cyan-300 text-xs">{T.forgot}</a>
           </div>
 
           {loginError && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{loginError}</div>}
 
           <button onClick={handleLogin} disabled={loginLoading} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-6">
-            {loginLoading ? 'جارٍ الدخول...' : 'دخول'}
+            {loginLoading ? T.loggingIn : T.loginBtn}
           </button>
 
           <p className="text-center text-gray-400 text-sm">
-            ليس لديك حساب؟ <a href="/signup" onClick={(e) => { e.preventDefault(); navigate('signup', '/signup'); }} className="text-cyan-400 hover:text-cyan-300">إنشاء حساب</a>
+            {T.noAccount} <a href="/signup" onClick={(e) => { e.preventDefault(); navigate('signup', '/signup'); }} className="text-cyan-400 hover:text-cyan-300">{T.createAccount}</a>
           </p>
         </div>
       </div>
@@ -142,7 +224,8 @@ const authErrorMessage = (error) => {
 // onAuthStateChange picks up as a PASSWORD_RECOVERY event and routes to
 // ResetPasswordPage). Self-contained: reads/writes nothing from LaundryPOS's
 // own state, just `auth` directly, same as LandingPage/LoginPage.
-function ForgotPasswordPage({ navigate }) {
+function ForgotPasswordPage({ navigate, lang }) {
+  const T = AUTH_TEXT[lang];
   const goLogin = (e) => { e.preventDefault(); navigate('login', '/login'); };
   const [email, setEmail] = useState('');
   const [sent, setSent] = useState(false);
@@ -151,41 +234,41 @@ function ForgotPasswordPage({ navigate }) {
 
   const submit = async () => {
     const emailNorm = email.trim().toLowerCase();
-    if (!emailNorm) { setError('حط بريدك الإلكتروني.'); return; }
+    if (!emailNorm) { setError(T.errEmailEmpty); return; }
     setLoading(true); setError('');
     const { error: err } = await auth.resetPasswordForEmail(emailNorm, { redirectTo: window.location.origin });
-    if (err) setError(authErrorMessage(err));
+    if (err) setError(authErrorMessage(err, lang));
     else setSent(true);
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
+    <div dir={T.dir} className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <img src="/logo.png" alt="Ragwa" className="inline-block w-16 h-16 rounded-2xl object-contain mb-4 shadow-lg" />
-          <h1 className="text-3xl font-bold text-white mb-2">رغوة</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">{T.brand}</h1>
         </div>
         <div className="bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
-          <h2 className="text-2xl font-bold text-center mb-1">استرجاع كلمة المرور</h2>
+          <h2 className="text-2xl font-bold text-center mb-1">{T.forgotTitle}</h2>
           {sent ? (
             <>
-              <p className="text-gray-400 text-center text-sm mb-8">تم إرسال رابط استرجاع كلمة المرور لبريدك — افتحه من نفس الجهاز اللي بتحط فيه كلمة المرور الجديدة.</p>
-              <a href="/login" onClick={goLogin} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 rounded-lg transition inline-block text-center">رجوع لتسجيل الدخول</a>
+              <p className="text-gray-400 text-center text-sm mb-8">{T.forgotSent}</p>
+              <a href="/login" onClick={goLogin} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 rounded-lg transition inline-block text-center">{T.backToLogin}</a>
             </>
           ) : (
             <>
-              <p className="text-gray-400 text-center text-sm mb-8">حط بريدك الإلكتروني وبنرسل لك رابط لتعيين كلمة مرور جديدة.</p>
+              <p className="text-gray-400 text-center text-sm mb-8">{T.forgotIntro}</p>
               <div className="mb-6">
-                <label className="block text-gray-300 text-sm font-semibold mb-3">البريد الإلكتروني</label>
-                <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" dir="rtl" />
+                <label className="block text-gray-300 text-sm font-semibold mb-3">{T.email}</label>
+                <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" dir="ltr" />
               </div>
               {error && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{error}</div>}
               <button onClick={submit} disabled={loading} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-6">
-                {loading ? 'جارٍ الإرسال...' : 'إرسال رابط الاسترجاع'}
+                {loading ? T.sending : T.sendReset}
               </button>
               <p className="text-center text-gray-400 text-sm">
-                <a href="/login" onClick={goLogin} className="text-cyan-400 hover:text-cyan-300">رجوع لتسجيل الدخول</a>
+                <a href="/login" onClick={goLogin} className="text-cyan-400 hover:text-cyan-300">{T.backToLogin}</a>
               </p>
             </>
           )}
@@ -198,17 +281,19 @@ function ForgotPasswordPage({ navigate }) {
 // Shown for any URL not in PATH_PAGE_MAP — middleware.js (repo root) already
 // answers these with a real HTTP 404 status; this is what actually renders
 // once that shell loads client-side.
-function NotFoundPage({ navigate }) {
-  const goHome = (e) => { e.preventDefault(); navigate('landing', '/'); };
+function NotFoundPage({ navigate, lang }) {
+  const T = AUTH_TEXT[lang];
+  const home = lang === 'en' ? '/en' : '/';
+  const goHome = (e) => { e.preventDefault(); navigate('landing', home); };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
+    <div dir={T.dir} className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md text-center">
         <img src="/logo.png" alt="Ragwa" className="inline-block w-16 h-16 rounded-2xl object-contain mb-4 shadow-lg" />
         <div className="bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
           <h1 className="text-5xl font-bold text-white mb-3">404</h1>
-          <p className="text-gray-400 text-sm mb-8">هذي الصفحة غير موجودة — يمكن الرابط قديم أو فيه خطأ إملائي.</p>
-          <a href="/" onClick={goHome} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 rounded-lg transition inline-block text-center">
-            رجوع للصفحة الرئيسية
+          <p className="text-gray-400 text-sm mb-8">{T.notFound}</p>
+          <a href={home} onClick={goHome} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 rounded-lg transition inline-block text-center">
+            {T.backHome}
           </a>
         </div>
       </div>
@@ -219,43 +304,44 @@ function NotFoundPage({ navigate }) {
 // Reached only via the PASSWORD_RECOVERY auth event (see the
 // onAuthStateChange listener in LaundryPOS) — a real recovery session
 // already exists at this point, so auth.updateUser() is all that's needed.
-function ResetPasswordPage({ onDone }) {
+function ResetPasswordPage({ onDone, lang }) {
+  const T = AUTH_TEXT[lang];
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const submit = async () => {
-    if (!password || password.length < 6) { setError('كلمة المرور لازم تكون 6 أحرف على الأقل.'); return; }
-    if (password !== confirm) { setError('كلمتا المرور غير متطابقتين.'); return; }
+    if (!password || password.length < 6) { setError(T.errPasswordShort); return; }
+    if (password !== confirm) { setError(T.errPasswordMismatch); return; }
     setLoading(true); setError('');
     const { error: err } = await auth.updateUser({ password });
-    if (err) { setError(authErrorMessage(err)); setLoading(false); return; }
+    if (err) { setError(authErrorMessage(err, lang)); setLoading(false); return; }
     setLoading(false);
     onDone();
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
+    <div dir={T.dir} className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <img src="/logo.png" alt="Ragwa" className="inline-block w-16 h-16 rounded-2xl object-contain mb-4 shadow-lg" />
-          <h1 className="text-3xl font-bold text-white mb-2">رغوة</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">{T.brand}</h1>
         </div>
         <div className="bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
-          <h2 className="text-2xl font-bold text-center mb-1">تعيين كلمة مرور جديدة</h2>
-          <p className="text-gray-400 text-center text-sm mb-8">حط كلمة المرور الجديدة اللي بتستخدمها من الحين.</p>
+          <h2 className="text-2xl font-bold text-center mb-1">{T.resetTitle}</h2>
+          <p className="text-gray-400 text-center text-sm mb-8">{T.resetIntro}</p>
           <div className="mb-6">
-            <label className="block text-gray-300 text-sm font-semibold mb-3">كلمة المرور الجديدة</label>
+            <label className="block text-gray-300 text-sm font-semibold mb-3">{T.newPassword}</label>
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
           </div>
           <div className="mb-6">
-            <label className="block text-gray-300 text-sm font-semibold mb-3">تأكيد كلمة المرور</label>
+            <label className="block text-gray-300 text-sm font-semibold mb-3">{T.confirmPassword}</label>
             <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
           </div>
           {error && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{error}</div>}
           <button onClick={submit} disabled={loading} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition">
-            {loading ? 'جارٍ الحفظ...' : 'حفظ كلمة المرور'}
+            {loading ? T.saving : T.savePassword}
           </button>
         </div>
       </div>
@@ -268,19 +354,20 @@ function ResetPasswordPage({ onDone }) {
 // dismiss (not tied to platform_config), so it comes back on reload/next
 // visit for as long as the admin leaves it active, but doesn't nag someone
 // who's already seen it and kept working this session.
-function MaintenanceBanner({ active, message }) {
+function MaintenanceBanner({ active, message, lang }) {
   const [dismissed, setDismissed] = useState(false);
   useEffect(() => { if (active) setDismissed(false); }, [active, message]);
   if (!active || dismissed) return null;
   return (
-    <div dir="rtl" className="sticky top-0 z-[100] flex items-center justify-between gap-3 bg-amber-500 px-4 py-2 text-sm font-medium text-amber-950">
-      <span>⚠️ {message || 'النظام حاليًا بصيانة مجدولة — بعض الميزات قد لا تعمل مؤقتًا.'}</span>
+    <div dir={AUTH_TEXT[lang].dir} className="sticky top-0 z-[100] flex items-center justify-between gap-3 bg-amber-500 px-4 py-2 text-sm font-medium text-amber-950">
+      <span>⚠️ {message || AUTH_TEXT[lang].maintenance}</span>
       <button onClick={() => setDismissed(true)} className="shrink-0 text-amber-950/70 hover:text-amber-950">✕</button>
     </div>
   );
 }
 
-function EmailVerificationPage({ email, onVerified, onBack }) {
+function EmailVerificationPage({ email, onVerified, onBack, lang }) {
+  const T = AUTH_TEXT[lang];
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [resendLoading, setResendLoading] = useState(false);
@@ -292,7 +379,7 @@ function EmailVerificationPage({ email, onVerified, onBack }) {
     // Supabase has no "currentUser.sendEmailVerification()" — resending a
     // signup confirmation email is its own top-level call, keyed by email.
     const { error: err } = await auth.resend({ type: 'signup', email });
-    if (err) setError(authErrorMessage(err));
+    if (err) setError(authErrorMessage(err, lang));
     else setResent(true);
     setResendLoading(false);
   };
@@ -310,17 +397,17 @@ function EmailVerificationPage({ email, onVerified, onBack }) {
   const handleConfirm = async () => {
     setVerifying(true); setError('');
     const { error: err } = await auth.verifyOtp({ email, token: code.trim(), type: 'signup' });
-    if (err) setError(authErrorMessage(err));
+    if (err) setError(authErrorMessage(err, lang));
     else await onVerified();
     setVerifying(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
+    <div dir={T.dir} className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">تأكيد البريد الإلكتروني</h1>
-          <p className="text-gray-400 text-sm">خطوة أخيرة قبل الدخول للوحة التحكم</p>
+          <h1 className="text-3xl font-bold text-white mb-2">{T.verifyTitle}</h1>
+          <p className="text-gray-400 text-sm">{T.verifySubtitle}</p>
         </div>
 
         <div className="bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
@@ -329,11 +416,11 @@ function EmailVerificationPage({ email, onVerified, onBack }) {
               <Mail className="text-cyan-400" size={20} />
             </div>
             <p className="text-gray-300 text-sm">
-              أرسلنا رمز تحقق إلى
+              {T.verifySentTo}
               <br />
               <span className="text-cyan-400 font-semibold" dir="ltr">{email}</span>
               <br />
-              افتح بريدك، وحط الرمز اللي وصلك بالمربع تحت.
+              {T.verifyHint}
             </p>
           </div>
 
@@ -348,16 +435,16 @@ function EmailVerificationPage({ email, onVerified, onBack }) {
           />
 
           {error && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{error}</div>}
-          {resent && <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500/30 px-4 py-2.5 text-sm text-green-400">تم إرسال رمز جديد.</div>}
+          {resent && <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500/30 px-4 py-2.5 text-sm text-green-400">{T.codeResent}</div>}
 
           <button onClick={handleConfirm} disabled={verifying || !code.trim()} className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-3">
-            {verifying ? 'جارٍ التحقق...' : 'تأكيد'}
+            {verifying ? T.verifying : T.confirm}
           </button>
           <button onClick={handleResend} disabled={resendLoading} className="w-full bg-slate-800 hover:bg-slate-700 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-3">
-            {resendLoading ? 'جارٍ الإرسال...' : 'إعادة إرسال الرمز'}
+            {resendLoading ? T.sending : T.resendCode}
           </button>
           <button onClick={onBack} className="w-full text-gray-400 hover:text-gray-300 text-sm py-2 transition">
-            رجوع
+            {T.backPlain}
           </button>
         </div>
       </div>
@@ -368,7 +455,9 @@ function EmailVerificationPage({ email, onVerified, onBack }) {
 function SignupPage(props) {
   const { navigate, signupShop, setSignupShop, signupEmail, setSignupEmail,
     signupMobile, setSignupMobile, signupAddress, setSignupAddress, signupPassword, setSignupPassword,
-    signupAgree, setSignupAgree, handleSignup, signupError, signupLoading, onOpenTerms, signupPlan, setSignupPlan } = props;
+    signupAgree, setSignupAgree, handleSignup, signupError, signupLoading, onOpenTerms, signupPlan, setSignupPlan, lang } = props;
+  const T = AUTH_TEXT[lang];
+  const home = lang === 'en' ? '/en' : '/';
   // Same honeypot + minimum-fill-time anti-bot pattern as the landing
   // page's contact form (see LandingPage) — checked server-side in
   // api/send-verification-email.js.
@@ -376,59 +465,59 @@ function SignupPage(props) {
   const formStartedAtRef = useRef(Date.now());
   useEffect(() => { preloadTurnstile(); }, []);
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
-      <div className="absolute top-6 right-6">
-        <a href="/" onClick={(e) => { e.preventDefault(); navigate('landing', '/'); }} className="px-4 py-2 text-gray-300 hover:text-white transition">
-          ← العودة
+    <div dir={T.dir} className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
+      <div className="absolute top-6 end-6">
+        <a href={home} onClick={(e) => { e.preventDefault(); navigate('landing', home); }} className="px-4 py-2 text-gray-300 hover:text-white transition">
+          {T.back}
         </a>
       </div>
 
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">إنشاء حساب</h1>
-          <p className="text-gray-400 text-sm">ابدأ مع رغوة الآن</p>
+          <h1 className="text-3xl font-bold text-white mb-2">{T.signupTitle}</h1>
+          <p className="text-gray-400 text-sm">{T.signupSubtitle}</p>
         </div>
 
         <div className="mb-5 grid grid-cols-2 gap-2 rounded-xl border border-slate-800 bg-slate-900/60 p-1.5 text-center text-sm font-semibold">
-          {[['trial', 'تجربة مجانية 14 يوم'], ['annual', 'سنوي 350 ريال']].map(([key, label]) => (
+          {[['trial', T.planTrial], ['annual', T.planAnnual]].map(([key, label]) => (
             <button key={key} type="button" onClick={() => setSignupPlan(key)} className={`rounded-lg px-3 py-2.5 transition ${signupPlan === key ? 'bg-cyan-500 text-slate-950' : 'text-gray-300 hover:text-white'}`}>{label}</button>
           ))}
           <p className="col-span-2 px-2 pb-1 pt-1 text-xs font-normal text-gray-400">
-            {signupPlan === 'annual' ? 'بعد تأكيد بريدك تحوّل المبلغ وترفق الإيصال، ونفعّل حسابك بعد المراجعة.' : 'تدخل النظام مباشرة بعد تأكيد بريدك بكل المميزات.'}
+            {signupPlan === 'annual' ? T.planAnnualNote : T.planTrialNote}
           </p>
         </div>
 
         <div className="bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
           <div className="mb-6">
-            <label className="block text-gray-300 text-sm font-semibold mb-3">اسم المحل</label>
-            <input type="text" value={signupShop} onChange={(e) => setSignupShop(e.target.value)} placeholder="اسم مغسلتك" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" dir="rtl" />
+            <label className="block text-gray-300 text-sm font-semibold mb-3">{T.shopName}</label>
+            <input type="text" value={signupShop} onChange={(e) => setSignupShop(e.target.value)} placeholder={T.shopNamePh} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" dir="auto" />
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-300 text-sm font-semibold mb-3">العنوان</label>
-            <input type="text" value={signupAddress} onChange={(e) => setSignupAddress(e.target.value)} placeholder="المدينة، الحي" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" dir="rtl" />
+            <label className="block text-gray-300 text-sm font-semibold mb-3">{T.address}</label>
+            <input type="text" value={signupAddress} onChange={(e) => setSignupAddress(e.target.value)} placeholder={T.addressPh} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" dir="auto" />
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-300 text-sm font-semibold mb-3">البريد الإلكتروني</label>
+            <label className="block text-gray-300 text-sm font-semibold mb-3">{T.email}</label>
             <input type="email" value={signupEmail} onChange={(e) => setSignupEmail(e.target.value)} placeholder="name@example.com" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-300 text-sm font-semibold mb-3">رقم الجوال</label>
+            <label className="block text-gray-300 text-sm font-semibold mb-3">{T.mobile}</label>
             <input type="tel" inputMode="numeric" value={signupMobile} onChange={(e) => setSignupMobile(normalizeSaudiMobile(e.target.value))} placeholder="05XXXXXXXX" maxLength={12} className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" dir="ltr" />
-            <p className="text-gray-500 text-xs mt-1.5">يبدأ تلقائيًا بـ 966 — اكتب رقمك كالمعتاد (05... أو 5...)</p>
+            <p className="text-gray-500 text-xs mt-1.5">{T.mobileHint}</p>
           </div>
 
           <div className="mb-6">
-            <label className="block text-gray-300 text-sm font-semibold mb-3">كلمة المرور</label>
+            <label className="block text-gray-300 text-sm font-semibold mb-3">{T.password}</label>
             <input type="password" value={signupPassword} onChange={(e) => setSignupPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
           </div>
 
           <div className="flex items-start gap-3 mb-6">
             <input type="checkbox" checked={signupAgree} onChange={(e) => setSignupAgree(e.target.checked)} className="w-4 h-4 rounded accent-cyan-400 mt-1" />
             <label className="text-gray-400 text-sm">
-              أوافق على <button type="button" onClick={() => onOpenTerms()} className="text-cyan-400 hover:underline">شروط الخدمة</button>
+              {T.agree} <button type="button" onClick={() => onOpenTerms()} className="text-cyan-400 hover:underline">{T.terms}</button>
             </label>
           </div>
 
@@ -440,11 +529,11 @@ function SignupPage(props) {
             style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0, opacity: 0 }}
           />
           <button onClick={() => handleSignup({ website: signupWebsite, formStartedAt: formStartedAtRef.current })} disabled={signupLoading || !signupAgree} className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-6">
-            {signupLoading ? 'جارٍ الإنشاء...' : 'إنشاء الحساب'}
+            {signupLoading ? T.creating : T.createBtn}
           </button>
 
           <p className="text-center text-gray-400 text-sm">
-            لديك حساب؟ <a href="/login" onClick={(e) => { e.preventDefault(); navigate('login', '/login'); }} className="text-cyan-400 hover:text-cyan-300">دخول</a>
+            {T.haveAccount} <a href="/login" onClick={(e) => { e.preventDefault(); navigate('login', '/login'); }} className="text-cyan-400 hover:text-cyan-300">{T.loginBtn}</a>
           </p>
         </div>
       </div>
@@ -764,7 +853,7 @@ function getPageMeta(page, termsScrollTarget, siteLang) {
     case 'terms': return { title: 'الشروط والأحكام | رغوة', description: 'الشروط والأحكام الخاصة باستخدام منصة رغوة.', path: '/terms', robots: null };
     case 'notFound': return { title: 'الصفحة غير موجودة | رغوة', description: 'الصفحة اللي تدور عليها مو موجودة.', path: window.location.pathname, robots: 'noindex,follow' };
     case 'dashboard': return { title: 'لوحة التحكم | رغوة', description: 'لوحة تحكم رغوة لإدارة المغسلة.', path: window.location.pathname, robots: 'noindex,nofollow' };
-    default: return { title: 'رغوة | نظام نقطة بيع لمغاسل الملابس', description: 'رغوة: نظام نقطة بيع لمغاسل الملابس يجمع البيع، تتبع الطلبات، الاشتراكات، والدفع الآجل في مكان واحد. جرّب رغوة مجاناً.', path: '/', robots: null };
+    default: return { title: 'رغوة | برنامج كاشير ونظام نقطة بيع لمغاسل الملابس في السعودية', description: 'رغوة برنامج سحابي لأصحاب مغاسل الملابس: نقطة بيع سريعة، تتبع كل قطعة، فواتير برمز QR، واتساب للعميل، ومناديب التوصيل. جرّب مجاناً 14 يوم بدون بطاقة.', path: '/', robots: null };
   }
 }
 function setMetaTag(selector, create, attrs) {
@@ -795,12 +884,12 @@ const LaundryPOS = () => {
   const [termsScrollTarget, setTermsScrollTarget] = useState(() =>
     window.location.pathname === '/privacy' ? 'privacy' : null
   );
-  // Chosen once on the landing page (before any login/signup) and carried
-  // through as the dashboard's starting language, so a visitor who picked
-  // Arabic there doesn't land on an English dashboard after signing up.
-  // '/en' is the only path with real translated content today, so it's the
-  // only one that seeds this to 'en'.
-  const [siteLang, setSiteLang] = useState(() => (window.location.pathname === '/en' ? 'en' : 'ar'));
+  // Chosen on the landing page ('/' or '/en') and carried through login,
+  // signup and into the dashboard as its starting language. Remembered in
+  // localStorage so reloading /login or /signup keeps the visitor's choice.
+  const [siteLang, setSiteLang] = useState(initialSiteLang);
+  useEffect(() => { try { localStorage.setItem(SITE_LANG_KEY, siteLang); } catch {} }, [siteLang]);
+  const T = AUTH_TEXT[siteLang];
   // Central navigation: updates the URL bar (so refresh/share/back-forward
   // all work) and the page state together. Every internal nav control for
   // the five public pages routes through this instead of calling
@@ -879,8 +968,13 @@ const LaundryPOS = () => {
       document.documentElement.dir = siteLang === 'en' ? 'ltr' : 'rtl';
     } else {
       removeMetaTag('link[hreflang]');
-      document.documentElement.lang = 'ar';
-      document.documentElement.dir = 'rtl';
+      // The pre-login pages follow the visitor's language; the terms page
+      // (Arabic legal text) and admin console stay Arabic/RTL. The dashboard
+      // sets <html lang> itself from the shop's own language setting.
+      const followsSiteLang = ['login', 'signup', 'forgotPassword', 'resetPassword', 'notFound', 'pending', 'payment'].includes(currentPage);
+      const docLang = followsSiteLang ? siteLang : 'ar';
+      if (currentPage !== 'dashboard') document.documentElement.lang = docLang;
+      document.documentElement.dir = docLang === 'en' ? 'ltr' : 'rtl';
     }
   }, [currentPage, termsScrollTarget, siteLang]);
   const [showPassword, setShowPassword] = useState(false);
@@ -1106,7 +1200,7 @@ const LaundryPOS = () => {
   const handleLogin = async () => {
     setLoginError('');
     const loginId = loginEmail.trim().toLowerCase();
-    if (!loginId) { setLoginError('حط البريد الإلكتروني.'); return; }
+    if (!loginId) { setLoginError(T.errEnterEmail); return; }
     // A branch login is typed as a bare username; its real address is on the
     // platform's branch domain (must match BRANCH_EMAIL_DOMAIN in api/branch-accounts.js).
     const emailNorm = loginId.includes('@') ? loginId : `${loginId}@branches.ragwapos.com`;
@@ -1141,7 +1235,7 @@ const LaundryPOS = () => {
         setPendingSignup({ email: user.email });
         setShowEmailVerification(true);
       } else if (dest.page === 'rejected') {
-        setLoginError(`تم رفض طلب تسجيلك${dest.reason ? `: ${dest.reason}` : '.'}`);
+        setLoginError(`${T.errRejected}${dest.reason ? `: ${dest.reason}` : '.'}`);
         await auth.signOut();
       } else if (dest.page === 'pending' || dest.page === 'payment') {
         setCurrentPage(dest.page);
@@ -1151,7 +1245,7 @@ const LaundryPOS = () => {
         setCurrentPage(dest.page);
       }
     } catch (e) {
-      setLoginError(authErrorMessage(e));
+      setLoginError(authErrorMessage(e, siteLang));
     }
     setLoginLoading(false);
   };
@@ -1164,16 +1258,16 @@ const LaundryPOS = () => {
         await adminSignIn(signupEmail.trim().toLowerCase(), signupPassword);
         setCurrentPage('admin');
       } catch (e) {
-        setSignupError(authErrorMessage(e));
+        setSignupError(authErrorMessage(e, siteLang));
       }
       setSignupLoading(false);
       return;
     }
-    if (!signupAgree) { setSignupError('لازم توافق على شروط الخدمة.'); return; }
-    if (!isValidSaudiMobile(signupMobile)) { setSignupError('رقم الجوال غير صحيح.'); return; }
+    if (!signupAgree) { setSignupError(T.errAgree); return; }
+    if (!isValidSaudiMobile(signupMobile)) { setSignupError(T.errMobile); return; }
     const emailNorm = signupEmail.trim().toLowerCase();
-    if (!emailNorm || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) { setSignupError('حط بريد إلكتروني صحيح.'); return; }
-    if (!signupPassword) { setSignupError('حط كلمة مرور.'); return; }
+    if (!emailNorm || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNorm)) { setSignupError(T.errEmailValid); return; }
+    if (!signupPassword) { setSignupError(T.errPasswordEmpty); return; }
 
     setSignupLoading(true);
     try {
@@ -1199,7 +1293,7 @@ const LaundryPOS = () => {
       const turnstileToken = await getTurnstileToken();
       const resp = await fetch('/api/send-verification-email', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: emailNorm, password: signupPassword, shopName, mobile: signupMobile, address, website, formStartedAt, turnstileToken, plan: signupPlan }),
+        body: JSON.stringify({ email: emailNorm, password: signupPassword, shopName, mobile: signupMobile, address, website, formStartedAt, turnstileToken, plan: signupPlan, lang: siteLang }),
       });
       const result = await resp.json();
       if (!result.success) throw { message: result.error, code: result.code };
@@ -1207,7 +1301,7 @@ const LaundryPOS = () => {
       setPendingSignup({ email: emailNorm });
       setShowEmailVerification(true);
     } catch (e) {
-      setSignupError(authErrorMessage(e));
+      setSignupError(authErrorMessage(e, siteLang));
     }
     setSignupLoading(false);
   };
@@ -1306,30 +1400,30 @@ const LaundryPOS = () => {
   if (!authResolved) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center">
-        <div className="text-gray-400 text-sm">جارٍ التحميل...</div>
+        <div className="text-gray-400 text-sm">{T.loading}</div>
       </div>
     );
   }
 
   return (
     <>
-      <MaintenanceBanner active={maintenanceActive} message={maintenanceMessage} />
+      <MaintenanceBanner active={maintenanceActive} message={maintenanceMessage} lang={siteLang} />
       {showEmailVerification && pendingSignup ? (
     <EmailVerificationPage
       email={pendingSignup.email}
-      onVerified={completeSignupAfterVerification}
+      onVerified={completeSignupAfterVerification} lang={siteLang}
       onBack={async () => { const { error: err } = await auth.signOut(); if (err) console.error(err); setShowEmailVerification(false); setPendingSignup(null); }}
     />
   ) : currentPage === 'payment' ? (
     <Suspense fallback={<DashboardLoading />}>
-      <PaymentPanel onRefresh={completeSignupAfterVerification} onLogout={handleLogout} />
+      <PaymentPanel onRefresh={completeSignupAfterVerification} onLogout={handleLogout} lang={siteLang} />
     </Suspense>
   ) : currentPage === 'pending' ? (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
+    <div dir={T.dir} className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md text-center bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
-        <h1 className="text-2xl font-bold text-white mb-3">طلبك قيد المراجعة</h1>
-        <p className="text-gray-400 text-sm mb-6">تم تأكيد بريدك الإلكتروني بنجاح. حسابك الآن بانتظار موافقة الإدارة، بترجع تقدر تدخل بمجرد ما توافق الإدارة.</p>
-        <button onClick={handleLogout} className="w-full text-gray-400 hover:text-gray-300 text-sm py-2 transition">رجوع لتسجيل الدخول</button>
+        <h1 className="text-2xl font-bold text-white mb-3">{T.pendingTitle}</h1>
+        <p className="text-gray-400 text-sm mb-6">{T.pendingBody}</p>
+        <button onClick={handleLogout} className="w-full text-gray-400 hover:text-gray-300 text-sm py-2 transition">{T.backToLogin}</button>
       </div>
     </div>
   ) : currentPage === 'landing' ? (
@@ -1349,12 +1443,12 @@ const LaundryPOS = () => {
       navigate={navigate} showPassword={showPassword} setShowPassword={setShowPassword}
       loginEmail={loginEmail} setLoginEmail={setLoginEmail}
       loginPassword={loginPassword} setLoginPassword={setLoginPassword}
-      handleLogin={handleLogin} loginError={loginError} loginLoading={loginLoading}
+      handleLogin={handleLogin} loginError={loginError} loginLoading={loginLoading} lang={siteLang}
     />
   ) : currentPage === 'forgotPassword' ? (
-    <ForgotPasswordPage navigate={navigate} />
+    <ForgotPasswordPage navigate={navigate} lang={siteLang} />
   ) : currentPage === 'resetPassword' ? (
-    <ResetPasswordPage onDone={async () => { await auth.signOut(); setCurrentPage('login'); }} />
+    <ResetPasswordPage lang={siteLang} onDone={async () => { await auth.signOut(); setCurrentPage('login'); }} />
   ) : currentPage === 'terms' ? (
     <TermsPage onBack={closeTerms} scrollTarget={termsScrollTarget} />
   ) : currentPage === 'signup' ? (
@@ -1366,10 +1460,10 @@ const LaundryPOS = () => {
       signupPassword={signupPassword} setSignupPassword={setSignupPassword}
       signupAgree={signupAgree} setSignupAgree={setSignupAgree}
       handleSignup={handleSignup} signupError={signupError} signupLoading={signupLoading}
-      onOpenTerms={openTerms} signupPlan={signupPlan} setSignupPlan={setSignupPlan}
+      onOpenTerms={openTerms} signupPlan={signupPlan} setSignupPlan={setSignupPlan} lang={siteLang}
     />
   ) : currentPage === 'notFound' ? (
-    <NotFoundPage navigate={navigate} />
+    <NotFoundPage navigate={navigate} lang={siteLang} />
   ) : currentPage === 'admin' ? (
     <Suspense fallback={<DashboardLoading />}>
       <AdminDashboard
@@ -1394,7 +1488,7 @@ const LaundryPOS = () => {
             <PaymentPanel
               renewal={expired} planKind={subscription?.plan}
               onBack={expired ? null : () => setShowUpgrade(false)}
-              onRefresh={() => loadSubscription().catch(() => {})} onLogout={handleLogout}
+              onRefresh={() => loadSubscription().catch(() => {})} onLogout={handleLogout} lang={siteLang}
             />
           );
         }
@@ -1405,21 +1499,21 @@ const LaundryPOS = () => {
               <>
                 <button onClick={() => setShowUpgrade(true)} className="fixed bottom-4 left-4 z-[60] flex items-center gap-2 rounded-full bg-slate-900/95 px-4 py-2 text-xs font-semibold text-white shadow-lg ring-1 ring-amber-400/50 transition hover:bg-slate-800">
                   <span className="size-2 rounded-full bg-amber-400" />
-                  باقي {daysLeft} {daysLeft === 1 ? 'يوم' : 'أيام'} على انتهاء {subscription.plan === 'trial' ? 'التجربة المجانية' : 'الاشتراك'} — جدّد الآن
+                  {T.expiryBanner(daysLeft, subscription.plan === 'trial')}
                 </button>
                 {!dismissedExpiryNotice && (
-                  <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4" dir="rtl">
+                  <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 p-4" dir={T.dir}>
                     <div className="w-full max-w-sm rounded-2xl border border-slate-700 bg-slate-900 p-6 text-center shadow-2xl">
                       <div className="mx-auto mb-3 flex size-12 items-center justify-center rounded-full bg-amber-500/15 text-2xl">⏳</div>
-                      <h2 className="text-lg font-bold text-white">باقي {daysLeft} {daysLeft === 1 ? 'يوم' : 'أيام'} على انتهاء اشتراكك</h2>
-                      <p className="mt-2 text-sm leading-relaxed text-gray-400">جدّد الآن لتستمر في استخدام رغوة بدون انقطاع. بياناتك محفوظة وآمنة.</p>
+                      <h2 className="text-lg font-bold text-white">{T.expiryTitle(daysLeft)}</h2>
+                      <p className="mt-2 text-sm leading-relaxed text-gray-400">{T.expiryBody}</p>
                       <a
-                        href={`https://wa.me/966592299405?text=${encodeURIComponent('السلام عليكم، أرغب في تجديد اشتراك رغوة' + (subscription.shopName ? ` لمحل (${subscription.shopName})` : '') + `. المتبقي ${daysLeft} أيام.`)}`}
+                        href={`https://wa.me/966592299405?text=${encodeURIComponent(T.expiryWa(subscription.shopName, daysLeft))}`}
                         target="_blank" rel="noopener noreferrer"
                         className="mt-5 block rounded-xl bg-[#25D366] px-5 py-3 text-sm font-bold text-slate-900 transition hover:bg-[#3ae07a]"
-                      >تواصل مع خدمة العملاء للتجديد</a>
-                      <button onClick={() => { setDismissedExpiryNotice(true); setShowUpgrade(true); }} className="mt-2.5 block w-full rounded-xl border border-slate-700 px-5 py-2.5 text-sm font-semibold text-gray-200 transition hover:border-cyan-400">الدفع بالتحويل البنكي</button>
-                      <button onClick={() => { setDismissedExpiryNotice(true); try { sessionStorage.setItem('ragwa_expiry_notice', '1'); } catch {} }} className="mt-2 w-full py-2 text-xs text-gray-500 transition hover:text-gray-300">لاحقًا</button>
+                      >{T.expiryContact}</a>
+                      <button onClick={() => { setDismissedExpiryNotice(true); setShowUpgrade(true); }} className="mt-2.5 block w-full rounded-xl border border-slate-700 px-5 py-2.5 text-sm font-semibold text-gray-200 transition hover:border-cyan-400">{T.expiryBank}</button>
+                      <button onClick={() => { setDismissedExpiryNotice(true); try { sessionStorage.setItem('ragwa_expiry_notice', '1'); } catch {} }} className="mt-2 w-full py-2 text-xs text-gray-500 transition hover:text-gray-300">{T.later}</button>
                     </div>
                   </div>
                 )}

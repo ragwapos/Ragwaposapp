@@ -91,9 +91,8 @@ function hreflangTags() {
 
 // نصوص head بالعربي — يجب أن تطابق حرفيًا ما هو موجود بـindex.html
 // بجذر المشروع (تحقق مباشر قبل الكتابة).
-const AR_TITLE = 'رغوة | نظام نقطة بيع لمغاسل الملابس';
-const AR_DESC_LONG = 'رغوة: نظام نقطة بيع لمغاسل الملابس يجمع البيع، تتبع الطلبات، الاشتراكات، والدفع الآجل في مكان واحد. جرّب رغوة مجاناً.';
-const AR_DESC_SHORT = 'رغوة: نظام نقطة بيع لمغاسل الملابس يجمع البيع، تتبع الطلبات، الاشتراكات، والدفع الآجل في مكان واحد.';
+const AR_TITLE = 'رغوة | برنامج كاشير ونظام نقطة بيع لمغاسل الملابس في السعودية';
+const AR_DESC = 'رغوة برنامج سحابي لأصحاب مغاسل الملابس: نقطة بيع سريعة، تتبع كل قطعة، فواتير برمز QR، واتساب للعميل، ومناديب التوصيل. جرّب مجاناً 14 يوم بدون بطاقة.';
 
 // نصوص head بالإنجليزي — مطابقة حرفيًا (نفس الحروف بالضبط) لما يُرجعه
 // getPageMeta() بـsrc/App.jsx لـ page === 'landing' && siteLang === 'en' —
@@ -127,9 +126,9 @@ async function main() {
   let enHtml = pristine;
   enHtml = mustReplace(enHtml, '<html lang="ar" dir="rtl">', '<html lang="en" dir="ltr">', 'وسم html lang/dir');
   enHtml = mustReplace(enHtml, `<title>${AR_TITLE}</title>`, `<title>${esc(EN_TITLE)}</title>`, 'title');
-  enHtml = mustReplace(enHtml, `<meta name="description" content="${AR_DESC_LONG}" />`, `<meta name="description" content="${esc(EN_DESC)}" />`, 'meta description');
+  enHtml = mustReplace(enHtml, `<meta name="description" content="${AR_DESC}" />`, `<meta name="description" content="${esc(EN_DESC)}" />`, 'meta description');
   enHtml = mustReplace(enHtml, `<meta property="og:title" content="${AR_TITLE}" />`, `<meta property="og:title" content="${esc(EN_TITLE)}" />`, 'og:title');
-  enHtml = mustReplace(enHtml, `<meta property="og:description" content="${AR_DESC_LONG}" />`, `<meta property="og:description" content="${esc(EN_DESC)}" />`, 'og:description');
+  enHtml = mustReplace(enHtml, `<meta property="og:description" content="${AR_DESC}" />`, `<meta property="og:description" content="${esc(EN_DESC)}" />`, 'og:description');
   // canonical/og:url: استبدال بمرساة الوسم الكامل (href="..."/content="...")
   // وليس الرابط كنص عارٍ — og:image يبدأ بنفس بادئة الرابط ويتأذى من أي
   // استبدال ساذج على الرابط المجرد.
@@ -138,7 +137,7 @@ async function main() {
   enHtml = mustReplace(enHtml, '<meta property="og:locale" content="ar_SA" />', '<meta property="og:locale" content="en_US" />', 'og:locale');
   enHtml = mustReplace(enHtml, '<meta property="og:locale:alternate" content="en_US" />', '<meta property="og:locale:alternate" content="ar_SA" />', 'og:locale:alternate');
   enHtml = mustReplace(enHtml, `<meta name="twitter:title" content="${AR_TITLE}" />`, `<meta name="twitter:title" content="${esc(EN_TITLE)}" />`, 'twitter:title');
-  enHtml = mustReplace(enHtml, `<meta name="twitter:description" content="${AR_DESC_SHORT}" />`, `<meta name="twitter:description" content="${esc(EN_DESC)}" />`, 'twitter:description');
+  enHtml = mustReplace(enHtml, `<meta name="twitter:description" content="${AR_DESC}" />`, `<meta name="twitter:description" content="${esc(EN_DESC)}" />`, 'twitter:description');
   // الـh1 بالنسخة الإنجليزية نص لاتيني — يحتاج subset لاتيني، مو العربي
   // المفترض افتراضيًا بـindex.html الأصلي (انظر التعليق فوق وسم الـpreload
   // هناك).

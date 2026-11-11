@@ -21,12 +21,24 @@ if (dsn) {
   });
 }
 
+// Can't rely on any app state here (the app itself just crashed), so it reads
+// the language the page was last showing, or the visitor's landing-page choice.
+const ERROR_TEXT = {
+  ar: { dir: 'rtl', msg: 'حدث خطأ غير متوقع. الرجاء إعادة تحميل الصفحة.', reload: 'إعادة التحميل' },
+  en: { dir: 'ltr', msg: 'Something went wrong. Please reload the page.', reload: 'Reload' },
+};
+function errorLang() {
+  if (document.documentElement.lang === 'en') return 'en';
+  try { return localStorage.getItem('ragwa_site_lang') === 'en' ? 'en' : 'ar'; } catch { return 'ar'; }
+}
+
 function ErrorFallback() {
+  const txt = ERROR_TEXT[errorLang()];
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px', fontFamily: 'system-ui, sans-serif', padding: '24px', textAlign: 'center' }}>
-      <p style={{ fontSize: '16px', color: '#333' }}>حدث خطأ غير متوقع. الرجاء إعادة تحميل الصفحة.</p>
+    <div dir={txt.dir} style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '12px', fontFamily: 'system-ui, sans-serif', padding: '24px', textAlign: 'center' }}>
+      <p style={{ fontSize: '16px', color: '#333' }}>{txt.msg}</p>
       <button onClick={() => window.location.reload()} style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: '#17a5a0', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>
-        إعادة التحميل
+        {txt.reload}
       </button>
     </div>
   );
