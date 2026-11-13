@@ -51,10 +51,10 @@ const AUTH_TEXT = {
     email: 'البريد الإلكتروني', password: 'كلمة المرور',
     loginTitle: 'دخول', loginSubtitle: 'الدخول إلى لوحة التحكم', loginBtn: 'دخول', loggingIn: 'جارٍ الدخول...',
     forgot: 'نسيت كلمة المرور؟', noAccount: 'ليس لديك حساب؟', createAccount: 'إنشاء حساب',
-    forgotTitle: 'استرجاع كلمة المرور', forgotSent: 'تم إرسال رابط استرجاع كلمة المرور لبريدك — افتحه من نفس الجهاز اللي بتحط فيه كلمة المرور الجديدة.',
-    forgotIntro: 'حط بريدك الإلكتروني وبنرسل لك رابط لتعيين كلمة مرور جديدة.', sending: 'جارٍ الإرسال...', sendReset: 'إرسال رابط الاسترجاع',
+    forgotTitle: 'استرجاع كلمة المرور', forgotSent: 'إذا كان البريد مسجّل عندنا، أرسلنا رمز استرجاع إلى',
+    forgotIntro: 'حط بريدك الإلكتروني وبنرسل لك رمز لتعيين كلمة مرور جديدة.', sending: 'جارٍ الإرسال...', sendReset: 'إرسال الرمز',
     backToLogin: 'رجوع لتسجيل الدخول', notFound: 'هذي الصفحة غير موجودة — يمكن الرابط قديم أو فيه خطأ إملائي.', backHome: 'رجوع للصفحة الرئيسية',
-    resetTitle: 'تعيين كلمة مرور جديدة', resetIntro: 'حط كلمة المرور الجديدة اللي بتستخدمها من الحين.', newPassword: 'كلمة المرور الجديدة',
+    resetTitle: 'تعيين كلمة مرور جديدة', resetSubtitle: 'حط الرمز وكلمة المرور الجديدة', resetDone: 'تم تغيير كلمة المرور بنجاح — سجّل دخولك بكلمة المرور الجديدة.', newPassword: 'كلمة المرور الجديدة',
     confirmPassword: 'تأكيد كلمة المرور', saving: 'جارٍ الحفظ...', savePassword: 'حفظ كلمة المرور',
     maintenance: 'النظام حاليًا بصيانة مجدولة — بعض الميزات قد لا تعمل مؤقتًا.',
     verifyTitle: 'تأكيد البريد الإلكتروني', verifySubtitle: 'خطوة أخيرة قبل الدخول للوحة التحكم', verifySentTo: 'أرسلنا رمز تحقق إلى',
@@ -72,6 +72,7 @@ const AUTH_TEXT = {
     errExists: 'هذا البريد مسجل مسبقًا — سجل دخول بدل إنشاء حساب جديد.', errEmailInvalid: 'بريد إلكتروني غير صحيح.',
     errWeak: 'كلمة المرور ضعيفة — لازم 6 أحرف على الأقل.', errCredentials: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
     errRate: 'محاولات كثيرة فاشلة — انتظر شوي وحاول مرة ثانية.', errRequest: 'تعذر إتمام الطلب — حاول مرة ثانية.', errGeneric: 'صار خطأ غير متوقع — حاول مرة ثانية.',
+    errCode: 'الرمز غير صحيح أو منتهي — تأكد منه أو اطلب رمز جديد.', errSamePassword: 'كلمة المرور الجديدة لازم تختلف عن القديمة.',
     expiryBanner: (d, trial) => `باقي ${d} ${d === 1 ? 'يوم' : 'أيام'} على انتهاء ${trial ? 'التجربة المجانية' : 'الاشتراك'} — جدّد الآن`,
     expiryTitle: (d) => `باقي ${d} ${d === 1 ? 'يوم' : 'أيام'} على انتهاء اشتراكك`,
     expiryBody: 'جدّد الآن لتستمر في استخدام رغوة بدون انقطاع. بياناتك محفوظة وآمنة.',
@@ -83,10 +84,10 @@ const AUTH_TEXT = {
     email: 'Email', password: 'Password',
     loginTitle: 'Log in', loginSubtitle: 'Sign in to your dashboard', loginBtn: 'Log in', loggingIn: 'Logging in...',
     forgot: 'Forgot password?', noAccount: "Don't have an account?", createAccount: 'Sign up',
-    forgotTitle: 'Reset your password', forgotSent: "We've sent a password reset link to your email. Open it on the same device where you'll set the new password.",
-    forgotIntro: "Enter your email and we'll send you a link to set a new password.", sending: 'Sending...', sendReset: 'Send reset link',
+    forgotTitle: 'Reset your password', forgotSent: 'If this email has an account, we sent a reset code to',
+    forgotIntro: "Enter your email and we'll send you a code to set a new password.", sending: 'Sending...', sendReset: 'Send code',
     backToLogin: 'Back to login', notFound: "This page doesn't exist. The link may be old or mistyped.", backHome: 'Back to the home page',
-    resetTitle: 'Set a new password', resetIntro: "Enter the new password you'll use from now on.", newPassword: 'New password',
+    resetTitle: 'Set a new password', resetSubtitle: 'Enter the code and your new password', resetDone: 'Your password has been changed. Log in with your new password.', newPassword: 'New password',
     confirmPassword: 'Confirm password', saving: 'Saving...', savePassword: 'Save password',
     maintenance: 'Scheduled maintenance is in progress. Some features may not work for a while.',
     verifyTitle: 'Confirm your email', verifySubtitle: 'One last step before your dashboard', verifySentTo: 'We sent a verification code to',
@@ -104,6 +105,7 @@ const AUTH_TEXT = {
     errExists: 'This email is already registered. Log in instead of creating a new account.', errEmailInvalid: 'Invalid email address.',
     errWeak: 'The password is too weak. Use at least 6 characters.', errCredentials: 'Incorrect email or password.',
     errRate: 'Too many failed attempts. Wait a moment and try again.', errRequest: "Couldn't complete the request. Please try again.", errGeneric: 'Something went wrong. Please try again.',
+    errCode: 'The code is wrong or has expired. Check it or request a new one.', errSamePassword: 'The new password must be different from the old one.',
     expiryBanner: (d, trial) => `${d} ${d === 1 ? 'day' : 'days'} left on your ${trial ? 'free trial' : 'subscription'}. Renew now`,
     expiryTitle: (d) => `${d} ${d === 1 ? 'day' : 'days'} left on your subscription`,
     expiryBody: 'Renew now to keep using Ragwa without interruption. Your data is safe.',
@@ -141,6 +143,9 @@ const authErrorMessage = (error, lang = 'ar') => {
     case "email_address_invalid": return T.errEmailInvalid;
     case "weak_password": return T.errWeak;
     case "invalid_credentials": return T.errCredentials;
+    // verifyOtp() with a wrong or expired code (signup and password reset).
+    case "otp_expired": return T.errCode;
+    case "same_password": return T.errSamePassword;
     case "over_request_rate_limit":
     case "over_email_send_rate_limit": return T.errRate;
     // Not a Supabase auth code — these are api/send-verification-email.js's
@@ -219,28 +224,147 @@ function LoginPage(props) {
   );
 }
 
-// Sends the recovery email (Supabase's own default link-based flow —
-// clicking it redirects back here with a session already exchanged, which
-// onAuthStateChange picks up as a PASSWORD_RECOVERY event and routes to
-// ResetPasswordPage). Self-contained: reads/writes nothing from LaundryPOS's
-// own state, just `auth` directly, same as LandingPage/LoginPage.
-function ForgotPasswordPage({ navigate, lang }) {
+// Password recovery by an emailed one-time code, same look as signup's
+// EmailVerificationPage. Step 1 asks for the email (api/send-reset-code.js
+// sends the code); step 2 takes the code plus the new password. verifyOtp()
+// creates a session, so recoveryMode (a ref owned by LaundryPOS) is raised
+// first to stop the onAuthStateChange listener from routing that session to
+// the dashboard before the new password is saved.
+function ForgotPasswordPage({ navigate, lang, recoveryMode }) {
   const T = AUTH_TEXT[lang];
   const goLogin = (e) => { e.preventDefault(); navigate('login', '/login'); };
   const [email, setEmail] = useState('');
-  const [sent, setSent] = useState(false);
+  const [step, setStep] = useState('email'); // 'email' | 'code' | 'done'
+  const [code, setCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [verified, setVerified] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resent, setResent] = useState(false);
   const [error, setError] = useState('');
+  useEffect(() => { preloadTurnstile(); }, []);
+  // Leaving the page after the code was accepted but before the new password
+  // was saved must not leave that recovery session signed in.
+  const verifiedRef = useRef(false);
+  useEffect(() => () => {
+    if (verifiedRef.current) auth.signOut().finally(() => { recoveryMode.current = false; });
+    else recoveryMode.current = false;
+  }, [recoveryMode]);
 
-  const submit = async () => {
+  const sendCode = async (emailNorm) => {
+    const turnstileToken = await getTurnstileToken();
+    const resp = await fetch('/api/send-reset-code', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: emailNorm, lang, turnstileToken }),
+    });
+    if (resp.status === 429) throw { code: 'over_request_rate_limit' };
+    const result = await resp.json().catch(() => ({ success: false, error: 'invalid_request' }));
+    if (!result.success) throw { message: result.error };
+  };
+
+  const submitEmail = async () => {
     const emailNorm = email.trim().toLowerCase();
     if (!emailNorm) { setError(T.errEmailEmpty); return; }
     setLoading(true); setError('');
-    const { error: err } = await auth.resetPasswordForEmail(emailNorm, { redirectTo: window.location.origin });
-    if (err) setError(authErrorMessage(err, lang));
-    else setSent(true);
+    try { await sendCode(emailNorm); setEmail(emailNorm); setStep('code'); }
+    catch (e) { setError(authErrorMessage(e, lang)); }
     setLoading(false);
   };
+
+  const resend = async () => {
+    setResendLoading(true); setError(''); setResent(false);
+    try { await sendCode(email); setResent(true); }
+    catch (e) { setError(authErrorMessage(e, lang)); }
+    setResendLoading(false);
+  };
+
+  const save = async () => {
+    // Checked before verifyOtp so a typo doesn't burn the one-time code.
+    if (!password || password.length < 6) { setError(T.errPasswordShort); return; }
+    if (password !== confirm) { setError(T.errPasswordMismatch); return; }
+    setLoading(true); setError(''); setResent(false);
+    try {
+      if (!verifiedRef.current) {
+        recoveryMode.current = true;
+        const { error: otpErr } = await auth.verifyOtp({ email, token: code.trim(), type: 'recovery' });
+        if (otpErr) { recoveryMode.current = false; throw otpErr; }
+        verifiedRef.current = true; setVerified(true);
+      }
+      const { error: pwErr } = await auth.updateUser({ password });
+      if (pwErr) throw pwErr;
+      await auth.signOut();
+      verifiedRef.current = false;
+      recoveryMode.current = false;
+      setStep('done');
+    } catch (e) {
+      setError(authErrorMessage(e, lang));
+    }
+    setLoading(false);
+  };
+
+  const back = async () => {
+    if (verifiedRef.current) { await auth.signOut(); verifiedRef.current = false; setVerified(false); }
+    recoveryMode.current = false;
+    setStep('email'); setCode(''); setPassword(''); setConfirm(''); setError(''); setResent(false);
+  };
+
+  const inputCls = 'w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition';
+  const errorBox = error && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{error}</div>;
+
+  if (step === 'code') {
+    return (
+      <div dir={T.dir} className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-white mb-2">{T.resetTitle}</h1>
+            <p className="text-gray-400 text-sm">{T.resetSubtitle}</p>
+          </div>
+          <div className="bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center shrink-0">
+                <Mail className="text-cyan-400" size={20} />
+              </div>
+              <p className="text-gray-300 text-sm">
+                {T.forgotSent}
+                <br />
+                <span className="text-cyan-400 font-semibold" dir="ltr">{email}</span>
+                <br />
+                {T.verifyHint}
+              </p>
+            </div>
+            <input
+              type="text" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)} disabled={verified}
+              // 8 digits, same as signup's email_otp (see EmailVerificationPage).
+              placeholder="00000000" maxLength={8} dir="ltr"
+              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white text-center text-2xl tracking-[0.35em] placeholder-gray-600 focus:border-cyan-400 outline-none transition mb-6 disabled:opacity-60"
+            />
+            <div className="mb-4">
+              <label className="block text-gray-300 text-sm font-semibold mb-3">{T.newPassword}</label>
+              <input type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className={inputCls} />
+            </div>
+            <div className="mb-6">
+              <label className="block text-gray-300 text-sm font-semibold mb-3">{T.confirmPassword}</label>
+              <input type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" className={inputCls} />
+            </div>
+            {errorBox}
+            {resent && <div className="mb-4 rounded-lg bg-green-500/10 border border-green-500/30 px-4 py-2.5 text-sm text-green-400">{T.codeResent}</div>}
+            <button onClick={save} disabled={loading || !code.trim()} className="w-full bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-3">
+              {loading ? T.saving : T.savePassword}
+            </button>
+            {!verified && (
+              <button onClick={resend} disabled={resendLoading} className="w-full bg-slate-800 hover:bg-slate-700 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-3">
+                {resendLoading ? T.sending : T.resendCode}
+              </button>
+            )}
+            <button onClick={back} className="w-full text-gray-400 hover:text-gray-300 text-sm py-2 transition">
+              {T.backPlain}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div dir={T.dir} className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
@@ -251,9 +375,9 @@ function ForgotPasswordPage({ navigate, lang }) {
         </div>
         <div className="bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
           <h2 className="text-2xl font-bold text-center mb-1">{T.forgotTitle}</h2>
-          {sent ? (
+          {step === 'done' ? (
             <>
-              <p className="text-gray-400 text-center text-sm mb-8">{T.forgotSent}</p>
+              <p className="text-gray-400 text-center text-sm mb-8">{T.resetDone}</p>
               <a href="/login" onClick={goLogin} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 rounded-lg transition inline-block text-center">{T.backToLogin}</a>
             </>
           ) : (
@@ -261,10 +385,10 @@ function ForgotPasswordPage({ navigate, lang }) {
               <p className="text-gray-400 text-center text-sm mb-8">{T.forgotIntro}</p>
               <div className="mb-6">
                 <label className="block text-gray-300 text-sm font-semibold mb-3">{T.email}</label>
-                <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" dir="ltr" />
+                <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@example.com" className={inputCls} dir="ltr" />
               </div>
-              {error && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{error}</div>}
-              <button onClick={submit} disabled={loading} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-6">
+              {errorBox}
+              <button onClick={submitEmail} disabled={loading} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-6">
                 {loading ? T.sending : T.sendReset}
               </button>
               <p className="text-center text-gray-400 text-sm">
@@ -295,54 +419,6 @@ function NotFoundPage({ navigate, lang }) {
           <a href={home} onClick={goHome} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 rounded-lg transition inline-block text-center">
             {T.backHome}
           </a>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Reached only via the PASSWORD_RECOVERY auth event (see the
-// onAuthStateChange listener in LaundryPOS) — a real recovery session
-// already exists at this point, so auth.updateUser() is all that's needed.
-function ResetPasswordPage({ onDone, lang }) {
-  const T = AUTH_TEXT[lang];
-  const [password, setPassword] = useState('');
-  const [confirm, setConfirm] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-
-  const submit = async () => {
-    if (!password || password.length < 6) { setError(T.errPasswordShort); return; }
-    if (password !== confirm) { setError(T.errPasswordMismatch); return; }
-    setLoading(true); setError('');
-    const { error: err } = await auth.updateUser({ password });
-    if (err) { setError(authErrorMessage(err, lang)); setLoading(false); return; }
-    setLoading(false);
-    onDone();
-  };
-
-  return (
-    <div dir={T.dir} className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <img src="/logo.png" alt="Ragwa" className="inline-block w-16 h-16 rounded-2xl object-contain mb-4 shadow-lg" />
-          <h1 className="text-3xl font-bold text-white mb-2">{T.brand}</h1>
-        </div>
-        <div className="bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
-          <h2 className="text-2xl font-bold text-center mb-1">{T.resetTitle}</h2>
-          <p className="text-gray-400 text-center text-sm mb-8">{T.resetIntro}</p>
-          <div className="mb-6">
-            <label className="block text-gray-300 text-sm font-semibold mb-3">{T.newPassword}</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
-          </div>
-          <div className="mb-6">
-            <label className="block text-gray-300 text-sm font-semibold mb-3">{T.confirmPassword}</label>
-            <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="••••••••" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
-          </div>
-          {error && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{error}</div>}
-          <button onClick={submit} disabled={loading} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition">
-            {loading ? T.saving : T.savePassword}
-          </button>
         </div>
       </div>
     </div>
@@ -425,7 +501,7 @@ function EmailVerificationPage({ email, onVerified, onBack, lang }) {
           </div>
 
           <input
-            type="text" inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)}
+            type="text" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)}
             // Supabase's generateLink() email_otp for the "signup" type is 8
             // digits, not the more common 6 — a 6-char maxLength here would
             // have silently truncated every real code before it ever reached
@@ -971,7 +1047,7 @@ const LaundryPOS = () => {
       // The pre-login pages follow the visitor's language; the terms page
       // (Arabic legal text) and admin console stay Arabic/RTL. The dashboard
       // sets <html lang> itself from the shop's own language setting.
-      const followsSiteLang = ['login', 'signup', 'forgotPassword', 'resetPassword', 'notFound', 'pending', 'payment'].includes(currentPage);
+      const followsSiteLang = ['login', 'signup', 'forgotPassword', 'notFound', 'pending', 'payment'].includes(currentPage);
       const docLang = followsSiteLang ? siteLang : 'ar';
       if (currentPage !== 'dashboard') document.documentElement.lang = docLang;
       document.documentElement.dir = docLang === 'en' ? 'ltr' : 'rtl';
@@ -980,6 +1056,10 @@ const LaundryPOS = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showWorkflow, setShowWorkflow] = useState(false);
   const [authResolved, setAuthResolved] = useState(false);
+  // Raised by ForgotPasswordPage while its recovery session exists (from the
+  // code being accepted until the new password is saved); the
+  // onAuthStateChange listener leaves that session alone meanwhile.
+  const recoveryMode = useRef(false);
 
   // Live-synced from platform_config so AdminDashboard's "add admin" /
   // "remove admin" / "toggle auto-approve" controls actually take effect.
@@ -1143,17 +1223,10 @@ const LaundryPOS = () => {
         setAuthResolved(true);
         return;
       }
-      // Fires when the user lands back on the site via a password-recovery
-      // link (auth.resetPasswordForEmail) — Supabase already exchanges it
-      // for a real session by this point, so intercept BEFORE the normal
-      // resolveDestination routing (which would otherwise send them
-      // straight to their dashboard/pending screen instead of letting them
-      // actually set a new password).
-      if (event === 'PASSWORD_RECOVERY') {
-        setCurrentPage('resetPassword');
-        setAuthResolved(true);
-        return;
-      }
+      // ForgotPasswordPage's verifyOtp() just created a recovery session —
+      // leave the user on that page until the new password is saved instead
+      // of routing them to their dashboard.
+      if (recoveryMode.current) { setAuthResolved(true); return; }
       // A resolved session always wins over whatever public path the URL
       // bar happens to still show (e.g. /login right after signing in) —
       // clear it so it doesn't sit there stale while the private app
@@ -1169,6 +1242,8 @@ const LaundryPOS = () => {
       if (pageForPath(window.location.pathname) === 'notFound') { setAuthResolved(true); return; }
       try {
         const dest = await resolveDestination(user);
+        // A password reset that started while resolveDestination was awaiting wins.
+        if (recoveryMode.current) return;
         if (dest.page === 'verify') {
           setPendingSignup({ email: user.email });
           setShowEmailVerification(true);
@@ -1446,9 +1521,7 @@ const LaundryPOS = () => {
       handleLogin={handleLogin} loginError={loginError} loginLoading={loginLoading} lang={siteLang}
     />
   ) : currentPage === 'forgotPassword' ? (
-    <ForgotPasswordPage navigate={navigate} lang={siteLang} />
-  ) : currentPage === 'resetPassword' ? (
-    <ResetPasswordPage lang={siteLang} onDone={async () => { await auth.signOut(); setCurrentPage('login'); }} />
+    <ForgotPasswordPage navigate={navigate} lang={siteLang} recoveryMode={recoveryMode} />
   ) : currentPage === 'terms' ? (
     <TermsPage onBack={closeTerms} scrollTarget={termsScrollTarget} />
   ) : currentPage === 'signup' ? (
