@@ -23,7 +23,10 @@ import { toCamelCase } from './transforms.js';
 // the array (e.g. client-side sort) before every setState call, both on the
 // initial load and on every realtime diff — needed since a couple of call
 // sites keep their local state pre-sorted rather than sorting at render time.
-export function subscribeToTable(table, filterColumn, filterValue, setState, orderColumn, transform) {
+// Optional `onSettled` runs once the initial load has finished, whether it
+// succeeded or failed — what a loading placeholder waits on, so a failed
+// request shows the (empty) screen instead of a placeholder that never ends.
+export function subscribeToTable(table, filterColumn, filterValue, setState, orderColumn, transform, onSettled) {
   let cancelled = false;
   const apply = transform || ((arr) => arr);
 
@@ -32,7 +35,7 @@ export function subscribeToTable(table, filterColumn, filterValue, setState, ord
   if (orderColumn) initial = initial.order(orderColumn);
   initial.then(({ data, error }) => {
     if (cancelled) return;
-    if (error) { console.error(`${table} initial load failed`, error); return; }
+    if (error) { console.error(`${table} initial load failed`, error); if (onSettled) onSettled(); return; }
     const fetched = (data || []).map(toCamelCase);
     // Merge rather than replace: this fetch was issued at mount time, so if
     // an optimistic add already landed in state before this slower request
@@ -44,6 +47,7 @@ export function subscribeToTable(table, filterColumn, filterValue, setState, ord
       const optimisticOnly = prev.filter((r) => !fetchedIds.has(r.id));
       return apply([...fetched, ...optimisticOnly]);
     });
+    if (onSettled) onSettled();
   });
 
   const channel = db

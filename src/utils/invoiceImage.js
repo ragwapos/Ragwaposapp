@@ -1,5 +1,3 @@
-import html2canvas from "html2canvas";
-
 // Rasterizes the same DOM node already used for the on-screen print preview
 // (see PrintDocumentModal's .print-area) straight into a compressed JPEG
 // blob — no PDF wrapping. A receipt is a small text document, not a photo,
@@ -15,7 +13,10 @@ import html2canvas from "html2canvas";
 const SCALE = 2;
 const JPEG_QUALITY = 0.92;
 
+// html2canvas is a third of the dashboard bundle and only this function needs
+// it, so it's fetched the first time an invoice image is actually prepared.
 export async function generateInvoiceImage(domNode) {
+  const { default: html2canvas } = await import("html2canvas");
   const canvas = await html2canvas(domNode, { scale: SCALE, backgroundColor: "#ffffff", useCORS: true, logging: false });
   return new Promise((resolve, reject) => {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("canvas_to_blob_failed"))), "image/jpeg", JPEG_QUALITY);

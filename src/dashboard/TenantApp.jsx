@@ -25,6 +25,7 @@ import { normalizeSaudiMobile, isValidSaudiMobile, cleanPhoneForWhatsApp, fillWh
 import { generateInvoiceImage } from "../utils/invoiceImage.js";
 import { uploadTenantFile, deleteTenantFile, uploadPrivateFile, deletePrivateFile, getSignedUrl } from "../utils/storage.js";
 import { subscribeToTable, subscribeToRow } from "../utils/dbSubscribe.js";
+import { ContentSkeleton } from "./DashboardSkeleton.jsx";
 import { pathForTab, tabForPath } from "../utils/dashboardPaths.js";
 import { newId } from "../utils/uuid.js";
 
@@ -4015,12 +4016,12 @@ function ProductLibraryModal({ categories, addCategory, products, addProduct, se
   );
 }
 
-function InventoryView({ categories, addCategory, products, productsLoaded, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType }) {
+function InventoryView({ categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType }) {
   const { t } = useLang();
   const [showLibrary, setShowLibrary] = useState(false);
   // First visit with an empty catalogue: offer the ready-made library once per session.
   const [introDismissed, setIntroDismissed] = useState(() => { try { return sessionStorage.getItem("ragwa_library_intro") === "1"; } catch { return false; } });
-  const showIntro = productsLoaded && products.length === 0 && !introDismissed && !showLibrary;
+  const showIntro = products.length === 0 && !introDismissed && !showLibrary;
   const [query, setQuery] = useState("");
   const [activeCat, setActiveCat] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -6602,7 +6603,7 @@ function HomeDashboardView({ invoices, merchant, setTab }) {
 /* =========================================================================
    ROOT APP
    ========================================================================= */
-function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, productsLoaded, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+function AppShell({ tab, tabReady, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { dir, t } = useLang();
   // Branch scope for the owner's "view all / one branch" picker: sales, purchases
   // and expenses follow it; customers, wallets and products are shared and never filtered.
@@ -6640,12 +6641,15 @@ function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pe
           <span className="font-bold text-navy-900">{t("app_name")}</span>
         </div>
         <main className="flex-1 overflow-y-auto p-6">
+        {/* Until this tab's own data has arrived, placeholders instead of zeros and empty lists that look like a shop with no data. */}
+        {!tabReady && <ContentSkeleton />}
+        {tabReady && (<>
         {tab === "home" && <HomeDashboardView invoices={scopedInvoices} merchant={merchant} setTab={setTab} />}
         {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promosForSale} enabledPayMethods={enabledPayMethods} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} setTab={setTab} />}
         {tab === "invoices" && <InvoicesView invoices={scopedInvoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} readyMessageEnabled={readyMessageEnabled} readyMessageTemplate={readyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} />}
         {tab === "delivery_invoices" && <InvoicesView invoices={scopedInvoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} readyMessageEnabled={readyMessageEnabled} readyMessageTemplate={readyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} isDelivery />}
         {tab === "customers" && <CustomersView customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} invoices={invoices} addInvoice={addInvoice} transactions={customerTransactions} addTransaction={addTransaction} merchant={merchant} applyCustomerPayment={applyCustomerPayment} nextDocNumber={nextDocNumber} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} />}
-        {tab === "inventory" && <InventoryView categories={categories} addCategory={addCategory} products={products} productsLoaded={productsLoaded} addProduct={addProduct} updateProduct={updateProduct} addons={addons} addAddon={addAddon} removeAddon={removeAddon} serviceTypes={serviceTypes} addServiceType={addServiceType} />}
+        {tab === "inventory" && <InventoryView categories={categories} addCategory={addCategory} products={products} addProduct={addProduct} updateProduct={updateProduct} addons={addons} addAddon={addAddon} removeAddon={removeAddon} serviceTypes={serviceTypes} addServiceType={addServiceType} />}
         {tab === "purchases" && <PurchasesExpensesView tab={purchasesSubTab} setTab={(s) => navigateTab("purchases", s)} suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={scopedPurchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={scopedExpenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
         {tab === "promotions" && <PromotionsView promotions={scopedPromotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
         {tab === "reports" && <ReportsView tab={reportsSubTab} setTab={(s) => navigateTab("reports", s)} invoices={scopedInvoices} transactions={customerTransactions} purchases={scopedPurchases} suppliers={suppliers} categories={categories} customers={customers} expenses={scopedExpenses} expenseCategories={expenseCategories} />}
@@ -6653,6 +6657,7 @@ function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pe
         {tab === "branches" && <BranchesView />}
         {tab === "settings" && isBranchAccount && <BranchSettingsView ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} onLogout={onLogout} />}
         {tab === "settings" && !isBranchAccount && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
+        </>)}
         </main>
       </div>
       {/* Same PIN-prompt-on-locked-nav flow the sidebar always had —
@@ -6675,6 +6680,10 @@ function AppShell({ tab, setTab, navigateTab, reportsSubTab, purchasesSubTab, pe
     </div>
   );
 }
+
+const POS_TABLES = ["categories", "products", "addons", "customers", "promotions", "branches"];
+const ALL_TABLES = [...POS_TABLES, "invoices", "customer_transactions", "service_types", "suppliers", "purchases", "expense_categories", "expenses"];
+const TABS_WITHOUT_TABLE_DATA = new Set(["settings", "whatsapp", "branches"]);
 
 function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   // Always starts at "home", even for a deep link like /reports -- NOT a
@@ -6708,7 +6717,6 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   // through to Firestore (the mirror then updates itself from the listener).
   const [categories, setCategoriesState] = useState([]);
   const [products, setProductsState] = useState([]);
-  const [productsLoaded, setProductsLoaded] = useState(false);
   const [invoices, setInvoicesState] = useState([]);
   const [customers, setCustomersState] = useState([]);
   const [customerTransactions, setCustomerTransactionsState] = useState([]);
@@ -6796,25 +6804,36 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     await refreshBranchMembers();
   };
 
+  // Which of the tables below have finished their first load. The register
+  // only needs its own few, so a cashier can start selling while a long
+  // invoice history is still on its way; the other data tabs wait for all of
+  // them, and the tabs in TABS_WITHOUT_TABLE_DATA wait for none.
+  const [loadedTables, setLoadedTables] = useState(() => new Set());
+  const tabReady = TABS_WITHOUT_TABLE_DATA.has(tab) || (tab === "pos" ? POS_TABLES : ALL_TABLES).every((name) => loadedTables.has(name));
+
   useEffect(() => {
     if (!tenantId) return;
     // Every table here is flat with a tenant_id column (Firestore's nested
     // subcollections don't exist in Postgres) — subscribeToTable does the
     // "load once, then apply realtime diffs" work Firestore's onSnapshot
     // used to do in one call, per table.
-    const unsubCats = subscribeToTable("categories", "tenant_id", tenantId, setCategoriesState);
-    const unsubProds = subscribeToTable("products", "tenant_id", tenantId, (v) => { setProductsState(v); setProductsLoaded(true); });
-    const unsubInv = subscribeToTable("invoices", "tenant_id", tenantId, setInvoicesState);
-    const unsubCust = subscribeToTable("customers", "tenant_id", tenantId, setCustomersState);
-    const unsubTxn = subscribeToTable("customer_transactions", "tenant_id", tenantId, setCustomerTransactionsState);
-    const unsubAddons = subscribeToTable("addons", "tenant_id", tenantId, setAddonsState);
-    const unsubSvc = subscribeToTable("service_types", "tenant_id", tenantId, setServiceTypesState);
-    const unsubSup = subscribeToTable("suppliers", "tenant_id", tenantId, setSuppliersState);
-    const unsubPur = subscribeToTable("purchases", "tenant_id", tenantId, setPurchasesState);
-    const unsubExpCat = subscribeToTable("expense_categories", "tenant_id", tenantId, setExpenseCategoriesState);
-    const unsubExp = subscribeToTable("expenses", "tenant_id", tenantId, setExpensesState);
-    const unsubPromo = subscribeToTable("promotions", "tenant_id", tenantId, setPromotionsState);
-    const unsubBranches = subscribeToTable("branches", "tenant_id", tenantId, setBranchesState);
+    // Each table reports when its first load is in (or has failed), which is
+    // what tabReady above waits on before a tab shows real content.
+    const sub = (table, setState) => subscribeToTable(table, "tenant_id", tenantId, setState, null, null,
+      () => setLoadedTables((prev) => new Set(prev).add(table)));
+    const unsubCats = sub("categories", setCategoriesState);
+    const unsubProds = sub("products", setProductsState);
+    const unsubInv = sub("invoices", setInvoicesState);
+    const unsubCust = sub("customers", setCustomersState);
+    const unsubTxn = sub("customer_transactions", setCustomerTransactionsState);
+    const unsubAddons = sub("addons", setAddonsState);
+    const unsubSvc = sub("service_types", setServiceTypesState);
+    const unsubSup = sub("suppliers", setSuppliersState);
+    const unsubPur = sub("purchases", setPurchasesState);
+    const unsubExpCat = sub("expense_categories", setExpenseCategoriesState);
+    const unsubExp = sub("expenses", setExpensesState);
+    const unsubPromo = sub("promotions", setPromotionsState);
+    const unsubBranches = sub("branches", setBranchesState);
     return () => {
       unsubCats(); unsubProds(); unsubInv(); unsubCust(); unsubTxn(); unsubAddons();
       unsubSvc(); unsubSup(); unsubPur(); unsubExpCat(); unsubExp(); unsubPromo(); unsubBranches();
@@ -7469,10 +7488,10 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     <LangContext.Provider value={{ lang, setLang, dir }}>
       <BranchCtx.Provider value={branchCtx}>
       <AppShell
-        tab={tab} setTab={requestTab} navigateTab={navigateTab}
+        tab={tab} tabReady={tabReady} setTab={requestTab} navigateTab={navigateTab}
         reportsSubTab={reportsSubTab} purchasesSubTab={purchasesSubTab}
         categories={categories} addCategory={addCategory}
-        products={products} productsLoaded={productsLoaded} addProduct={addProduct} updateProduct={updateProduct}
+        products={products} addProduct={addProduct} updateProduct={updateProduct}
         addons={addons} addAddon={addAddon} removeAddon={removeAddon}
         serviceTypes={serviceTypes} addServiceType={addServiceType}
         customers={customers} addCustomer={addCustomer} updateCustomer={updateCustomer}

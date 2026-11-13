@@ -75,3 +75,21 @@ th {
 .animate-pin-shake {
   animation: pin-shake 400ms ease-in-out;
 }
+
+/* Static views inside #root, written at build time by
+   scripts/build-landing-prerender.mjs; public/boot.js sets data-boot on <html>
+   before the first paint to pick one (see that file for the modes). React
+   replaces all of them on its first render. With no JavaScript only the
+   landing view shows. */
+[data-boot-view="skeleton"],
+[data-boot-view="blank"],
+[data-boot-view^="login-"],
+html[data-boot="app"] [data-boot-view="landing"] {
+  display: none;
+}
+html[data-boot="app"] [data-boot-view="skeleton"],
+html[data-boot="blank"] [data-boot-view="blank"],
+html[data-boot="login"][data-boot-lang="ar"] [data-boot-view="login-ar"],
+html[data-boot="login"][data-boot-lang="en"] [data-boot-view="login-en"] {
+  display: block;
+}

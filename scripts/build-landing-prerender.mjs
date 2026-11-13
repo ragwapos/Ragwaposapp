@@ -15,7 +15,7 @@
 // المحتوى النصي مصدره الوحيد content/landing.mjs (نفس المصدر اللي يستهلكه
 // LandingPage وقت الرندر الفعلي) — صفر تكرار محتوى بين المسارين.
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync, readdirSync } from 'node:fs';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { LANDING_TEXT, SITE_URL } from '../content/landing.mjs';
@@ -27,6 +27,10 @@ const SSR_TMP_DIR = path.join(ROOT_DIR, '.prerender-tmp');
 const AR_FILE = path.join(DIST_DIR, 'index.html');
 const EN_DIR = path.join(DIST_DIR, 'en');
 const EN_FILE = path.join(EN_DIR, 'index.html');
+// الهيكل اللي يخدم كل مسارات التطبيق غير الصفحة الرئيسية (/login، /signup،
+// مسارات لوحة التحكم...) عبر الـrewrite العام بـvercel.json وهيكل الـ404
+// بـmiddleware.js: فيه نموذج الدخول وهيكل اللوحة جاهزين، بدون تصميم الرئيسية.
+const APP_FILE = path.join(DIST_DIR, 'app.html');
 
 function esc(str) {
   return String(str)
@@ -61,8 +65,28 @@ async function loadLandingRenderer() {
     build: { ssr: 'src/landing/prerender-entry.jsx', outDir: SSR_TMP_DIR, emptyOutDir: true },
   });
   const mod = await import(pathToFileURL(path.join(SSR_TMP_DIR, 'prerender-entry.js')).href);
-  return mod.render;
+  return { render: mod.render, renderLogin: mod.renderLogin, renderSkeleton: mod.renderSkeleton };
 }
+
+// كل "عرض" جاهز داخل #root له data-boot-view، وpublic/boot.js يختار اللي
+// يظهر قبل أول رسم (القواعد بـsrc/index.css). الافتراضي بدون جافاسكربت:
+// الرئيسية ظاهرة والباقي مخفي — نفس اللي تقرأه الزواحف.
+function bootView(name, html) {
+  return `<div data-boot-view="${name}">${html}</div>`;
+}
+
+// وسم boot.js + اسم ملف لوحة المحل (بالهاش) عشان boot.js يبدأ تنزيله
+// بالتوازي مع الحزمة الأساسية للعميل اللي عنده جلسة محفوظة. ينحط بأول
+// الـhead، قبل رابط الـCSS، عشان ما ينتظر تنزيله.
+function bootHead() {
+  const chunks = readdirSync(path.join(DIST_DIR, 'assets')).filter((f) => /^TenantApp-[\w-]+\.js$/.test(f));
+  if (chunks.length !== 1) {
+    throw new Error(`[build-landing-prerender] توقعت ملف TenantApp واحد بـdist/assets ولقيت ${chunks.length} — تم إيقاف الـbuild.`);
+  }
+  return `<meta name="ragwa-tenant-chunk" content="/assets/${chunks[0]}" />\n    <script src="/boot.js"></script>`;
+}
+const BOOT_ANCHOR = '<meta name="theme-color" content="#020617" />';
+const BLANK_VIEW = '<div class="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950"></div>';
 
 // FAQPage هي النوع البنيوي الصحيح لعدة أسئلة بصفحة وحدة (بعكس QAPage،
 // المخصصة لسؤال واحد بعدة إجابات بنمط منتدى/مجتمع) — حتى لو فقدت FAQPage
@@ -107,17 +131,24 @@ async function main() {
   if (!existsSync(AR_FILE)) {
     throw new Error(`[build-landing-prerender] dist/index.html غير موجود — لازم "vite build" يشتغل قبل هذا السكربت (postbuild).`);
   }
-  const pristine = readFileSync(AR_FILE, 'utf8');
-  let render;
+  const built = readFileSync(AR_FILE, 'utf8');
+  const pristine = mustReplace(built, BOOT_ANCHOR, `${BOOT_ANCHOR}\n    ${bootHead()}`, 'meta theme-color');
+  let render, renderLogin, renderSkeleton;
   try {
-    render = await loadLandingRenderer();
+    ({ render, renderLogin, renderSkeleton } = await loadLandingRenderer());
   } finally {
     rmSync(SSR_TMP_DIR, { recursive: true, force: true });
   }
+  const skeletonView = bootView('skeleton', renderSkeleton());
+
+  // ===== هيكل التطبيق (dist/app.html) =====
+  const appHtml = mustReplace(pristine, '<div id="root"></div>',
+    `<div id="root">${bootView('login-ar', renderLogin('ar'))}${bootView('login-en', renderLogin('en'))}${bootView('blank', BLANK_VIEW)}${skeletonView}</div>`, 'div#root الفارغ (app)');
+  writeFileSync(APP_FILE, appHtml, 'utf8');
 
   // ===== النسخة العربية (تُكتب فوق dist/index.html) =====
   let arHtml = pristine;
-  arHtml = mustReplace(arHtml, '<div id="root"></div>', `<div id="root">${render('ar')}</div>`, 'div#root الفارغ');
+  arHtml = mustReplace(arHtml, '<div id="root"></div>', `<div id="root">${bootView('landing', render('ar'))}${skeletonView}</div>`, 'div#root الفارغ');
   arHtml = mustReplace(arHtml, '</head>', `${hreflangTags()}\n<script type="application/ld+json">${JSON.stringify(faqJsonLd('ar'))}</script>\n</head>`, 'وسم إغلاق head');
   writeFileSync(AR_FILE, arHtml, 'utf8');
 
@@ -142,13 +173,13 @@ async function main() {
   // المفترض افتراضيًا بـindex.html الأصلي (انظر التعليق فوق وسم الـpreload
   // هناك).
   enHtml = mustReplace(enHtml, '<link rel="preload" as="font" type="font/woff2" href="/fonts/cairo-arabic.woff2" crossorigin />', '<link rel="preload" as="font" type="font/woff2" href="/fonts/cairo-latin.woff2" crossorigin />', 'preload link (font subset, en)');
-  enHtml = mustReplace(enHtml, '<div id="root"></div>', `<div id="root">${render('en')}</div>`, 'div#root الفارغ (en)');
+  enHtml = mustReplace(enHtml, '<div id="root"></div>', `<div id="root">${bootView('landing', render('en'))}${skeletonView}</div>`, 'div#root الفارغ (en)');
   enHtml = mustReplace(enHtml, '</head>', `${hreflangTags()}\n<script type="application/ld+json">${JSON.stringify(faqJsonLd('en'))}</script>\n</head>`, 'وسم إغلاق head (en)');
 
   mkdirSync(EN_DIR, { recursive: true });
   writeFileSync(EN_FILE, enHtml, 'utf8');
 
-  console.log('[build-landing-prerender] حقنت HTML التصميم الحقيقي (renderToString) + hreflang + FAQ JSON-LD بـ dist/index.html و dist/en/index.html');
+  console.log('[build-landing-prerender] حقنت HTML التصميم الحقيقي (renderToString) + hreflang + FAQ JSON-LD بـ dist/index.html و dist/en/index.html، وبنيت dist/app.html (نموذج الدخول + هيكل اللوحة)');
 }
 
 await main();

@@ -12,3 +12,12 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 export const auth = supabase.auth;
 export const db = supabase;
 export default supabase;
+
+// True when a saved sign-in exists in this browser (presence only; the token
+// itself isn't read or validated here). Lets the app show the dashboard
+// skeleton straight away for a returning shop instead of a public page.
+// The key is the one supabase-js derives from the project URL.
+const AUTH_STORAGE_KEY = `sb-${new URL(SUPABASE_URL).hostname.split('.')[0]}-auth-token`;
+export function hasStoredSession() {
+  try { return Boolean(localStorage.getItem(AUTH_STORAGE_KEY)); } catch { return false; }
+}

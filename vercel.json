@@ -16,6 +16,12 @@
       ]
     },
     {
+      "source": "/app.html",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex" }
+      ]
+    },
+    {
       "source": "/(.*)",
       "has": [{ "type": "host", "value": "staging.ragwapos.com" }],
       "headers": [
@@ -27,6 +33,6 @@
     { "source": "/guides", "destination": "/guides/index.html" },
     { "source": "/guides/:slug", "destination": "/guides/:slug.html" },
     { "source": "/en", "destination": "/en/index.html" },
-    { "source": "/((?!api/|assets/|.*\\.\\w+$).*)", "destination": "/index.html" }
+    { "source": "/((?!api/|assets/|.*\\.\\w+$).*)", "destination": "/app.html" }
   ]
 }

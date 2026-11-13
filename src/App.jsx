@@ -4,7 +4,10 @@ import { Mail } from "lucide-react";
 // Every database call below is a METHOD chain on db — db.from('table').select()
 // / .upsert() / .delete() / .channel() — not a standalone function imported
 // from a package the way Firebase's collection()/doc()/setDoc() worked.
-import { auth, db } from "./supabase";
+import { auth, db, hasStoredSession } from "./supabase";
+import { AUTH_TEXT } from "./auth/authText.js";
+import LoginPage from "./auth/LoginPage.jsx";
+import { DashboardSkeleton } from "./dashboard/DashboardSkeleton.jsx";
 import { toCamelCase } from "./utils/transforms.js";
 import { normalizeSaudiMobile, isValidSaudiMobile } from "./utils/phone.js";
 import { useClarityTracking } from "./utils/clarity.js";
@@ -23,8 +26,17 @@ const loadTenantApp = () => import('./dashboard/TenantApp.jsx');
 const LaundryOpsApp = lazy(loadTenantApp);
 const AdminDashboard = lazy(() => import('./dashboard/AdminApp.jsx'));
 const PaymentPanel = lazy(() => import('./payment/PaymentPanel.jsx'));
-// Minimal, dependency-free fallback shown only for the (usually brief) time
-// it takes to fetch the lazy chunk after a successful login — deliberately
+const preloadTenantApp = () => { loadTenantApp().catch(() => {}); };
+// Whatever the visitor typed into the static login form (dist/app.html shows
+// it before this bundle has run) and which field the caret was in, read once
+// here, before React replaces that markup, so nothing they typed is lost.
+const BOOT_LOGIN = (() => {
+  const inputs = Array.from(document.querySelectorAll('[data-boot-view^="login-"] input'));
+  const typed = (name) => (inputs.find((el) => el.name === name && el.value) || { value: '' }).value;
+  return { email: typed('email'), password: typed('password'), focus: inputs.includes(document.activeElement) ? document.activeElement.name : null };
+})();
+// Minimal, dependency-free fallback for the admin console and payment screen
+// chunks (the shop dashboard shows DashboardSkeleton instead) — deliberately
 // unstyled by Tailwind/Cairo so it renders instantly regardless of what else
 // has loaded yet, same spirit as main.jsx's ErrorFallback.
 function DashboardLoading() {
@@ -40,79 +52,6 @@ function DashboardLoading() {
    CONSTANTS
    ========================================================================= */
 const ADMIN_EMAILS_DEFAULT = ["ragwapos@gmail.com"];
-
-// Every user-facing string on the pre-login pages (login, signup, email
-// verification, password reset, 404, pending, expiry notice), in the two
-// languages the landing page offers. Picked by `siteLang`, so a visitor who
-// chose English on /en stays in English all the way into the dashboard.
-const AUTH_TEXT = {
-  ar: {
-    dir: 'rtl', back: '← العودة', brand: 'رغوة', tagline: 'نظام إدارة مغاسل الملابس', loading: 'جارٍ التحميل...',
-    email: 'البريد الإلكتروني', password: 'كلمة المرور',
-    loginTitle: 'دخول', loginSubtitle: 'الدخول إلى لوحة التحكم', loginBtn: 'دخول', loggingIn: 'جارٍ الدخول...',
-    forgot: 'نسيت كلمة المرور؟', noAccount: 'ليس لديك حساب؟', createAccount: 'إنشاء حساب',
-    forgotTitle: 'استرجاع كلمة المرور', forgotSent: 'إذا كان البريد مسجّل عندنا، أرسلنا رمز استرجاع إلى',
-    forgotIntro: 'حط بريدك الإلكتروني وبنرسل لك رمز لتعيين كلمة مرور جديدة.', sending: 'جارٍ الإرسال...', sendReset: 'إرسال الرمز',
-    backToLogin: 'رجوع لتسجيل الدخول', notFound: 'هذي الصفحة غير موجودة — يمكن الرابط قديم أو فيه خطأ إملائي.', backHome: 'رجوع للصفحة الرئيسية',
-    resetTitle: 'تعيين كلمة مرور جديدة', resetSubtitle: 'حط الرمز وكلمة المرور الجديدة', resetDone: 'تم تغيير كلمة المرور بنجاح — سجّل دخولك بكلمة المرور الجديدة.', newPassword: 'كلمة المرور الجديدة',
-    confirmPassword: 'تأكيد كلمة المرور', saving: 'جارٍ الحفظ...', savePassword: 'حفظ كلمة المرور',
-    maintenance: 'النظام حاليًا بصيانة مجدولة — بعض الميزات قد لا تعمل مؤقتًا.',
-    verifyTitle: 'تأكيد البريد الإلكتروني', verifySubtitle: 'خطوة أخيرة قبل الدخول للوحة التحكم', verifySentTo: 'أرسلنا رمز تحقق إلى',
-    verifyHint: 'افتح بريدك، وحط الرمز اللي وصلك بالمربع تحت.', codeResent: 'تم إرسال رمز جديد.', verifying: 'جارٍ التحقق...', confirm: 'تأكيد',
-    resendCode: 'إعادة إرسال الرمز', backPlain: 'رجوع',
-    signupTitle: 'إنشاء حساب', signupSubtitle: 'ابدأ مع رغوة الآن', planTrial: 'تجربة مجانية 14 يوم', planAnnual: 'سنوي 350 ريال',
-    planAnnualNote: 'بعد تأكيد بريدك تحوّل المبلغ وترفق الإيصال، ونفعّل حسابك بعد المراجعة.', planTrialNote: 'تدخل النظام مباشرة بعد تأكيد بريدك بكل المميزات.',
-    shopName: 'اسم المحل', shopNamePh: 'اسم مغسلتك', address: 'العنوان', addressPh: 'المدينة، الحي', mobile: 'رقم الجوال',
-    mobileHint: 'يبدأ تلقائيًا بـ 966 — اكتب رقمك كالمعتاد (05... أو 5...)', agree: 'أوافق على', terms: 'شروط الخدمة',
-    creating: 'جارٍ الإنشاء...', createBtn: 'إنشاء الحساب', haveAccount: 'لديك حساب؟',
-    pendingTitle: 'طلبك قيد المراجعة', pendingBody: 'تم تأكيد بريدك الإلكتروني بنجاح. حسابك الآن بانتظار موافقة الإدارة، بترجع تقدر تدخل بمجرد ما توافق الإدارة.',
-    errEnterEmail: 'حط البريد الإلكتروني.', errRejected: 'تم رفض طلب تسجيلك', errAgree: 'لازم توافق على شروط الخدمة.', errMobile: 'رقم الجوال غير صحيح.',
-    errEmailValid: 'حط بريد إلكتروني صحيح.', errPasswordEmpty: 'حط كلمة مرور.', errEmailEmpty: 'حط بريدك الإلكتروني.',
-    errPasswordShort: 'كلمة المرور لازم تكون 6 أحرف على الأقل.', errPasswordMismatch: 'كلمتا المرور غير متطابقتين.',
-    errExists: 'هذا البريد مسجل مسبقًا — سجل دخول بدل إنشاء حساب جديد.', errEmailInvalid: 'بريد إلكتروني غير صحيح.',
-    errWeak: 'كلمة المرور ضعيفة — لازم 6 أحرف على الأقل.', errCredentials: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
-    errRate: 'محاولات كثيرة فاشلة — انتظر شوي وحاول مرة ثانية.', errRequest: 'تعذر إتمام الطلب — حاول مرة ثانية.', errGeneric: 'صار خطأ غير متوقع — حاول مرة ثانية.',
-    errCode: 'الرمز غير صحيح أو منتهي — تأكد منه أو اطلب رمز جديد.', errSamePassword: 'كلمة المرور الجديدة لازم تختلف عن القديمة.',
-    expiryBanner: (d, trial) => `باقي ${d} ${d === 1 ? 'يوم' : 'أيام'} على انتهاء ${trial ? 'التجربة المجانية' : 'الاشتراك'} — جدّد الآن`,
-    expiryTitle: (d) => `باقي ${d} ${d === 1 ? 'يوم' : 'أيام'} على انتهاء اشتراكك`,
-    expiryBody: 'جدّد الآن لتستمر في استخدام رغوة بدون انقطاع. بياناتك محفوظة وآمنة.',
-    expiryWa: (shop, d) => 'السلام عليكم، أرغب في تجديد اشتراك رغوة' + (shop ? ` لمحل (${shop})` : '') + `. المتبقي ${d} أيام.`,
-    expiryContact: 'تواصل مع خدمة العملاء للتجديد', expiryBank: 'الدفع بالتحويل البنكي', later: 'لاحقًا',
-  },
-  en: {
-    dir: 'ltr', back: '← Back', brand: 'Ragwa', tagline: 'Laundry shop management system', loading: 'Loading...',
-    email: 'Email', password: 'Password',
-    loginTitle: 'Log in', loginSubtitle: 'Sign in to your dashboard', loginBtn: 'Log in', loggingIn: 'Logging in...',
-    forgot: 'Forgot password?', noAccount: "Don't have an account?", createAccount: 'Sign up',
-    forgotTitle: 'Reset your password', forgotSent: 'If this email has an account, we sent a reset code to',
-    forgotIntro: "Enter your email and we'll send you a code to set a new password.", sending: 'Sending...', sendReset: 'Send code',
-    backToLogin: 'Back to login', notFound: "This page doesn't exist. The link may be old or mistyped.", backHome: 'Back to the home page',
-    resetTitle: 'Set a new password', resetSubtitle: 'Enter the code and your new password', resetDone: 'Your password has been changed. Log in with your new password.', newPassword: 'New password',
-    confirmPassword: 'Confirm password', saving: 'Saving...', savePassword: 'Save password',
-    maintenance: 'Scheduled maintenance is in progress. Some features may not work for a while.',
-    verifyTitle: 'Confirm your email', verifySubtitle: 'One last step before your dashboard', verifySentTo: 'We sent a verification code to',
-    verifyHint: 'Open your inbox and enter the code in the box below.', codeResent: 'A new code has been sent.', verifying: 'Verifying...', confirm: 'Confirm',
-    resendCode: 'Resend code', backPlain: 'Back',
-    signupTitle: 'Create an account', signupSubtitle: 'Get started with Ragwa today', planTrial: '14-day free trial', planAnnual: 'Annual, 350 SAR',
-    planAnnualNote: "After confirming your email, transfer the amount and attach the receipt. We'll activate your account once it's reviewed.", planTrialNote: 'You get full access right after confirming your email.',
-    shopName: 'Shop name', shopNamePh: 'Your laundry name', address: 'Address', addressPh: 'City, district', mobile: 'Mobile number',
-    mobileHint: 'Starts with 966 automatically. Type your number as usual (05... or 5...)', agree: 'I agree to the', terms: 'Terms of Service',
-    creating: 'Creating...', createBtn: 'Create account', haveAccount: 'Already have an account?',
-    pendingTitle: 'Your request is under review', pendingBody: "Your email is confirmed. Your account is waiting for approval, and you'll be able to log in as soon as it's approved.",
-    errEnterEmail: 'Enter your email.', errRejected: 'Your registration request was rejected', errAgree: 'You need to agree to the Terms of Service.', errMobile: 'Invalid mobile number.',
-    errEmailValid: 'Enter a valid email.', errPasswordEmpty: 'Enter a password.', errEmailEmpty: 'Enter your email.',
-    errPasswordShort: 'The password must be at least 6 characters.', errPasswordMismatch: "The passwords don't match.",
-    errExists: 'This email is already registered. Log in instead of creating a new account.', errEmailInvalid: 'Invalid email address.',
-    errWeak: 'The password is too weak. Use at least 6 characters.', errCredentials: 'Incorrect email or password.',
-    errRate: 'Too many failed attempts. Wait a moment and try again.', errRequest: "Couldn't complete the request. Please try again.", errGeneric: 'Something went wrong. Please try again.',
-    errCode: 'The code is wrong or has expired. Check it or request a new one.', errSamePassword: 'The new password must be different from the old one.',
-    expiryBanner: (d, trial) => `${d} ${d === 1 ? 'day' : 'days'} left on your ${trial ? 'free trial' : 'subscription'}. Renew now`,
-    expiryTitle: (d) => `${d} ${d === 1 ? 'day' : 'days'} left on your subscription`,
-    expiryBody: 'Renew now to keep using Ragwa without interruption. Your data is safe.',
-    expiryWa: (shop, d) => "Hello, I'd like to renew my Ragwa subscription" + (shop ? ` for (${shop})` : '') + `. ${d} days left.`,
-    expiryContact: 'Contact support to renew', expiryBank: 'Pay by bank transfer', later: 'Later',
-  },
-};
 
 // The language the visitor picked on the landing page, remembered across
 // reloads of /login, /signup etc. Only ever 'ar' or 'en'; anything else in
@@ -162,67 +101,6 @@ const authErrorMessage = (error, lang = 'ar') => {
     default: return (error && typeof error.message === "string" && error.message) || T.errGeneric;
   }
 };
-
-function LoginPage(props) {
-  const { navigate, showPassword, setShowPassword, loginEmail, setLoginEmail,
-    loginPassword, setLoginPassword, handleLogin, loginError, loginLoading, lang } = props;
-  const T = AUTH_TEXT[lang];
-  const home = lang === 'en' ? '/en' : '/';
-  // Start downloading the dashboard chunk while the owner is still typing, so
-  // it's ready the moment sign-in succeeds instead of being fetched after.
-  useEffect(() => { loadTenantApp().catch(() => {}); }, []);
-  return (
-    <div dir={T.dir} className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center p-4">
-      <div className="absolute top-6 end-6">
-        <a href={home} onClick={(e) => { e.preventDefault(); navigate('landing', home); }} className="px-4 py-2 text-gray-300 hover:text-white transition">
-          {T.back}
-        </a>
-      </div>
-
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <img src="/logo.png" alt="Ragwa" className="inline-block w-16 h-16 rounded-2xl object-contain mb-4 shadow-lg" />
-          <h1 className="text-3xl font-bold text-white mb-2">{T.brand}</h1>
-          <p className="text-gray-400 text-sm">{T.tagline}</p>
-        </div>
-
-        <div className="bg-slate-900/60 backdrop-blur border border-slate-800 rounded-2xl p-8">
-          <h2 className="text-2xl font-bold text-center mb-1">{T.loginTitle}</h2>
-          <p className="text-gray-400 text-center text-sm mb-8">{T.loginSubtitle}</p>
-
-          <div className="mb-6">
-            <label className="block text-gray-300 text-sm font-semibold mb-3">{T.email}</label>
-            <input type="text" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="name@example.com" className="w-full bg-slate-800 border border-slate-700 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" dir="ltr" />
-          </div>
-
-          <div className="mb-6">
-            <label className="block text-gray-300 text-sm font-semibold mb-3">{T.password}</label>
-            <div className="relative">
-              <input type={showPassword ? 'text' : 'password'} value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••••" className="w-full bg-slate-800 border border-slate-700 rounded-lg ps-4 pe-12 py-3 text-white placeholder-gray-500 focus:border-cyan-400 outline-none transition" />
-              <button onClick={() => setShowPassword(!showPassword)} className="absolute end-4 top-1/2 -translate-y-1/2 text-gray-500 text-lg">
-                {showPassword ? '🙈' : '👁'}
-              </button>
-            </div>
-          </div>
-
-          <div className="text-end mb-4 -mt-2">
-            <a href="/forgot-password" onClick={(e) => { e.preventDefault(); navigate('forgotPassword', '/forgot-password'); }} className="text-cyan-400 hover:text-cyan-300 text-xs">{T.forgot}</a>
-          </div>
-
-          {loginError && <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 text-sm text-rose-400">{loginError}</div>}
-
-          <button onClick={handleLogin} disabled={loginLoading} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:opacity-60 text-white font-semibold py-3 rounded-lg transition mb-6">
-            {loginLoading ? T.loggingIn : T.loginBtn}
-          </button>
-
-          <p className="text-center text-gray-400 text-sm">
-            {T.noAccount} <a href="/signup" onClick={(e) => { e.preventDefault(); navigate('signup', '/signup'); }} className="text-cyan-400 hover:text-cyan-300">{T.createAccount}</a>
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // Password recovery by an emailed one-time code, same look as signup's
 // EmailVerificationPage. Step 1 asks for the email (api/send-reset-code.js
@@ -1055,7 +933,15 @@ const LaundryPOS = () => {
   }, [currentPage, termsScrollTarget, siteLang]);
   const [showPassword, setShowPassword] = useState(false);
   const [showWorkflow, setShowWorkflow] = useState(false);
-  const [authResolved, setAuthResolved] = useState(false);
+  // Nothing to wait for when this browser has no saved sign-in: the public
+  // page renders at once. A saved sign-in (or a dashboard URL, or tokens in
+  // the URL) waits for the listener below to say where the visitor belongs.
+  const [authResolved, setAuthResolved] = useState(() =>
+    !hasStoredSession() && pageForPath(window.location.pathname) !== 'dashboard' && !window.location.hash.includes('access_token')
+  );
+  // What the auth listener last resolved for a user, kept so handleLogin can
+  // use it instead of asking the database the same thing a second time.
+  const lastDest = useRef(null);
   // Raised by ForgotPasswordPage while its recovery session exists (from the
   // code being accepted until the new password is saved); the
   // onAuthStateChange listener leaves that session alone meanwhile.
@@ -1089,8 +975,8 @@ const LaundryPOS = () => {
   const [salesInquiries, setSalesInquiries] = useState([]);
   const [tenants, setTenants] = useState([]);
 
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
+  const [loginEmail, setLoginEmail] = useState(BOOT_LOGIN.email);
+  const [loginPassword, setLoginPassword] = useState(BOOT_LOGIN.password);
   const [loginError, setLoginError] = useState('');
   const [loginLoading, setLoginLoading] = useState(false);
 
@@ -1188,15 +1074,16 @@ const LaundryPOS = () => {
     if (!user.email_confirmed_at) return { page: 'verify' };
     // maybeSingle() (not single()) — a missing tenant row is the expected,
     // non-error outcome for a user who just signed up and isn't approved yet.
-    // Both lookups in parallel — one database round trip instead of two.
-    const [{ data: tenantRow }, { data: reqRows }] = await Promise.all([
+    // All three lookups in parallel — one database round trip, for an owner
+    // and a branch account alike.
+    const [{ data: tenantRow }, { data: reqRows }, { data: memberRow }] = await Promise.all([
       db.from('tenants').select().eq('id', user.id).maybeSingle(),
       db.from('registration_requests').select().eq('uid', user.id),
+      db.from('branch_members').select('tenant_id, branch_id').eq('user_id', user.id).eq('active', true).maybeSingle(),
     ]);
     if (tenantRow) return { page: 'dashboard', tenantId: user.id };
     // A branch account (supabase-branches-accounts.sql) has no tenants row of
     // its own: it belongs to its owner's tenant and to one branch of it.
-    const { data: memberRow } = await db.from('branch_members').select('tenant_id, branch_id').eq('user_id', user.id).eq('active', true).maybeSingle();
     if (memberRow) return { page: 'dashboard', tenantId: memberRow.tenant_id, branchId: memberRow.branch_id };
     const req = reqRows && reqRows[0] ? toCamelCase(reqRows[0]) : null;
     if (req && req.status === 'rejected') return { page: 'rejected', reason: req.rejectReason };
@@ -1242,6 +1129,7 @@ const LaundryPOS = () => {
       if (pageForPath(window.location.pathname) === 'notFound') { setAuthResolved(true); return; }
       try {
         const dest = await resolveDestination(user);
+        lastDest.current = { uid: user.id, dest };
         // A password reset that started while resolveDestination was awaiting wins.
         if (recoveryMode.current) return;
         if (dest.page === 'verify') {
@@ -1280,6 +1168,7 @@ const LaundryPOS = () => {
     // platform's branch domain (must match BRANCH_EMAIL_DOMAIN in api/branch-accounts.js).
     const emailNorm = loginId.includes('@') ? loginId : `${loginId}@branches.ragwapos.com`;
     setLoginLoading(true);
+    lastDest.current = null;
     try {
       if (isAdminEmail(emailNorm)) {
         await adminSignIn(emailNorm, loginPassword);
@@ -1305,7 +1194,11 @@ const LaundryPOS = () => {
         throw signInErr;
       }
       const user = data.user;
-      const dest = await resolveDestination(user);
+      // signInWithPassword() only returns after the auth listener has run for
+      // this sign-in, so its answer is normally already here.
+      const resolved = lastDest.current;
+      lastDest.current = null;
+      const dest = resolved && resolved.uid === user.id ? resolved.dest : await resolveDestination(user);
       if (dest.page === 'verify') {
         setPendingSignup({ email: user.email });
         setShowEmailVerification(true);
@@ -1472,13 +1365,9 @@ const LaundryPOS = () => {
   const PUBLIC_TRACKED_PAGES = ['landing', 'login', 'signup'];
   useClarityTracking(authResolved && !showEmailVerification && PUBLIC_TRACKED_PAGES.includes(currentPage));
 
-  if (!authResolved) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 flex items-center justify-center">
-        <div className="text-gray-400 text-sm">{T.loading}</div>
-      </div>
-    );
-  }
+  // Only reached with a saved sign-in (see authResolved), which nearly always
+  // ends in the dashboard — so show its frame while that's being confirmed.
+  if (!authResolved) return <DashboardSkeleton />;
 
   return (
     <>
@@ -1519,6 +1408,7 @@ const LaundryPOS = () => {
       loginEmail={loginEmail} setLoginEmail={setLoginEmail}
       loginPassword={loginPassword} setLoginPassword={setLoginPassword}
       handleLogin={handleLogin} loginError={loginError} loginLoading={loginLoading} lang={siteLang}
+      preloadDashboard={preloadTenantApp} focusField={BOOT_LOGIN.focus}
     />
   ) : currentPage === 'forgotPassword' ? (
     <ForgotPasswordPage navigate={navigate} lang={siteLang} recoveryMode={recoveryMode} />
@@ -1551,7 +1441,7 @@ const LaundryPOS = () => {
       />
     </Suspense>
   ) : (
-    <Suspense fallback={<DashboardLoading />}>
+    <Suspense fallback={<DashboardSkeleton />}>
       {(() => {
         const endsMs = subscription?.plan && subscription.endsAt ? new Date(subscription.endsAt).getTime() : null;
         const expired = endsMs !== null && endsMs < Date.now();

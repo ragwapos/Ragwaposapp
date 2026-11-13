@@ -35,11 +35,11 @@ export default async function middleware(request) {
   // KNOWN_PATHS entry per slug.
   if (KNOWN_PATHS.has(pathname) || pathname === '/guides' || pathname.startsWith('/guides/')) return next();
 
-  // Unknown path: serve the same SPA shell the normal rewrite would have,
-  // but with a real 404 status instead of 200 -- src/App.jsx's own
-  // pageForPath/currentPage logic renders the actual "not found" UI once
-  // this loads client-side.
-  const shell = await fetch(new URL('/index.html', request.url));
+  // Unknown path: serve the same SPA shell the normal rewrite would have
+  // (dist/app.html), but with a real 404 status instead of 200 --
+  // src/App.jsx's own pageForPath/currentPage logic renders the actual
+  // "not found" UI once this loads client-side.
+  const shell = await fetch(new URL('/app.html', request.url));
   const html = await shell.text();
   return new Response(html, { status: 404, headers: { 'content-type': 'text/html; charset=utf-8' } });
 }

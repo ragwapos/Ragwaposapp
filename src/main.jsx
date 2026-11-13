@@ -17,8 +17,15 @@ if (dsn) {
     // plan's 50-replay quota for when it actually matters.
     replaysSessionSampleRate: 0,
     replaysOnErrorSampleRate: 1.0,
-    integrations: [Sentry.replayIntegration()],
   });
+  // Replay is about a third of the entry bundle and only matters once an
+  // error happens, so it loads in its own chunk after the first paint instead
+  // of delaying it. Error reporting itself is live from init() above.
+  const loadReplay = () => import('./utils/sentryReplay.js')
+    .then((m) => Sentry.addIntegration(m.replayIntegration()))
+    .catch(() => {});
+  if ('requestIdleCallback' in window) window.requestIdleCallback(loadReplay, { timeout: 5000 });
+  else setTimeout(loadReplay, 2000);
 }
 
 // Can't rely on any app state here (the app itself just crashed), so it reads
