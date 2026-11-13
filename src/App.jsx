@@ -4,7 +4,7 @@ import { Mail } from "lucide-react";
 // Every database call below is a METHOD chain on db — db.from('table').select()
 // / .upsert() / .delete() / .channel() — not a standalone function imported
 // from a package the way Firebase's collection()/doc()/setDoc() worked.
-import { auth, db } from "./supabase";
+import { auth, db, isRecoveryLanding } from "./supabase";
 import { toCamelCase } from "./utils/transforms.js";
 import { normalizeSaudiMobile, isValidSaudiMobile } from "./utils/phone.js";
 import { useClarityTracking } from "./utils/clarity.js";
@@ -301,7 +301,7 @@ function NotFoundPage({ navigate, lang }) {
   );
 }
 
-// Reached only via the PASSWORD_RECOVERY auth event (see the
+// Reached only from a password-recovery link (see recoveryMode and the
 // onAuthStateChange listener in LaundryPOS) — a real recovery session
 // already exists at this point, so auth.updateUser() is all that's needed.
 function ResetPasswordPage({ onDone, lang }) {
@@ -980,6 +980,9 @@ const LaundryPOS = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showWorkflow, setShowWorkflow] = useState(false);
   const [authResolved, setAuthResolved] = useState(false);
+  // True from a password-recovery landing until the new password is saved;
+  // keeps the session on ResetPasswordPage (see the onAuthStateChange listener).
+  const recoveryMode = useRef(isRecoveryLanding);
 
   // Live-synced from platform_config so AdminDashboard's "add admin" /
   // "remove admin" / "toggle auto-approve" controls actually take effect.
@@ -1143,13 +1146,16 @@ const LaundryPOS = () => {
         setAuthResolved(true);
         return;
       }
-      // Fires when the user lands back on the site via a password-recovery
-      // link (auth.resetPasswordForEmail) — Supabase already exchanges it
-      // for a real session by this point, so intercept BEFORE the normal
-      // resolveDestination routing (which would otherwise send them
-      // straight to their dashboard/pending screen instead of letting them
-      // actually set a new password).
-      if (event === 'PASSWORD_RECOVERY') {
+      // The user landed back via a password-recovery link
+      // (auth.resetPasswordForEmail). Supabase has already exchanged it for a
+      // real session, but delivers INITIAL_SESSION first and PASSWORD_RECOVERY
+      // only afterwards (deferred, and missed entirely if this listener
+      // subscribes late) — so the recovery is detected from the URL up front
+      // (isRecoveryLanding) and every event is held on the reset screen until
+      // the new password is saved, BEFORE the normal resolveDestination
+      // routing could send them to their dashboard instead.
+      if (event === 'PASSWORD_RECOVERY') recoveryMode.current = true;
+      if (recoveryMode.current) {
         setCurrentPage('resetPassword');
         setAuthResolved(true);
         return;
@@ -1169,6 +1175,8 @@ const LaundryPOS = () => {
       if (pageForPath(window.location.pathname) === 'notFound') { setAuthResolved(true); return; }
       try {
         const dest = await resolveDestination(user);
+        // A recovery event that arrived while resolveDestination was awaiting wins.
+        if (recoveryMode.current) return;
         if (dest.page === 'verify') {
           setPendingSignup({ email: user.email });
           setShowEmailVerification(true);
@@ -1448,7 +1456,7 @@ const LaundryPOS = () => {
   ) : currentPage === 'forgotPassword' ? (
     <ForgotPasswordPage navigate={navigate} lang={siteLang} />
   ) : currentPage === 'resetPassword' ? (
-    <ResetPasswordPage lang={siteLang} onDone={async () => { await auth.signOut(); setCurrentPage('login'); }} />
+    <ResetPasswordPage lang={siteLang} onDone={async () => { recoveryMode.current = false; await auth.signOut(); setCurrentPage('login'); }} />
   ) : currentPage === 'terms' ? (
     <TermsPage onBack={closeTerms} scrollTarget={termsScrollTarget} />
   ) : currentPage === 'signup' ? (

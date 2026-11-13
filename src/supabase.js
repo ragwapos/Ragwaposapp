@@ -8,6 +8,12 @@ const envKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 const SUPABASE_URL = /^https:\/\/[a-z0-9]+\.supabase\.co$/.test(envUrl) ? envUrl : 'https://qepsmlnozznqfybavyix.supabase.co';
 const SUPABASE_ANON_KEY = /^(sb_publishable_|eyJ)[A-Za-z0-9._-]+$/.test(envKey) ? envKey : 'sb_publishable_xhU8bp5pS45Brd5HqDJ9sA_zeMidsGk';
 
+// Read before createClient() runs: the client consumes the password-recovery
+// callback (#access_token=...&type=recovery) and strips the hash, and its own
+// PASSWORD_RECOVERY event is deferred and can lose the race against the app's
+// normal post-login routing (see the onAuthStateChange listener in App.jsx).
+export const isRecoveryLanding = /(^|[#&])type=recovery(&|$)/.test(window.location.hash);
+
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 export const auth = supabase.auth;
 export const db = supabase;
