@@ -21,12 +21,12 @@ const EMAIL_TEXT = {
   ar: {
     subject: 'رمز استرجاع كلمة المرور — رغوة', dir: 'rtl', title: 'استرجاع كلمة المرور',
     body: 'ارجع لصفحة استرجاع كلمة المرور وحط الرمز التالي مع كلمة المرور الجديدة.',
-    ignore: 'إذا ما طلبت تغيير كلمة المرور، تجاهل هذه الرسالة — كلمة مرورك الحالية ما تغيرت.',
+    ignore: 'إذا ما طلبت تغيير كلمة المرور، تجاهل هذه الرسالة — كلمة مرورك الحالية ما تغيرت.', codeLabel: 'رمز التحقق',
   },
   en: {
     subject: 'Your password reset code — Ragwa', dir: 'ltr', title: 'Reset your password',
     body: 'Go back to the password reset page and enter the code below with your new password.',
-    ignore: "If you didn't ask to reset your password, ignore this email. Your current password hasn't changed.",
+    ignore: "If you didn't ask to reset your password, ignore this email. Your current password hasn't changed.", codeLabel: 'Your code',
   },
 };
 
@@ -43,6 +43,7 @@ function emailHtml({ otp, txt }) {
       <div style="padding:32px; text-align:center; direction:${txt.dir};">
         <h1 style="font-size:20px; color:#0f172a; margin:0 0 12px;">${txt.title} 🔑</h1>
         <p style="font-size:14px; color:#475569; line-height:1.7; margin:0 0 24px;">${txt.body}</p>
+        <div style="font-size:13px; color:#64748b; margin:0 0 8px;">${txt.codeLabel}</div>
         <div style="display:inline-block; background:#f1f5f9; color:#0f172a; font-weight:700; font-size:28px; letter-spacing:6px; padding:16px 28px; border-radius:10px;">
           ${otp}
         </div>
@@ -92,6 +93,9 @@ export default async function handler(req, res) {
       from: 'Ragwa <no-reply@ragwapos.com>',
       to: email,
       subject: txt.subject,
+      text: `${txt.codeLabel}: ${otp}
+
+${txt.ignore}`,
       html: emailHtml({ otp, txt }),
     });
     if (sendErr) throw sendErr;

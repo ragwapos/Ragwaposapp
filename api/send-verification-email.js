@@ -39,12 +39,12 @@ const EMAIL_TEXT = {
   ar: {
     subject: 'تأكيد بريدك الإلكتروني — رغوة', dir: 'rtl', hello: 'أهلًا',
     body: 'شكرًا لتسجيلك في رغوة. ارجع لصفحة التسجيل وحط رمز التحقق التالي لتفعيل حسابك.',
-    ignore: 'إذا لم تطلب هذا الحساب، تجاهل هذه الرسالة.',
+    ignore: 'إذا لم تطلب هذا الحساب، تجاهل هذه الرسالة.', codeLabel: 'رمز التحقق',
   },
   en: {
     subject: 'Confirm your email — Ragwa', dir: 'ltr', hello: 'Welcome',
     body: 'Thanks for signing up for Ragwa. Go back to the sign-up page and enter the code below to activate your account.',
-    ignore: "If you didn't request this account, you can ignore this email.",
+    ignore: "If you didn't request this account, you can ignore this email.", codeLabel: 'Your code',
   },
 };
 
@@ -62,6 +62,7 @@ function emailHtml({ shopName, otp, txt }) {
         <p style="font-size:14px; color:#475569; line-height:1.7; margin:0 0 24px;">
           ${txt.body}
         </p>
+        <div style="font-size:13px; color:#64748b; margin:0 0 8px;">${txt.codeLabel}</div>
         <div style="display:inline-block; background:#f1f5f9; color:#0f172a; font-weight:700; font-size:28px; letter-spacing:6px; padding:16px 28px; border-radius:10px;">
           ${otp}
         </div>
@@ -144,6 +145,9 @@ export default async function handler(req, res) {
       from: 'Ragwa <no-reply@ragwapos.com>',
       to: email,
       subject: txt.subject,
+      text: `${txt.codeLabel}: ${otp}
+
+${txt.ignore}`,
       html: emailHtml({ shopName, otp, txt }),
     });
     if (sendErr) throw sendErr;

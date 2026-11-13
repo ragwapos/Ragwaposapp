@@ -501,7 +501,7 @@ function EmailVerificationPage({ email, onVerified, onBack, lang }) {
           </div>
 
           <input
-            type="text" inputMode="numeric" value={code} onChange={(e) => setCode(e.target.value)}
+            type="text" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(e) => setCode(e.target.value)}
             // Supabase's generateLink() email_otp for the "signup" type is 8
             // digits, not the more common 6 — a 6-char maxLength here would
             // have silently truncated every real code before it ever reached
