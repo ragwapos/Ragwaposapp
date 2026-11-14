@@ -5761,6 +5761,7 @@ function renderTemplatePreview(text) {
 //   rowSlots: the most rows any card on the page has. A card with fewer gets
 //     blank filler rows, so all cards are the same height while folded, and
 //     an opened row only makes its own card taller (the grid doesn't stretch).
+//     Fillers are dropped while a row is open, so no blank strip shows under it.
 function MessageTemplateCard({ icon: Icon, tone, title, description, enabled, onToggleEnabled, template, defaultTemplate, tags, onSave, sections = [], rowSlots = 0 }) {
   const { t } = useLang();
   const [open, setOpen] = useState(null); // null | "message" | a section key
@@ -5847,7 +5848,7 @@ function MessageTemplateCard({ icon: Icon, tone, title, description, enabled, on
             </div>
           );
         })}
-        {Array.from({ length: Math.max(0, rowSlots - rows.length) }, (_, i) => (
+        {open === null && Array.from({ length: Math.max(0, rowSlots - rows.length) }, (_, i) => (
           <div key={`filler-${i}`} aria-hidden="true" className="invisible border-b border-app-border px-5 py-3 text-[13px] font-semibold last:border-b-0">-</div>
         ))}
       </div>
