@@ -21,3 +21,9 @@ const AUTH_STORAGE_KEY = `sb-${new URL(SUPABASE_URL).hostname.split('.')[0]}-aut
 export function hasStoredSession() {
   try { return Boolean(localStorage.getItem(AUTH_STORAGE_KEY)); } catch { return false; }
 }
+
+// The user id inside that saved sign-in, or null. Only the id is read; the
+// session itself is still validated by supabase-js before any data request.
+export function storedSessionUserId() {
+  try { return JSON.parse(localStorage.getItem(AUTH_STORAGE_KEY) || 'null')?.user?.id || null; } catch { return null; }
+}

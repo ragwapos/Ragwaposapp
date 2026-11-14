@@ -80,14 +80,22 @@ th {
    scripts/build-landing-prerender.mjs; public/boot.js sets data-boot on <html>
    before the first paint to pick one (see that file for the modes). React
    replaces all of them on its first render. With no JavaScript only the
-   landing view shows. */
-[data-boot-view="skeleton"],
+   landing view shows. The skeleton views are one per page shape
+   (skeleton-home, skeleton-pos, ...; see DashboardSkeleton.jsx), picked by
+   data-boot-skel. */
+[data-boot-view^="skeleton-"],
 [data-boot-view="blank"],
 [data-boot-view^="login-"],
 html[data-boot="app"] [data-boot-view="landing"] {
   display: none;
 }
-html[data-boot="app"] [data-boot-view="skeleton"],
+html[data-boot="app"][data-boot-skel="home"] [data-boot-view="skeleton-home"],
+html[data-boot="app"][data-boot-skel="pos"] [data-boot-view="skeleton-pos"],
+html[data-boot="app"][data-boot-skel="table"] [data-boot-view="skeleton-table"],
+html[data-boot="app"][data-boot-skel="stats"] [data-boot-view="skeleton-stats"],
+html[data-boot="app"][data-boot-skel="reports"] [data-boot-view="skeleton-reports"],
+html[data-boot="app"][data-boot-skel="cards"] [data-boot-view="skeleton-cards"],
+html[data-boot="app"][data-boot-skel="settings"] [data-boot-view="skeleton-settings"],
 html[data-boot="blank"] [data-boot-view="blank"],
 html[data-boot="login"][data-boot-lang="ar"] [data-boot-view="login-ar"],
 html[data-boot="login"][data-boot-lang="en"] [data-boot-view="login-en"] {

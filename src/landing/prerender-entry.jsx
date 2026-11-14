@@ -9,7 +9,7 @@ import React from "react";
 import { renderToString } from "react-dom/server";
 import LandingPage from "./LandingPage.jsx";
 import LoginPage from "../auth/LoginPage.jsx";
-import { DashboardSkeleton } from "../dashboard/DashboardSkeleton.jsx";
+import { DashboardSkeleton, SKELETON_VARIANTS } from "../dashboard/DashboardSkeleton.jsx";
 
 const noop = () => {};
 
@@ -46,6 +46,7 @@ export function renderLogin(lang) {
   );
 }
 
-export function renderSkeleton() {
-  return renderToString(<DashboardSkeleton />);
+export { SKELETON_VARIANTS };
+export function renderSkeleton(variant) {
+  return renderToString(<DashboardSkeleton variant={variant} />);
 }

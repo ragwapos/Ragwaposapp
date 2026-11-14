@@ -4,10 +4,10 @@ import { Mail } from "lucide-react";
 // Every database call below is a METHOD chain on db — db.from('table').select()
 // / .upsert() / .delete() / .channel() — not a standalone function imported
 // from a package the way Firebase's collection()/doc()/setDoc() worked.
-import { auth, db, hasStoredSession } from "./supabase";
+import { auth, db, hasStoredSession, storedSessionUserId } from "./supabase";
 import { AUTH_TEXT } from "./auth/authText.js";
 import LoginPage from "./auth/LoginPage.jsx";
-import { DashboardSkeleton } from "./dashboard/DashboardSkeleton.jsx";
+import { DashboardSkeleton, skeletonVariantForPath } from "./dashboard/DashboardSkeleton.jsx";
 import { toCamelCase } from "./utils/transforms.js";
 import { normalizeSaudiMobile, isValidSaudiMobile } from "./utils/phone.js";
 import { useClarityTracking } from "./utils/clarity.js";
@@ -820,13 +820,37 @@ function removeMetaTag(selector) {
   document.head.querySelectorAll(selector).forEach((el) => el.remove());
 }
 
+// The dashboard this browser's signed-in user ended up in last time (ids only:
+// { uid, tenantId, branchId }), saved after every confirmed sign-in. When the
+// saved sign-in belongs to that same user, the dashboard opens straight away
+// and its data starts loading at once, while the usual destination check runs
+// in the background and corrects course if anything changed. Interface only:
+// every row still comes through the same RLS, so a tampered value can show
+// nothing the account itself isn't allowed to read.
+const LAST_DEST_KEY = 'ragwa_last_dest';
+const saveLastDest = (uid, dest) => { try { localStorage.setItem(LAST_DEST_KEY, JSON.stringify({ uid, tenantId: dest.tenantId, branchId: dest.branchId || null })); } catch {} };
+const clearLastDest = () => { try { localStorage.removeItem(LAST_DEST_KEY); } catch {} };
+const KNOWN_DEST = (() => {
+  const path = window.location.pathname;
+  if (!(path === '/' || pageForPath(path) === 'dashboard') || window.location.hash.includes('access_token')) return null;
+  const uid = storedSessionUserId();
+  if (!uid) return null;
+  try {
+    const saved = JSON.parse(localStorage.getItem(LAST_DEST_KEY) || 'null');
+    return saved && saved.uid === uid && typeof saved.tenantId === 'string' ? saved : null;
+  } catch { return null; }
+})();
+// Which skeleton to draw while the dashboard loads; the same rule public/boot.js
+// uses for the static one, so the two match.
+const BOOT_SKELETON = KNOWN_DEST && KNOWN_DEST.branchId && ['/', '/home'].includes(window.location.pathname) ? 'pos' : skeletonVariantForPath(window.location.pathname);
+
 const LaundryPOS = () => {
   // Real <a href> anchors point at these paths (crawlable, shareable,
   // right-click-able), so a direct visit or a page refresh has to land on
   // the matching page instead of always resetting to the landing page —
   // checked once at mount via lazy init, and re-derived on browser
   // back/forward via the popstate listener below.
-  const [currentPage, setCurrentPage] = useState(() => pageForPath(window.location.pathname));
+  const [currentPage, setCurrentPage] = useState(() => (KNOWN_DEST ? 'dashboard' : pageForPath(window.location.pathname)));
   // Where to send the user back to from the terms page — it can be reached
   // from more than one place (signup checkbox, landing page footer), and a
   // plain setCurrentPage('signup') on the way back would strand a visitor
@@ -872,8 +896,8 @@ const LaundryPOS = () => {
   // dependency array — a `const` referenced there is in the temporal dead
   // zone until its own declaration line runs, regardless of the effect
   // callback itself only executing later.
-  const [tenantId, setTenantId] = useState(null);
-  const [branchId, setBranchId] = useState(null);
+  const [tenantId, setTenantId] = useState(KNOWN_DEST ? KNOWN_DEST.tenantId : null);
+  const [branchId, setBranchId] = useState(KNOWN_DEST ? KNOWN_DEST.branchId : null);
   // Browser back/forward doesn't call navigate() (pushState doesn't fire
   // popstate), so it needs its own re-derivation straight from the URL —
   // same source of truth as the initial-mount lazy inits above.
@@ -936,9 +960,12 @@ const LaundryPOS = () => {
   // Nothing to wait for when this browser has no saved sign-in: the public
   // page renders at once. A saved sign-in (or a dashboard URL, or tokens in
   // the URL) waits for the listener below to say where the visitor belongs.
-  const [authResolved, setAuthResolved] = useState(() =>
-    !hasStoredSession() && pageForPath(window.location.pathname) !== 'dashboard' && !window.location.hash.includes('access_token')
+  const [authResolved, setAuthResolved] = useState(() => Boolean(KNOWN_DEST) ||
+    (!hasStoredSession() && pageForPath(window.location.pathname) !== 'dashboard' && !window.location.hash.includes('access_token'))
   );
+  // True while the dashboard on screen was opened from KNOWN_DEST and the
+  // destination check hasn't confirmed it yet.
+  const openedFromCache = useRef(Boolean(KNOWN_DEST));
   // What the auth listener last resolved for a user, kept so handleLogin can
   // use it instead of asking the database the same thing a second time.
   const lastDest = useRef(null);
@@ -1101,6 +1128,14 @@ const LaundryPOS = () => {
     const { data: { subscription } } = auth.onAuthStateChange(async (event, session) => {
       const user = session?.user;
       if (!user) {
+        // The saved sign-in turned out to be expired or revoked: undo the
+        // dashboard that was opened from it.
+        if (openedFromCache.current) {
+          openedFromCache.current = false;
+          clearLastDest();
+          setTenantId(null); setBranchId(null);
+          if (pageForPath(window.location.pathname) !== 'dashboard') setCurrentPage(pageForPath(window.location.pathname));
+        }
         // An anonymous visitor landing directly on a dashboard-only URL
         // (e.g. a bookmarked /reports) has no session to resolve — send
         // them to log in instead of leaving LaundryOpsApp to render with
@@ -1132,6 +1167,17 @@ const LaundryPOS = () => {
         lastDest.current = { uid: user.id, dest };
         // A password reset that started while resolveDestination was awaiting wins.
         if (recoveryMode.current) return;
+        const fromCache = openedFromCache.current;
+        openedFromCache.current = false;
+        if (dest.page === 'dashboard') saveLastDest(user.id, dest);
+        else {
+          clearLastDest();
+          // Opened from KNOWN_DEST but this account no longer belongs there.
+          if (fromCache) {
+            setTenantId(null); setBranchId(null);
+            if (dest.page === 'verify' || dest.page === 'rejected') { window.history.replaceState({}, '', '/'); setCurrentPage('landing'); }
+          }
+        }
         if (dest.page === 'verify') {
           setPendingSignup({ email: user.email });
           setShowEmailVerification(true);
@@ -1150,7 +1196,7 @@ const LaundryPOS = () => {
           setCurrentPage('admin');
         } else if (dest.page === 'pending' || dest.page === 'payment') {
           setShowEmailVerification(false); setPendingSignup(null);
-          setCurrentPage((p) => (p === 'landing' || p === 'login' || p === 'signup') ? dest.page : p);
+          setCurrentPage((p) => (fromCache || p === 'landing' || p === 'login' || p === 'signup') ? dest.page : p);
         }
       } catch (e) {
         console.error('auth state resolve failed', e);
@@ -1300,6 +1346,7 @@ const LaundryPOS = () => {
   }, [currentPage, tenantId]);
 
   const handleLogout = async () => {
+    clearLastDest();
     const { error: err } = await auth.signOut();
     if (err) console.error(err);
     navigate('landing', '/');
@@ -1367,7 +1414,7 @@ const LaundryPOS = () => {
 
   // Only reached with a saved sign-in (see authResolved), which nearly always
   // ends in the dashboard — so show its frame while that's being confirmed.
-  if (!authResolved) return <DashboardSkeleton />;
+  if (!authResolved) return <DashboardSkeleton variant={BOOT_SKELETON} />;
 
   return (
     <>
@@ -1441,7 +1488,7 @@ const LaundryPOS = () => {
       />
     </Suspense>
   ) : (
-    <Suspense fallback={<DashboardSkeleton />}>
+    <Suspense fallback={<DashboardSkeleton variant={BOOT_SKELETON} />}>
       {(() => {
         const endsMs = subscription?.plan && subscription.endsAt ? new Date(subscription.endsAt).getTime() : null;
         const expired = endsMs !== null && endsMs < Date.now();
@@ -1457,7 +1504,7 @@ const LaundryPOS = () => {
         }
         return (
           <>
-            <LaundryOpsApp tenantId={tenantId} branchId={branchId} onLogout={handleLogout} initialLang={siteLang} />
+            <LaundryOpsApp key={`${tenantId}:${branchId || ''}`} tenantId={tenantId} branchId={branchId} onLogout={handleLogout} initialLang={siteLang} />
             {!branchId && subscription?.plan && daysLeft !== null && daysLeft <= 6 && (
               <>
                 <button onClick={() => setShowUpgrade(true)} className="fixed bottom-4 left-4 z-[60] flex items-center gap-2 rounded-full bg-slate-900/95 px-4 py-2 text-xs font-semibold text-white shadow-lg ring-1 ring-amber-400/50 transition hover:bg-slate-800">

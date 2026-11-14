@@ -65,7 +65,7 @@ async function loadLandingRenderer() {
     build: { ssr: 'src/landing/prerender-entry.jsx', outDir: SSR_TMP_DIR, emptyOutDir: true },
   });
   const mod = await import(pathToFileURL(path.join(SSR_TMP_DIR, 'prerender-entry.js')).href);
-  return { render: mod.render, renderLogin: mod.renderLogin, renderSkeleton: mod.renderSkeleton };
+  return { render: mod.render, renderLogin: mod.renderLogin, renderSkeleton: mod.renderSkeleton, skeletonVariants: mod.SKELETON_VARIANTS };
 }
 
 // كل "عرض" جاهز داخل #root له data-boot-view، وpublic/boot.js يختار اللي
@@ -133,17 +133,21 @@ async function main() {
   }
   const built = readFileSync(AR_FILE, 'utf8');
   const pristine = mustReplace(built, BOOT_ANCHOR, `${BOOT_ANCHOR}\n    ${bootHead()}`, 'meta theme-color');
-  let render, renderLogin, renderSkeleton;
+  let render, renderLogin, renderSkeleton, skeletonVariants;
   try {
-    ({ render, renderLogin, renderSkeleton } = await loadLandingRenderer());
+    ({ render, renderLogin, renderSkeleton, skeletonVariants } = await loadLandingRenderer());
   } finally {
     rmSync(SSR_TMP_DIR, { recursive: true, force: true });
   }
-  const skeletonView = bootView('skeleton', renderSkeleton());
+  // هيكل اللوحة بشكل الصفحة المفتوحة (نقطة البيع، جدول، بطاقات الواتساب...):
+  // app.html فيه كل الأشكال، والرئيسية (/ و/en) فيها اللي ممكن تفتحه بس
+  // (الرئيسية لحساب المالك، ونقطة البيع لحساب الفرع) عشان ما يثقل HTML الزوار.
+  const skeletonViews = (variants) => variants.map((v) => bootView(`skeleton-${v}`, renderSkeleton(v))).join('');
+  const skeletonView = skeletonViews(['home', 'pos']);
 
   // ===== هيكل التطبيق (dist/app.html) =====
   const appHtml = mustReplace(pristine, '<div id="root"></div>',
-    `<div id="root">${bootView('login-ar', renderLogin('ar'))}${bootView('login-en', renderLogin('en'))}${bootView('blank', BLANK_VIEW)}${skeletonView}</div>`, 'div#root الفارغ (app)');
+    `<div id="root">${bootView('login-ar', renderLogin('ar'))}${bootView('login-en', renderLogin('en'))}${bootView('blank', BLANK_VIEW)}${skeletonViews(skeletonVariants)}</div>`, 'div#root الفارغ (app)');
   writeFileSync(APP_FILE, appHtml, 'utf8');
 
   // ===== النسخة العربية (تُكتب فوق dist/index.html) =====

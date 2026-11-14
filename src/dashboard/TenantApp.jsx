@@ -25,7 +25,7 @@ import { normalizeSaudiMobile, isValidSaudiMobile, cleanPhoneForWhatsApp, fillWh
 import { generateInvoiceImage } from "../utils/invoiceImage.js";
 import { uploadTenantFile, deleteTenantFile, uploadPrivateFile, deletePrivateFile, getSignedUrl } from "../utils/storage.js";
 import { subscribeToTable, subscribeToRow } from "../utils/dbSubscribe.js";
-import { ContentSkeleton } from "./DashboardSkeleton.jsx";
+import { ContentSkeleton, skeletonVariantForTab } from "./DashboardSkeleton.jsx";
 import { DEFAULT_REMINDER_DAYS, normalizeReminderDays, dueReminders, reminderLogRows } from "../utils/pickupReminders.js";
 import { postToExtension, onExtensionMessage } from "../utils/whatsappExtension.js";
 import { pathForTab, tabForPath } from "../utils/dashboardPaths.js";
@@ -6003,7 +6003,9 @@ function PickupRemindersToday({ invoices, customers, merchant, pickup, tenantId 
         {pickup.extension ? t("wa_extDetected", { v: pickup.extension.version }) : t("wa_extMissing")}
       </div>
 
-      {!pickup.enabled ? (
+      {!pickup.ready ? (
+        <div className="h-48 animate-pulse rounded-xl border border-app-border bg-app-surface" aria-hidden="true" />
+      ) : !pickup.enabled ? (
         <div className="rounded-xl border border-app-border bg-app-surface p-5 text-sm text-app-text-muted">{t("wa_remindersDisabled")}</div>
       ) : (
         <div className="rounded-xl border border-app-border bg-app-surface shadow-app-xs">
@@ -6834,7 +6836,7 @@ function HomeDashboardView({ invoices, merchant, setTab }) {
 /* =========================================================================
    ROOT APP
    ========================================================================= */
-function AppShell({ tab, tabReady, pickup, tenantId, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+function AppShell({ tab, tabReady, skeletonTab, pickup, tenantId, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { dir, t } = useLang();
   // Branch scope for the owner's "view all / one branch" picker: sales, purchases
   // and expenses follow it; customers, wallets and products are shared and never filtered.
@@ -6873,7 +6875,7 @@ function AppShell({ tab, tabReady, pickup, tenantId, setTab, navigateTab, report
         </div>
         <main className="flex-1 overflow-y-auto p-6">
         {/* Until this tab's own data has arrived, placeholders instead of zeros and empty lists that look like a shop with no data. */}
-        {!tabReady && <ContentSkeleton />}
+        {!tabReady && <ContentSkeleton variant={skeletonVariantForTab(skeletonTab)} />}
         {tabReady && (<>
         {tab === "home" && <HomeDashboardView invoices={scopedInvoices} merchant={merchant} setTab={setTab} />}
         {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promosForSale} enabledPayMethods={enabledPayMethods} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} setTab={setTab} />}
@@ -6912,9 +6914,24 @@ function AppShell({ tab, tabReady, pickup, tenantId, setTab, navigateTab, report
   );
 }
 
-const POS_TABLES = ["categories", "products", "addons", "customers", "promotions", "branches"];
-const ALL_TABLES = [...POS_TABLES, "invoices", "customer_transactions", "service_types", "suppliers", "purchases", "expense_categories", "expenses", "pickup_reminders"];
-const TABS_WITHOUT_TABLE_DATA = new Set(["settings", "branches"]);
+// The tables each tab actually shows (from what AppShell passes to its view).
+// A tab shows its content as soon as these have loaded, not when every table
+// has. Tabs not listed here wait for no table; the ones in
+// TABS_NEEDING_SETTINGS wait for tenant_settings instead.
+const TAB_TABLES = {
+  home: ["invoices"],
+  pos: ["categories", "products", "addons", "customers", "promotions", "branches"],
+  invoices: ["invoices", "customers", "zatca_invoices"],
+  delivery_invoices: ["invoices", "customers", "zatca_invoices"],
+  customers: ["customers", "invoices", "customer_transactions"],
+  inventory: ["categories", "products", "addons", "service_types"],
+  purchases: ["suppliers", "purchases", "expense_categories", "expenses"],
+  promotions: ["promotions"],
+  reports: ["invoices", "customer_transactions", "purchases", "suppliers", "categories", "customers", "expenses", "expense_categories"],
+};
+const TABS_NEEDING_SETTINGS = new Set(["whatsapp", "settings"]);
+// What "تذكيرات اليوم" (inside the WhatsApp tab) needs before it can list anything.
+const REMINDER_TABLES = ["invoices", "customers", "pickup_reminders"];
 const SETTINGS_ECHO_QUIET_MS = 3000;
 
 function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
@@ -7036,15 +7053,12 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     await refreshBranchMembers();
   };
 
-  // Which of the tables below have finished their first load. The register
-  // only needs its own few, so a cashier can start selling while a long
-  // invoice history is still on its way; the other data tabs wait for all of
-  // them, and the tabs in TABS_WITHOUT_TABLE_DATA wait for none.
+  // Which of the tables below have finished their first load (see TAB_TABLES
+  // and tabReady further down).
   const [loadedTables, setLoadedTables] = useState(() => new Set());
   // The pickup-reminder send log (pickup_reminders): one row per reminder stage
   // of an order, written only by the extension listener further down.
   const [pickupReminderLogs, setPickupReminderLogs] = useState([]);
-  const tabReady = TABS_WITHOUT_TABLE_DATA.has(tab) || (tab === "pos" ? POS_TABLES : ALL_TABLES).every((name) => loadedTables.has(name));
 
   useEffect(() => {
     if (!tenantId) return;
@@ -7053,7 +7067,7 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     // "load once, then apply realtime diffs" work Firestore's onSnapshot
     // used to do in one call, per table.
     // Each table reports when its first load is in (or has failed), which is
-    // what tabReady above waits on before a tab shows real content.
+    // what tabReady waits on before a tab shows real content.
     const sub = (table, setState) => subscribeToTable(table, "tenant_id", tenantId, setState, null, null,
       () => setLoadedTables((prev) => new Set(prev).add(table)));
     const unsubCats = sub("categories", setCategoriesState);
@@ -7088,7 +7102,8 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   useEffect(() => {
     if (!tenantId) return;
     const unsubZCfg = subscribeToRow("zatca_configurations", "tenant_id", tenantId, setZatcaConfig);
-    const unsubZInv = subscribeToTable("zatca_invoices", "tenant_id", tenantId, setZatcaInvoicesState);
+    const unsubZInv = subscribeToTable("zatca_invoices", "tenant_id", tenantId, setZatcaInvoicesState, null, null,
+      () => setLoadedTables((prev) => new Set(prev).add("zatca_invoices")));
     return () => { unsubZCfg(); unsubZInv(); };
   }, [tenantId]);
 
@@ -7347,6 +7362,9 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   // When this tab last scheduled or finished a settings save (see applyRow).
   const lastSettingsSaveAt = useRef(0);
+  // The settings exactly as last loaded or saved, so opening the dashboard
+  // doesn't write the row back unchanged (see the save effect below).
+  const settingsSnapshot = useRef(null);
 
   // tenant_settings has its own `id` primary key, separate from `tenant_id`
   // (which is just the filter/uniqueness column) — this holds it once known,
@@ -7361,6 +7379,7 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     if (!tenantId) return;
     setSettingsLoaded(false);
     setSettingsRowId(null);
+    settingsSnapshot.current = null;
     let initialLoad = true;
     const applyRow = (d) => {
       // A realtime echo of this tab's own save carries the values from the
@@ -7453,10 +7472,12 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   // waits for branchLocksReady: otherwise a refresh on /reports would see every
   // section as unlocked and skip the PIN.
   const initialDeepLinkResolved = useRef(false);
+  const [deepLinkResolved, setDeepLinkResolved] = useState(false);
   const [branchLocksReady, setBranchLocksReady] = useState(false);
   useEffect(() => {
     if (initialDeepLinkResolved.current || !settingsLoaded || (branchId && !branchLocksReady)) return;
     initialDeepLinkResolved.current = true;
+    setDeepLinkResolved(true);
     const resolved = tabForPath(window.location.pathname);
     if (!resolved) return;
     if (resolved.tab === 'home') {
@@ -7468,6 +7489,13 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
 
   useEffect(() => {
     if (!tenantId || !settingsLoaded || branchId) return;
+    const fields = { merchant, enabledPayMethods, whatsappTemplate, whatsappEnabled, readyMessageEnabled, readyMessageTemplate, whatsappReadySendMode, pickupReminderEnabled, pickupReminderTemplate, pickupReminderDays, lang };
+    const snapshot = JSON.stringify(fields);
+    // First run after an existing row loaded: these are the saved values, so
+    // there is nothing to write. A shop with no row yet still gets it created.
+    if (settingsSnapshot.current === null && settingsRowId) { settingsSnapshot.current = snapshot; return; }
+    if (snapshot === settingsSnapshot.current) return;
+    settingsSnapshot.current = snapshot;
     const rowId = settingsRowId || newId();
     if (!settingsRowId) setSettingsRowId(rowId);
     // Debounced -- a burst of rapid changes to this same row (e.g. clicking
@@ -7480,7 +7508,7 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
       // lockedSections are deliberately NOT written from here -- they're
       // server-managed (api/verify-pin.js, via the service-role key) so this
       // client-side save can never clobber them with stale local state.
-      db.from("tenant_settings").upsert(toSnakeCase({ id: rowId, tenantId, merchant, enabledPayMethods, whatsappTemplate, whatsappEnabled, readyMessageEnabled, readyMessageTemplate, whatsappReadySendMode, pickupReminderEnabled, pickupReminderTemplate, pickupReminderDays, lang }))
+      db.from("tenant_settings").upsert(toSnakeCase({ id: rowId, tenantId, ...fields }))
         .then(({ error }) => { lastSettingsSaveAt.current = Date.now(); if (error) console.error("settings save failed", error); });
     }, 500);
     return () => clearTimeout(timer);
@@ -7534,6 +7562,7 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     template: pickupReminderTemplate, setTemplate: setPickupReminderTemplate,
     days: pickupReminderDays, setDays: setPickupReminderDays,
     logs: pickupReminderLogs, extension: waExtension,
+    ready: REMINDER_TABLES.every((name) => loadedTables.has(name)),
   };
 
   const walkInLabel = lang === "ar" ? "عميل مباشر" : lang === "ur" ? "براہ راست گاہک" : "Walk-in";
@@ -7768,6 +7797,16 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     if (ownBranch) setBranchLocksReady(true);
   }, [branchId, ownBranchLocks, ownBranch?.pinSet, Boolean(ownBranch)]);
 
+  // Until the URL's tab is resolved (it waits for the section locks), the
+  // skeleton is drawn for that tab rather than for "home", and no content is
+  // shown, so a deep link never flashes the home screen first. Only grey
+  // shapes are drawn, so a locked section's data is never on screen.
+  const linkTab = tabForPath(window.location.pathname)?.tab || "home";
+  const pendingTab = branchId && linkTab === "home" ? "pos" : linkTab;
+  const deepLinkPending = !deepLinkResolved && pendingTab !== tab;
+  const tabReady = !deepLinkPending && (TABS_NEEDING_SETTINGS.has(tab) ? settingsLoaded : (TAB_TABLES[tab] || []).every((name) => loadedTables.has(name)));
+  const skeletonTab = deepLinkPending ? pendingTab : tab;
+
   const branchCtx = {
     multi: multiBranch, branches, activeBranches, scope: branchScope, work: workBranch, workName: workBranch ? workBranch.name : null,
     isBranchAccount: Boolean(branchId), members: branchMembers, mainBranchId: mainBranch ? mainBranch.id : null,
@@ -7781,7 +7820,7 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     <LangContext.Provider value={{ lang, setLang, dir }}>
       <BranchCtx.Provider value={branchCtx}>
       <AppShell
-        tab={tab} tabReady={tabReady} pickup={pickup} tenantId={tenantId} setTab={requestTab} navigateTab={navigateTab}
+        tab={tab} tabReady={tabReady} skeletonTab={skeletonTab} pickup={pickup} tenantId={tenantId} setTab={requestTab} navigateTab={navigateTab}
         reportsSubTab={reportsSubTab} purchasesSubTab={purchasesSubTab}
         categories={categories} addCategory={addCategory}
         products={products} addProduct={addProduct} updateProduct={updateProduct}
