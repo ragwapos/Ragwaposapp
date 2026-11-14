@@ -3,7 +3,7 @@
   "name": "Ragwa WhatsApp Reminders",
   "short_name": "Ragwa WhatsApp",
   "version": "1.0.0",
-  "description": "Opens each Ragwa pickup reminder as a draft in WhatsApp Web. The employee reviews it and presses Enter; the extension never sends a message itself.",
+  "description": "Opens Ragwa pickup reminders as drafts in WhatsApp Web. Staff review and press Enter; the extension never sends a message itself.",
   "homepage_url": "https://www.ragwapos.com/",
   "icons": {
     "16": "icons/icon-16.png",
