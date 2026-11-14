@@ -9,7 +9,8 @@
     "build": "vite build",
     "postbuild": "node scripts/build-landing-prerender.mjs",
     "preview": "vite preview",
-    "prepare": "git config core.hooksPath .githooks || true"
+    "prepare": "git config core.hooksPath .githooks || true",
+    "build:extension": "node scripts/build-extension.mjs"
   },
   "dependencies": {
     "@noble/curves": "^2.2.0",

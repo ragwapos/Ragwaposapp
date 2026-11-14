@@ -55,6 +55,36 @@ export function dueReminders({ invoices, customers, logs, days, now = new Date()
   return due.sort((a, b) => b.daysSinceReady - a.daysSinceReady);
 }
 
+// One message per customer: their due orders gathered together, so a customer
+// with three uncollected orders gets one reminder listing all three instead of
+// three messages in a row. Each order keeps its own stage and skipped stages,
+// and repeats are still prevented per order (pickup_reminders is unique per
+// order and day), so an order that was already reminded never reappears just
+// because another order of the same customer fell due.
+//   -> [{ customer, orders: [due entries, oldest first], maxDays }], oldest first
+export function groupByCustomer(due) {
+  const byCustomer = new Map();
+  for (const entry of due) {
+    const key = entry.customer.id;
+    if (!byCustomer.has(key)) byCustomer.set(key, { customer: entry.customer, orders: [], maxDays: 0 });
+    const group = byCustomer.get(key);
+    group.orders.push(entry);
+    group.maxDays = Math.max(group.maxDays, entry.daysSinceReady);
+  }
+  const groups = [...byCustomer.values()];
+  for (const group of groups) group.orders.sort((a, b) => b.daysSinceReady - a.daysSinceReady);
+  return groups.sort((a, b) => b.maxDays - a.maxDays);
+}
+
+// A short, stable id for one customer's message: the same orders at the same
+// stages always give the same id (the extension keys its confirmations on it).
+export function groupId(group) {
+  const pairs = group.orders.map((o) => `${o.invoice.id}:${o.stage}`).sort().join(",");
+  let hash = 5381;
+  for (let i = 0; i < pairs.length; i++) hash = ((hash * 33) ^ pairs.charCodeAt(i)) >>> 0;
+  return `${group.customer.id}:${group.orders.length}:${hash.toString(36)}`;
+}
+
 // The pickup_reminders rows for one sent reminder: the stage itself as "sent",
 // plus every earlier stage it replaced as "skipped".
 export function reminderLogRows({ tenantId, invoice, customer, stage, skippedStages, phone, message }) {

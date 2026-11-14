@@ -26,7 +26,7 @@ import { generateInvoiceImage } from "../utils/invoiceImage.js";
 import { uploadTenantFile, deleteTenantFile, uploadPrivateFile, deletePrivateFile, getSignedUrl } from "../utils/storage.js";
 import { subscribeToTable, subscribeToRow } from "../utils/dbSubscribe.js";
 import { ContentSkeleton, skeletonVariantForTab } from "./DashboardSkeleton.jsx";
-import { DEFAULT_REMINDER_DAYS, normalizeReminderDays, dueReminders, reminderLogRows } from "../utils/pickupReminders.js";
+import { DEFAULT_REMINDER_DAYS, normalizeReminderDays, dueReminders, groupByCustomer, groupId, reminderLogRows } from "../utils/pickupReminders.js";
 import { postToExtension, onExtensionMessage } from "../utils/whatsappExtension.js";
 import { pathForTab, tabForPath } from "../utils/dashboardPaths.js";
 import { newId } from "../utils/uuid.js";
@@ -1229,8 +1229,8 @@ const DICT = {
     wa_reminderDaysTitle: "Reminder Days", wa_reminderDaysDesc: "How many days after an order becomes ready each reminder falls due.",
     wa_reminderDayChip: "Day {n}", wa_reminderAddDay: "Add", wa_reminderDayPlaceholder: "Days", wa_reminderRemoveDay: "Remove day {n}",
     wa_remindersTitle: "Today's Reminders", wa_remindersDesc: "Ready orders that haven't been picked up and have reached a reminder day with no reminder sent yet.",
-    wa_remindersCount: "{n} reminders ready to send", wa_remindersEmpty: "No reminders are due today.", wa_remindersDisabled: "Pickup Reminder is turned off. Turn it on from the Messages tab to send reminders.",
-    wa_remindersColCustomer: "Customer", wa_remindersColMobile: "Mobile", wa_remindersColOrder: "Order", wa_remindersColDays: "Days since ready", wa_remindersColStage: "Stage",
+    wa_remindersCount: "{n} messages ready ({m} orders)", wa_remindersEmpty: "No reminders are due today.", wa_remindersDisabled: "Pickup Reminder is turned off. Turn it on from the Messages tab to send reminders.",
+    wa_remindersColCustomer: "Customer", wa_remindersColMobile: "Mobile", wa_remindersColOrders: "Orders", wa_remindersColDays: "Days since ready",
     wa_remindersRemove: "Remove from this list", wa_remindersRestore: "Restore removed ({n})", wa_remindersSend: "Send via WhatsApp ({n})",
     wa_extDetected: "Ragwa WhatsApp extension connected (v{v})", wa_extMissing: "The Ragwa WhatsApp extension isn't installed in this browser. Install it, then reload this page.",
     wa_remindersQueued: "{n} reminders were handed to the extension. Continue in the WhatsApp Web tab.",
@@ -1526,8 +1526,8 @@ const DICT = {
     wa_reminderDaysTitle: "أيام التذكير", wa_reminderDaysDesc: "بعد كم يوم من جاهزية الطلب يستحق كل تذكير.",
     wa_reminderDayChip: "اليوم {n}", wa_reminderAddDay: "إضافة", wa_reminderDayPlaceholder: "عدد الأيام", wa_reminderRemoveDay: "حذف اليوم {n}",
     wa_remindersTitle: "تذكيرات اليوم", wa_remindersDesc: "الطلبات الجاهزة غير المستلمة التي وصلت أحد أيام التذكير ولم يُرسل لها تذكير.",
-    wa_remindersCount: "{n} تذكير جاهز للإرسال", wa_remindersEmpty: "لا توجد تذكيرات مستحقة اليوم.", wa_remindersDisabled: "تذكير استلام الطلب غير مفعّل. فعّله من تبويب الرسائل لإرسال التذكيرات.",
-    wa_remindersColCustomer: "العميل", wa_remindersColMobile: "الجوال", wa_remindersColOrder: "الطلب", wa_remindersColDays: "أيام منذ الجاهزية", wa_remindersColStage: "المرحلة",
+    wa_remindersCount: "{n} رسالة جاهزة ({m} طلب)", wa_remindersEmpty: "لا توجد تذكيرات مستحقة اليوم.", wa_remindersDisabled: "تذكير استلام الطلب غير مفعّل. فعّله من تبويب الرسائل لإرسال التذكيرات.",
+    wa_remindersColCustomer: "العميل", wa_remindersColMobile: "الجوال", wa_remindersColOrders: "الطلبات", wa_remindersColDays: "أيام منذ الجاهزية",
     wa_remindersRemove: "إزالة من هذه القائمة", wa_remindersRestore: "إرجاع المُزالين ({n})", wa_remindersSend: "إرسال عبر واتساب ({n})",
     wa_extDetected: "إضافة رغوة للواتساب متصلة (إصدار {v})", wa_extMissing: "إضافة رغوة للواتساب غير مثبتة في هذا المتصفح. ثبّتها ثم أعد تحميل الصفحة.",
     wa_remindersQueued: "تم تسليم {n} تذكير للإضافة. أكمل من تبويب واتساب ويب.",
@@ -1823,8 +1823,8 @@ const DICT = {
     wa_reminderDaysTitle: "یاد دہانی کے دن", wa_reminderDaysDesc: "آرڈر تیار ہونے کے کتنے دن بعد ہر یاد دہانی واجب ہوتی ہے۔",
     wa_reminderDayChip: "دن {n}", wa_reminderAddDay: "شامل کریں", wa_reminderDayPlaceholder: "دنوں کی تعداد", wa_reminderRemoveDay: "دن {n} ہٹائیں",
     wa_remindersTitle: "آج کی یاد دہانیاں", wa_remindersDesc: "وہ تیار آرڈر جو ابھی تک نہیں لیے گئے، یاد دہانی کے کسی دن تک پہنچ چکے ہیں اور جنہیں یاد دہانی نہیں بھیجی گئی۔",
-    wa_remindersCount: "{n} یاد دہانیاں بھیجنے کے لیے تیار", wa_remindersEmpty: "آج کوئی یاد دہانی واجب نہیں۔", wa_remindersDisabled: "آرڈر لینے کی یاد دہانی بند ہے۔ یاد دہانیاں بھیجنے کے لیے اسے پیغامات کے ٹیب سے آن کریں۔",
-    wa_remindersColCustomer: "کسٹمر", wa_remindersColMobile: "موبائل", wa_remindersColOrder: "آرڈر", wa_remindersColDays: "تیار ہوئے دن", wa_remindersColStage: "مرحلہ",
+    wa_remindersCount: "{n} پیغامات تیار ({m} آرڈرز)", wa_remindersEmpty: "آج کوئی یاد دہانی واجب نہیں۔", wa_remindersDisabled: "آرڈر لینے کی یاد دہانی بند ہے۔ یاد دہانیاں بھیجنے کے لیے اسے پیغامات کے ٹیب سے آن کریں۔",
+    wa_remindersColCustomer: "کسٹمر", wa_remindersColMobile: "موبائل", wa_remindersColOrders: "آرڈرز", wa_remindersColDays: "تیار ہوئے دن",
     wa_remindersRemove: "اس فہرست سے ہٹائیں", wa_remindersRestore: "ہٹائے گئے واپس لائیں ({n})", wa_remindersSend: "واٹس ایپ پر بھیجیں ({n})",
     wa_extDetected: "رغوہ واٹس ایپ ایکسٹینشن منسلک ہے (ورژن {v})", wa_extMissing: "رغوہ واٹس ایپ ایکسٹینشن اس براؤزر میں انسٹال نہیں۔ اسے انسٹال کریں، پھر یہ صفحہ دوبارہ لوڈ کریں۔",
     wa_remindersQueued: "{n} یاد دہانیاں ایکسٹینشن کو دے دی گئیں۔ واٹس ایپ ویب کے ٹیب میں جاری رکھیں۔",
@@ -5960,7 +5960,7 @@ function ReminderDaysEditor({ days, onChange }) {
 // reports it was actually sent (see LaundryOpsApp's extension listener).
 function PickupRemindersToday({ invoices, customers, merchant, pickup, tenantId }) {
   const { t, lang } = useLang();
-  // Orders the employee took out of this run. Not saved: they are due again
+  // Customers the employee took out of this run. Not saved: they are due again
   // the next time this screen opens.
   const [removed, setRemoved] = useState(() => new Set());
   const [queued, setQueued] = useState(null);
@@ -5970,20 +5970,28 @@ function PickupRemindersToday({ invoices, customers, merchant, pickup, tenantId 
     invoices: invoices.filter((i) => !i.closed && !i.isDelivery && !i.isTopup && invoiceOverallStatus(i) === "Ready"),
     customers, logs: pickup.logs, days: pickup.days,
   }), [invoices, customers, pickup.logs, pickup.days]);
-  const list = due.filter((d) => !removed.has(d.invoice.id));
+  const list = useMemo(() => groupByCustomer(due).filter((g) => !removed.has(g.customer.id)), [due, removed]);
+  const orderCount = list.reduce((n, g) => n + g.orders.length, 0);
   const recentLogs = useMemo(() => [...pickup.logs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 20), [pickup.logs]);
   const invoiceCode = (id) => invoices.find((i) => i.id === id)?.code || "";
 
   const send = () => {
     const fallback = whatsAppDefaults(lang).reminder;
-    const items = list.map(({ invoice, customer, stage, skippedStages }) => {
+    const separator = lang === "en" ? ", " : "، ";
+    const items = list.map((group) => {
+      const { customer, orders } = group;
+      const name = customer.name || orders[0].invoice.customerName || "";
       const phone = cleanPhoneForWhatsApp(customer.mobile);
+      // {order_id} lists every order in the message, so existing templates
+      // work unchanged for one order or several.
       const text = fillWhatsAppTemplate(pickup.template, {
-        customer_name: customer.name || invoice.customerName || "", store_name: merchant?.storeName || merchant?.name || "", order_id: invoice.code || "",
+        customer_name: name, store_name: merchant?.storeName || merchant?.name || "", order_id: orders.map((o) => o.invoice.code).filter(Boolean).join(separator),
       }, fallback);
       // `log` is carried through the extension untouched and comes back with
-      // the confirmation; it is exactly what gets written to pickup_reminders.
-      return { id: `${invoice.id}:${stage}`, name: customer.name || invoice.customerName || "", phone, text, log: reminderLogRows({ tenantId, invoice, customer, stage, skippedStages, phone, message: text }) };
+      // the confirmation; it is exactly what gets written to pickup_reminders:
+      // every order's stage as sent, and the earlier stages it passed as skipped.
+      const log = orders.flatMap((o) => reminderLogRows({ tenantId, invoice: o.invoice, customer, stage: o.stage, skippedStages: o.skippedStages, phone, message: text }));
+      return { id: groupId(group), name, phone, text, log };
     });
     setQueued(null);
     postToExtension("SEND_QUEUE", {
@@ -6010,7 +6018,7 @@ function PickupRemindersToday({ invoices, customers, merchant, pickup, tenantId 
       ) : (
         <div className="rounded-xl border border-app-border bg-app-surface shadow-app-xs">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-app-border p-4">
-            <div className="text-sm font-bold text-app-text" data-testid="reminders-count">{t("wa_remindersCount", { n: list.length })}</div>
+            <div className="text-sm font-bold text-app-text" data-testid="reminders-count">{t("wa_remindersCount", { n: list.length, m: orderCount })}</div>
             <div className="flex flex-wrap items-center gap-2">
               {removed.size > 0 && (
                 <button type="button" onClick={() => setRemoved(new Set())} className="rounded-lg border border-app-border px-3 py-2 text-xs font-semibold text-app-text-muted hover:bg-app-bg">{t("wa_remindersRestore", { n: removed.size })}</button>
@@ -6031,22 +6039,29 @@ function PickupRemindersToday({ invoices, customers, merchant, pickup, tenantId 
                   <tr className="border-b border-app-border text-xs font-semibold text-app-text-subtle">
                     <th className="px-4 py-2.5">{t("wa_remindersColCustomer")}</th>
                     <th className="px-4 py-2.5">{t("wa_remindersColMobile")}</th>
-                    <th className="px-4 py-2.5">{t("wa_remindersColOrder")}</th>
+                    <th className="px-4 py-2.5">{t("wa_remindersColOrders")}</th>
                     <th className="px-4 py-2.5">{t("wa_remindersColDays")}</th>
-                    <th className="px-4 py-2.5">{t("wa_remindersColStage")}</th>
                     <th className="px-4 py-2.5" />
                   </tr>
                 </thead>
                 <tbody>
-                  {list.map(({ invoice, customer, daysSinceReady, stage }) => (
-                    <tr key={invoice.id} className="border-b border-app-border last:border-b-0">
-                      <td className="px-4 py-2.5 font-semibold text-app-text">{customer.name || invoice.customerName}</td>
+                  {list.map(({ customer, orders, maxDays }) => (
+                    <tr key={customer.id} className="border-b border-app-border align-top last:border-b-0">
+                      <td className="px-4 py-2.5 font-semibold text-app-text">{customer.name || orders[0].invoice.customerName}</td>
                       <td className="px-4 py-2.5 f-mono text-xs text-app-text-muted" dir="ltr">{cleanPhoneForWhatsApp(customer.mobile)}</td>
-                      <td className="px-4 py-2.5 f-mono text-xs text-app-text-muted" dir="ltr">{invoice.code}</td>
-                      <td className="px-4 py-2.5 text-app-text">{daysSinceReady}</td>
-                      <td className="px-4 py-2.5"><span className="rounded-full bg-info-50 px-2.5 py-1 text-xs font-bold text-info-700">{t("wa_reminderDayChip", { n: stage })}</span></td>
+                      <td className="px-4 py-2">
+                        <div className="flex flex-wrap gap-1.5">
+                          {orders.map((o) => (
+                            <span key={o.invoice.id} className="flex items-center gap-1.5 rounded-full bg-info-50 py-0.5 pe-1 ps-2.5 text-xs text-info-700">
+                              <span className="f-mono font-semibold" dir="ltr">{o.invoice.code}</span>
+                              <span className="rounded-full bg-white/70 px-1.5 py-0.5 text-[10.5px] font-bold">{t("wa_reminderDayChip", { n: o.stage })}</span>
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2.5 text-app-text">{maxDays}</td>
                       <td className="px-4 py-2.5 text-end">
-                        <button type="button" onClick={() => setRemoved((prev) => new Set(prev).add(invoice.id))} title={t("wa_remindersRemove")} aria-label={t("wa_remindersRemove")} className="rounded-lg p-1.5 text-app-text-subtle hover:bg-danger-50 hover:text-danger-600"><X size={15} /></button>
+                        <button type="button" onClick={() => setRemoved((prev) => new Set(prev).add(customer.id))} title={t("wa_remindersRemove")} aria-label={t("wa_remindersRemove")} className="rounded-lg p-1.5 text-app-text-subtle hover:bg-danger-50 hover:text-danger-600"><X size={15} /></button>
                       </td>
                     </tr>
                   ))}

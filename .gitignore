@@ -12,3 +12,4 @@ service-account*.json
 .env*
 # Temporary SSR build of the landing page (scripts/build-landing-prerender.mjs) -- deleted after each build.
 .prerender-tmp/
+dist-extension/
