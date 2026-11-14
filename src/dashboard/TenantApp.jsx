@@ -5758,7 +5758,10 @@ function renderTemplatePreview(text) {
 // is open at a time. The message editor works on a local draft that only
 // replaces the saved text on "حفظ الرسالة".
 //   sections: [{ key, label, summary, render: () => node }]
-function MessageTemplateCard({ icon: Icon, tone, title, description, enabled, onToggleEnabled, template, defaultTemplate, tags, onSave, sections = [] }) {
+//   rowSlots: the most rows any card on the page has. A card with fewer gets
+//     blank filler rows, so all cards are the same height while folded, and
+//     an opened row only makes its own card taller (the grid doesn't stretch).
+function MessageTemplateCard({ icon: Icon, tone, title, description, enabled, onToggleEnabled, template, defaultTemplate, tags, onSave, sections = [], rowSlots = 0 }) {
   const { t } = useLang();
   const [open, setOpen] = useState(null); // null | "message" | a section key
   const [draft, setDraft] = useState(template || "");
@@ -5812,7 +5815,7 @@ function MessageTemplateCard({ icon: Icon, tone, title, description, enabled, on
   ];
 
   return (
-    <div className="flex h-full flex-col rounded-xl border border-app-border bg-app-surface shadow-app-xs">
+    <div className="flex flex-col rounded-xl border border-app-border bg-app-surface shadow-app-xs">
       <div className="p-5 pb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
@@ -5844,6 +5847,9 @@ function MessageTemplateCard({ icon: Icon, tone, title, description, enabled, on
             </div>
           );
         })}
+        {Array.from({ length: Math.max(0, rowSlots - rows.length) }, (_, i) => (
+          <div key={`filler-${i}`} aria-hidden="true" className="invisible border-b border-app-border px-5 py-3 text-[13px] font-semibold last:border-b-0">-</div>
+        ))}
       </div>
     </div>
   );
@@ -6098,20 +6104,20 @@ function WhatsAppView({ whatsappEnabled, setWhatsappEnabled, whatsappTemplate, s
       {view === "reminders" && <div className="max-w-4xl"><PickupRemindersToday invoices={invoices} customers={customers} merchant={merchant} pickup={pickup} tenantId={tenantId} /></div>}
 
       {view === "messages" && (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
           <MessageTemplateCard
             icon={ReceiptText} tone="brand"
             title={t("wa_invoiceCardTitle")} description={t("wa_invoiceCardDesc")}
             enabled={whatsappEnabled} onToggleEnabled={setWhatsappEnabled}
             template={whatsappTemplate} defaultTemplate={defaults.invoice}
-            tags={WHATSAPP_TAGS} onSave={setWhatsappTemplate}
+            tags={WHATSAPP_TAGS} onSave={setWhatsappTemplate} rowSlots={2}
           />
           <MessageTemplateCard
             icon={Bell} tone="warning"
             title={t("wa_readyCardTitle")} description={t("wa_readyCardDesc")}
             enabled={readyMessageEnabled} onToggleEnabled={setReadyMessageEnabled}
             template={readyMessageTemplate} defaultTemplate={defaults.ready}
-            tags={READY_MESSAGE_TAGS} onSave={setReadyMessageTemplate}
+            tags={READY_MESSAGE_TAGS} onSave={setReadyMessageTemplate} rowSlots={2}
             sections={[{ key: "behavior", label: t("wa_behaviorSection"), summary: sendMode ? t(sendMode.titleKey) : null, render: () => <SendModePicker value={whatsappReadySendMode} onChange={setWhatsappReadySendMode} /> }]}
           />
           <MessageTemplateCard
@@ -6119,7 +6125,7 @@ function WhatsAppView({ whatsappEnabled, setWhatsappEnabled, whatsappTemplate, s
             title={t("wa_reminderCardTitle")} description={t("wa_reminderCardDesc")}
             enabled={pickup.enabled} onToggleEnabled={pickup.setEnabled}
             template={pickup.template} defaultTemplate={defaults.reminder}
-            tags={READY_MESSAGE_TAGS} onSave={pickup.setTemplate}
+            tags={READY_MESSAGE_TAGS} onSave={pickup.setTemplate} rowSlots={2}
             sections={[{ key: "days", label: t("wa_reminderDaysTitle"), summary: pickup.days.length ? pickup.days.join(lang === "en" ? ", " : "، ") : "—", render: () => <ReminderDaysEditor days={pickup.days} onChange={pickup.setDays} /> }]}
           />
         </div>
