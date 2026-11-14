@@ -163,9 +163,9 @@ function ReportsContent() {
 
 function CardsContent() {
   return (
-    <>
+    <div className="max-w-6xl">
       <div className="flex flex-wrap items-end justify-between gap-3"><Title /><Bar className="h-9 w-48 rounded-full" /></div>
-      <div className="mt-5 grid max-w-6xl grid-cols-1 items-start gap-4 lg:grid-cols-3">
+      <div className="mt-5 grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
         {Array.from({ length: 3 }, (_, i) => (
           <Box key={i} className="rounded-xl">
             <div className="p-5 pb-4">
@@ -178,7 +178,7 @@ function CardsContent() {
           </Box>
         ))}
       </div>
-    </>
+    </div>
   );
 }
 
