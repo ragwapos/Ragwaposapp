@@ -29,7 +29,7 @@
 > • الموظف يراجع الرسالة ويضغط Enter بنفسه. الإضافة ما ترسل أي رسالة لحالها أبداً.
 > • بعد الإرسال تنتقل للمحادثة اللي بعدها تلقائياً، مع عدّاد وزر تخطي وزر إيقاف.
 > • كل تذكير انرسل ينسجّل في حساب المحل برغوة، حتى لو كان تبويب رغوة مقفول وقت الإرسال.
-> • ما تقرأ محادثاتك، وما تتصل بأي خادم بنفسها، وما فيها أي إعلانات.
+> • ما تقرأ رسائل محادثاتك، وما تتصل بأي خادم بنفسها، وما فيها أي إعلانات.
 >
 > تحتاج حساب فعّال في رغوة: https://www.ragwapos.com
 
@@ -40,7 +40,7 @@
 > • Staff review the message and press Enter themselves. The extension never sends a message on its own.
 > • After sending, it moves to the next chat automatically, with a counter, Skip and Stop.
 > • Every sent reminder is recorded in the shop's Ragwa account, even if the Ragwa tab was closed at the time.
-> • It does not read your chats, does not contact any server itself, and has no ads.
+> • It does not read your chat messages, does not contact any server itself, and has no ads.
 >
 > Requires an active Ragwa account: https://www.ragwapos.com
 

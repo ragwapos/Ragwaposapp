@@ -7,6 +7,8 @@
 //   queue          the list Ragwa handed over and how far the employee has got
 //                  { items, index, sentCount, status, tabId, labels, dir }
 //                  status: "active" | "stopped" | "done"
+//                  Once a run is stopped or done, its items (names, numbers, texts)
+//                  are wiped; only the counts the panel shows are kept.
 //   confirmations  reminders the employee sent that Ragwa hasn't logged yet
 //                  [{ id, log, sentAt }]
 //
@@ -93,7 +95,7 @@ const handlers = {
     const item = queue.items[queue.index];
     if (!item || item.id !== message.itemId) return { ok: false };
     if (message.outcome === "stopped") {
-      await write("queue", { ...queue, status: "stopped" });
+      await write("queue", { ...queue, items: [], status: "stopped" });
       return { ok: true };
     }
     if (message.outcome === "sent") {
@@ -104,7 +106,8 @@ const handlers = {
     }
     const index = queue.index + 1;
     const sentCount = queue.sentCount + (message.outcome === "sent" ? 1 : 0);
-    await write("queue", { ...queue, index, sentCount, status: index >= queue.items.length ? "done" : "active" });
+    const done = index >= queue.items.length;
+    await write("queue", { ...queue, index, sentCount, items: done ? [] : queue.items, status: done ? "done" : "active" });
     return { ok: true };
   },
   async clearQueue() {
