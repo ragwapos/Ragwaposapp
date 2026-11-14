@@ -15,7 +15,7 @@ import {
   ReceiptText, Receipt, Building2, FileText, Settings, Globe, Lock, Unlock, Pencil, Paperclip,
   MessageCircle, Bell, Loader2, Home, SplitSquareHorizontal, Printer, StickyNote,
   Phone, User, Link2, FlaskConical, KeyRound, LogOut, XCircle, Download,
-  SlidersHorizontal, ChevronDown, Menu, Store
+  SlidersHorizontal, ChevronDown, Menu, Store, AlarmClock, Send
 } from "lucide-react";
 import QRCode from "qrcode";
 import { auth, db } from "../supabase";
@@ -26,6 +26,8 @@ import { generateInvoiceImage } from "../utils/invoiceImage.js";
 import { uploadTenantFile, deleteTenantFile, uploadPrivateFile, deletePrivateFile, getSignedUrl } from "../utils/storage.js";
 import { subscribeToTable, subscribeToRow } from "../utils/dbSubscribe.js";
 import { ContentSkeleton } from "./DashboardSkeleton.jsx";
+import { DEFAULT_REMINDER_DAYS, normalizeReminderDays, dueReminders, reminderLogRows } from "../utils/pickupReminders.js";
+import { postToExtension, onExtensionMessage } from "../utils/whatsappExtension.js";
 import { pathForTab, tabForPath } from "../utils/dashboardPaths.js";
 import { newId } from "../utils/uuid.js";
 
@@ -1212,7 +1214,6 @@ const DICT = {
     print_whatsappBtn: "WhatsApp", print_whatsappSending: "Sending...", print_whatsappNoPhone: "No phone number on file for this customer.",
     print_whatsappError: "Couldn't share this invoice — please try again.",
     wa_pageTitle: "WhatsApp", wa_pageDesc: "Manage the WhatsApp messages and notifications sent to your customers.",
-    wa_messagesSection: "Messages", wa_messagesSectionDesc: "Customize the messages sent to customers over WhatsApp.",
     wa_invoiceCardTitle: "Send Invoice", wa_invoiceCardDesc: "Sends the invoice to the customer over WhatsApp right after the sale.",
     wa_readyCardTitle: "Order Ready", wa_readyCardDesc: "Sends the customer a message when the order's status changes to Ready.",
     wa_editMessage: "Edit Message", wa_messageTextLabel: "Message text", wa_availableVars: "Available variables",
@@ -1223,6 +1224,19 @@ const DICT = {
     wa_behaviorOffTitle: "Don't Send", wa_behaviorOffDesc: "Never sends a WhatsApp message when an order becomes ready.",
     wa_confirmTitle: "Order Ready", wa_confirmQuestion: "Send a WhatsApp notification to the customer?",
     wa_confirmSend: "Send via WhatsApp", wa_confirmSkip: "Skip", wa_confirmHint: "Enter to send • Esc to skip",
+    wa_reminderCardTitle: "Pickup Reminder", wa_reminderCardDesc: "Reminds the customer about an order that is ready but hasn't been picked up, on the days you choose.",
+    wa_tabMessages: "Messages", wa_tabReminders: "Today's Reminders",
+    wa_reminderDaysTitle: "Reminder Days", wa_reminderDaysDesc: "How many days after an order becomes ready each reminder falls due.",
+    wa_reminderDayChip: "Day {n}", wa_reminderAddDay: "Add", wa_reminderDayPlaceholder: "Days", wa_reminderRemoveDay: "Remove day {n}",
+    wa_remindersTitle: "Today's Reminders", wa_remindersDesc: "Ready orders that haven't been picked up and have reached a reminder day with no reminder sent yet.",
+    wa_remindersCount: "{n} reminders ready to send", wa_remindersEmpty: "No reminders are due today.", wa_remindersDisabled: "Pickup Reminder is turned off. Turn it on from the Messages tab to send reminders.",
+    wa_remindersColCustomer: "Customer", wa_remindersColMobile: "Mobile", wa_remindersColOrder: "Order", wa_remindersColDays: "Days since ready", wa_remindersColStage: "Stage",
+    wa_remindersRemove: "Remove from this list", wa_remindersRestore: "Restore removed ({n})", wa_remindersSend: "Send via WhatsApp ({n})",
+    wa_extDetected: "Ragwa WhatsApp extension connected (v{v})", wa_extMissing: "The Ragwa WhatsApp extension isn't installed in this browser. Install it, then reload this page.",
+    wa_remindersQueued: "{n} reminders were handed to the extension. Continue in the WhatsApp Web tab.",
+    wa_remindersLogTitle: "Recently logged reminders", wa_logSent: "Sent", wa_logSkipped: "Skipped",
+    wa_extPanelTitle: "Ragwa reminders", wa_extCounter: "{i} of {n}", wa_extHint: "Review the message, then press Enter to send.", wa_extSkip: "Skip", wa_extStop: "Stop",
+    wa_extOpening: "Opening chat…", wa_extDone: "All done. Sent {n}.", wa_extFailed: "Couldn't open this chat. Skip it or stop.", wa_extStopped: "Stopped.",
   },
 
   ar: {
@@ -1497,7 +1511,6 @@ const DICT = {
     print_whatsappBtn: "واتساب", print_whatsappSending: "جارٍ الإرسال...", print_whatsappNoPhone: "لا يوجد رقم جوال مسجّل لهذا العميل.",
     print_whatsappError: "تعذّرت مشاركة الفاتورة — حاول مرة أخرى.",
     wa_pageTitle: "واتس اب", wa_pageDesc: "إدارة رسائل واتساب والإشعارات التي يتم إرسالها للعملاء.",
-    wa_messagesSection: "الرسائل", wa_messagesSectionDesc: "خصص الرسائل التي يتم إرسالها للعملاء عبر واتساب.",
     wa_invoiceCardTitle: "إرسال الفاتورة", wa_invoiceCardDesc: "إرسال الفاتورة للعميل عبر واتساب بعد إتمام البيع.",
     wa_readyCardTitle: "الطلب جاهز", wa_readyCardDesc: "إرسال رسالة للعميل عند تحويل حالة الطلب إلى جاهز.",
     wa_editMessage: "تعديل الرسالة", wa_messageTextLabel: "نص الرسالة", wa_availableVars: "المتغيرات المتاحة",
@@ -1508,6 +1521,19 @@ const DICT = {
     wa_behaviorOffTitle: "عدم الإرسال", wa_behaviorOffDesc: "عدم إرسال أي رسالة واتساب عند جاهزية الطلب.",
     wa_confirmTitle: "الطلب جاهز", wa_confirmQuestion: "هل تريد إرسال إشعار للعميل عبر واتساب؟",
     wa_confirmSend: "إرسال عبر واتساب", wa_confirmSkip: "تخطي", wa_confirmHint: "Enter للإرسال • Esc للتخطي",
+    wa_reminderCardTitle: "تذكير باستلام الطلب", wa_reminderCardDesc: "تذكير العميل بطلب جاهز لم يستلمه بعد، في الأيام التي تحددها.",
+    wa_tabMessages: "الرسائل", wa_tabReminders: "تذكيرات اليوم",
+    wa_reminderDaysTitle: "أيام التذكير", wa_reminderDaysDesc: "بعد كم يوم من جاهزية الطلب يستحق كل تذكير.",
+    wa_reminderDayChip: "اليوم {n}", wa_reminderAddDay: "إضافة", wa_reminderDayPlaceholder: "عدد الأيام", wa_reminderRemoveDay: "حذف اليوم {n}",
+    wa_remindersTitle: "تذكيرات اليوم", wa_remindersDesc: "الطلبات الجاهزة غير المستلمة التي وصلت أحد أيام التذكير ولم يُرسل لها تذكير.",
+    wa_remindersCount: "{n} تذكير جاهز للإرسال", wa_remindersEmpty: "لا توجد تذكيرات مستحقة اليوم.", wa_remindersDisabled: "تذكير استلام الطلب غير مفعّل. فعّله من تبويب الرسائل لإرسال التذكيرات.",
+    wa_remindersColCustomer: "العميل", wa_remindersColMobile: "الجوال", wa_remindersColOrder: "الطلب", wa_remindersColDays: "أيام منذ الجاهزية", wa_remindersColStage: "المرحلة",
+    wa_remindersRemove: "إزالة من هذه القائمة", wa_remindersRestore: "إرجاع المُزالين ({n})", wa_remindersSend: "إرسال عبر واتساب ({n})",
+    wa_extDetected: "إضافة رغوة للواتساب متصلة (إصدار {v})", wa_extMissing: "إضافة رغوة للواتساب غير مثبتة في هذا المتصفح. ثبّتها ثم أعد تحميل الصفحة.",
+    wa_remindersQueued: "تم تسليم {n} تذكير للإضافة. أكمل من تبويب واتساب ويب.",
+    wa_remindersLogTitle: "آخر التذكيرات المسجّلة", wa_logSent: "أُرسل", wa_logSkipped: "متخطّى",
+    wa_extPanelTitle: "تذكيرات رغوة", wa_extCounter: "{i} من {n}", wa_extHint: "راجع الرسالة ثم اضغط Enter للإرسال.", wa_extSkip: "تخطي", wa_extStop: "إيقاف",
+    wa_extOpening: "جارٍ فتح المحادثة…", wa_extDone: "انتهت القائمة. أُرسل {n}.", wa_extFailed: "تعذّر فتح هذه المحادثة. تخطّها أو أوقف.", wa_extStopped: "تم الإيقاف.",
   },
 
   ur: {
@@ -1782,7 +1808,6 @@ const DICT = {
     print_whatsappBtn: "واٹس ایپ", print_whatsappSending: "بھیجا جا رہا ہے...", print_whatsappNoPhone: "اس کسٹمر کا کوئی فون نمبر درج نہیں ہے۔",
     print_whatsappError: "انوائس شیئر نہیں ہو سکی — دوبارہ کوشش کریں۔",
     wa_pageTitle: "واٹس ایپ", wa_pageDesc: "کسٹمرز کو بھیجے جانے والے واٹس ایپ پیغامات اور اطلاعات کا انتظام کریں۔",
-    wa_messagesSection: "پیغامات", wa_messagesSectionDesc: "واٹس ایپ کے ذریعے کسٹمرز کو بھیجے جانے والے پیغامات ترتیب دیں۔",
     wa_invoiceCardTitle: "انوائس بھیجیں", wa_invoiceCardDesc: "سیل مکمل ہونے کے بعد کسٹمر کو انوائس واٹس ایپ پر بھیجی جاتی ہے۔",
     wa_readyCardTitle: "آرڈر تیار", wa_readyCardDesc: "آرڈر کی حالت 'تیار' ہونے پر کسٹمر کو پیغام بھیجیں۔",
     wa_editMessage: "پیغام میں ترمیم کریں", wa_messageTextLabel: "پیغام کا متن", wa_availableVars: "دستیاب ویری ایبلز",
@@ -1793,6 +1818,19 @@ const DICT = {
     wa_behaviorOffTitle: "ارسال نہ کریں", wa_behaviorOffDesc: "آرڈر تیار ہونے پر کوئی واٹس ایپ پیغام نہیں بھیجا جائے گا۔",
     wa_confirmTitle: "آرڈر تیار", wa_confirmQuestion: "کیا آپ کسٹمر کو واٹس ایپ پر اطلاع بھیجنا چاہتے ہیں؟",
     wa_confirmSend: "واٹس ایپ پر بھیجیں", wa_confirmSkip: "چھوڑیں", wa_confirmHint: "بھیجنے کے لیے Enter • چھوڑنے کے لیے Esc",
+    wa_reminderCardTitle: "آرڈر لینے کی یاد دہانی", wa_reminderCardDesc: "کسٹمر کو اس آرڈر کی یاد دہانی جو تیار ہے مگر ابھی تک نہیں لیا گیا، آپ کے منتخب کردہ دنوں پر۔",
+    wa_tabMessages: "پیغامات", wa_tabReminders: "آج کی یاد دہانیاں",
+    wa_reminderDaysTitle: "یاد دہانی کے دن", wa_reminderDaysDesc: "آرڈر تیار ہونے کے کتنے دن بعد ہر یاد دہانی واجب ہوتی ہے۔",
+    wa_reminderDayChip: "دن {n}", wa_reminderAddDay: "شامل کریں", wa_reminderDayPlaceholder: "دنوں کی تعداد", wa_reminderRemoveDay: "دن {n} ہٹائیں",
+    wa_remindersTitle: "آج کی یاد دہانیاں", wa_remindersDesc: "وہ تیار آرڈر جو ابھی تک نہیں لیے گئے، یاد دہانی کے کسی دن تک پہنچ چکے ہیں اور جنہیں یاد دہانی نہیں بھیجی گئی۔",
+    wa_remindersCount: "{n} یاد دہانیاں بھیجنے کے لیے تیار", wa_remindersEmpty: "آج کوئی یاد دہانی واجب نہیں۔", wa_remindersDisabled: "آرڈر لینے کی یاد دہانی بند ہے۔ یاد دہانیاں بھیجنے کے لیے اسے پیغامات کے ٹیب سے آن کریں۔",
+    wa_remindersColCustomer: "کسٹمر", wa_remindersColMobile: "موبائل", wa_remindersColOrder: "آرڈر", wa_remindersColDays: "تیار ہوئے دن", wa_remindersColStage: "مرحلہ",
+    wa_remindersRemove: "اس فہرست سے ہٹائیں", wa_remindersRestore: "ہٹائے گئے واپس لائیں ({n})", wa_remindersSend: "واٹس ایپ پر بھیجیں ({n})",
+    wa_extDetected: "رغوہ واٹس ایپ ایکسٹینشن منسلک ہے (ورژن {v})", wa_extMissing: "رغوہ واٹس ایپ ایکسٹینشن اس براؤزر میں انسٹال نہیں۔ اسے انسٹال کریں، پھر یہ صفحہ دوبارہ لوڈ کریں۔",
+    wa_remindersQueued: "{n} یاد دہانیاں ایکسٹینشن کو دے دی گئیں۔ واٹس ایپ ویب کے ٹیب میں جاری رکھیں۔",
+    wa_remindersLogTitle: "حال ہی میں درج یاد دہانیاں", wa_logSent: "بھیجی گئی", wa_logSkipped: "چھوڑی گئی",
+    wa_extPanelTitle: "رغوہ یاد دہانیاں", wa_extCounter: "{n} میں سے {i}", wa_extHint: "پیغام دیکھیں، پھر بھیجنے کے لیے Enter دبائیں۔", wa_extSkip: "چھوڑیں", wa_extStop: "روکیں",
+    wa_extOpening: "چیٹ کھل رہی ہے…", wa_extDone: "فہرست مکمل۔ {n} بھیجی گئیں۔", wa_extFailed: "یہ چیٹ نہیں کھل سکی۔ اسے چھوڑیں یا روکیں۔", wa_extStopped: "روک دیا گیا۔",
   },
 };
 
@@ -3103,7 +3141,9 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
   const updateItemStatus = (invId, itemId, status) => {
     const inv = invoices.find((i) => i.id === invId);
     if (!inv) return;
-    const items = inv.items.map((it) => it.itemId === itemId ? { ...it, status, deliveredAt: status === "Delivered" ? nowISO() : it.deliveredAt } : it);
+    // readyAt is what the pickup reminders count their days from (see
+    // utils/pickupReminders.js), stamped each time an item turns Ready.
+    const items = inv.items.map((it) => it.itemId === itemId ? { ...it, status, deliveredAt: status === "Delivered" ? nowISO() : it.deliveredAt, ...(status === "Ready" ? { readyAt: nowISO() } : {}) } : it);
     updateInvoice(invId, { items });
     maybeNotifyReady(inv, items);
   };
@@ -5694,6 +5734,7 @@ const READY_MESSAGE_TAGS = ["customer_name", "store_name", "order_id"];
 const MESSAGE_CARD_ICON_TONES = {
   brand: "bg-brand-50 text-brand-600",
   warning: "bg-warning-50 text-warning-600",
+  info: "bg-info-50 text-info-600",
 };
 
 // Highlights every {tag} token inside a template's compact preview (same
@@ -5708,33 +5749,29 @@ function renderTemplatePreview(text) {
   );
 }
 
-// Shared compact/expand editor for every WhatsApp message template on the
-// "واتس اب" page (invoice-send, order-ready) — collapsed by default
-// (icon/title/description/Toggle + a short highlighted preview of the
-// current text) with a "تعديل الرسالة" button that expands the same
-// textarea+tag-chip editor WhatsAppSettingsPanel used to render inline and
-// always-open in Settings. Editing is local (`draft`) until "حفظ الرسالة"
-// is clicked — closing without saving (chevron or "إلغاء") discards it with
-// zero effect on the saved template.
-function MessageTemplateCard({ icon: Icon, tone, title, description, enabled, onToggleEnabled, template, defaultTemplate, tags, onSave }) {
+// One card per WhatsApp message on the "واتس اب" page (invoice, order ready,
+// pickup reminder), shown side by side at the same size. The card holds the
+// on/off toggle and a preview of the current text; everything else about that
+// message sits in folded rows at the bottom of the same card ("تعديل الرسالة",
+// plus any `sections`, e.g. the order-ready send behavior or the reminder
+// days), so each setting is visibly part of the message it affects. One row
+// is open at a time. The message editor works on a local draft that only
+// replaces the saved text on "حفظ الرسالة".
+//   sections: [{ key, label, summary, render: () => node }]
+function MessageTemplateCard({ icon: Icon, tone, title, description, enabled, onToggleEnabled, template, defaultTemplate, tags, onSave, sections = [] }) {
   const { t } = useLang();
-  const [expanded, setExpanded] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const [open, setOpen] = useState(null); // null | "message" | a section key
   const [draft, setDraft] = useState(template || "");
   const textareaRef = useRef(null);
 
-  const openEditor = () => {
-    setDraft(template || "");
-    setExpanded(true);
-    setMounted(false);
-    requestAnimationFrame(() => setMounted(true));
+  const toggleRow = (key) => {
+    if (key === "message" && open !== "message") setDraft(template || "");
+    setOpen((current) => (current === key ? null : key));
   };
-  const closeEditor = () => { setExpanded(false); setMounted(false); };
-  const save = () => { onSave(draft); closeEditor(); };
+  const save = () => { onSave(draft); setOpen(null); };
 
-  // Same cursor-aware insertion as the old always-open editor — drops the
-  // tag wherever the cursor is (or replaces the current selection) instead
-  // of always appending to the end.
+  // Drops the tag wherever the cursor is (or replaces the current selection)
+  // instead of always appending to the end.
   const insertTag = (tag) => {
     const insertion = `{${tag}}`;
     const el = textareaRef.current;
@@ -5747,58 +5784,67 @@ function MessageTemplateCard({ icon: Icon, tone, title, description, enabled, on
     requestAnimationFrame(() => { el.focus(); el.setSelectionRange(cursor, cursor); });
   };
 
-  return (
-    <div className="rounded-xl border border-app-border bg-app-surface p-5 shadow-app-xs">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${MESSAGE_CARD_ICON_TONES[tone]}`}>
-            <Icon size={16} />
-          </span>
-          <div>
-            <div className="text-sm font-semibold text-app-text">{title}</div>
-            <p className="mt-0.5 text-xs text-app-text-subtle">{description}</p>
-          </div>
-        </div>
-        <Toggle checked={enabled} onChange={onToggleEnabled} />
-      </div>
-
-      <div className="mt-3 rounded-lg bg-app-bg px-3 py-2.5 text-sm leading-relaxed text-app-text" dir="auto">
-        {renderTemplatePreview(template && template.trim() ? template : defaultTemplate)}
-      </div>
-
-      {!expanded ? (
-        <button type="button" onClick={openEditor} className="mt-2 flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-800">
-          <ChevronDown size={14} /> {t("wa_editMessage")}
-        </button>
-      ) : (
-        <div className={`mt-3 transition-all duration-200 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-1"}`}>
-          <button type="button" onClick={closeEditor} className="mb-2 flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-800">
-            <ChevronDown size={14} className="rotate-180" /> {t("wa_editMessage")}
-          </button>
-          <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t("wa_messageTextLabel")}</span>
+  const rows = [
+    {
+      key: "message", label: t("wa_editMessage"), summary: null,
+      render: () => (
+        <>
+          <span className="mb-1.5 block text-xs font-semibold text-app-text-muted">{t("wa_messageTextLabel")}</span>
           <textarea
-            ref={textareaRef}
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder={defaultTemplate}
-            rows={5}
-            dir="auto"
+            ref={textareaRef} value={draft} onChange={(e) => setDraft(e.target.value)}
+            placeholder={defaultTemplate} rows={5} dir="auto"
             className="w-full rounded-lg border border-app-border-strong bg-app-surface px-3 py-2 text-sm text-app-text outline-none focus:border-brand-500"
           />
-          <div className="mt-2">
-            <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500">{t("wa_availableVars")}</span>
-            <div className="flex flex-wrap gap-1.5">
-              {tags.map((tag) => (
-                <button key={tag} type="button" onClick={() => insertTag(tag)} className="rounded bg-app-border/60 px-1.5 py-0.5 text-[11px] font-mono text-app-text-muted transition hover:bg-brand-100 hover:text-brand-800" dir="ltr">{`{${tag}}`}</button>
-              ))}
-            </div>
+          <span className="mb-1.5 mt-2 block text-xs font-semibold text-app-text-muted">{t("wa_availableVars")}</span>
+          <div className="flex flex-wrap gap-1.5">
+            {tags.map((tag) => (
+              <button key={tag} type="button" onClick={() => insertTag(tag)} className="rounded bg-app-border/60 px-1.5 py-0.5 font-mono text-[11px] text-app-text-muted transition hover:bg-brand-100 hover:text-brand-800" dir="ltr">{`{${tag}}`}</button>
+            ))}
           </div>
           <div className="mt-3 flex gap-2">
-            <button type="button" onClick={closeEditor} className="rounded-lg border border-app-border px-4 py-2 text-sm font-semibold text-app-text-muted hover:bg-app-bg">{t("wa_cancel")}</button>
-            <button type="button" onClick={save} className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700">{t("wa_saveMessage")}</button>
+            <button type="button" onClick={() => setOpen(null)} className="flex-1 rounded-lg border border-app-border px-3 py-2 text-sm font-semibold text-app-text-muted hover:bg-app-bg">{t("wa_cancel")}</button>
+            <button type="button" onClick={save} className="flex-1 rounded-lg bg-brand-600 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-700">{t("wa_saveMessage")}</button>
           </div>
+        </>
+      ),
+    },
+    ...sections,
+  ];
+
+  return (
+    <div className="flex h-full flex-col rounded-xl border border-app-border bg-app-surface shadow-app-xs">
+      <div className="p-5 pb-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${MESSAGE_CARD_ICON_TONES[tone]}`}>
+              <Icon size={16} />
+            </span>
+            <div className="truncate text-sm font-semibold text-app-text">{title}</div>
+          </div>
+          <Toggle checked={enabled} onChange={onToggleEnabled} />
         </div>
-      )}
+        <p className="mt-2 min-h-[2.5rem] text-xs leading-5 text-app-text-subtle">{description}</p>
+        <div className="mt-3 h-32 overflow-hidden rounded-lg bg-app-bg px-3 py-2.5 text-[13px] leading-relaxed text-app-text" dir="auto">
+          <div className="line-clamp-5 whitespace-pre-line">{renderTemplatePreview(template && template.trim() ? template : defaultTemplate)}</div>
+        </div>
+      </div>
+
+      <div className="border-t border-app-border">
+        {rows.map((row) => {
+          const isOpen = open === row.key;
+          return (
+            <div key={row.key} className="border-b border-app-border last:border-b-0">
+              <button type="button" onClick={() => toggleRow(row.key)} aria-expanded={isOpen}
+                className="flex w-full items-center gap-2 px-5 py-3 text-start text-[13px] font-semibold text-app-text transition hover:bg-app-bg">
+                <span className="shrink-0">{row.label}</span>
+                {row.summary && <span className="min-w-0 flex-1 truncate text-end text-xs font-medium text-app-text-subtle">{row.summary}</span>}
+                <ChevronDown size={15} className={`shrink-0 text-app-text-subtle transition-transform ${row.summary ? "" : "ms-auto"} ${isOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isOpen && <div className="px-5 pb-4">{row.render()}</div>}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -5841,27 +5887,218 @@ const WHATSAPP_SEND_MODES = [
   { value: "off", titleKey: "wa_behaviorOffTitle", descKey: "wa_behaviorOffDesc" },
 ];
 
-// The "واتس اب" page — a standalone nav tab (see NAV/AppShell), not part of
-// Settings anymore. Card 1 reuses whatsappEnabled/whatsappTemplate exactly
-// as SettingsView's old WhatsAppSettingsPanel did (same state, same
-// callVerifyPin-free direct setters, same tenant_settings autosave in
-// LaundryOpsApp) — only the surrounding UI moved. Card 2 + the send-behavior
-// radios are the new "order ready" feature (see InvoicesView.updateItemStatus
-// for where whatsappReadySendMode actually gets read).
-function WhatsAppView({ whatsappEnabled, setWhatsappEnabled, whatsappTemplate, setWhatsappTemplate, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode }) {
-  const { t, lang } = useLang();
-  const defaults = whatsAppDefaults(lang);
+// What happens when an order turns Ready (read in InvoicesView.maybeNotifyReady).
+// Lives inside the "الطلب جاهز" card because it only affects that message.
+function SendModePicker({ value, onChange }) {
+  const { t } = useLang();
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="space-y-2">
+      <p className="text-xs text-app-text-subtle">{t("wa_behaviorSectionDesc")}</p>
+      {WHATSAPP_SEND_MODES.map((mode) => {
+        const active = value === mode.value;
+        return (
+          <button key={mode.value} type="button" onClick={() => onChange(mode.value)}
+            className={`flex w-full items-start gap-2.5 rounded-lg border px-3 py-2.5 text-start transition ${active ? "border-brand-600 bg-brand-50" : "border-app-border bg-app-surface hover:border-app-border-strong"}`}>
+            <span className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border-2 ${active ? "border-brand-600" : "border-app-border-strong"}`}>
+              {active && <span className="size-1.5 rounded-full bg-brand-600" />}
+            </span>
+            <span>
+              <span className={`block text-[13px] font-semibold ${active ? "text-brand-800" : "text-app-text"}`}>{t(mode.titleKey)}</span>
+              <span className="mt-0.5 block text-[11.5px] leading-4 text-app-text-subtle">{t(mode.descKey)}</span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// The days (after an order becomes ready) on which a pickup reminder falls
+// due — chips to remove, a number box to add. Lives inside the "تذكير باستلام
+// الطلب" card; saved with the other settings.
+function ReminderDaysEditor({ days, onChange }) {
+  const { t } = useLang();
+  const [draft, setDraft] = useState("");
+  const add = () => {
+    if (!draft.trim()) return;
+    onChange(normalizeReminderDays([...days, draft]));
+    setDraft("");
+  };
+  return (
+    <div>
+      <p className="mb-2.5 text-xs text-app-text-subtle">{t("wa_reminderDaysDesc")}</p>
+      <div className="flex flex-wrap items-center gap-2">
+        {days.map((day) => (
+          <span key={day} className="flex items-center gap-1.5 rounded-full bg-info-50 py-1 pe-1.5 ps-3 text-[12.5px] font-bold text-info-700">
+            {t("wa_reminderDayChip", { n: day })}
+            <button type="button" onClick={() => onChange(days.filter((d) => d !== day))} aria-label={t("wa_reminderRemoveDay", { n: day })} className="flex size-5 items-center justify-center rounded-full text-info-700 hover:bg-info-500 hover:text-white"><X size={12} /></button>
+          </span>
+        ))}
+        <input
+          type="number" min="1" max="365" inputMode="numeric" value={draft} onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } }}
+          placeholder={t("wa_reminderDayPlaceholder")} dir="ltr"
+          className="w-24 rounded-lg border border-app-border-strong bg-app-surface px-3 py-1.5 text-sm text-app-text outline-none focus:border-brand-500"
+        />
+        <button type="button" onClick={add} className="flex items-center gap-1 rounded-lg border border-app-border px-3 py-1.5 text-sm font-semibold text-app-text-muted hover:bg-app-bg"><Plus size={14} /> {t("wa_reminderAddDay")}</button>
+      </div>
+    </div>
+  );
+}
+
+// "تذكيرات اليوم": ready, uncollected orders that have reached a reminder day.
+// The list is handed to the Chrome extension, which opens each chat in
+// WhatsApp Web with the text as a draft; the employee sends it themselves.
+// Nothing is logged here — a reminder is logged only when the extension
+// reports it was actually sent (see LaundryOpsApp's extension listener).
+function PickupRemindersToday({ invoices, customers, merchant, pickup, tenantId }) {
+  const { t, lang } = useLang();
+  // Orders the employee took out of this run. Not saved: they are due again
+  // the next time this screen opens.
+  const [removed, setRemoved] = useState(() => new Set());
+  const [queued, setQueued] = useState(null);
+  useEffect(() => onExtensionMessage((type, data) => { if (type === "QUEUE_ACCEPTED") setQueued(data.count); }), []);
+
+  const due = useMemo(() => dueReminders({
+    invoices: invoices.filter((i) => !i.closed && !i.isDelivery && !i.isTopup && invoiceOverallStatus(i) === "Ready"),
+    customers, logs: pickup.logs, days: pickup.days,
+  }), [invoices, customers, pickup.logs, pickup.days]);
+  const list = due.filter((d) => !removed.has(d.invoice.id));
+  const recentLogs = useMemo(() => [...pickup.logs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 20), [pickup.logs]);
+  const invoiceCode = (id) => invoices.find((i) => i.id === id)?.code || "";
+
+  const send = () => {
+    const fallback = whatsAppDefaults(lang).reminder;
+    const items = list.map(({ invoice, customer, stage, skippedStages }) => {
+      const phone = cleanPhoneForWhatsApp(customer.mobile);
+      const text = fillWhatsAppTemplate(pickup.template, {
+        customer_name: customer.name || invoice.customerName || "", store_name: merchant?.storeName || merchant?.name || "", order_id: invoice.code || "",
+      }, fallback);
+      // `log` is carried through the extension untouched and comes back with
+      // the confirmation; it is exactly what gets written to pickup_reminders.
+      return { id: `${invoice.id}:${stage}`, name: customer.name || invoice.customerName || "", phone, text, log: reminderLogRows({ tenantId, invoice, customer, stage, skippedStages, phone, message: text }) };
+    });
+    setQueued(null);
+    postToExtension("SEND_QUEUE", {
+      items, dir: lang === "en" ? "ltr" : "rtl",
+      labels: { title: t("wa_extPanelTitle"), counter: t("wa_extCounter"), hint: t("wa_extHint"), skip: t("wa_extSkip"), stop: t("wa_extStop"), opening: t("wa_extOpening"), done: t("wa_extDone"), failed: t("wa_extFailed"), stopped: t("wa_extStopped") },
+    });
+  };
+
+  return (
+    <div className="space-y-4">
       <div>
-        <div className="f-display text-xl font-semibold text-app-text">{t("wa_pageTitle")}</div>
-        <div className="mt-1 text-sm text-app-text-muted">{t("wa_pageDesc")}</div>
+        <div className="text-sm font-semibold text-app-text">{t("wa_remindersTitle")}</div>
+        <p className="mt-0.5 text-xs text-app-text-subtle">{t("wa_remindersDesc")}</p>
       </div>
 
-      <div>
-        <div className="mb-1 text-sm font-semibold text-app-text">{t("wa_messagesSection")}</div>
-        <p className="mb-3 text-xs text-app-text-subtle">{t("wa_messagesSectionDesc")}</p>
-        <div className="space-y-4">
+      <div className={`rounded-lg px-3 py-2.5 text-xs font-semibold ${pickup.extension ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>
+        {pickup.extension ? t("wa_extDetected", { v: pickup.extension.version }) : t("wa_extMissing")}
+      </div>
+
+      {!pickup.enabled ? (
+        <div className="rounded-xl border border-app-border bg-app-surface p-5 text-sm text-app-text-muted">{t("wa_remindersDisabled")}</div>
+      ) : (
+        <div className="rounded-xl border border-app-border bg-app-surface shadow-app-xs">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-app-border p-4">
+            <div className="text-sm font-bold text-app-text" data-testid="reminders-count">{t("wa_remindersCount", { n: list.length })}</div>
+            <div className="flex flex-wrap items-center gap-2">
+              {removed.size > 0 && (
+                <button type="button" onClick={() => setRemoved(new Set())} className="rounded-lg border border-app-border px-3 py-2 text-xs font-semibold text-app-text-muted hover:bg-app-bg">{t("wa_remindersRestore", { n: removed.size })}</button>
+              )}
+              <button type="button" onClick={send} disabled={!pickup.extension || list.length === 0}
+                className="flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-700 disabled:cursor-not-allowed disabled:opacity-50">
+                <Send size={15} /> {t("wa_remindersSend", { n: list.length })}
+              </button>
+            </div>
+          </div>
+          {queued !== null && <div className="border-b border-app-border bg-brand-50 px-4 py-2.5 text-xs font-semibold text-brand-800">{t("wa_remindersQueued", { n: queued })}</div>}
+          {list.length === 0 ? (
+            <div className="p-6 text-center text-sm text-app-text-muted">{t("wa_remindersEmpty")}</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[560px] text-sm">
+                <thead>
+                  <tr className="border-b border-app-border text-xs font-semibold text-app-text-subtle">
+                    <th className="px-4 py-2.5">{t("wa_remindersColCustomer")}</th>
+                    <th className="px-4 py-2.5">{t("wa_remindersColMobile")}</th>
+                    <th className="px-4 py-2.5">{t("wa_remindersColOrder")}</th>
+                    <th className="px-4 py-2.5">{t("wa_remindersColDays")}</th>
+                    <th className="px-4 py-2.5">{t("wa_remindersColStage")}</th>
+                    <th className="px-4 py-2.5" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {list.map(({ invoice, customer, daysSinceReady, stage }) => (
+                    <tr key={invoice.id} className="border-b border-app-border last:border-b-0">
+                      <td className="px-4 py-2.5 font-semibold text-app-text">{customer.name || invoice.customerName}</td>
+                      <td className="px-4 py-2.5 f-mono text-xs text-app-text-muted" dir="ltr">{cleanPhoneForWhatsApp(customer.mobile)}</td>
+                      <td className="px-4 py-2.5 f-mono text-xs text-app-text-muted" dir="ltr">{invoice.code}</td>
+                      <td className="px-4 py-2.5 text-app-text">{daysSinceReady}</td>
+                      <td className="px-4 py-2.5"><span className="rounded-full bg-info-50 px-2.5 py-1 text-xs font-bold text-info-700">{t("wa_reminderDayChip", { n: stage })}</span></td>
+                      <td className="px-4 py-2.5 text-end">
+                        <button type="button" onClick={() => setRemoved((prev) => new Set(prev).add(invoice.id))} title={t("wa_remindersRemove")} aria-label={t("wa_remindersRemove")} className="rounded-lg p-1.5 text-app-text-subtle hover:bg-danger-50 hover:text-danger-600"><X size={15} /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {recentLogs.length > 0 && (
+        <div>
+          <div className="mb-2 text-sm font-semibold text-app-text">{t("wa_remindersLogTitle")}</div>
+          <div className="overflow-x-auto rounded-xl border border-app-border bg-app-surface">
+            <table className="w-full min-w-[480px] text-sm">
+              <tbody>
+                {recentLogs.map((log) => (
+                  <tr key={`${log.invoiceId}:${log.reminderDay}`} className="border-b border-app-border last:border-b-0">
+                    <td className="px-4 py-2 text-app-text">{log.customerName}</td>
+                    <td className="px-4 py-2 f-mono text-xs text-app-text-muted" dir="ltr">{invoiceCode(log.invoiceId)}</td>
+                    <td className="px-4 py-2 text-xs text-app-text-muted">{t("wa_reminderDayChip", { n: log.reminderDay })}</td>
+                    <td className="px-4 py-2"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${log.status === "sent" ? "bg-success-50 text-success-700" : "bg-app-bg text-app-text-muted"}`}>{log.status === "sent" ? t("wa_logSent") : t("wa_logSkipped")}</span></td>
+                    <td className="px-4 py-2 f-mono text-xs text-app-text-subtle" dir="ltr">{fmtDate(log.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// The "واتس اب" page — a standalone nav tab (see NAV/AppShell). Two views:
+// the three message cards side by side, and "تذكيرات اليوم" (the pickup
+// reminders due today). Every setter here autosaves through LaundryOpsApp's
+// tenant_settings save.
+function WhatsAppView({ whatsappEnabled, setWhatsappEnabled, whatsappTemplate, setWhatsappTemplate, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode, pickup, invoices, customers, merchant, tenantId }) {
+  const { t, lang } = useLang();
+  const defaults = whatsAppDefaults(lang);
+  const [view, setView] = useState("messages");
+  const sendMode = WHATSAPP_SEND_MODES.find((m) => m.value === whatsappReadySendMode);
+  return (
+    <div className="max-w-6xl space-y-5">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <div className="f-display text-xl font-semibold text-app-text">{t("wa_pageTitle")}</div>
+          <div className="mt-1 text-sm text-app-text-muted">{t("wa_pageDesc")}</div>
+        </div>
+        <div className="flex gap-1 rounded-full bg-app-bg p-1">
+          {[["messages", "wa_tabMessages"], ["reminders", "wa_tabReminders"]].map(([key, labelKey]) => (
+            <button key={key} type="button" onClick={() => setView(key)} className={`rounded-full px-4 py-1.5 text-[12.5px] font-bold transition-colors ${view === key ? "bg-navy-900 text-white" : "text-app-text-muted hover:text-app-text"}`}>{t(labelKey)}</button>
+          ))}
+        </div>
+      </div>
+
+      {view === "reminders" && <div className="max-w-4xl"><PickupRemindersToday invoices={invoices} customers={customers} merchant={merchant} pickup={pickup} tenantId={tenantId} /></div>}
+
+      {view === "messages" && (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <MessageTemplateCard
             icon={ReceiptText} tone="brand"
             title={t("wa_invoiceCardTitle")} description={t("wa_invoiceCardDesc")}
@@ -5875,31 +6112,18 @@ function WhatsAppView({ whatsappEnabled, setWhatsappEnabled, whatsappTemplate, s
             enabled={readyMessageEnabled} onToggleEnabled={setReadyMessageEnabled}
             template={readyMessageTemplate} defaultTemplate={defaults.ready}
             tags={READY_MESSAGE_TAGS} onSave={setReadyMessageTemplate}
+            sections={[{ key: "behavior", label: t("wa_behaviorSection"), summary: sendMode ? t(sendMode.titleKey) : null, render: () => <SendModePicker value={whatsappReadySendMode} onChange={setWhatsappReadySendMode} /> }]}
+          />
+          <MessageTemplateCard
+            icon={AlarmClock} tone="info"
+            title={t("wa_reminderCardTitle")} description={t("wa_reminderCardDesc")}
+            enabled={pickup.enabled} onToggleEnabled={pickup.setEnabled}
+            template={pickup.template} defaultTemplate={defaults.reminder}
+            tags={READY_MESSAGE_TAGS} onSave={pickup.setTemplate}
+            sections={[{ key: "days", label: t("wa_reminderDaysTitle"), summary: pickup.days.length ? pickup.days.join(lang === "en" ? ", " : "، ") : "—", render: () => <ReminderDaysEditor days={pickup.days} onChange={pickup.setDays} /> }]}
           />
         </div>
-      </div>
-
-      <div>
-        <div className="mb-1 text-sm font-semibold text-app-text">{t("wa_behaviorSection")}</div>
-        <p className="mb-3 text-xs text-app-text-subtle">{t("wa_behaviorSectionDesc")}</p>
-        <div className="space-y-2">
-          {WHATSAPP_SEND_MODES.map((mode) => {
-            const active = whatsappReadySendMode === mode.value;
-            return (
-              <button key={mode.value} type="button" onClick={() => setWhatsappReadySendMode(mode.value)}
-                className={`flex w-full items-start gap-3 rounded-xl border p-4 text-start transition ${active ? "border-brand-600 bg-brand-50" : "border-app-border bg-app-surface hover:border-app-border-strong"}`}>
-                <span className={`mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border-2 ${active ? "border-brand-600" : "border-app-border-strong"}`}>
-                  {active && <span className="size-1.5 rounded-full bg-brand-600" />}
-                </span>
-                <span>
-                  <span className={`block text-sm font-semibold ${active ? "text-brand-800" : "text-app-text"}`}>{t(mode.titleKey)}</span>
-                  <span className="mt-0.5 block text-xs text-app-text-subtle">{t(mode.descKey)}</span>
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -6603,7 +6827,7 @@ function HomeDashboardView({ invoices, merchant, setTab }) {
 /* =========================================================================
    ROOT APP
    ========================================================================= */
-function AppShell({ tab, tabReady, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+function AppShell({ tab, tabReady, pickup, tenantId, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { dir, t } = useLang();
   // Branch scope for the owner's "view all / one branch" picker: sales, purchases
   // and expenses follow it; customers, wallets and products are shared and never filtered.
@@ -6653,7 +6877,7 @@ function AppShell({ tab, tabReady, setTab, navigateTab, reportsSubTab, purchases
         {tab === "purchases" && <PurchasesExpensesView tab={purchasesSubTab} setTab={(s) => navigateTab("purchases", s)} suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={scopedPurchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={scopedExpenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
         {tab === "promotions" && <PromotionsView promotions={scopedPromotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
         {tab === "reports" && <ReportsView tab={reportsSubTab} setTab={(s) => navigateTab("reports", s)} invoices={scopedInvoices} transactions={customerTransactions} purchases={scopedPurchases} suppliers={suppliers} categories={categories} customers={customers} expenses={scopedExpenses} expenseCategories={expenseCategories} />}
-        {tab === "whatsapp" && <WhatsAppView whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} readyMessageEnabled={readyMessageEnabled} setReadyMessageEnabled={setReadyMessageEnabled} readyMessageTemplate={readyMessageTemplate} setReadyMessageTemplate={setReadyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} setWhatsappReadySendMode={setWhatsappReadySendMode} />}
+        {tab === "whatsapp" && <WhatsAppView whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} readyMessageEnabled={readyMessageEnabled} setReadyMessageEnabled={setReadyMessageEnabled} readyMessageTemplate={readyMessageTemplate} setReadyMessageTemplate={setReadyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} setWhatsappReadySendMode={setWhatsappReadySendMode} pickup={pickup} invoices={scopedInvoices} customers={customers} merchant={merchant} tenantId={tenantId} />}
         {tab === "branches" && <BranchesView />}
         {tab === "settings" && isBranchAccount && <BranchSettingsView ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} onLogout={onLogout} />}
         {tab === "settings" && !isBranchAccount && <SettingsView merchant={merchant} setMerchant={setMerchant} ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} enabledPayMethods={enabledPayMethods} setEnabledPayMethods={setEnabledPayMethods} onLogout={onLogout} zatcaConfig={zatcaConfig} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig} />}
@@ -6682,8 +6906,9 @@ function AppShell({ tab, tabReady, setTab, navigateTab, reportsSubTab, purchases
 }
 
 const POS_TABLES = ["categories", "products", "addons", "customers", "promotions", "branches"];
-const ALL_TABLES = [...POS_TABLES, "invoices", "customer_transactions", "service_types", "suppliers", "purchases", "expense_categories", "expenses"];
-const TABS_WITHOUT_TABLE_DATA = new Set(["settings", "whatsapp", "branches"]);
+const ALL_TABLES = [...POS_TABLES, "invoices", "customer_transactions", "service_types", "suppliers", "purchases", "expense_categories", "expenses", "pickup_reminders"];
+const TABS_WITHOUT_TABLE_DATA = new Set(["settings", "branches"]);
+const SETTINGS_ECHO_QUIET_MS = 3000;
 
 function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   // Always starts at "home", even for a deep link like /reports -- NOT a
@@ -6809,6 +7034,9 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   // invoice history is still on its way; the other data tabs wait for all of
   // them, and the tabs in TABS_WITHOUT_TABLE_DATA wait for none.
   const [loadedTables, setLoadedTables] = useState(() => new Set());
+  // The pickup-reminder send log (pickup_reminders): one row per reminder stage
+  // of an order, written only by the extension listener further down.
+  const [pickupReminderLogs, setPickupReminderLogs] = useState([]);
   const tabReady = TABS_WITHOUT_TABLE_DATA.has(tab) || (tab === "pos" ? POS_TABLES : ALL_TABLES).every((name) => loadedTables.has(name));
 
   useEffect(() => {
@@ -6834,9 +7062,10 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     const unsubExp = sub("expenses", setExpensesState);
     const unsubPromo = sub("promotions", setPromotionsState);
     const unsubBranches = sub("branches", setBranchesState);
+    const unsubReminders = sub("pickup_reminders", setPickupReminderLogs);
     return () => {
       unsubCats(); unsubProds(); unsubInv(); unsubCust(); unsubTxn(); unsubAddons();
-      unsubSvc(); unsubSup(); unsubPur(); unsubExpCat(); unsubExp(); unsubPromo(); unsubBranches();
+      unsubSvc(); unsubSup(); unsubPur(); unsubExpCat(); unsubExp(); unsubPromo(); unsubBranches(); unsubReminders();
     };
   }, [tenantId]);
 
@@ -7103,7 +7332,14 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
   // for a tenant -- a feature that silently starts messaging customers the
   // moment it's turned on would be a surprising jump straight to "auto".
   const [whatsappReadySendMode, setWhatsappReadySendMode] = useState("ask");
+  // "تذكير باستلام الطلب": same off-by-default / empty-means-default conventions,
+  // plus the days after "ready" on which a reminder falls due.
+  const [pickupReminderEnabled, setPickupReminderEnabled] = useState(false);
+  const [pickupReminderTemplate, setPickupReminderTemplate] = useState("");
+  const [pickupReminderDays, setPickupReminderDays] = useState(DEFAULT_REMINDER_DAYS);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
+  // When this tab last scheduled or finished a settings save (see applyRow).
+  const lastSettingsSaveAt = useRef(0);
 
   // tenant_settings has its own `id` primary key, separate from `tenant_id`
   // (which is just the filter/uniqueness column) — this holds it once known,
@@ -7118,21 +7354,35 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     if (!tenantId) return;
     setSettingsLoaded(false);
     setSettingsRowId(null);
+    let initialLoad = true;
     const applyRow = (d) => {
+      // A realtime echo of this tab's own save carries the values from the
+      // moment that save was sent. If the owner has changed something since
+      // (say a toggle clicked within a second of the page opening, whose first
+      // save is still echoing back), applying it would silently undo their
+      // change. So while this tab has saved in the last few seconds, an echo
+      // only updates the fields the server owns; the fields edited here keep
+      // their local values, which are the newer ones.
+      const localIsNewer = !initialLoad && Date.now() - lastSettingsSaveAt.current < SETTINGS_ECHO_QUIET_MS;
+      initialLoad = false;
       if (d) {
         setSettingsRowId(d.id);
-        if (d.merchant) setMerchant(d.merchant);
         if (!branchId && d.ownerPinSet !== undefined) setOwnerPinSet(Boolean(d.ownerPinSet));
         if (!branchId && d.lockedSections) {
           const locked = new Set(d.lockedSections);
           setSectionLocks(Object.fromEntries(OWNER_SECTIONS.map((s) => [s.key, locked.has(s.key)])));
         }
+        if (localIsNewer) return;
+        if (d.merchant) setMerchant(d.merchant);
         if (d.enabledPayMethods) setEnabledPayMethods(d.enabledPayMethods);
         if (d.whatsappTemplate !== undefined && d.whatsappTemplate !== null) setWhatsappTemplate(d.whatsappTemplate);
         if (d.whatsappEnabled !== undefined && d.whatsappEnabled !== null) setWhatsappEnabled(Boolean(d.whatsappEnabled));
         if (d.readyMessageEnabled !== undefined && d.readyMessageEnabled !== null) setReadyMessageEnabled(Boolean(d.readyMessageEnabled));
         if (d.readyMessageTemplate !== undefined && d.readyMessageTemplate !== null) setReadyMessageTemplate(d.readyMessageTemplate);
         if (d.whatsappReadySendMode) setWhatsappReadySendMode(d.whatsappReadySendMode);
+        if (d.pickupReminderEnabled !== undefined && d.pickupReminderEnabled !== null) setPickupReminderEnabled(Boolean(d.pickupReminderEnabled));
+        if (d.pickupReminderTemplate !== undefined && d.pickupReminderTemplate !== null) setPickupReminderTemplate(d.pickupReminderTemplate);
+        if (d.pickupReminderDays !== undefined && d.pickupReminderDays !== null) setPickupReminderDays(normalizeReminderDays(d.pickupReminderDays));
         if (d.lang) setLang(d.lang);
       }
       setSettingsLoaded(true);
@@ -7216,14 +7466,15 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     // Debounced -- a burst of rapid changes to this same row (e.g. clicking
     // through the three "سلوك الإرسال" options back-to-back to compare them)
     // used to fire one upsert PER click.
+    lastSettingsSaveAt.current = Date.now();
     const timer = setTimeout(() => {
       // Always writing all tracked fields together (never a partial subset)
       // is the equivalent of Firestore's { merge: true } here. ownerPinSet/
       // lockedSections are deliberately NOT written from here -- they're
       // server-managed (api/verify-pin.js, via the service-role key) so this
       // client-side save can never clobber them with stale local state.
-      db.from("tenant_settings").upsert(toSnakeCase({ id: rowId, tenantId, merchant, enabledPayMethods, whatsappTemplate, whatsappEnabled, readyMessageEnabled, readyMessageTemplate, whatsappReadySendMode, lang }))
-        .then(({ error }) => { if (error) console.error("settings save failed", error); });
+      db.from("tenant_settings").upsert(toSnakeCase({ id: rowId, tenantId, merchant, enabledPayMethods, whatsappTemplate, whatsappEnabled, readyMessageEnabled, readyMessageTemplate, whatsappReadySendMode, pickupReminderEnabled, pickupReminderTemplate, pickupReminderDays, lang }))
+        .then(({ error }) => { lastSettingsSaveAt.current = Date.now(); if (error) console.error("settings save failed", error); });
     }, 500);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -7241,7 +7492,42 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     // while a loop-driven request was already in flight, and that stale
     // echo would overwrite the click a moment later. Stringifying makes this
     // effect re-run only when the actual content changes.
-  }, [tenantId, settingsLoaded, JSON.stringify(merchant), JSON.stringify(enabledPayMethods), whatsappTemplate, whatsappEnabled, readyMessageEnabled, readyMessageTemplate, whatsappReadySendMode, lang]);
+  }, [tenantId, settingsLoaded, JSON.stringify(merchant), JSON.stringify(enabledPayMethods), whatsappTemplate, whatsappEnabled, readyMessageEnabled, readyMessageTemplate, whatsappReadySendMode, pickupReminderEnabled, pickupReminderTemplate, JSON.stringify(pickupReminderDays), lang]);
+
+  // ===== Ragwa WhatsApp extension (ragwa-whatsapp-extension/) =====
+  // The extension reports each reminder the employee actually sent in WhatsApp
+  // Web, and keeps reporting it until it is acknowledged here. This listener
+  // lives at this level (not in the WhatsApp tab) so a send is logged whichever
+  // tab is open, including ones made while the dashboard was closed. Only this
+  // shop's confirmations are written and acknowledged; another shop's stay in
+  // the extension until that shop signs in.
+  const [waExtension, setWaExtension] = useState(null);
+  useEffect(() => {
+    if (!tenantId) return;
+    const unsub = onExtensionMessage((type, data) => {
+      if (type === "PONG") { setWaExtension({ version: data.version }); return; }
+      if (type !== "CONFIRMATIONS" || !Array.isArray(data.items)) return;
+      data.items.forEach(async (item) => {
+        const rows = Array.isArray(item.log) ? item.log.filter((r) => r && r.tenantId === tenantId) : [];
+        if (!rows.length) return;
+        // A stage that is already logged is left as it is (the unique
+        // constraint on invoice + day), so a repeated confirmation is harmless.
+        const stamped = rows.map((r) => ({ ...r, createdAt: item.sentAt || nowISO() }));
+        const { error } = await db.from("pickup_reminders").upsert(toSnakeCase(stamped), { onConflict: "invoice_id,reminder_day", ignoreDuplicates: true });
+        if (error) { console.error("pickup reminder log failed", error); return; }
+        setPickupReminderLogs((prev) => [...prev, ...stamped.filter((r) => !prev.some((p) => p.invoiceId === r.invoiceId && p.reminderDay === r.reminderDay))]);
+        postToExtension("ACK", { ids: [item.id] });
+      });
+    });
+    postToExtension("PING");
+    return unsub;
+  }, [tenantId]);
+  const pickup = {
+    enabled: pickupReminderEnabled, setEnabled: setPickupReminderEnabled,
+    template: pickupReminderTemplate, setTemplate: setPickupReminderTemplate,
+    days: pickupReminderDays, setDays: setPickupReminderDays,
+    logs: pickupReminderLogs, extension: waExtension,
+  };
 
   const walkInLabel = lang === "ar" ? "عميل مباشر" : lang === "ur" ? "براہ راست گاہک" : "Walk-in";
 
@@ -7488,7 +7774,7 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     <LangContext.Provider value={{ lang, setLang, dir }}>
       <BranchCtx.Provider value={branchCtx}>
       <AppShell
-        tab={tab} tabReady={tabReady} setTab={requestTab} navigateTab={navigateTab}
+        tab={tab} tabReady={tabReady} pickup={pickup} tenantId={tenantId} setTab={requestTab} navigateTab={navigateTab}
         reportsSubTab={reportsSubTab} purchasesSubTab={purchasesSubTab}
         categories={categories} addCategory={addCategory}
         products={products} addProduct={addProduct} updateProduct={updateProduct}

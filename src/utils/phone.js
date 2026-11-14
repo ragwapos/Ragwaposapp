@@ -33,18 +33,24 @@ const DEFAULT_WHATSAPP_TEMPLATE =
 const DEFAULT_READY_MESSAGE_TEMPLATE =
   "مرحبًا {customer_name} 👋\nطلبك رقم {order_id} من {store_name} أصبح جاهزًا للاستلام.\nنسعد بخدمتك 🤍";
 
+const DEFAULT_PICKUP_REMINDER_TEMPLATE =
+  "مرحبًا {customer_name} 👋\nنذكّرك بأن طلبك رقم {order_id} جاهز للاستلام من {store_name}.\nبانتظارك 🤍";
+
 const DEFAULT_WHATSAPP_TEMPLATE_EN =
   "Hello {customer_name} 👋\nHere's your invoice from {store_name}: invoice {invoice_id}, total {total_amount} SAR.\nYou can download a copy here:\n{invoice_url}\n\nThank you for choosing us!";
 
 const DEFAULT_READY_MESSAGE_TEMPLATE_EN =
   "Hello {customer_name} 👋\nYour order {order_id} from {store_name} is ready for pickup.\nWe're happy to serve you 🤍";
 
+const DEFAULT_PICKUP_REMINDER_TEMPLATE_EN =
+  "Hello {customer_name} 👋\nA reminder that your order {order_id} is ready for pickup at {store_name}.\nWe look forward to seeing you 🤍";
+
 // Built-in message text for a shop that never customized it: English for an
 // English UI, Arabic otherwise (Urdu-speaking staff still message Arabic customers).
 export function whatsAppDefaults(lang) {
   return lang === "en"
-    ? { invoice: DEFAULT_WHATSAPP_TEMPLATE_EN, ready: DEFAULT_READY_MESSAGE_TEMPLATE_EN }
-    : { invoice: DEFAULT_WHATSAPP_TEMPLATE, ready: DEFAULT_READY_MESSAGE_TEMPLATE };
+    ? { invoice: DEFAULT_WHATSAPP_TEMPLATE_EN, ready: DEFAULT_READY_MESSAGE_TEMPLATE_EN, reminder: DEFAULT_PICKUP_REMINDER_TEMPLATE_EN }
+    : { invoice: DEFAULT_WHATSAPP_TEMPLATE, ready: DEFAULT_READY_MESSAGE_TEMPLATE, reminder: DEFAULT_PICKUP_REMINDER_TEMPLATE };
 }
 
 // Replaces every {tag} in the template with its value from `vars`; any tag

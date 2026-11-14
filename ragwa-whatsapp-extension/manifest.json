@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "Ragwa WhatsApp Reminders",
+  "short_name": "Ragwa WhatsApp",
+  "version": "1.0.0",
+  "description": "Opens each Ragwa pickup reminder as a draft in WhatsApp Web. The employee reviews it and presses Enter; the extension never sends a message itself.",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://web.whatsapp.com/*",
+    "http://localhost/*",
+    "https://ragwapos.com/*",
+    "https://www.ragwapos.com/*",
+    "https://staging.ragwapos.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://localhost/*",
+        "https://ragwapos.com/*",
+        "https://www.ragwapos.com/*",
+        "https://staging.ragwapos.com/*"
+      ],
+      "js": ["bridge.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://web.whatsapp.com/*"],
+      "js": ["whatsapp.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
