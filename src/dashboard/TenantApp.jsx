@@ -1229,7 +1229,7 @@ const DICT = {
     wa_reminderDaysTitle: "Reminder Days", wa_reminderDaysDesc: "How many days after an order becomes ready each reminder falls due.",
     wa_reminderDayChip: "Day {n}", wa_reminderAddDay: "Add", wa_reminderDayPlaceholder: "Days", wa_reminderRemoveDay: "Remove day {n}",
     wa_remindersTitle: "Today's Reminders", wa_remindersDesc: "Ready orders that haven't been picked up and have reached a reminder day with no reminder sent yet.",
-    wa_remindersCount: "{n} messages ready ({m} orders)", wa_remindersEmpty: "No reminders are due today.", wa_remindersDisabled: "Pickup Reminder is turned off. Turn it on from the Messages tab to send reminders.",
+    wa_remindersCount: "{n} messages ready ({m} orders)", wa_remindersEmpty: "No reminders are due today.", wa_remindersDisabled: "Pickup Reminder is turned off. Turn it on from the Messages tab to send reminders.", wa_remindersDisabledBranch: "Pickup Reminder isn't turned on. If you need it, ask the shop owner.",
     wa_remindersColCustomer: "Customer", wa_remindersColMobile: "Mobile", wa_remindersColOrders: "Orders", wa_remindersColDays: "Days since ready",
     wa_remindersRemove: "Remove from this list", wa_remindersRestore: "Restore removed ({n})", wa_remindersSend: "Send via WhatsApp ({n})",
     wa_extDetected: "Ragwa WhatsApp extension connected (v{v})", wa_extMissing: "The Ragwa WhatsApp extension isn't installed in this browser. After installing it, reload this page.", wa_extInstall: "Install from the Chrome Web Store",
@@ -1526,7 +1526,7 @@ const DICT = {
     wa_reminderDaysTitle: "أيام التذكير", wa_reminderDaysDesc: "بعد كم يوم من جاهزية الطلب يستحق كل تذكير.",
     wa_reminderDayChip: "اليوم {n}", wa_reminderAddDay: "إضافة", wa_reminderDayPlaceholder: "عدد الأيام", wa_reminderRemoveDay: "حذف اليوم {n}",
     wa_remindersTitle: "تذكيرات اليوم", wa_remindersDesc: "الطلبات الجاهزة غير المستلمة التي وصلت أحد أيام التذكير ولم يُرسل لها تذكير.",
-    wa_remindersCount: "{n} رسالة جاهزة ({m} طلب)", wa_remindersEmpty: "لا توجد تذكيرات مستحقة اليوم.", wa_remindersDisabled: "تذكير استلام الطلب غير مفعّل. فعّله من تبويب الرسائل لإرسال التذكيرات.",
+    wa_remindersCount: "{n} رسالة جاهزة ({m} طلب)", wa_remindersEmpty: "لا توجد تذكيرات مستحقة اليوم.", wa_remindersDisabled: "تذكير استلام الطلب غير مفعّل. فعّله من تبويب الرسائل لإرسال التذكيرات.", wa_remindersDisabledBranch: "ميزة تذكير الاستلام غير مفعّلة. إذا كنت تحتاجها، كلّم المالك.",
     wa_remindersColCustomer: "العميل", wa_remindersColMobile: "الجوال", wa_remindersColOrders: "الطلبات", wa_remindersColDays: "أيام منذ الجاهزية",
     wa_remindersRemove: "إزالة من هذه القائمة", wa_remindersRestore: "إرجاع المُزالين ({n})", wa_remindersSend: "إرسال عبر واتساب ({n})",
     wa_extDetected: "إضافة رغوة للواتساب متصلة (إصدار {v})", wa_extMissing: "إضافة رغوة للواتساب غير مثبتة في هذا المتصفح. بعد التثبيت أعد تحميل هذه الصفحة.", wa_extInstall: "ثبّت الإضافة من متجر كروم",
@@ -1823,7 +1823,7 @@ const DICT = {
     wa_reminderDaysTitle: "یاد دہانی کے دن", wa_reminderDaysDesc: "آرڈر تیار ہونے کے کتنے دن بعد ہر یاد دہانی واجب ہوتی ہے۔",
     wa_reminderDayChip: "دن {n}", wa_reminderAddDay: "شامل کریں", wa_reminderDayPlaceholder: "دنوں کی تعداد", wa_reminderRemoveDay: "دن {n} ہٹائیں",
     wa_remindersTitle: "آج کی یاد دہانیاں", wa_remindersDesc: "وہ تیار آرڈر جو ابھی تک نہیں لیے گئے، یاد دہانی کے کسی دن تک پہنچ چکے ہیں اور جنہیں یاد دہانی نہیں بھیجی گئی۔",
-    wa_remindersCount: "{n} پیغامات تیار ({m} آرڈرز)", wa_remindersEmpty: "آج کوئی یاد دہانی واجب نہیں۔", wa_remindersDisabled: "آرڈر لینے کی یاد دہانی بند ہے۔ یاد دہانیاں بھیجنے کے لیے اسے پیغامات کے ٹیب سے آن کریں۔",
+    wa_remindersCount: "{n} پیغامات تیار ({m} آرڈرز)", wa_remindersEmpty: "آج کوئی یاد دہانی واجب نہیں۔", wa_remindersDisabled: "آرڈر لینے کی یاد دہانی بند ہے۔ یاد دہانیاں بھیجنے کے لیے اسے پیغامات کے ٹیب سے آن کریں۔", wa_remindersDisabledBranch: "پک اپ ریمائنڈر فعال نہیں ہے۔ اگر آپ کو اس کی ضرورت ہے تو مالک سے بات کریں۔",
     wa_remindersColCustomer: "کسٹمر", wa_remindersColMobile: "موبائل", wa_remindersColOrders: "آرڈرز", wa_remindersColDays: "تیار ہوئے دن",
     wa_remindersRemove: "اس فہرست سے ہٹائیں", wa_remindersRestore: "ہٹائے گئے واپس لائیں ({n})", wa_remindersSend: "واٹس ایپ پر بھیجیں ({n})",
     wa_extDetected: "رغوہ واٹس ایپ ایکسٹینشن منسلک ہے (ورژن {v})", wa_extMissing: "رغوہ واٹس ایپ ایکسٹینشن اس براؤزر میں انسٹال نہیں۔ انسٹال کرنے کے بعد یہ صفحہ دوبارہ لوڈ کریں۔", wa_extInstall: "کروم ویب اسٹور سے انسٹال کریں",
@@ -1860,7 +1860,7 @@ const BranchCtx = createContext({
 // the sections a cashier needs; the database enforces the same split, so these
 // are hidden rather than left to fail silently on write. "home" is the owner's
 // overview, so a branch login lands on the register instead.
-const BRANCH_ACCOUNT_HIDDEN = new Set(["home", "branches", "inventory", "whatsapp"]);
+const BRANCH_ACCOUNT_HIDDEN = new Set(["home", "branches", "inventory"]);
 function useBranches() { return useContext(BranchCtx); }
 // Main branch keeps its original numbering (INV-1001); branch N>1 gets B<N>-.
 // Name the database gives every main branch (see supabase-branches-schema.sql).
@@ -5961,6 +5961,10 @@ function ReminderDaysEditor({ days, onChange }) {
 const WA_EXTENSION_STORE_URL = "https://chromewebstore.google.com/detail/ragwa-whatsapp-reminders/pciknpcmfocphlbggagbedidclmhbokd";
 function PickupRemindersToday({ invoices, customers, merchant, pickup, tenantId }) {
   const { t, lang } = useLang();
+  // A branch login only sees its own branch's orders and log (RLS), and can't
+  // turn the feature on: that is the owner's Messages tab.
+  const { isBranchAccount } = useBranches();
+  const branchOff = isBranchAccount && !pickup.enabled;
   // Customers the employee took out of this run. Not saved: they are due again
   // the next time this screen opens.
   const [removed, setRemoved] = useState(() => new Set());
@@ -6008,7 +6012,7 @@ function PickupRemindersToday({ invoices, customers, merchant, pickup, tenantId 
         <p className="mt-0.5 text-xs text-app-text-subtle">{t("wa_remindersDesc")}</p>
       </div>
 
-      {pickup.extension ? (
+      {branchOff ? null : pickup.extension ? (
         <div className="rounded-lg bg-success-50 px-3 py-2.5 text-xs font-semibold text-success-700">{t("wa_extDetected", { v: pickup.extension.version })}</div>
       ) : (
         <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-warning-50 px-3 py-2.5 text-xs font-semibold text-warning-700">
@@ -6023,7 +6027,7 @@ function PickupRemindersToday({ invoices, customers, merchant, pickup, tenantId 
       {!pickup.ready ? (
         <div className="h-48 animate-pulse rounded-xl border border-app-border bg-app-surface" aria-hidden="true" />
       ) : !pickup.enabled ? (
-        <div className="rounded-xl border border-app-border bg-app-surface p-5 text-sm text-app-text-muted">{t("wa_remindersDisabled")}</div>
+        <div className="rounded-xl border border-app-border bg-app-surface p-5 text-sm text-app-text-muted" data-testid="reminders-disabled">{t(isBranchAccount ? "wa_remindersDisabledBranch" : "wa_remindersDisabled")}</div>
       ) : (
         <div className="rounded-xl border border-app-border bg-app-surface shadow-app-xs">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-app-border p-4">
@@ -6114,6 +6118,9 @@ function WhatsAppView({ whatsappEnabled, setWhatsappEnabled, whatsappTemplate, s
   const defaults = whatsAppDefaults(lang);
   const [view, setView] = useState("messages");
   const sendMode = WHATSAPP_SEND_MODES.find((m) => m.value === whatsappReadySendMode);
+  // Branch logins get Today's Reminders only; the message cards stay the owner's.
+  const { isBranchAccount } = useBranches();
+  if (isBranchAccount) return <div className="max-w-4xl"><PickupRemindersToday invoices={invoices} customers={customers} merchant={merchant} pickup={pickup} tenantId={tenantId} /></div>;
   return (
     <div className="max-w-6xl space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -7569,6 +7576,9 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
       data.items.forEach(async (item) => {
         const rows = Array.isArray(item.log) ? item.log.filter((r) => r && r.tenantId === tenantId) : [];
         if (!rows.length) return;
+        // A branch login can only log its own branch (RLS). Anything else is
+        // left in the extension for the owner or the right branch to log.
+        if (branchId && rows.some((r) => r.branchId !== branchId)) return;
         // A stage that is already logged is left as it is (the unique
         // constraint on invoice + day), so a repeated confirmation is harmless.
         const stamped = rows.map((r) => ({ ...r, createdAt: item.sentAt || nowISO() }));
@@ -7580,7 +7590,7 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     });
     postToExtension("PING");
     return unsub;
-  }, [tenantId]);
+  }, [tenantId, branchId]);
   const pickup = {
     enabled: pickupReminderEnabled, setEnabled: setPickupReminderEnabled,
     template: pickupReminderTemplate, setTemplate: setPickupReminderTemplate,
