@@ -432,6 +432,26 @@ export default function LandingPage(props) {
         </div>
       </div>
 
+      {/* Guides: plain full-page links (the guides are static HTML outside the
+          React app) so crawlers reach every guide from the homepage. Arabic
+          only -- the guides have no English version, so `en` has no guidesLinks. */}
+      {t.guidesLinks && (
+        <div className="py-20 px-6 bg-landing-bg">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-8">{t.guidesTitle}</h2>
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {t.guidesLinks.map((g) => (
+                <li key={g.href}>
+                  <a href={g.href} className="block bg-white border border-slate-100 rounded-2xl p-4 shadow-soft font-semibold text-landing-ink hover:text-brand-600 transition">
+                    {g.label} <span className="text-brand-500">{dir === 'rtl' ? '←' : '→'}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
       {/* Final CTA */}
       <div className="py-24 px-6">
         <div className="max-w-3xl mx-auto relative overflow-hidden rounded-3xl bg-gradient-to-br from-brand-700 via-brand-600 to-brand-500 p-10 md:p-14 text-center text-white shadow-soft">

@@ -121,6 +121,18 @@ export const LANDING_TEXT = {
     walletDebtTitle: 'وش نقصد بـ"الاشتراكات" و"الدفع الآجل"؟',
     walletDebtDesc: 'هذي المصطلحات توصف ميزتين حقيقيتين داخل رغوة نفسه، يستخدمهم أصحاب المغاسل مع عملائهم — مو رسوم اشتراك رغوة على صاحب المحل. رصيد المحفظة يخلي عميلك يشحن مبلغ مقدمًا ويصرفه على دفعات، والدفع الآجل يخلي عميلك ياخذ الخدمة اليوم ويسدد لاحقًا — والنظام يتابع الرصيدين بدقة ويمنع أي خطأ بالحسبة.',
     walletDebtLinkText: 'اقرأ الدليل الكامل: إدارة رصيد العملاء والدفع الآجل',
+    // أدلة /guides عربية فقط، فالقسم في هذا البلوك فقط (لا يوجد ما يقابله في en).
+    guidesTitle: 'أدلة ومقالات تهمّ صاحب المغسلة',
+    guidesLinks: [
+      { href: '/guides/best-cashier-system-laundry-saudi', label: 'أفضل نظام كاشير لمغاسل الملابس' },
+      { href: '/guides/order-customer-tracking-system-laundry', label: 'نظام تتبع الطلبات والعملاء' },
+      { href: '/guides/ragwa-vs-traditional-notebook-excel', label: 'رغوة مقابل الدفاتر والإكسل' },
+      { href: '/guides/zatca-e-invoicing-laundry-shops', label: 'الفوترة الإلكترونية للمغاسل' },
+      { href: '/guides/wallet-debt-management-laundry-customers', label: 'إدارة رصيد العملاء والدفع الآجل' },
+      { href: '/guides/delivery-driver-management-laundry-saudi', label: 'إدارة سائقي التوصيل' },
+      { href: '/guides/open-laundry-shop-saudi-guide', label: 'كيف تفتح مغسلة ملابس في السعودية' },
+      { href: '/guides', label: 'كل الأدلة والمقالات' },
+    ],
 
     featureMock: {
       invoiceLine1: 'فاتورة إلكترونية', invoiceLine2: 'تم الإرسال للعميل عبر واتساب',
