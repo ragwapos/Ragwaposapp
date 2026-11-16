@@ -15,7 +15,7 @@ import {
   ReceiptText, Receipt, Building2, FileText, Settings, Globe, Lock, Unlock, Pencil, Paperclip,
   MessageCircle, Bell, Loader2, Home, SplitSquareHorizontal, Printer, StickyNote,
   Phone, User, Link2, FlaskConical, KeyRound, LogOut, XCircle, Download,
-  SlidersHorizontal, ChevronDown, Menu, Store, AlarmClock, Send
+  SlidersHorizontal, ChevronDown, Menu, Store, AlarmClock, Send, ExternalLink
 } from "lucide-react";
 import QRCode from "qrcode";
 import { auth, db } from "../supabase";
@@ -1232,7 +1232,7 @@ const DICT = {
     wa_remindersCount: "{n} messages ready ({m} orders)", wa_remindersEmpty: "No reminders are due today.", wa_remindersDisabled: "Pickup Reminder is turned off. Turn it on from the Messages tab to send reminders.",
     wa_remindersColCustomer: "Customer", wa_remindersColMobile: "Mobile", wa_remindersColOrders: "Orders", wa_remindersColDays: "Days since ready",
     wa_remindersRemove: "Remove from this list", wa_remindersRestore: "Restore removed ({n})", wa_remindersSend: "Send via WhatsApp ({n})",
-    wa_extDetected: "Ragwa WhatsApp extension connected (v{v})", wa_extMissing: "The Ragwa WhatsApp extension isn't installed in this browser. Install it, then reload this page.",
+    wa_extDetected: "Ragwa WhatsApp extension connected (v{v})", wa_extMissing: "The Ragwa WhatsApp extension isn't installed in this browser. After installing it, reload this page.", wa_extInstall: "Install from the Chrome Web Store",
     wa_remindersQueued: "{n} reminders were handed to the extension. Continue in the WhatsApp Web tab.",
     wa_remindersLogTitle: "Recently logged reminders", wa_logSent: "Sent", wa_logSkipped: "Skipped",
     wa_extPanelTitle: "Ragwa reminders", wa_extCounter: "{i} of {n}", wa_extHint: "Review the message, then press Enter to send.", wa_extSkip: "Skip", wa_extStop: "Stop",
@@ -1529,7 +1529,7 @@ const DICT = {
     wa_remindersCount: "{n} رسالة جاهزة ({m} طلب)", wa_remindersEmpty: "لا توجد تذكيرات مستحقة اليوم.", wa_remindersDisabled: "تذكير استلام الطلب غير مفعّل. فعّله من تبويب الرسائل لإرسال التذكيرات.",
     wa_remindersColCustomer: "العميل", wa_remindersColMobile: "الجوال", wa_remindersColOrders: "الطلبات", wa_remindersColDays: "أيام منذ الجاهزية",
     wa_remindersRemove: "إزالة من هذه القائمة", wa_remindersRestore: "إرجاع المُزالين ({n})", wa_remindersSend: "إرسال عبر واتساب ({n})",
-    wa_extDetected: "إضافة رغوة للواتساب متصلة (إصدار {v})", wa_extMissing: "إضافة رغوة للواتساب غير مثبتة في هذا المتصفح. ثبّتها ثم أعد تحميل الصفحة.",
+    wa_extDetected: "إضافة رغوة للواتساب متصلة (إصدار {v})", wa_extMissing: "إضافة رغوة للواتساب غير مثبتة في هذا المتصفح. بعد التثبيت أعد تحميل هذه الصفحة.", wa_extInstall: "ثبّت الإضافة من متجر كروم",
     wa_remindersQueued: "تم تسليم {n} تذكير للإضافة. أكمل من تبويب واتساب ويب.",
     wa_remindersLogTitle: "آخر التذكيرات المسجّلة", wa_logSent: "أُرسل", wa_logSkipped: "متخطّى",
     wa_extPanelTitle: "تذكيرات رغوة", wa_extCounter: "{i} من {n}", wa_extHint: "راجع الرسالة ثم اضغط Enter للإرسال.", wa_extSkip: "تخطي", wa_extStop: "إيقاف",
@@ -1826,7 +1826,7 @@ const DICT = {
     wa_remindersCount: "{n} پیغامات تیار ({m} آرڈرز)", wa_remindersEmpty: "آج کوئی یاد دہانی واجب نہیں۔", wa_remindersDisabled: "آرڈر لینے کی یاد دہانی بند ہے۔ یاد دہانیاں بھیجنے کے لیے اسے پیغامات کے ٹیب سے آن کریں۔",
     wa_remindersColCustomer: "کسٹمر", wa_remindersColMobile: "موبائل", wa_remindersColOrders: "آرڈرز", wa_remindersColDays: "تیار ہوئے دن",
     wa_remindersRemove: "اس فہرست سے ہٹائیں", wa_remindersRestore: "ہٹائے گئے واپس لائیں ({n})", wa_remindersSend: "واٹس ایپ پر بھیجیں ({n})",
-    wa_extDetected: "رغوہ واٹس ایپ ایکسٹینشن منسلک ہے (ورژن {v})", wa_extMissing: "رغوہ واٹس ایپ ایکسٹینشن اس براؤزر میں انسٹال نہیں۔ اسے انسٹال کریں، پھر یہ صفحہ دوبارہ لوڈ کریں۔",
+    wa_extDetected: "رغوہ واٹس ایپ ایکسٹینشن منسلک ہے (ورژن {v})", wa_extMissing: "رغوہ واٹس ایپ ایکسٹینشن اس براؤزر میں انسٹال نہیں۔ انسٹال کرنے کے بعد یہ صفحہ دوبارہ لوڈ کریں۔", wa_extInstall: "کروم ویب اسٹور سے انسٹال کریں",
     wa_remindersQueued: "{n} یاد دہانیاں ایکسٹینشن کو دے دی گئیں۔ واٹس ایپ ویب کے ٹیب میں جاری رکھیں۔",
     wa_remindersLogTitle: "حال ہی میں درج یاد دہانیاں", wa_logSent: "بھیجی گئی", wa_logSkipped: "چھوڑی گئی",
     wa_extPanelTitle: "رغوہ یاد دہانیاں", wa_extCounter: "{n} میں سے {i}", wa_extHint: "پیغام دیکھیں، پھر بھیجنے کے لیے Enter دبائیں۔", wa_extSkip: "چھوڑیں", wa_extStop: "روکیں",
@@ -5958,6 +5958,7 @@ function ReminderDaysEditor({ days, onChange }) {
 // WhatsApp Web with the text as a draft; the employee sends it themselves.
 // Nothing is logged here — a reminder is logged only when the extension
 // reports it was actually sent (see LaundryOpsApp's extension listener).
+const WA_EXTENSION_STORE_URL = "https://chromewebstore.google.com/detail/ragwa-whatsapp-reminders/pciknpcmfocphlbggagbedidclmhbokd";
 function PickupRemindersToday({ invoices, customers, merchant, pickup, tenantId }) {
   const { t, lang } = useLang();
   // Customers the employee took out of this run. Not saved: they are due again
@@ -6007,9 +6008,17 @@ function PickupRemindersToday({ invoices, customers, merchant, pickup, tenantId 
         <p className="mt-0.5 text-xs text-app-text-subtle">{t("wa_remindersDesc")}</p>
       </div>
 
-      <div className={`rounded-lg px-3 py-2.5 text-xs font-semibold ${pickup.extension ? "bg-success-50 text-success-700" : "bg-warning-50 text-warning-700"}`}>
-        {pickup.extension ? t("wa_extDetected", { v: pickup.extension.version }) : t("wa_extMissing")}
-      </div>
+      {pickup.extension ? (
+        <div className="rounded-lg bg-success-50 px-3 py-2.5 text-xs font-semibold text-success-700">{t("wa_extDetected", { v: pickup.extension.version })}</div>
+      ) : (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-warning-50 px-3 py-2.5 text-xs font-semibold text-warning-700">
+          <span>{t("wa_extMissing")}</span>
+          <a href={WA_EXTENSION_STORE_URL} target="_blank" rel="noopener noreferrer" data-testid="wa-ext-install"
+            className="flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700">
+            <ExternalLink size={13} /> {t("wa_extInstall")}
+          </a>
+        </div>
+      )}
 
       {!pickup.ready ? (
         <div className="h-48 animate-pulse rounded-xl border border-app-border bg-app-surface" aria-hidden="true" />

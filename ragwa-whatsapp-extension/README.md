@@ -13,6 +13,7 @@
 | `STORE_LISTING.md` و`store/` | — | نصوص وصور Chrome Web Store (ما تدخل بالحزمة) |
 
 ## نسخة المتجر
+- منشورة على المتجر: https://chromewebstore.google.com/detail/ragwa-whatsapp-reminders/pciknpcmfocphlbggagbedidclmhbokd (شاشة «تذكيرات اليوم» برغوة تعرض زر التثبيت لما الإضافة مو موجودة).
 - `manifest.json` هنا نسخة التطوير: تشتغل كمان على `localhost` و`staging.ragwapos.com` للتجربة.
 - `npm run build:extension` يبني `dist-extension/ragwa-whatsapp-extension-<version>.zip` للمتجر بصلاحيات الإنتاج بس (`web.whatsapp.com` و`ragwapos.com` و`www.ragwapos.com`)، ويرفض البناء لو صارت الصلاحيات أوسع من كذا.
 - خطوات النشر ونصوص كل خانة بلوحة المطوّر: `STORE_LISTING.md`.
