@@ -224,25 +224,35 @@ const Fonts = () => (
 // DocumentViewerModal); without this, one Escape press would close both.
 let modalStack = [];
 
-function Modal({ title, onClose, onSubmit, children, width = "max-w-lg" }) {
+// Joins modalStack while active, and runs onEscape/onEnter only while this
+// overlay is the topmost one. Every overlay drawn over another must use it
+// (not a bare useKeydown), or the window underneath also takes the key.
+// Same convention as ProductModal's own shortcut handler: a note/message
+// textarea needs Enter for its own newlines, so shortcuts sit out entirely
+// while one is focused.
+function useModalLayer({ onEscape, onEnter, active = true }) {
   const idRef = useRef(null);
   if (idRef.current === null) idRef.current = {};
-
   useEffect(() => {
+    if (!active) return;
     const id = idRef.current;
     modalStack.push(id);
     return () => { modalStack = modalStack.filter((x) => x !== id); };
-  }, []);
-
-  // Same convention as ProductModal's own shortcut handler: a note/message
-  // textarea needs Enter for its own newlines, so shortcuts sit out entirely
-  // while one is focused.
+  }, [active]);
   useKeydown((e) => {
+    // A trusted key press runs React's update between listeners, so the layer
+    // that handled it may already be gone from modalStack when the next
+    // window's listener checks; the mark keeps that window from acting too.
+    if (e.ragwaLayerHandled) return;
     if (modalStack[modalStack.length - 1] !== idRef.current) return;
     if (document.activeElement?.tagName === "TEXTAREA") return;
-    if (e.key === "Escape") { e.preventDefault(); onClose(); }
-    else if (e.key === "Enter" && onSubmit) { e.preventDefault(); onSubmit(); }
-  });
+    if (e.key === "Escape" && onEscape) { e.preventDefault(); e.ragwaLayerHandled = true; onEscape(); }
+    else if (e.key === "Enter" && onEnter) { e.preventDefault(); e.ragwaLayerHandled = true; onEnter(); }
+  }, active);
+}
+
+function Modal({ title, onClose, onSubmit, children, width = "max-w-lg" }) {
+  useModalLayer({ onEscape: onClose, onEnter: onSubmit });
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/60 p-4 f-body" onClick={onClose}>
@@ -710,6 +720,8 @@ function PrintDocumentModal({ doc, onClose }) {
   // already moved on to the next sale.
   const cancelledRef = useRef(false);
   const cancelBackgroundPrep = () => { cancelledRef.current = true; };
+  // Esc closes only this preview, never the invoice window it was opened from.
+  useModalLayer({ onEscape: () => { cancelBackgroundPrep(); onClose(); }, active: !silent });
 
   // Bucket is still named "invoice-pdfs" (created back when this uploaded
   // PDFs) — kept as-is rather than provisioning a second bucket + RLS
@@ -1054,6 +1066,11 @@ const DICT = {
     products_operationalCost: "Operational Cost (SAR)", products_noCost: "No Cost",
     products_liveOnPos: "Live on POS", products_draft: "Saved as Draft", products_save: "Save Product",
     products_editTitle: "Edit Product", products_saveChanges: "Save Changes",
+    products_delete: "Delete product", products_deleteYes: "Yes, delete",
+    products_deleteConfirm: "Delete \"{name}\" for good? It disappears from the Point of Sale and the products list. Past invoices are not affected.",
+    products_serviceDelete: "Delete this service from the shop",
+    products_serviceDeleteConfirm: "Delete the \"{name}\" service from the shop? It is removed from every product that has it ({n}) and from the Point of Sale. Past invoices are not affected.",
+    products_serviceDeleteBlocked: "\"{name}\" is the only service of: {list}. Give them another service, or delete them, first.",
     products_errName: "Enter a product name.", products_errCategory: "Choose or add a category.",
     upload_tooLarge: "File is too large.", upload_badType: "Unsupported file type.",
     upload_failed: "Upload failed — check your connection and try again.", upload_uploading: "Uploading...",
@@ -1351,6 +1368,11 @@ const DICT = {
     products_operationalCost: "التكلفة التشغيلية (ريال)", products_noCost: "بدون تكلفة",
     products_liveOnPos: "مفعّل في نقطة البيع", products_draft: "محفوظ كمسودة", products_save: "حفظ المنتج",
     products_editTitle: "تعديل المنتج", products_saveChanges: "حفظ التعديلات",
+    products_delete: "حذف المنتج", products_deleteYes: "نعم، احذف",
+    products_deleteConfirm: "حذف «{name}» نهائياً؟ سيختفي من نقطة البيع ومن قائمة المنتجات. الفواتير السابقة لا تتأثر.",
+    products_serviceDelete: "حذف هذه الخدمة من المحل",
+    products_serviceDeleteConfirm: "حذف خدمة «{name}» من المحل؟ ستُزال من كل المنتجات التي فيها ({n}) ومن نقطة البيع. الفواتير السابقة لا تتأثر.",
+    products_serviceDeleteBlocked: "«{name}» هي الخدمة الوحيدة في: {list}. أضف لها خدمة ثانية أو احذفها أولاً.",
     products_errName: "حط اسم المنتج.", products_errCategory: "اختر أو أضف فئة.",
     upload_tooLarge: "حجم الملف كبير جداً.", upload_badType: "نوع الملف غير مدعوم.",
     upload_failed: "فشل رفع الملف — تحقق من الاتصال وحاول مرة ثانية.", upload_uploading: "جارٍ الرفع...",
@@ -1648,6 +1670,11 @@ const DICT = {
     products_operationalCost: "آپریشنل لاگت (ریال)", products_noCost: "کوئی لاگت نہیں",
     products_liveOnPos: "پوائنٹ آف سیل پر فعال", products_draft: "ڈرافٹ کے طور پر محفوظ", products_save: "پروڈکٹ محفوظ کریں",
     products_editTitle: "پروڈکٹ میں ترمیم کریں", products_saveChanges: "تبدیلیاں محفوظ کریں",
+    products_delete: "پروڈکٹ حذف کریں", products_deleteYes: "جی ہاں، حذف کریں",
+    products_deleteConfirm: "«{name}» کو مستقل طور پر حذف کریں؟ یہ پوائنٹ آف سیل اور پروڈکٹس کی فہرست سے ہٹ جائے گا۔ پچھلی انوائسز متاثر نہیں ہوں گی۔",
+    products_serviceDelete: "یہ سروس دکان سے حذف کریں",
+    products_serviceDeleteConfirm: "«{name}» سروس دکان سے حذف کریں؟ یہ ان تمام پروڈکٹس ({n}) سے اور پوائنٹ آف سیل سے ہٹ جائے گی جن میں یہ ہے۔ پچھلی انوائسز متاثر نہیں ہوں گی۔",
+    products_serviceDeleteBlocked: "«{name}» ان پروڈکٹس کی واحد سروس ہے: {list}۔ پہلے انہیں کوئی دوسری سروس دیں یا انہیں حذف کریں۔",
     products_errName: "پروڈکٹ کا نام درج کریں۔", products_errCategory: "کیٹگری منتخب کریں یا شامل کریں۔",
     upload_tooLarge: "فائل بہت بڑی ہے۔", upload_badType: "فائل کی قسم معاون نہیں ہے۔",
     upload_failed: "اپ لوڈ ناکام — کنکشن چیک کریں اور دوبارہ کوشش کریں۔", upload_uploading: "اپ لوڈ ہو رہا ہے...",
@@ -3709,8 +3736,12 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
 /* =========================================================================
    MODULE 4 — INVENTORY
    ========================================================================= */
-function ProductFormModal({ editing, categories, addCategory, serviceTypes, addServiceType, addProduct, updateProduct, products, onClose }) {
+function ProductFormModal({ editing, categories, addCategory, serviceTypes, addServiceType, deleteServiceType, addProduct, updateProduct, deleteProduct, products, onClose }) {
   const { t } = useLang();
+  // Inline confirmations (the app's convention, like the ZATCA reset): the
+  // whole product, or one service type for the whole shop.
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmServiceId, setConfirmServiceId] = useState(null);
   const [name, setName] = useState(editing?.name || "");
   const [categoryId, setCategoryId] = useState(editing?.categoryId || categories[0]?.id || "");
   const [published, setPublished] = useState(editing ? editing.published : true);
@@ -3818,12 +3849,35 @@ function ProductFormModal({ editing, categories, addCategory, serviceTypes, addS
       <div className="mb-4">
         <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("products_servicePrices")} <span className="normal-case text-app-text-subtle">{t("products_servicePricesHint")}</span></span>
         <div className="space-y-2">
-          {serviceTypes.map((st) => (
-            <div key={st.id} className="flex items-center gap-2">
-              <span className="w-32 shrink-0 text-sm text-app-text-muted">{st.name}</span>
-              <input type="number" min="0" placeholder="—" value={servicePrices[st.id] ?? ""} onChange={(e) => setServicePrices((p) => ({ ...p, [st.id]: e.target.value }))} className={inputCls} />
-            </div>
-          ))}
+          {serviceTypes.map((st) => {
+            const using = products.filter((p) => p.services && p.services[st.name] !== undefined);
+            // The database requires every product to keep at least one service,
+            // so a service that is some product's only one can't go yet.
+            const onlyThis = using.filter((p) => Object.keys(p.services).length === 1);
+            return (
+              <div key={st.id}>
+                <div className="flex items-center gap-2">
+                  <span className="w-32 shrink-0 text-sm text-app-text-muted">{st.name}</span>
+                  <input type="number" min="0" placeholder="—" value={servicePrices[st.id] ?? ""} onChange={(e) => setServicePrices((p) => ({ ...p, [st.id]: e.target.value }))} className={inputCls} />
+                  <button type="button" onClick={() => setConfirmServiceId(confirmServiceId === st.id ? null : st.id)} title={t("products_serviceDelete")} aria-label={t("products_serviceDelete")} data-testid="service-delete"
+                    className="shrink-0 rounded-lg p-2 text-app-text-subtle hover:bg-danger-50 hover:text-danger-600"><Trash2 size={15} /></button>
+                </div>
+                {confirmServiceId === st.id && (
+                  <div className="mt-2 rounded-lg border border-warning-200 bg-warning-50 p-3" data-testid="service-delete-confirm">
+                    <div className="mb-2 text-xs font-medium text-warning-700">
+                      {onlyThis.length > 0
+                        ? t("products_serviceDeleteBlocked", { name: st.name, list: onlyThis.map((p) => p.name).join("، ") })
+                        : t("products_serviceDeleteConfirm", { name: st.name, n: using.length })}
+                    </div>
+                    <div className="flex gap-2">
+                      {onlyThis.length === 0 && <button type="button" onClick={() => { deleteServiceType(st); setConfirmServiceId(null); }} className="flex-1 rounded-lg bg-danger-600 py-2 text-xs font-semibold text-white hover:bg-danger-700">{t("products_deleteYes")}</button>}
+                      <button type="button" onClick={() => setConfirmServiceId(null)} className="rounded-lg border border-app-border-strong px-3 py-2 text-xs font-medium text-app-text-muted hover:bg-app-bg">{t("common_cancel")}</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
           {serviceTypes.length === 0 && <div className="text-sm text-app-text-subtle">{t("products_noServiceTypes")}</div>}
           {showAddService ? (
             <div className="flex gap-2">
@@ -3869,6 +3923,18 @@ function ProductFormModal({ editing, categories, addCategory, serviceTypes, addS
       </div>
       {formError && <div className="mb-3 rounded-lg bg-danger-50 border border-danger-200 px-3 py-2 text-xs font-medium text-danger-700">{formError}</div>}
       <button disabled={imgUploading} onClick={save} className="w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600 disabled:opacity-60">{editing ? t("products_saveChanges") : t("products_save")}</button>
+      {editing && (confirmDelete ? (
+        <div className="mt-3 rounded-lg border border-warning-200 bg-warning-50 p-3" data-testid="product-delete-confirm">
+          <div className="mb-2 text-xs font-medium text-warning-700">{t("products_deleteConfirm", { name: editing.name })}</div>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => { deleteProduct(editing); onClose(); }} className="flex-1 rounded-lg bg-danger-600 py-2 text-xs font-semibold text-white hover:bg-danger-700">{t("products_deleteYes")}</button>
+            <button type="button" onClick={() => setConfirmDelete(false)} className="rounded-lg border border-app-border-strong px-3 py-2 text-xs font-medium text-app-text-muted hover:bg-app-bg">{t("common_cancel")}</button>
+          </div>
+        </div>
+      ) : (
+        <button type="button" onClick={() => setConfirmDelete(true)} data-testid="product-delete"
+          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-danger-300 py-2 text-xs font-medium text-danger-600 hover:bg-danger-50"><Trash2 size={14} /> {t("products_delete")}</button>
+      ))}
     </Modal>
   );
 }
@@ -4056,7 +4122,7 @@ function ProductLibraryModal({ categories, addCategory, products, addProduct, se
   );
 }
 
-function InventoryView({ categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType }) {
+function InventoryView({ categories, addCategory, products, addProduct, updateProduct, deleteProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, deleteServiceType }) {
   const { t } = useLang();
   const [showLibrary, setShowLibrary] = useState(false);
   // First visit with an empty catalogue: offer the ready-made library once per session.
@@ -4217,8 +4283,8 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
       {showAddModal && (
         <ProductFormModal
           categories={categories} addCategory={addCategory}
-          serviceTypes={serviceTypes} addServiceType={addServiceType}
-          addProduct={addProduct} updateProduct={updateProduct}
+          serviceTypes={serviceTypes} addServiceType={addServiceType} deleteServiceType={deleteServiceType}
+          addProduct={addProduct} updateProduct={updateProduct} deleteProduct={deleteProduct}
           products={products}
           onClose={() => setShowAddModal(false)}
         />
@@ -4227,8 +4293,8 @@ function InventoryView({ categories, addCategory, products, addProduct, updatePr
         <ProductFormModal
           editing={editingProduct}
           categories={categories} addCategory={addCategory}
-          serviceTypes={serviceTypes} addServiceType={addServiceType}
-          addProduct={addProduct} updateProduct={updateProduct}
+          serviceTypes={serviceTypes} addServiceType={addServiceType} deleteServiceType={deleteServiceType}
+          addProduct={addProduct} updateProduct={updateProduct} deleteProduct={deleteProduct}
           products={products}
           onClose={() => setEditingProduct(null)}
         />
@@ -5861,10 +5927,8 @@ function MessageTemplateCard({ icon: Icon, tone, title, description, enabled, on
 // skips the WhatsApp side-effect and never touches the order's status.
 function WhatsAppReadyConfirmModal({ message, onSend, onSkip }) {
   const { t } = useLang();
-  useKeydown((e) => {
-    if (e.key === "Enter") { e.preventDefault(); onSend(); }
-    else if (e.key === "Escape") { e.preventDefault(); onSkip(); }
-  });
+  // Drawn over the invoice window: Esc/Enter belong to this popup only.
+  useModalLayer({ onEscape: onSkip, onEnter: onSend });
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/60 p-4 f-body" onClick={onSkip}>
       <div className="w-full max-w-sm rounded-2xl bg-app-surface p-6 text-center shadow-app-lg" onClick={(e) => e.stopPropagation()}>
@@ -6867,7 +6931,7 @@ function HomeDashboardView({ invoices, merchant, setTab }) {
 /* =========================================================================
    ROOT APP
    ========================================================================= */
-function AppShell({ tab, tabReady, skeletonTab, pickup, tenantId, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, addProduct, updateProduct, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+function AppShell({ tab, tabReady, skeletonTab, pickup, tenantId, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, addProduct, updateProduct, deleteProduct, deleteServiceType, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { dir, t } = useLang();
   // Branch scope for the owner's "view all / one branch" picker: sales, purchases
   // and expenses follow it; customers, wallets and products are shared and never filtered.
@@ -6913,7 +6977,7 @@ function AppShell({ tab, tabReady, skeletonTab, pickup, tenantId, setTab, naviga
         {tab === "invoices" && <InvoicesView invoices={scopedInvoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} readyMessageEnabled={readyMessageEnabled} readyMessageTemplate={readyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} />}
         {tab === "delivery_invoices" && <InvoicesView invoices={scopedInvoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} readyMessageEnabled={readyMessageEnabled} readyMessageTemplate={readyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} isDelivery />}
         {tab === "customers" && <CustomersView customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} invoices={invoices} addInvoice={addInvoice} transactions={customerTransactions} addTransaction={addTransaction} merchant={merchant} applyCustomerPayment={applyCustomerPayment} nextDocNumber={nextDocNumber} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} />}
-        {tab === "inventory" && <InventoryView categories={categories} addCategory={addCategory} products={products} addProduct={addProduct} updateProduct={updateProduct} addons={addons} addAddon={addAddon} removeAddon={removeAddon} serviceTypes={serviceTypes} addServiceType={addServiceType} />}
+        {tab === "inventory" && <InventoryView categories={categories} addCategory={addCategory} products={products} addProduct={addProduct} updateProduct={updateProduct} deleteProduct={deleteProduct} addons={addons} addAddon={addAddon} removeAddon={removeAddon} serviceTypes={serviceTypes} addServiceType={addServiceType} deleteServiceType={deleteServiceType} />}
         {tab === "purchases" && <PurchasesExpensesView tab={purchasesSubTab} setTab={(s) => navigateTab("purchases", s)} suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={scopedPurchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={scopedExpenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
         {tab === "promotions" && <PromotionsView promotions={scopedPromotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
         {tab === "reports" && <ReportsView tab={reportsSubTab} setTab={(s) => navigateTab("reports", s)} invoices={scopedInvoices} transactions={customerTransactions} purchases={scopedPurchases} suppliers={suppliers} categories={categories} customers={customers} expenses={scopedExpenses} expenseCategories={expenseCategories} />}
@@ -7178,6 +7242,36 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     return db.from("products").update(toSnakeCase(patch)).eq("id", productId).then(({ error }) => {
       if (error) { console.error("updateProduct failed", error); if (previous) setProductsState((prev) => prev.map((p) => (p.id === productId ? previous : p))); }
       return { error };
+    });
+  };
+  // Past invoices keep their own copy of each item (name, service, price), so
+  // deleting a product never changes them. Its uploaded image is dropped only
+  // once the row is confirmed gone, and only if no other product shows it
+  // (deleteTenantFile ignores library images and anything outside the shop's folder).
+  const deleteProduct = (product) => {
+    setProductsState((prev) => prev.filter((p) => p.id !== product.id));
+    db.from("products").delete().eq("id", product.id).then(({ error }) => {
+      if (error) { console.error("deleteProduct failed", error); setProductsState((prev) => [...prev, product]); return; }
+      if (product.image && !products.some((p) => p.id !== product.id && p.image === product.image)) deleteTenantFile(product.image);
+    });
+  };
+  // A service type is a shop-wide list; each product keeps its own prices
+  // keyed by the service NAME (the register reads those, not this list). So
+  // once the type is gone it is also taken out of every product and the price
+  // recomputed. The database requires every product to keep at least one
+  // service (services_not_empty), so the form only offers this when no
+  // product would be left without one; checked again here.
+  const deleteServiceType = (st) => {
+    const affected = products.filter((p) => p.services && p.services[st.name] !== undefined);
+    if (affected.some((p) => Object.keys(p.services).length === 1)) return;
+    setServiceTypesState((prev) => prev.filter((x) => x.id !== st.id));
+    db.from("service_types").delete().eq("id", st.id).then(({ error }) => {
+      if (error) { console.error("deleteServiceType failed", error); setServiceTypesState((prev) => [...prev, st]); return; }
+      if (serviceTypes.some((x) => x.id !== st.id && x.name === st.name)) return; // another type still uses this name
+      affected.forEach((p) => {
+        const services = { ...p.services }; delete services[st.name];
+        updateProduct(p.id, { services, price: Math.min(...Object.values(services)) });
+      });
     });
   };
   const addInvoice = (invoiceData) => {
@@ -7857,7 +7951,7 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
         tab={tab} tabReady={tabReady} skeletonTab={skeletonTab} pickup={pickup} tenantId={tenantId} setTab={requestTab} navigateTab={navigateTab}
         reportsSubTab={reportsSubTab} purchasesSubTab={purchasesSubTab}
         categories={categories} addCategory={addCategory}
-        products={products} addProduct={addProduct} updateProduct={updateProduct}
+        products={products} addProduct={addProduct} updateProduct={updateProduct} deleteProduct={deleteProduct} deleteServiceType={deleteServiceType}
         addons={addons} addAddon={addAddon} removeAddon={removeAddon}
         serviceTypes={serviceTypes} addServiceType={addServiceType}
         customers={customers} addCustomer={addCustomer} updateCustomer={updateCustomer}
