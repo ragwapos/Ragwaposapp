@@ -1110,6 +1110,10 @@ const DICT = {
     expenses_noExpenses: "No expenses recorded yet.",
     addSupplier_title: "Add New Supplier", addSupplier_editTitle: "Edit Supplier", addSupplier_company: "Company Name", addSupplier_agent: "Agent Name",
     addSupplier_contact: "Contact Number", addSupplier_taxNumber: "Tax Number (optional)", addSupplier_save: "Save Supplier",
+    addSupplier_taxChangeNote: "Changes to the tax number or exemption apply to new purchases only.",
+    supplier_edit: "Edit", supplier_delete: "Delete supplier",
+    supplier_deleteConfirm: "Delete \"{name}\"? It disappears from the suppliers list and the purchase form. Its past purchases stay in reports and the tax return as they are.",
+    supplier_deleteBlockedBalance: "This supplier still has a balance due. Pay it first, then delete.",
     addSupplier_taxExempt: "Supplier is Tax Exempt", addSupplier_exemptionNumber: "Tax Exemption Number",
     supplierDetail_agent: "Agent", supplierDetail_contact: "Contact", supplierDetail_liability: "Outstanding Liability",
     supplierDetail_totalPurchased: "Total Purchased", supplierDetail_payBalance: "Pay Balance",
@@ -1412,6 +1416,10 @@ const DICT = {
     expenses_noExpenses: "لا توجد مصروفات مسجلة بعد.",
     addSupplier_title: "إضافة مورد جديد", addSupplier_editTitle: "تعديل المورد", addSupplier_company: "اسم الشركة", addSupplier_agent: "اسم الوكيل",
     addSupplier_contact: "رقم التواصل", addSupplier_taxNumber: "الرقم الضريبي (اختياري)", addSupplier_save: "حفظ المورد",
+    addSupplier_taxChangeNote: "أي تغيير على الرقم الضريبي أو الإعفاء ينطبق على المشتريات الجديدة فقط.",
+    supplier_edit: "تعديل", supplier_delete: "حذف المورد",
+    supplier_deleteConfirm: "حذف «{name}»؟ سيختفي من قائمة الموردين ومن فاتورة الشراء. مشترياته السابقة تبقى في التقارير والإقرار الضريبي كما هي.",
+    supplier_deleteBlockedBalance: "على هذا المورد رصيد مستحق. سدّده أولاً ثم احذفه.",
     addSupplier_taxExempt: "المورد معفى من الضريبة", addSupplier_exemptionNumber: "رقم الإعفاء الضريبي",
     supplierDetail_agent: "الوكيل", supplierDetail_contact: "التواصل", supplierDetail_liability: "المستحق عليه",
     supplierDetail_totalPurchased: "إجمالي المشتريات", supplierDetail_payBalance: "سداد الرصيد",
@@ -1714,6 +1722,10 @@ const DICT = {
     expenses_noExpenses: "ابھی کوئی خرچہ درج نہیں ہوا۔",
     addSupplier_title: "نیا سپلائر شامل کریں", addSupplier_editTitle: "سپلائر میں ترمیم کریں", addSupplier_company: "کمپنی کا نام", addSupplier_agent: "ایجنٹ کا نام",
     addSupplier_contact: "رابطہ نمبر", addSupplier_taxNumber: "ٹیکس نمبر (اختیاری)", addSupplier_save: "سپلائر محفوظ کریں",
+    addSupplier_taxChangeNote: "ٹیکس نمبر یا چھوٹ میں تبدیلی صرف نئی خریداریوں پر لاگو ہوگی۔",
+    supplier_edit: "ترمیم", supplier_delete: "سپلائر حذف کریں",
+    supplier_deleteConfirm: "«{name}» حذف کریں؟ یہ سپلائرز کی فہرست اور خریداری فارم سے ہٹ جائے گا۔ اس کی پچھلی خریداریاں رپورٹس اور ٹیکس ریٹرن میں ویسی ہی رہیں گی۔",
+    supplier_deleteBlockedBalance: "اس سپلائر کا بیلنس ابھی واجب الادا ہے۔ پہلے اسے ادا کریں، پھر حذف کریں۔",
     addSupplier_taxExempt: "سپلائر ٹیکس سے مستثنیٰ ہے", addSupplier_exemptionNumber: "ٹیکس چھوٹ نمبر",
     supplierDetail_agent: "ایجنٹ", supplierDetail_contact: "رابطہ", supplierDetail_liability: "واجب الادا رقم",
     supplierDetail_totalPurchased: "کل خریداری", supplierDetail_payBalance: "بیلنس ادا کریں",
@@ -2210,6 +2222,15 @@ function AddCustomerModal({ customers, onClose, onSave }) {
   );
 }
 
+// Same rule as the database's supplier_vat_class() (supabase-supplier-edit-delete.sql):
+// a tax number = standard-rated; else flagged exempt with a number = exempt.
+function supplierVatClass(s) {
+  if (!s) return "none";
+  if ((s.taxNumber || "").trim()) return "standard";
+  if (s.taxExempt && (s.exemptionNumber || "").trim()) return "exempt";
+  return "none";
+}
+
 function AddSupplierModal({ onClose, onSave, editing }) {
   const { t } = useLang();
   const [company, setCompany] = useState(editing?.company || "");
@@ -2235,6 +2256,10 @@ function AddSupplierModal({ onClose, onSave, editing }) {
       <div className="mb-4">
         <Toggle checked={taxExempt} onChange={setTaxExempt} label={t("addSupplier_taxExempt")} />
       </div>
+      {/* Each purchase keeps the supplier's tax details from when it was
+          recorded (purchases_supplier_snapshot trigger), so this edit never
+          changes past purchases or past tax returns. */}
+      {editing && <div className="-mt-2 mb-4 text-xs text-app-text-muted">{t("addSupplier_taxChangeNote")}</div>}
       {/* Distinct from the regular tax number above: this is what makes a
           purchase count toward the Tax Return's exempt-purchases box (#5)
           instead of the standard-rated box. Without it, purchases from this
@@ -2256,11 +2281,15 @@ function AddSupplierModal({ onClose, onSave, editing }) {
 // distinct from AddSupplierModal above (a full modal, used only for editing
 // an existing supplier from SupplierDetailModal). Same fields/validation as
 // AddSupplierModal, just laid out inline instead of stacking a modal-on-modal.
+// The tax number has to be here too: the purchase recorded right after keeps
+// the supplier's tax details from that moment, so a number added later
+// wouldn't reach it.
 function SupplierQuickAddFields({ onSave, onCancel }) {
   const { t } = useLang();
   const [company, setCompany] = useState("");
   const [agent, setAgent] = useState("");
   const [contact, setContact] = useState("");
+  const [taxNumber, setTaxNumber] = useState("");
   const [taxExempt, setTaxExempt] = useState(false);
   const [exemptionNumber, setExemptionNumber] = useState("");
   return (
@@ -2272,22 +2301,14 @@ function SupplierQuickAddFields({ onSave, onCancel }) {
       <input autoFocus value={company} onChange={(e) => setCompany(e.target.value)} placeholder={t("addSupplier_company")} className={inputCls} />
       <input value={agent} onChange={(e) => setAgent(e.target.value.slice(0, 15))} maxLength={15} placeholder={t("addSupplier_agent")} className={inputCls} />
       <input value={contact} onChange={(e) => setContact(e.target.value)} placeholder={t("addSupplier_contact")} className={inputCls} />
-      {/* This quick-add card skips the real tax NUMBER field (registered
-          suppliers are the less-common case and can be filled in later via
-          the full edit modal) — but the exemption number can't be skipped
-          the same way: exemptSupplierIds only counts a supplier as exempt
-          when BOTH taxExempt and exemptionNumber are set, so saving exempt=true
-          with no number here would silently drop this supplier's purchases
-          out of the tax return entirely (neither taxed nor exempt) until
-          someone remembers to go edit it — a real VAT-classification bug,
-          not just a missing field. */}
+      <input value={taxNumber} onChange={(e) => setTaxNumber(e.target.value)} placeholder={t("addSupplier_taxNumber")} className={`${inputCls} f-mono`} />
       <Toggle checked={taxExempt} onChange={setTaxExempt} label={t("addSupplier_taxExempt")} />
       {taxExempt && (
         <input value={exemptionNumber} onChange={(e) => setExemptionNumber(e.target.value)} placeholder={t("addSupplier_exemptionNumber")} className={`${inputCls} f-mono`} />
       )}
       <button
         type="button"
-        onClick={() => { if (!company.trim()) return; onSave({ company: company.trim(), agent: agent.trim() || "-", contact: contact.trim() || "-", taxNumber: "", taxExempt, exemptionNumber: taxExempt ? exemptionNumber.trim() : "" }); }}
+        onClick={() => { if (!company.trim()) return; onSave({ company: company.trim(), agent: agent.trim() || "-", contact: contact.trim() || "-", taxNumber: taxNumber.trim(), taxExempt, exemptionNumber: taxExempt ? exemptionNumber.trim() : "" }); }}
         className="w-full rounded-lg bg-brand-500 py-2 text-sm font-semibold text-white hover:bg-brand-600">
         {t("addSupplier_save")}
       </button>
@@ -2295,8 +2316,9 @@ function SupplierQuickAddFields({ onSave, onCancel }) {
   );
 }
 
-function SupplierDetailModal({ supplier, purchases, onClose, onPayBalance, onEdit }) {
+function SupplierDetailModal({ supplier, purchases, onClose, onPayBalance, onEdit, onDelete, canManage }) {
   const { t } = useLang();
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const supplierPurchases = purchases.filter((p) => p.supplierId === supplier.id).sort((a, b) => new Date(b.date) - new Date(a.date));
   const totalSpent = supplierPurchases.reduce((s, p) => s + p.amount, 0);
   const [viewingDoc, setViewingDoc] = useState(null);
@@ -2304,10 +2326,7 @@ function SupplierDetailModal({ supplier, purchases, onClose, onPayBalance, onEdi
   return (
     <Modal
       title={
-        <span className="flex items-center gap-2">
-          {supplier.company}
-          <button onClick={onEdit} className="rounded-full p-1 text-app-text-subtle hover:bg-app-bg hover:text-brand-700"><Pencil size={15} /></button>
-        </span>
+        <span className="flex items-center gap-2">{supplier.company}</span>
       }
       onClose={onClose} width="max-w-2xl">
       <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -2342,6 +2361,28 @@ function SupplierDetailModal({ supplier, purchases, onClose, onPayBalance, onEdi
       {supplier.balance > 0 && (
         <button onClick={() => onPayBalance(supplier)} className="mb-5 w-full rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600">{t("supplierDetail_payBalance")}</button>
       )}
+
+      {/* Owner only: branch logins can't change suppliers (RLS). Deleting
+          archives the supplier; its purchases keep their own copy of its
+          name and tax details, so reports and tax returns don't change. */}
+      {canManage && (confirmDelete ? (
+        <div className="mb-5 rounded-lg border border-warning-200 bg-warning-50 p-3" data-testid="supplier-delete-confirm">
+          <div className="mb-2 text-xs font-medium text-warning-700">
+            {supplier.balance > 0 ? t("supplier_deleteBlockedBalance") : t("supplier_deleteConfirm", { name: supplier.company })}
+          </div>
+          <div className="flex gap-2">
+            {!(supplier.balance > 0) && <button type="button" onClick={() => onDelete(supplier)} className="flex-1 rounded-lg bg-danger-600 py-2 text-xs font-semibold text-white hover:bg-danger-700">{t("products_deleteYes")}</button>}
+            <button type="button" onClick={() => setConfirmDelete(false)} className="rounded-lg border border-app-border-strong px-3 py-2 text-xs font-medium text-app-text-muted hover:bg-app-bg">{t("common_cancel")}</button>
+          </div>
+        </div>
+      ) : (
+        <div className="mb-5 flex gap-2">
+          <button type="button" onClick={onEdit} data-testid="supplier-edit"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-app-border-strong py-2 text-xs font-medium text-app-text hover:bg-app-bg"><Pencil size={14} /> {t("supplier_edit")}</button>
+          <button type="button" onClick={() => setConfirmDelete(true)} data-testid="supplier-delete"
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-danger-300 py-2 text-xs font-medium text-danger-600 hover:bg-danger-50"><Trash2 size={14} /> {t("supplier_delete")}</button>
+        </div>
+      ))}
 
       <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-app-text-muted">{t("supplierDetail_history")}</div>
       <div className="overflow-hidden rounded-xl border border-app-border">
@@ -4330,9 +4371,13 @@ function PurchasesStatCard({ label, value, icon: Icon, tone }) {
 // URLs — this component no longer owns that state itself.
 function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, adjustSupplierBalance, nextDocNumber }) {
   const { t } = useLang();
+  const { isBranchAccount } = useBranches();
+  // A deleted supplier is archived, not removed (its purchases point at it):
+  // gone from the list and the purchase form, still known to reports.
+  const activeSuppliers = suppliers.filter((s) => !s.archived);
 
   // Purchases sub-state
-  const [supplierId, setSupplierId] = useState(suppliers[0]?.id || "");
+  const [supplierId, setSupplierId] = useState(activeSuppliers[0]?.id || "");
   const [amount, setAmount] = useState("");
   const [method, setMethod] = useState("Cash");
   const [attachment, setAttachment] = useState("");
@@ -4364,6 +4409,13 @@ function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupp
   const saveEditedSupplier = (data) => {
     updateSupplier(editingSupplier.id, data);
     setEditingSupplier(null);
+  };
+
+  const deleteSupplier = (sup) => {
+    if (sup.balance > 0) return; // pay the balance first (the form says so)
+    updateSupplier(sup.id, { archived: true });
+    if (supplierId === sup.id) setSupplierId(activeSuppliers.find((x) => x.id !== sup.id)?.id || "");
+    setSelectedSupplier(null);
   };
 
   const handlePurchaseFile = async (e) => {
@@ -4403,7 +4455,10 @@ function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupp
         // why this replaced a client-computed "supplier.balance + amt" write.
         await adjustSupplierBalance(supplierId, amt);
       }
-      addPurchase({ code: `PO-${await nextDocNumber("PO")}`, supplierId, amount: amt, method, date: nowISO(), attachment, attachmentName });
+      // The database fills the same supplier copy itself (trigger); it is set
+      // here too so the new row shows right away.
+      const sup = suppliers.find((x) => x.id === supplierId);
+      addPurchase({ code: `PO-${await nextDocNumber("PO")}`, supplierId, supplierName: sup?.company || "", supplierTaxNumber: (sup?.taxNumber || "").trim(), supplierVatClass: supplierVatClass(sup), amount: amt, method, date: nowISO(), attachment, attachmentName });
       setAmount(""); setAttachment(""); setAttachmentName("");
       setShowPurchaseModal(false);
     } catch (e) {
@@ -4485,7 +4540,7 @@ function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupp
   const taxableTotal = expenses.filter((e) => e.taxFlag === "Inclusive").reduce((s, e) => s + e.amount, 0);
   const expensesTotal = exemptTotal + taxableTotal;
   const supplierQueryNorm = supplierQuery.trim().toLowerCase();
-  const filteredSuppliers = suppliers.filter((s) => !supplierQueryNorm || [s.company, s.agent, s.contact].some((v) => (v || "").toLowerCase().includes(supplierQueryNorm)));
+  const filteredSuppliers = activeSuppliers.filter((s) => !supplierQueryNorm || [s.company, s.agent, s.contact].some((v) => (v || "").toLowerCase().includes(supplierQueryNorm)));
   const recentPurchases = [...purchases].sort((a, b) => new Date(b.date) - new Date(a.date));
   const expenseQueryNorm = expenseQuery.trim().toLowerCase();
   const filteredExpenses = expenses.filter((e) => {
@@ -4510,7 +4565,7 @@ function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupp
         <div>
           <div className="-mx-4 flex gap-3 overflow-x-auto scrollbar-none snap-x snap-mandatory px-4 pb-1 mb-5 sm:mx-0 sm:grid sm:gap-4 sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-3">
             <PurchasesStatCard label={t("purchases_kpiDue")} value={sar(totalDue)} icon={Wallet} tone="warning" />
-            <PurchasesStatCard label={t("purchases_kpiSuppliers")} value={suppliers.length} icon={Receipt} tone="info" />
+            <PurchasesStatCard label={t("purchases_kpiSuppliers")} value={activeSuppliers.length} icon={Receipt} tone="info" />
             <PurchasesStatCard label={t("purchases_kpiCount")} value={purchases.length} />
           </div>
 
@@ -4545,13 +4600,12 @@ function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupp
           <div className="mb-2 text-sm font-semibold text-app-text">{t("purchases_recentTitle")}</div>
           <div className="space-y-2">
             {recentPurchases.map((p) => {
-              const supplier = suppliers.find((s) => s.id === p.supplierId);
               return (
                 <div key={p.id} onClick={() => p.attachment && setViewingDoc({ value: p.attachment, name: p.attachmentName })} className={`flex items-center justify-between rounded-xl border border-app-border bg-app-surface p-3 ${p.attachment ? "cursor-pointer hover:bg-app-bg" : ""}`}>
                   <div className="flex items-center gap-3">
                     <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-app-bg text-app-text-muted"><ReceiptText size={16} /></span>
                     <div>
-                      <div className="text-sm font-medium text-app-text">{supplier?.company || "—"}</div>
+                      <div className="text-sm font-medium text-app-text">{p.supplierName || "—"}</div>
                       <div className="f-mono text-xs text-app-text-subtle">{p.code} · {fmtDate(p.date)}</div>
                     </div>
                   </div>
@@ -4614,7 +4668,7 @@ function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupp
             <Field label={t("purchases_supplier")}>
               <div className="flex gap-2">
                 <select value={supplierId} onChange={(e) => setSupplierId(e.target.value)} className={inputCls}>
-                  {suppliers.map((s) => <option key={s.id} value={s.id}>{s.company}</option>)}
+                  {activeSuppliers.map((s) => <option key={s.id} value={s.id}>{s.company}</option>)}
                 </select>
                 <button type="button" onClick={() => setShowAddSupplier(true)} title={t("purchases_newSupplier")} className="shrink-0 rounded-lg border border-brand-300 bg-brand-50 px-3 py-2 text-brand-700 hover:bg-brand-100"><Plus size={16} /></button>
               </div>
@@ -4674,6 +4728,8 @@ function PurchasesExpensesView({ tab, setTab, suppliers, addSupplier, updateSupp
           onClose={() => setSelectedSupplier(null)}
           onPayBalance={(s) => { setSelectedSupplier(null); openPayBalance(s); }}
           onEdit={() => { setEditingSupplier(suppliers.find((s) => s.id === selectedSupplier.id) || selectedSupplier); setSelectedSupplier(null); }}
+          onDelete={deleteSupplier}
+          canManage={!isBranchAccount}
         />
       )}
       {editingSupplier && <AddSupplierModal editing={editingSupplier} onClose={() => setEditingSupplier(null)} onSave={saveEditedSupplier} />}
@@ -4920,7 +4976,7 @@ function inDateRange(iso, rangeStart, rangeEnd) {
 // and its sub-tab paths (/reports/vat, etc.) are real, bookmarkable,
 // browser-back-forward-able URLs — this component no longer owns that
 // state itself.
-function ReportsView({ tab, setTab, invoices, transactions, purchases, suppliers, categories, customers, expenses, expenseCategories }) {
+function ReportsView({ tab, setTab, invoices, transactions, purchases, categories, customers, expenses, expenseCategories }) {
   const { t } = useLang();
   const { multi: multiBranch, scope: viewScope } = useBranches();
   const round2 = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
@@ -4952,12 +5008,13 @@ function ReportsView({ tab, setTab, invoices, transactions, purchases, suppliers
     downloadCSV(rows, `sales-ledger-${start || "all"}-${end || "all"}.csv`);
   };
 
-  // A purchase only carries reclaimable input VAT if its supplier has a
-  // registered tax number — without one there's no valid tax invoice to
-  // reclaim against, so that purchase contributes zero VAT (its full amount
-  // just becomes net cost instead). Shared by both the Procurement Ledger's
-  // "Input VAT Paid" KPI and the Tax Return tab's purchases box below.
-  const taxedSupplierIds = new Set(suppliers.filter((s) => s.taxNumber && s.taxNumber.trim()).map((s) => s.id));
+  // A purchase only carries reclaimable input VAT if its supplier had a
+  // registered tax number when it was recorded (supplierVatClass is the
+  // purchase's own copy, see purchases_supplier_snapshot) — without one
+  // there's no valid tax invoice to reclaim against, so that purchase
+  // contributes zero VAT (its full amount just becomes net cost instead).
+  // Shared by the Procurement Ledger's "Input VAT Paid" KPI and the Tax
+  // Return tab's purchases boxes below.
 
   // ---- Procurement Ledger report ----
   const [purchStart, setPurchStart] = useState("");
@@ -4965,14 +5022,14 @@ function ReportsView({ tab, setTab, invoices, transactions, purchases, suppliers
   const [purchMethod, setPurchMethod] = useState("all");
   const filteredPurchases = purchases.filter((p) => inDateRange(p.date, purchStart, purchEnd) && (purchMethod === "all" || p.method === purchMethod));
   const pGross = filteredPurchases.reduce((s, p) => s + p.amount, 0);
-  const pVatEligibleGross = filteredPurchases.filter((p) => taxedSupplierIds.has(p.supplierId)).reduce((s, p) => s + p.amount, 0);
+  const pVatEligibleGross = filteredPurchases.filter((p) => p.supplierVatClass === "standard").reduce((s, p) => s + p.amount, 0);
   const pVat = pVatEligibleGross - pVatEligibleGross / (1 + VAT_RATE);
   const pNet = pGross - pVat;
 
   const exportProcurementCsv = () => {
     const rows = [
       ["PO ID", "Supplier", "Value", "Date", "Method"],
-      ...filteredPurchases.map((p) => [p.code, suppliers.find((s) => s.id === p.supplierId)?.company || "", round2(p.amount), p.date, p.method === "Cash" ? "Cash" : "Credit (On Account)"]),
+      ...filteredPurchases.map((p) => [p.code, p.supplierName || "", round2(p.amount), p.date, p.method === "Cash" ? "Cash" : "Credit (On Account)"]),
     ];
     downloadCSV(rows, `procurement-ledger-${purchStart || "all"}-${purchEnd || "all"}.csv`);
   };
@@ -5031,14 +5088,12 @@ function ReportsView({ tab, setTab, invoices, transactions, purchases, suppliers
   const salesBox1Taxable = vatSalesInvoices.reduce((s, i) => s + invoiceRevenue(i).net, 0);
   const salesBox1Vat = vatSalesInvoices.reduce((s, i) => s + invoiceRevenue(i).vat, 0);
 
-  // A supplier only counts as "exempt" for box 5 if the owner explicitly
-  // flagged it and gave an exemption number — a supplier with neither a tax
-  // number nor an exemption number is just left out of the tax return
-  // entirely (its purchases still show up in the Procurement Ledger/reports).
-  const exemptSupplierIds = new Set(suppliers.filter((s) => s.taxExempt && s.exemptionNumber && s.exemptionNumber.trim()).map((s) => s.id));
-
-  const vatPurchases = purchases.filter((p) => inVatPeriod(p.date) && taxedSupplierIds.has(p.supplierId));
-  const vatPurchasesExempt = purchases.filter((p) => inVatPeriod(p.date) && exemptSupplierIds.has(p.supplierId));
+  // A purchase only counts as "exempt" for box 5 if its supplier was flagged
+  // exempt with an exemption number when it was recorded — one with neither
+  // a tax number nor an exemption number is just left out of the tax return
+  // entirely (it still shows up in the Procurement Ledger/reports).
+  const vatPurchases = purchases.filter((p) => inVatPeriod(p.date) && p.supplierVatClass === "standard");
+  const vatPurchasesExempt = purchases.filter((p) => inVatPeriod(p.date) && p.supplierVatClass === "exempt");
   const vatExpensesIncl = expenses.filter((e) => e.taxFlag === "Inclusive" && inVatPeriod(e.date));
   const vatExpensesExempt = expenses.filter((e) => e.taxFlag === "Exempt" && inVatPeriod(e.date));
   const purchBox1Gross = vatPurchases.reduce((s, p) => s + p.amount, 0) + vatExpensesIncl.reduce((s, e) => s + e.amount, 0);
@@ -5226,7 +5281,7 @@ function ReportsView({ tab, setTab, invoices, transactions, purchases, suppliers
                 {filteredPurchases.map((p) => (
                   <tr key={p.id} className="hover:bg-app-bg">
                     <td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-muted text-center">{p.code}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-center text-app-text">{suppliers.find((s) => s.id === p.supplierId)?.company}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-center text-app-text">{p.supplierName}</td>
                     <td className="whitespace-nowrap px-4 py-3 f-mono font-semibold text-app-text text-center">{sar(p.amount)}</td>
                     <td className="whitespace-nowrap px-4 py-3 f-mono text-app-text-muted text-center">{fmtDate(p.date)}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-center text-app-text-muted">{p.method === "Cash" ? t("common_cash") : t("purchases_credit")}</td>
@@ -6985,7 +7040,7 @@ function AppShell({ tab, tabReady, skeletonTab, pickup, tenantId, setTab, naviga
         {tab === "inventory" && <InventoryView categories={categories} addCategory={addCategory} products={products} addProduct={addProduct} updateProduct={updateProduct} deleteProduct={deleteProduct} addons={addons} addAddon={addAddon} removeAddon={removeAddon} serviceTypes={serviceTypes} addServiceType={addServiceType} deleteServiceType={deleteServiceType} />}
         {tab === "purchases" && <PurchasesExpensesView tab={purchasesSubTab} setTab={(s) => navigateTab("purchases", s)} suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={scopedPurchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={scopedExpenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
         {tab === "promotions" && <PromotionsView promotions={scopedPromotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
-        {tab === "reports" && <ReportsView tab={reportsSubTab} setTab={(s) => navigateTab("reports", s)} invoices={scopedInvoices} transactions={customerTransactions} purchases={scopedPurchases} suppliers={suppliers} categories={categories} customers={customers} expenses={scopedExpenses} expenseCategories={expenseCategories} />}
+        {tab === "reports" && <ReportsView tab={reportsSubTab} setTab={(s) => navigateTab("reports", s)} invoices={scopedInvoices} transactions={customerTransactions} purchases={scopedPurchases} categories={categories} customers={customers} expenses={scopedExpenses} expenseCategories={expenseCategories} />}
         {tab === "whatsapp" && <WhatsAppView whatsappEnabled={whatsappEnabled} setWhatsappEnabled={setWhatsappEnabled} whatsappTemplate={whatsappTemplate} setWhatsappTemplate={setWhatsappTemplate} readyMessageEnabled={readyMessageEnabled} setReadyMessageEnabled={setReadyMessageEnabled} readyMessageTemplate={readyMessageTemplate} setReadyMessageTemplate={setReadyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} setWhatsappReadySendMode={setWhatsappReadySendMode} pickup={pickup} invoices={scopedInvoices} customers={customers} merchant={merchant} tenantId={tenantId} />}
         {tab === "branches" && <BranchesView />}
         {tab === "settings" && isBranchAccount && <BranchSettingsView ownerPinSet={ownerPinSet} sectionLocks={sectionLocks} onLogout={onLogout} />}
@@ -7027,7 +7082,7 @@ const TAB_TABLES = {
   inventory: ["categories", "products", "addons", "service_types"],
   purchases: ["suppliers", "purchases", "expense_categories", "expenses"],
   promotions: ["promotions"],
-  reports: ["invoices", "customer_transactions", "purchases", "suppliers", "categories", "customers", "expenses", "expense_categories"],
+  reports: ["invoices", "customer_transactions", "purchases", "categories", "customers", "expenses", "expense_categories"],
 };
 const TABS_NEEDING_SETTINGS = new Set(["whatsapp", "settings"]);
 // What "تذكيرات اليوم" (inside the WhatsApp tab) needs before it can list anything.
