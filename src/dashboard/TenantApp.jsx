@@ -3148,8 +3148,9 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
   // INTO "Ready" -- never while it's already Ready (editing some other item
   // afterwards shouldn't re-notify), and never for a closed invoice. This
   // runs after updateInvoice below, so the status change is already saved
-  // either way -- Esc/"تخطي" on the resulting popup only skips the WhatsApp
-  // side effect, it can never undo the status itself (spec section 11/13).
+  // either way -- Esc/"تخطي" on the resulting popup only skip the WhatsApp
+  // side effect (Esc also closes the invoice window), they can never undo
+  // the status itself (spec section 11/13).
   const maybeNotifyReady = (inv, nextItems) => {
     if (!readyMessageEnabled || whatsappReadySendMode === "off") return;
     const wasReady = invoiceOverallStatus(inv) === "Ready";
@@ -3257,6 +3258,7 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
           message={readyConfirm.message}
           onSend={() => { openWhatsApp(readyConfirm.phone, readyConfirm.message); setReadyConfirm(null); }}
           onSkip={() => setReadyConfirm(null)}
+          onEscape={() => { setReadyConfirm(null); setOpenId(null); }}
         />
       )}
     </div>
@@ -5924,11 +5926,14 @@ function MessageTemplateCard({ icon: Icon, tone, title, description, enabled, on
 
 // "السؤال قبل الإرسال" popup — shown after the order's status is ALREADY
 // saved as Ready (see InvoicesView's updateItemStatus), so Esc/"تخطي" only
-// skips the WhatsApp side-effect and never touches the order's status.
-function WhatsAppReadyConfirmModal({ message, onSend, onSkip }) {
+// skip the WhatsApp side-effect and never touch the order's status.
+// "تخطي" closes just this popup; Esc (onEscape) also closes the invoice
+// window under it, in one press.
+function WhatsAppReadyConfirmModal({ message, onSend, onSkip, onEscape }) {
   const { t } = useLang();
-  // Drawn over the invoice window: Esc/Enter belong to this popup only.
-  useModalLayer({ onEscape: onSkip, onEnter: onSend });
+  // Drawn over the invoice window as the top layer, so the invoice window's
+  // own Esc handler doesn't also fire on the same press.
+  useModalLayer({ onEscape: onEscape || onSkip, onEnter: onSend });
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy-950/60 p-4 f-body" onClick={onSkip}>
       <div className="w-full max-w-sm rounded-2xl bg-app-surface p-6 text-center shadow-app-lg" onClick={(e) => e.stopPropagation()}>
