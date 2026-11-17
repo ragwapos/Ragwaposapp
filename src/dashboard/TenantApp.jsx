@@ -1068,9 +1068,8 @@ const DICT = {
     products_editTitle: "Edit Product", products_saveChanges: "Save Changes",
     products_delete: "Delete product", products_deleteYes: "Yes, delete",
     products_deleteConfirm: "Delete \"{name}\" for good? It disappears from the Point of Sale and the products list. Past invoices are not affected.",
-    products_serviceDelete: "Delete this service from the shop",
-    products_serviceDeleteConfirm: "Delete the \"{name}\" service from the shop? It is removed from every product that has it ({n}) and from the Point of Sale. Past invoices are not affected.",
-    products_serviceDeleteBlocked: "\"{name}\" is the only service of: {list}. Give them another service, or delete them, first.",
+    products_serviceDelete: "Delete this service from the list", products_serviceRemoveHere: "Remove from this product",
+    products_serviceDeleteConfirm: "Delete the \"{name}\" service from the services list? No product uses it.",
     products_errName: "Enter a product name.", products_errCategory: "Choose or add a category.",
     upload_tooLarge: "File is too large.", upload_badType: "Unsupported file type.",
     upload_failed: "Upload failed — check your connection and try again.", upload_uploading: "Uploading...",
@@ -1374,9 +1373,8 @@ const DICT = {
     products_editTitle: "تعديل المنتج", products_saveChanges: "حفظ التعديلات",
     products_delete: "حذف المنتج", products_deleteYes: "نعم، احذف",
     products_deleteConfirm: "حذف «{name}» نهائياً؟ سيختفي من نقطة البيع ومن قائمة المنتجات. الفواتير السابقة لا تتأثر.",
-    products_serviceDelete: "حذف هذه الخدمة من المحل",
-    products_serviceDeleteConfirm: "حذف خدمة «{name}» من المحل؟ ستُزال من كل المنتجات التي فيها ({n}) ومن نقطة البيع. الفواتير السابقة لا تتأثر.",
-    products_serviceDeleteBlocked: "«{name}» هي الخدمة الوحيدة في: {list}. أضف لها خدمة ثانية أو احذفها أولاً.",
+    products_serviceDelete: "حذف هذه الخدمة من القائمة", products_serviceRemoveHere: "إزالة من هذا المنتج",
+    products_serviceDeleteConfirm: "حذف خدمة «{name}» من قائمة الخدمات؟ لا يوجد أي منتج يستخدمها.",
     products_errName: "حط اسم المنتج.", products_errCategory: "اختر أو أضف فئة.",
     upload_tooLarge: "حجم الملف كبير جداً.", upload_badType: "نوع الملف غير مدعوم.",
     upload_failed: "فشل رفع الملف — تحقق من الاتصال وحاول مرة ثانية.", upload_uploading: "جارٍ الرفع...",
@@ -1680,9 +1678,8 @@ const DICT = {
     products_editTitle: "پروڈکٹ میں ترمیم کریں", products_saveChanges: "تبدیلیاں محفوظ کریں",
     products_delete: "پروڈکٹ حذف کریں", products_deleteYes: "جی ہاں، حذف کریں",
     products_deleteConfirm: "«{name}» کو مستقل طور پر حذف کریں؟ یہ پوائنٹ آف سیل اور پروڈکٹس کی فہرست سے ہٹ جائے گا۔ پچھلی انوائسز متاثر نہیں ہوں گی۔",
-    products_serviceDelete: "یہ سروس دکان سے حذف کریں",
-    products_serviceDeleteConfirm: "«{name}» سروس دکان سے حذف کریں؟ یہ ان تمام پروڈکٹس ({n}) سے اور پوائنٹ آف سیل سے ہٹ جائے گی جن میں یہ ہے۔ پچھلی انوائسز متاثر نہیں ہوں گی۔",
-    products_serviceDeleteBlocked: "«{name}» ان پروڈکٹس کی واحد سروس ہے: {list}۔ پہلے انہیں کوئی دوسری سروس دیں یا انہیں حذف کریں۔",
+    products_serviceDelete: "یہ سروس فہرست سے حذف کریں", products_serviceRemoveHere: "اس پروڈکٹ سے ہٹائیں",
+    products_serviceDeleteConfirm: "«{name}» سروس کو سروسز کی فہرست سے حذف کریں؟ کوئی پروڈکٹ اسے استعمال نہیں کرتا۔",
     products_errName: "پروڈکٹ کا نام درج کریں۔", products_errCategory: "کیٹگری منتخب کریں یا شامل کریں۔",
     upload_tooLarge: "فائل بہت بڑی ہے۔", upload_badType: "فائل کی قسم معاون نہیں ہے۔",
     upload_failed: "اپ لوڈ ناکام — کنکشن چیک کریں اور دوبارہ کوشش کریں۔", upload_uploading: "اپ لوڈ ہو رہا ہے...",
@@ -3893,27 +3890,30 @@ function ProductFormModal({ editing, categories, addCategory, serviceTypes, addS
         <span className="mb-1.5 block text-xs font-semibold uppercase tracking-wide text-app-text-subtle">{t("products_servicePrices")} <span className="normal-case text-app-text-subtle">{t("products_servicePricesHint")}</span></span>
         <div className="space-y-2">
           {serviceTypes.map((st) => {
-            const using = products.filter((p) => p.services && p.services[st.name] !== undefined);
-            // The database requires every product to keep at least one service,
-            // so a service that is some product's only one can't go yet.
-            const onlyThis = using.filter((p) => Object.keys(p.services).length === 1);
+            // Removing a service only ever touches THIS product (its price is
+            // cleared and saved with the form); other products keep it. The
+            // service itself can leave the shop's list only once no saved
+            // product uses it, this one included.
+            const pricedHere = (servicePrices[st.id] ?? "") !== "";
+            const usedAnywhere = products.some((p) => p.services && p.services[st.name] !== undefined);
             return (
               <div key={st.id}>
                 <div className="flex items-center gap-2">
                   <span className="w-32 shrink-0 text-sm text-app-text-muted">{st.name}</span>
                   <input type="number" min="0" placeholder="—" value={servicePrices[st.id] ?? ""} onChange={(e) => setServicePrices((p) => ({ ...p, [st.id]: e.target.value }))} className={inputCls} />
-                  <button type="button" onClick={() => setConfirmServiceId(confirmServiceId === st.id ? null : st.id)} title={t("products_serviceDelete")} aria-label={t("products_serviceDelete")} data-testid="service-delete"
-                    className="shrink-0 rounded-lg p-2 text-app-text-subtle hover:bg-danger-50 hover:text-danger-600"><Trash2 size={15} /></button>
+                  {pricedHere ? (
+                    <button type="button" onClick={() => setServicePrices((p) => ({ ...p, [st.id]: "" }))} title={t("products_serviceRemoveHere")} aria-label={t("products_serviceRemoveHere")} data-testid="service-remove"
+                      className="shrink-0 rounded-lg p-2 text-app-text-subtle hover:bg-danger-50 hover:text-danger-600"><X size={15} /></button>
+                  ) : !usedAnywhere ? (
+                    <button type="button" onClick={() => setConfirmServiceId(confirmServiceId === st.id ? null : st.id)} title={t("products_serviceDelete")} aria-label={t("products_serviceDelete")} data-testid="service-delete"
+                      className="shrink-0 rounded-lg p-2 text-app-text-subtle hover:bg-danger-50 hover:text-danger-600"><Trash2 size={15} /></button>
+                  ) : <span className="w-[31px] shrink-0" />}
                 </div>
-                {confirmServiceId === st.id && (
+                {confirmServiceId === st.id && !usedAnywhere && (
                   <div className="mt-2 rounded-lg border border-warning-200 bg-warning-50 p-3" data-testid="service-delete-confirm">
-                    <div className="mb-2 text-xs font-medium text-warning-700">
-                      {onlyThis.length > 0
-                        ? t("products_serviceDeleteBlocked", { name: st.name, list: onlyThis.map((p) => p.name).join("، ") })
-                        : t("products_serviceDeleteConfirm", { name: st.name, n: using.length })}
-                    </div>
+                    <div className="mb-2 text-xs font-medium text-warning-700">{t("products_serviceDeleteConfirm", { name: st.name })}</div>
                     <div className="flex gap-2">
-                      {onlyThis.length === 0 && <button type="button" onClick={() => { deleteServiceType(st); setConfirmServiceId(null); }} className="flex-1 rounded-lg bg-danger-600 py-2 text-xs font-semibold text-white hover:bg-danger-700">{t("products_deleteYes")}</button>}
+                      <button type="button" onClick={() => { deleteServiceType(st); setConfirmServiceId(null); }} className="flex-1 rounded-lg bg-danger-600 py-2 text-xs font-semibold text-white hover:bg-danger-700">{t("products_deleteYes")}</button>
                       <button type="button" onClick={() => setConfirmServiceId(null)} className="rounded-lg border border-app-border-strong px-3 py-2 text-xs font-medium text-app-text-muted hover:bg-app-bg">{t("common_cancel")}</button>
                     </div>
                   </div>
@@ -7316,22 +7316,15 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
     });
   };
   // A service type is a shop-wide list; each product keeps its own prices
-  // keyed by the service NAME (the register reads those, not this list). So
-  // once the type is gone it is also taken out of every product and the price
-  // recomputed. The database requires every product to keep at least one
-  // service (services_not_empty), so the form only offers this when no
-  // product would be left without one; checked again here.
+  // keyed by the service NAME (the register reads those, not this list).
+  // Taking a service off a product is done per product in its form; the type
+  // itself is only removed from the list once no product uses it, so
+  // deleting it never changes any product.
   const deleteServiceType = (st) => {
-    const affected = products.filter((p) => p.services && p.services[st.name] !== undefined);
-    if (affected.some((p) => Object.keys(p.services).length === 1)) return;
+    if (products.some((p) => p.services && p.services[st.name] !== undefined)) return;
     setServiceTypesState((prev) => prev.filter((x) => x.id !== st.id));
     db.from("service_types").delete().eq("id", st.id).then(({ error }) => {
-      if (error) { console.error("deleteServiceType failed", error); setServiceTypesState((prev) => [...prev, st]); return; }
-      if (serviceTypes.some((x) => x.id !== st.id && x.name === st.name)) return; // another type still uses this name
-      affected.forEach((p) => {
-        const services = { ...p.services }; delete services[st.name];
-        updateProduct(p.id, { services, price: Math.min(...Object.values(services)) });
-      });
+      if (error) { console.error("deleteServiceType failed", error); setServiceTypesState((prev) => [...prev, st]); }
     });
   };
   const addInvoice = (invoiceData) => {
