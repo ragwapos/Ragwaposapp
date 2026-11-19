@@ -88,6 +88,7 @@ export const LANDING_TEXT = {
       },
       annual: {
         name: 'الباقة السنوية', tagline: 'لمغسلة تشتغل بكل مميزات رغوة طول السنة',
+        originalPrice: '875', discountBadge: 'خصم 60%',
         price: '350', unit: 'ريال / السنة', note: 'شامل ضريبة القيمة المضافة',
         bullets: ['كل مميزات النظام بدون استثناء', 'سنة كاملة من تاريخ التفعيل', 'الدفع حاليًا بالتحويل البنكي، والدفع الإلكتروني قريبًا'],
         cta: 'اشترك الآن',
@@ -241,6 +242,7 @@ export const LANDING_TEXT = {
       },
       annual: {
         name: 'Annual Plan', tagline: 'For a shop that runs on every Ragwa feature all year',
+        originalPrice: '875', discountBadge: '60% off',
         price: '350', unit: 'SAR / year', note: 'VAT included',
         bullets: ['Every feature, no exceptions', 'A full year from activation', 'Pay by bank transfer for now; online payment is coming soon'],
         cta: 'Subscribe now',

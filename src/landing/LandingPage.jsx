@@ -374,6 +374,12 @@ export default function LandingPage(props) {
                   <p className="mt-1.5 min-h-[2.75rem] text-sm leading-relaxed text-gray-400">{plan.tagline}</p>
 
                   <div className="mt-6">
+                    {plan.originalPrice && (
+                      <div className="mb-1 flex items-center gap-2">
+                        <s className="text-xl font-bold text-gray-400">{plan.originalPrice}</s>
+                        <span className="rounded-full bg-emerald-400 px-3 py-0.5 text-xs font-extrabold text-slate-900">{plan.discountBadge}</span>
+                      </div>
+                    )}
                     <div className="flex items-baseline gap-2">
                       <span className={`font-extrabold text-white ${isContact ? 'text-3xl' : 'text-5xl'}`}>{plan.price}</span>
                       {plan.unit && <span className="text-base font-semibold text-gray-300">{plan.unit}</span>}

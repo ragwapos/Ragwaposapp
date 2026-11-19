@@ -87,6 +87,8 @@ const SHARED_STYLE = `
   .plan h2 { margin: 0 0 4px; }
   .plan .tag { color: #5b7381; font-size: .9rem; margin: 0 0 12px; }
   .plan .price { font-size: 2rem; font-weight: 800; margin: 0; line-height: 1.4; }
+  .plan .was { margin: 0 0 2px; color: #5b7381; font-size: 1.1rem; font-weight: 700; }
+  .plan .badge { display: inline-block; margin-inline-start: 8px; padding: 2px 10px; border-radius: 999px; background: #d7f5e3; color: #11643a; font-size: .8rem; font-weight: 800; }
   .plan .price span { font-size: 1rem; font-weight: 600; color: #5b7381; }
   .plan .note { color: #5b7381; font-size: .85rem; margin: 0 0 14px; }
   footer.site-footer { background: #0d172a; color: #b8c2d0; margin-top: 40px; }
@@ -255,7 +257,7 @@ function indexJsonLd(guides) {
 // مصدر قسم الأسعار في الرئيسية) فلا يحصل اختلاف بين الصفحتين.
 const PRICING = LANDING_TEXT.ar.pricing;
 const PRICING_TITLE = 'سعر برنامج مغسلة ملابس: أسعار رغوة';
-const PRICING_DESC = `سعر برنامج رغوة لمغاسل الملابس ${PRICING.annual.price} ريال في السنة شامل ضريبة القيمة المضافة، مع تجربة مجانية 14 يومًا بكل المميزات وبدون بطاقة بنكية.`;
+const PRICING_DESC = `سعر برنامج رغوة لمغاسل الملابس ${PRICING.annual.price} ريال في السنة بدل ${PRICING.annual.originalPrice} (${PRICING.annual.discountBadge}) شامل ضريبة القيمة المضافة، مع تجربة مجانية 14 يومًا بكل المميزات وبدون بطاقة بنكية.`;
 
 function pricingFaq() {
   const branchItem = LANDING_TEXT.ar.faq.find((f) => f.q.includes('أكثر من فرع'));
@@ -263,7 +265,7 @@ function pricingFaq() {
   return [
     {
       q: 'كم سعر برنامج رغوة؟',
-      a: `${PRICING.annual.price} ريال في السنة، ${PRICING.annual.note}. وقبلها تجربة مجانية ${PRICING.trial.unit} بكل المميزات وبدون بطاقة بنكية.`,
+      a: `${PRICING.annual.price} ريال في السنة بدل ${PRICING.annual.originalPrice} (${PRICING.annual.discountBadge})، ${PRICING.annual.note}. وقبلها تجربة مجانية ${PRICING.trial.unit} بكل المميزات وبدون بطاقة بنكية.`,
     },
     {
       q: 'هل المميزات تختلف بين التجربة والباقة السنوية؟',
@@ -281,7 +283,7 @@ function renderPricingBody() {
   const card = (plan, { featured = false, href, cta, external = false }) => `<div class="plan${featured ? ' featured' : ''}">
   <h2>${esc(plan.name)}</h2>
   <p class="tag">${esc(plan.tagline)}</p>
-  <p class="price">${esc(plan.price)}${plan.unit ? ` <span>${esc(plan.unit)}</span>` : ''}</p>
+  ${plan.originalPrice ? `<p class="was"><s>${esc(plan.originalPrice)}</s><span class="badge">${esc(plan.discountBadge)}</span></p>\n  ` : ''}<p class="price">${esc(plan.price)}${plan.unit ? ` <span>${esc(plan.unit)}</span>` : ''}</p>
   <p class="note">${esc(plan.note)}</p>
   <ul class="points">${plan.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
   <a class="cta-btn" href="${esc(href)}"${external ? ' target="_blank" rel="noopener noreferrer"' : ''}>${esc(cta)}</a>
@@ -293,7 +295,7 @@ function renderPricingBody() {
 
   return `<div class="breadcrumb"><a href="/">رغوة</a> ← الأسعار</div>
 <h1 class="article-title">${esc(PRICING_TITLE)}</h1>
-<p>${esc(PRICING.annual.name)} في رغوة بـ <strong>${esc(PRICING.annual.price)} ${esc(PRICING.annual.unit)}</strong> (${esc(PRICING.annual.note)})، وتشمل كل مميزات النظام. تقدر تجرّب أولًا ${esc(PRICING.trial.unit)} مجانًا بدون بطاقة بنكية.</p>
+<p>${esc(PRICING.annual.name)} في رغوة بـ <strong>${esc(PRICING.annual.price)} ${esc(PRICING.annual.unit)}</strong> بدل <s>${esc(PRICING.annual.originalPrice)}</s> (${esc(PRICING.annual.discountBadge)}، ${esc(PRICING.annual.note)})، وتشمل كل مميزات النظام. تقدر تجرّب أولًا ${esc(PRICING.trial.unit)} مجانًا بدون بطاقة بنكية.</p>
 <div class="plans">
 ${card(PRICING.trial, { href: '/signup', cta: PRICING.trial.cta })}
 ${card(PRICING.annual, { featured: true, href: '/signup?plan=annual', cta: PRICING.annual.cta })}
