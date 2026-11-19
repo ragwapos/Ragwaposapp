@@ -15,7 +15,7 @@ import { LANDING_TEXT } from '../content/landing.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.join(__dirname, '..', 'public', 'guides');
-const PRICING_FILE = path.join(__dirname, '..', 'public', 'pricing.html');
+const PRICING_DIR = path.join(__dirname, '..', 'public', 'pricing');
 const WHATSAPP_URL = 'https://wa.me/966592299405';
 
 // تعقيم نصوص وقت التوليد (دفاع إضافي حتى لو تلوثت content/guides.mjs
@@ -362,8 +362,10 @@ function main() {
   });
   writeFileSync(path.join(OUT_DIR, 'index.html'), indexHtml, 'utf8');
 
+  if (existsSync(PRICING_DIR)) rmSync(PRICING_DIR, { recursive: true, force: true });
+  mkdirSync(PRICING_DIR, { recursive: true });
   writeFileSync(
-    PRICING_FILE,
+    path.join(PRICING_DIR, 'index.html'),
     pageShell({
       title: `${PRICING_TITLE} | رغوة`,
       description: PRICING_DESC,
@@ -375,7 +377,7 @@ function main() {
     'utf8'
   );
 
-  console.log(`[build-guides] generated ${guides.length} guide pages + index into public/guides/ and public/pricing.html`);
+  console.log(`[build-guides] generated ${guides.length} guide pages + index into public/guides/ and public/pricing/`);
 }
 
 main();

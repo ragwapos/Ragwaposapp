@@ -30,7 +30,7 @@
     }
   ],
   "rewrites": [
-    { "source": "/pricing", "destination": "/pricing.html" },
+    { "source": "/pricing", "destination": "/pricing/index.html" },
     { "source": "/guides", "destination": "/guides/index.html" },
     { "source": "/guides/:slug", "destination": "/guides/:slug.html" },
     { "source": "/en", "destination": "/en/index.html" },
