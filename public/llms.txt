@@ -23,4 +23,5 @@ Ragwa is for laundry shop owners and staff who need to run checkout, track indiv
 - Homepage (Arabic): https://www.ragwapos.com/
 - Homepage (English): https://www.ragwapos.com/en
 - Guides (how-to articles for laundry shop owners): https://www.ragwapos.com/guides
+- Pricing (Arabic): https://www.ragwapos.com/pricing
 - Sign up: https://www.ragwapos.com/signup

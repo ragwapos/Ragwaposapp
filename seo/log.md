@@ -22,3 +22,6 @@
 ## 2026-11-16 — قسم أدلة في الرئيسية العربية + طلبات الفهرسة
 - طُلبت الفهرسة يدويًا من Search Console (حساب مالك الخاصية) للأدلة الخمسة غير المفهرسة: best-cashier، wallet-debt، ragwa-vs-notebook، order-tracking (رُفض أول طلب بخطأ اتصال مؤقت من جوجل ونجح عند الإعادة)، zatca. حُذف من Search Console ملف sitemap الخاص بالبلوغ الملغى (blog.ragwapos.com/blog/sitemap.xml). أُبقي sitemap بدون www (يحوّل 308).
 - الرئيسية العربية: قسم جديد بين الأسئلة الشائعة والدعوة النهائية يربط بالأدلة السبعة وبـ/guides (كان الرابط الوحيد من الرئيسية للأدلة هو /guides ودليل المحفظة). لم يُضف شيء لـ/en. (content/landing.mjs، src/landing/LandingPage.jsx). القياس: حالة الفهرسة في التقرير الأسبوعي 2026-11-23.
+
+## 2026-11-19 — صفحة /pricing
+صفحة HTML ثابتة جديدة على /pricing: ثلاث باقات (تجربة 14 يوم، سنوية 350 ريال شامل الضريبة، إنتربرايز)، قائمة المميزات، وأربعة أسئلة عن السعر، مع JSON-LD (SoftwareApplication بـ offers + BreadcrumbList). الأرقام تُقرأ من content/landing.mjs (مصدر واحد). روابط داخلية: الرئيسية العربية (تحت قسم الأسعار) وتذييل كل الأدلة، وأُضيفت للـsitemap وllms.txt. أُضيف تهريب < في JSON-LD لكل صفحات المولّد (backlog 9). القياس: ظهور /pricing واستعلام "سعر برنامج مغسلة" في تقرير 2026-11-23 ثم الشهري. (scripts/build-guides.mjs، vercel.json، content/landing.mjs، src/landing/LandingPage.jsx)

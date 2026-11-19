@@ -11,9 +11,12 @@ import { mkdirSync, writeFileSync, rmSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { guides, SITE_URL } from '../content/guides.mjs';
+import { LANDING_TEXT } from '../content/landing.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT_DIR = path.join(__dirname, '..', 'public', 'guides');
+const PRICING_FILE = path.join(__dirname, '..', 'public', 'pricing.html');
+const WHATSAPP_URL = 'https://wa.me/966592299405';
 
 // تعقيم نصوص وقت التوليد (دفاع إضافي حتى لو تلوثت content/guides.mjs
 // مستقبلاً — كل بيانات المقالات نصوص عادية أصلاً، بدون HTML خام).
@@ -78,6 +81,14 @@ const SHARED_STYLE = `
   .index-hero { margin-bottom: 32px; }
   .index-hero h1 { font-size: 1.7rem; font-weight: 800; margin: 0 0 10px; }
   .index-hero p { color: #5b7381; margin: 0; }
+  .plans { display: grid; gap: 16px; margin: 24px 0 32px; }
+  .plan { background: #ffffff; border: 1px solid #e6eaed; border-radius: 16px; padding: 22px; }
+  .plan.featured { border: 2px solid #f0611f; }
+  .plan h2 { margin: 0 0 4px; }
+  .plan .tag { color: #5b7381; font-size: .9rem; margin: 0 0 12px; }
+  .plan .price { font-size: 2rem; font-weight: 800; margin: 0; line-height: 1.4; }
+  .plan .price span { font-size: 1rem; font-weight: 600; color: #5b7381; }
+  .plan .note { color: #5b7381; font-size: .85rem; margin: 0 0 14px; }
   footer.site-footer { background: #0d172a; color: #b8c2d0; margin-top: 40px; }
   footer.site-footer .inner { max-width: 780px; margin: 0 auto; padding: 36px 24px; text-align: center; }
   footer.site-footer a { color: #b8c2d0; text-decoration: none; font-size: .85rem; margin: 0 10px; }
@@ -85,7 +96,7 @@ const SHARED_STYLE = `
   footer.site-footer .rights { color: #7b8ca0; font-size: .75rem; margin-top: 14px; }
 `;
 
-function pageShell({ title, description, canonicalPath, jsonLd, bodyHtml }) {
+function pageShell({ title, description, canonicalPath, jsonLd, bodyHtml, ogType = 'article' }) {
   const canonicalUrl = `${SITE_URL}${canonicalPath}`;
   return `<!DOCTYPE html>
 <html lang="ar" dir="rtl">
@@ -95,7 +106,7 @@ function pageShell({ title, description, canonicalPath, jsonLd, bodyHtml }) {
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}" />
 <link rel="canonical" href="${esc(canonicalUrl)}" />
-<meta property="og:type" content="article" />
+<meta property="og:type" content="${ogType}" />
 <meta property="og:site_name" content="رغوة" />
 <meta property="og:title" content="${esc(title)}" />
 <meta property="og:description" content="${esc(description)}" />
@@ -106,7 +117,7 @@ function pageShell({ title, description, canonicalPath, jsonLd, bodyHtml }) {
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 <link rel="icon" type="image/png" href="/favicon.png" />
-<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
+<script type="application/ld+json">${JSON.stringify(jsonLd).replaceAll('<', '\\u003c')}</script>
 <style>${SHARED_STYLE}</style>
 </head>
 <body>
@@ -126,6 +137,7 @@ ${bodyHtml}
   <div class="inner">
     <div>
       <a href="/">الرئيسية</a>
+      <a href="/pricing">الأسعار</a>
       <a href="/guides">كل الأدلة</a>
       <a href="/terms">الشروط والأحكام</a>
       <a href="/privacy">سياسة الخصوصية</a>
@@ -239,6 +251,93 @@ function indexJsonLd(guides) {
   };
 }
 
+// صفحة /pricing: الأسعار والباقات والمميزات تُقرأ من content/landing.mjs (نفس
+// مصدر قسم الأسعار في الرئيسية) فلا يحصل اختلاف بين الصفحتين.
+const PRICING = LANDING_TEXT.ar.pricing;
+const PRICING_TITLE = 'سعر برنامج مغسلة ملابس: أسعار رغوة';
+const PRICING_DESC = `سعر برنامج رغوة لمغاسل الملابس ${PRICING.annual.price} ريال في السنة شامل ضريبة القيمة المضافة، مع تجربة مجانية 14 يومًا بكل المميزات وبدون بطاقة بنكية.`;
+
+function pricingFaq() {
+  const branchItem = LANDING_TEXT.ar.faq.find((f) => f.q.includes('أكثر من فرع'));
+  if (!branchItem) throw new Error('[build-guides] branch FAQ not found in content/landing.mjs');
+  return [
+    {
+      q: 'كم سعر برنامج رغوة؟',
+      a: `${PRICING.annual.price} ريال في السنة، ${PRICING.annual.note}. وقبلها تجربة مجانية ${PRICING.trial.unit} بكل المميزات وبدون بطاقة بنكية.`,
+    },
+    {
+      q: 'هل المميزات تختلف بين التجربة والباقة السنوية؟',
+      a: 'لا. التجربة المجانية والباقة السنوية تشملان كل مميزات النظام بدون استثناء.',
+    },
+    branchItem,
+    {
+      q: 'كيف أدفع؟',
+      a: PRICING.annual.bullets[2],
+    },
+  ];
+}
+
+function renderPricingBody() {
+  const card = (plan, { featured = false, href, cta, external = false }) => `<div class="plan${featured ? ' featured' : ''}">
+  <h2>${esc(plan.name)}</h2>
+  <p class="tag">${esc(plan.tagline)}</p>
+  <p class="price">${esc(plan.price)}${plan.unit ? ` <span>${esc(plan.unit)}</span>` : ''}</p>
+  <p class="note">${esc(plan.note)}</p>
+  <ul class="points">${plan.bullets.map((b) => `<li>${esc(b)}</li>`).join('')}</ul>
+  <a class="cta-btn" href="${esc(href)}"${external ? ' target="_blank" rel="noopener noreferrer"' : ''}>${esc(cta)}</a>
+</div>`;
+
+  const faq = pricingFaq()
+    .map((f) => `<section class="block"><h2>${esc(f.q)}</h2><p>${esc(f.a)}</p></section>`)
+    .join('\n');
+
+  return `<div class="breadcrumb"><a href="/">رغوة</a> ← الأسعار</div>
+<h1 class="article-title">${esc(PRICING_TITLE)}</h1>
+<p>${esc(PRICING.annual.name)} في رغوة بـ <strong>${esc(PRICING.annual.price)} ${esc(PRICING.annual.unit)}</strong> (${esc(PRICING.annual.note)})، وتشمل كل مميزات النظام. تقدر تجرّب أولًا ${esc(PRICING.trial.unit)} مجانًا بدون بطاقة بنكية.</p>
+<div class="plans">
+${card(PRICING.trial, { href: '/signup', cta: PRICING.trial.cta })}
+${card(PRICING.annual, { featured: true, href: '/signup?plan=annual', cta: PRICING.annual.cta })}
+${card(PRICING.enterprise, { href: WHATSAPP_URL, cta: PRICING.enterprise.cta, external: true })}
+</div>
+<section class="block">
+  <h2>${esc(PRICING.includesTitle)}</h2>
+  <ul class="points">${PRICING.features.map((f) => `<li>${esc(f)}</li>`).join('')}</ul>
+</section>
+${faq}
+<div class="end-cta">
+  <p>جاهز تجرّب رغوة في مغسلتك؟</p>
+  <a class="cta-btn" href="/signup">${esc(PRICING.trial.cta)}</a>
+</div>`;
+}
+
+function pricingJsonLd() {
+  return [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'SoftwareApplication',
+      name: 'رغوة',
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Web',
+      inLanguage: 'ar',
+      url: `${SITE_URL}/pricing`,
+      offers: {
+        '@type': 'Offer',
+        price: PRICING.annual.price,
+        priceCurrency: 'SAR',
+        url: `${SITE_URL}/pricing`,
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'رغوة', item: `${SITE_URL}/` },
+        { '@type': 'ListItem', position: 2, name: 'الأسعار', item: `${SITE_URL}/pricing` },
+      ],
+    },
+  ];
+}
+
 function main() {
   if (existsSync(OUT_DIR)) rmSync(OUT_DIR, { recursive: true, force: true });
   mkdirSync(OUT_DIR, { recursive: true });
@@ -263,7 +362,20 @@ function main() {
   });
   writeFileSync(path.join(OUT_DIR, 'index.html'), indexHtml, 'utf8');
 
-  console.log(`[build-guides] generated ${guides.length} guide pages + index into public/guides/`);
+  writeFileSync(
+    PRICING_FILE,
+    pageShell({
+      title: `${PRICING_TITLE} | رغوة`,
+      description: PRICING_DESC,
+      canonicalPath: '/pricing',
+      jsonLd: pricingJsonLd(),
+      bodyHtml: renderPricingBody(),
+      ogType: 'website',
+    }),
+    'utf8'
+  );
+
+  console.log(`[build-guides] generated ${guides.length} guide pages + index into public/guides/ and public/pricing.html`);
 }
 
 main();

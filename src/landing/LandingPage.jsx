@@ -411,6 +411,13 @@ export default function LandingPage(props) {
               ))}
             </ul>
           </div>
+
+          {/* /pricing is a static Arabic-only page (scripts/build-guides.mjs): plain full-page link, shown only when the text exists. */}
+          {t.pricing.detailsLink && (
+            <p className="mt-8 text-center">
+              <a href="/pricing" className="text-sm font-semibold text-amber-300 hover:text-amber-200 transition">{t.pricing.detailsLink} {dir === 'rtl' ? '←' : '→'}</a>
+            </p>
+          )}
         </div>
       </div>
 
