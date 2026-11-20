@@ -1058,6 +1058,13 @@ const DICT = {
     settle_amount: "Payment Amount (SAR)", settle_overWallet: "Wallet balance is not enough for this amount.",
     settle_exceedsDebtError: "Amount exceeds the maximum outstanding debt ({amount})",
     settle_remaining: "Remaining Debt After Payment", settle_confirm: "Confirm Payment & Close",
+    settle_target: "Pay for", settle_invoiceOption: "Invoice {code} · {date} · {amount} remaining", settle_unlinkedDebt: "Debt without an invoice · {amount}",
+    settle_errLinked: "This debt belongs to pay-later invoices — pay it on the invoice itself.",
+    creditPay_title: "Pay-Later Invoice", creditPay_notice: "Invoice {code} is pay-later. It must be paid before it can be handed over.",
+    creditPay_amountDue: "Amount Due", creditPay_confirm: "Confirm Payment & Hand Over", creditPay_noMethods: "No payment method is enabled. Enable one in Settings.",
+    creditPay_errSameMethod: "Choose two different payment methods.", creditPay_errChanged: "The amount owed on this invoice has changed. Check the new amount and try again.",
+    invoiceDetail_creditDue: "Pay-later · {amount} remaining", invoices_creditCheckFailed: "Couldn't check the invoice's payment. Check the connection and try again.",
+    customerDetail_debtInvoiceDetail: "Invoice {code} · {method}", customerDetail_creditDue: "{amount} remaining",
 
     products_newProduct: "New Product", lib_open: "Product library", lib_title: "Product library", lib_hint: "Pick products, adjust names and prices, then save — they are added straight to your products.", lib_introTitle: "We know adding products takes time. Want to add them from the product library?", lib_introBody: "Choose ready-made products from our library, tweak their names, prices and options, and add them all in one go.", lib_fromLibrary: "From the product library", lib_myself: "I'll add them myself", lib_selectAll: "Select all", lib_clearAll: "Clear selection", lib_selectGroup: "Select group", lib_clearGroup: "Clear group", lib_selected: "{n} selected", lib_added: "Added", lib_addSelected: "Add selected ({n})", lib_adding: "Adding…", lib_addOption: "Add option", lib_optionName: "Option name", lib_rushTitle: "Rush options", lib_priceFor: "Price", lib_errName: "Every selected product needs a name.", lib_errService: "Every selected product needs at least one service price.", lib_failed: "Some products could not be added, please try again.", lib_loading: "Loading the library…", products_image: "Image", products_upload: "Upload (250×250)",
     products_name: "Product Name", products_servicePrices: "Service Prices",
@@ -1363,6 +1370,13 @@ const DICT = {
     settle_amount: "مبلغ الدفعة (ريال)", settle_overWallet: "رصيد المحفظة لا يكفي هذا المبلغ.",
     settle_exceedsDebtError: "المبلغ يتجاوز الحد الأقصى المستحق ({amount})",
     settle_remaining: "الدين المتبقي بعد الدفع", settle_confirm: "تأكيد الدفع والإغلاق",
+    settle_target: "الدفع عن", settle_invoiceOption: "فاتورة {code} · {date} · متبقي {amount}", settle_unlinkedDebt: "دين بدون فاتورة · {amount}",
+    settle_errLinked: "هذا الدين على فواتير دفع آجل، سدّده من الفاتورة نفسها.",
+    creditPay_title: "فاتورة دفع آجل", creditPay_notice: "الفاتورة {code} دفع آجل، لازم تنسدّ قبل التسليم.",
+    creditPay_amountDue: "المبلغ المستحق", creditPay_confirm: "تأكيد الدفع والتسليم", creditPay_noMethods: "ما فيه طريقة دفع مفعّلة. فعّل وحدة من الإعدادات.",
+    creditPay_errSameMethod: "اختر طريقتين دفع مختلفتين.", creditPay_errChanged: "المبلغ المتبقي على الفاتورة تغيّر. راجع المبلغ الجديد وحاول مرة ثانية.",
+    invoiceDetail_creditDue: "دفع آجل · متبقي {amount}", invoices_creditCheckFailed: "ما قدرنا نتحقق من دفع الفاتورة. تأكد من الاتصال وحاول مرة ثانية.",
+    customerDetail_debtInvoiceDetail: "فاتورة {code} · {method}", customerDetail_creditDue: "متبقي {amount}",
 
     products_newProduct: "منتج جديد", lib_open: "مكتبة المنتجات", lib_title: "مكتبة المنتجات", lib_hint: "اختر المنتجات وعدّل الأسماء والأسعار ثم احفظ، وتنضاف مباشرة لمنتجاتك.", lib_introTitle: "ندري إن إضافة المنتجات قروشة وتاخذ وقت، وش رايك تضيفها من مكتبة المنتجات؟", lib_introBody: "اختر من منتجات جاهزة بصورها وأسعارها، عدّل الأسماء والأسعار والخيارات، وأضفها كلها مرة وحدة.", lib_fromLibrary: "من مكتبة المنتجات", lib_myself: "أضيفها بنفسي", lib_selectAll: "تحديد الكل", lib_clearAll: "إلغاء التحديد", lib_selectGroup: "تحديد المجموعة", lib_clearGroup: "إلغاء المجموعة", lib_selected: "تم تحديد {n}", lib_added: "مضاف", lib_addSelected: "إضافة المحدد ({n})", lib_adding: "جارٍ الإضافة…", lib_addOption: "إضافة خيار", lib_optionName: "اسم الخيار", lib_rushTitle: "خيارات الاستعجال", lib_priceFor: "السعر", lib_errName: "كل منتج محدد لازم يكون له اسم.", lib_errService: "كل منتج محدد لازم يكون له سعر خدمة واحد على الأقل.", lib_failed: "تعذرت إضافة بعض المنتجات، حاول مرة ثانية.", lib_loading: "جارٍ تحميل المكتبة…", products_image: "الصورة", products_upload: "رفع صورة (250×250)",
     products_name: "اسم المنتج", products_servicePrices: "أسعار الخدمات",
@@ -1668,6 +1682,13 @@ const DICT = {
     settle_amount: "ادائیگی کی رقم (ریال)", settle_overWallet: "اس رقم کے لیے والٹ بیلنس ناکافی ہے۔",
     settle_exceedsDebtError: "رقم زیادہ سے زیادہ واجب الادا حد ({amount}) سے تجاوز کر گئی ہے",
     settle_remaining: "ادائیگی کے بعد باقی ادھار", settle_confirm: "ادائیگی کی تصدیق اور بند کریں",
+    settle_target: "ادائیگی برائے", settle_invoiceOption: "انوائس {code} · {date} · باقی {amount}", settle_unlinkedDebt: "بغیر انوائس کا ادھار · {amount}",
+    settle_errLinked: "یہ ادھار بعد میں ادائیگی والی انوائسز کا ہے — اسے انوائس پر ہی ادا کریں۔",
+    creditPay_title: "بعد میں ادائیگی والی انوائس", creditPay_notice: "انوائس {code} بعد میں ادائیگی والی ہے۔ حوالگی سے پہلے ادائیگی ضروری ہے۔",
+    creditPay_amountDue: "واجب الادا رقم", creditPay_confirm: "ادائیگی کی تصدیق اور حوالگی", creditPay_noMethods: "کوئی ادائیگی کا طریقہ فعال نہیں۔ سیٹنگز سے ایک فعال کریں۔",
+    creditPay_errSameMethod: "دو مختلف ادائیگی کے طریقے منتخب کریں۔", creditPay_errChanged: "اس انوائس پر باقی رقم بدل گئی ہے۔ نئی رقم دیکھ کر دوبارہ کوشش کریں۔",
+    invoiceDetail_creditDue: "بعد میں ادائیگی · باقی {amount}", invoices_creditCheckFailed: "انوائس کی ادائیگی چیک نہیں ہو سکی۔ کنکشن چیک کر کے دوبارہ کوشش کریں۔",
+    customerDetail_debtInvoiceDetail: "انوائس {code} · {method}", customerDetail_creditDue: "باقی {amount}",
 
     products_newProduct: "نیا پروڈکٹ", lib_open: "پروڈکٹ لائبریری", lib_title: "پروڈکٹ لائبریری", lib_hint: "پروڈکٹس منتخب کریں، نام اور قیمتیں بدلیں، پھر محفوظ کریں — وہ سیدھے آپ کی پروڈکٹس میں شامل ہو جائیں گی۔", lib_introTitle: "ہمیں معلوم ہے پروڈکٹس شامل کرنے میں وقت لگتا ہے۔ کیوں نہ انہیں پروڈکٹ لائبریری سے شامل کریں؟", lib_introBody: "تیار پروڈکٹس میں سے چنیں، نام، قیمتیں اور آپشنز بدلیں اور سب ایک ساتھ شامل کریں۔", lib_fromLibrary: "پروڈکٹ لائبریری سے", lib_myself: "میں خود شامل کروں گا", lib_selectAll: "سب منتخب کریں", lib_clearAll: "انتخاب ختم کریں", lib_selectGroup: "گروپ منتخب کریں", lib_clearGroup: "گروپ کا انتخاب ختم کریں", lib_selected: "{n} منتخب", lib_added: "شامل ہے", lib_addSelected: "منتخب شامل کریں ({n})", lib_adding: "شامل ہو رہا ہے…", lib_addOption: "آپشن شامل کریں", lib_optionName: "آپشن کا نام", lib_rushTitle: "فوری آپشنز", lib_priceFor: "قیمت", lib_errName: "ہر منتخب پروڈکٹ کا نام ہونا ضروری ہے۔", lib_errService: "ہر منتخب پروڈکٹ کی کم از کم ایک سروس قیمت ضروری ہے۔", lib_failed: "کچھ پروڈکٹس شامل نہ ہو سکیں، دوبارہ کوشش کریں۔", lib_loading: "لائبریری لوڈ ہو رہی ہے…", products_image: "تصویر", products_upload: "تصویر اپ لوڈ کریں (250×250)",
     products_name: "پروڈکٹ کا نام", products_servicePrices: "سروس کی قیمتیں",
@@ -2427,6 +2448,55 @@ const PAY_METHOD_ICONS = {
   "Split": SplitSquareHorizontal,
 };
 
+// The payment-method buttons and the two-method split fields, shared by the
+// register and the pay-later hand-over window so both look and work the same.
+// `children` of the grid are extra buttons in the same row (the register's
+// delivery toggle); `children` of the split fields are its error lines.
+function PayMethodGrid({ methods, value, onChange, children }) {
+  const { t } = useLang();
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {methods.map((m) => {
+        const Icon = PAY_METHOD_ICONS[m.value] || CreditCard;
+        const active = value === m.value;
+        return (
+          <button key={m.value} type="button" onClick={() => onChange(m.value)} data-testid={`pay-${m.value}`}
+            className={`flex flex-col items-center gap-1 rounded-lg border px-1 py-2.5 text-center text-[10.5px] font-bold leading-tight transition-colors ${active ? "border-brand-500 bg-brand-50 text-brand-700" : "border-app-border-strong text-app-text-muted"}`}>
+            <Icon className="size-4" />{t(m.key)}
+          </button>
+        );
+      })}
+      {children}
+    </div>
+  );
+}
+
+function SplitPaymentFields({ methods, method1, onMethod1, amount1, onAmount1, method2, onMethod2, remaining, amountInvalid, children }) {
+  const { t } = useLang();
+  return (
+    <div className="space-y-2 rounded-lg border border-app-border bg-app-bg p-3">
+      <Field label={t("pos_splitMethod1")}>
+        <select value={method1} onChange={(e) => onMethod1(e.target.value)} className={inputCls}>
+          {methods.map((m) => <option key={m.value} value={m.value}>{t(m.key)}</option>)}
+        </select>
+      </Field>
+      <Field label={t("pos_splitAmount1")}>
+        <input type="number" min="0" value={amount1} onChange={(e) => onAmount1(e.target.value)} className={inputCls} />
+      </Field>
+      {amountInvalid && <div className="text-xs font-medium text-danger-600">{t("pos_splitErrorAmount")}</div>}
+      <Field label={t("pos_splitMethod2")}>
+        <select value={method2} onChange={(e) => onMethod2(e.target.value)} className={inputCls}>
+          {methods.map((m) => <option key={m.value} value={m.value}>{t(m.key)}</option>)}
+        </select>
+      </Field>
+      <Field label={t("pos_splitRemaining")}>
+        <input type="text" readOnly value={sar(remaining)} className={`${inputCls} f-mono bg-app-border/40 text-app-text-muted`} />
+      </Field>
+      {children}
+    </div>
+  );
+}
+
 function CustomerPicker({ customers, customerId, onSelect, onAddNew }) {
   const { t } = useLang();
   const [query, setQuery] = useState("");
@@ -2829,17 +2899,7 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
           </div>
           <div className="border-t border-app-border p-4 space-y-3">
             <Field label={t("common_paymentMethod")}>
-              <div className="grid grid-cols-3 gap-2">
-                {availablePosPayMethods.map((m) => {
-                  const Icon = PAY_METHOD_ICONS[m.value] || CreditCard;
-                  const active = payMethod === m.value;
-                  return (
-                    <button key={m.value} type="button" onClick={() => setPayMethod(m.value)}
-                      className={`flex flex-col items-center gap-1 rounded-lg border px-1 py-2.5 text-center text-[10.5px] font-bold leading-tight transition-colors ${active ? "border-brand-500 bg-brand-50 text-brand-700" : "border-app-border-strong text-app-text-muted"}`}>
-                      <Icon className="size-4" />{t(m.key)}
-                    </button>
-                  );
-                })}
+              <PayMethodGrid methods={availablePosPayMethods} value={payMethod} onChange={setPayMethod}>
                 {/* Not a payment method — a separate "is this a delivery
                     order?" toggle that happens to live in this grid, right
                     beside "دفع متعدد" (Split). Doesn't touch payMethod at
@@ -2849,7 +2909,7 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
                   className={`flex flex-col items-center gap-1 rounded-lg border px-1 py-2.5 text-center text-[10.5px] font-bold leading-tight transition-colors ${isDelivery ? "border-warning-500 bg-warning-50 text-warning-700" : "border-app-border-strong text-app-text-muted"}`}>
                   <Truck className="size-4" />{t("pos_deliveryOrder")}
                 </button>
-              </div>
+              </PayMethodGrid>
             </Field>
             {isDelivery && (
               <div className="flex flex-wrap items-center gap-2 rounded-lg border border-warning-200 bg-warning-50 px-3 py-2.5">
@@ -2879,26 +2939,10 @@ function POSView({ categories, products, addons, customers, addCustomer, onCreat
             {autoPromos.length > 0 && <div className="flex items-center gap-1 text-[11px] font-medium text-brand-700"><Check size={12} /> {t("pos_autoDiscountApplied")}</div>}
 
             {isSplit && (
-              <div className="space-y-2 rounded-lg border border-app-border bg-app-bg p-3">
-                <Field label={t("pos_splitMethod1")}>
-                  <select value={splitMethod1} onChange={(e) => setSplitMethod1(e.target.value)} className={inputCls}>
-                    {availableSplitMethods.map((m) => <option key={m.value} value={m.value}>{t(m.key)}</option>)}
-                  </select>
-                </Field>
-                <Field label={t("pos_splitAmount1")}>
-                  <input type="number" min="0" value={splitAmount1} onChange={(e) => setSplitAmount1(e.target.value)} className={inputCls} />
-                </Field>
-                {splitAmountInvalid && <div className="text-xs font-medium text-danger-600">{t("pos_splitErrorAmount")}</div>}
-                <Field label={t("pos_splitMethod2")}>
-                  <select value={splitMethod2} onChange={(e) => setSplitMethod2(e.target.value)} className={inputCls}>
-                    {availableSplitMethods.map((m) => <option key={m.value} value={m.value}>{t(m.key)}</option>)}
-                  </select>
-                </Field>
-                <Field label={t("pos_splitRemaining")}>
-                  <input type="text" readOnly value={sar(splitAmt2)} className={`${inputCls} f-mono bg-app-border/40 text-app-text-muted`} />
-                </Field>
+              <SplitPaymentFields methods={availableSplitMethods} method1={splitMethod1} onMethod1={setSplitMethod1} amount1={splitAmount1} onAmount1={setSplitAmount1}
+                method2={splitMethod2} onMethod2={setSplitMethod2} remaining={splitAmt2} amountInvalid={splitAmountInvalid}>
                 {splitWalletInsufficient && <div className="text-xs font-medium text-danger-600">{t("pos_splitErrorWallet")}</div>}
-              </div>
+              </SplitPaymentFields>
             )}
 
             {discountAmount > 0 && (
@@ -2958,7 +3002,99 @@ function LifecycleBar({ status }) {
   );
 }
 
-function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoice, merchant, zatcaRecord, customerPhone, whatsappTemplate, whatsappEnabled }) {
+// A pay_invoice_credit() / customer-debt rejection, as a message key.
+function creditPayErrorKey(error) {
+  const m = error?.message || "";
+  if (m.includes("insufficient_balance")) return "pos_walletInsufficient";
+  if (m.includes("amount_mismatch") || m.includes("debt_mismatch")) return "creditPay_errChanged";
+  if (m.includes("debt_linked_to_invoices")) return "settle_errLinked";
+  return "common_operationFailed";
+}
+
+// Shown when a piece of a pay-later invoice is about to be handed over: the
+// amount still owed is fixed, the cashier only picks how it's paid, with the
+// same buttons and split fields as the register (minus pay-later itself).
+// onPay(payments) throws on a rejection, which is shown here.
+function CreditPaymentModal({ invoice, customer, due, enabledPayMethods, onPay, onClose }) {
+  const { t } = useLang();
+  const cents = (n) => Math.round((n + Number.EPSILON) * 100) / 100;
+  const methods = POS_PAY_METHODS.filter((m) => m.value !== "Credit (On Account)" && enabledPayMethods[m.value] !== false);
+  const splitMethods = PAY_METHODS.filter((m) => m.value !== "Credit (On Account)" && enabledPayMethods[m.value] !== false);
+  const [payMethod, setPayMethod] = useState(methods[0]?.value || "");
+  const [method1, setMethod1] = useState(splitMethods[0]?.value || "");
+  const [amount1, setAmount1] = useState("");
+  const [method2, setMethod2] = useState(splitMethods[1]?.value || splitMethods[0]?.value || "");
+  const [error, setError] = useState("");
+  const submittingRef = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const wallet = Number(customer?.walletBalance || 0);
+  const isSplit = payMethod === "Split";
+  const amt1 = cents(Number(amount1 || 0));
+  const amt2 = cents(Math.max(0, due - amt1));
+  const splitAmountInvalid = isSplit && (amount1 === "" || amt1 <= 0 || amt1 >= due);
+  const sameMethods = isSplit && method1 === method2;
+  const walletNeeded = isSplit
+    ? (method1 === "Wallet Balance" ? amt1 : 0) + (method2 === "Wallet Balance" ? amt2 : 0)
+    : (payMethod === "Wallet Balance" ? due : 0);
+  const walletShort = walletNeeded > wallet + 0.005;
+  const canPay = Boolean(payMethod) && !splitAmountInvalid && !sameMethods && !walletShort && !submitting;
+
+  const confirm = async () => {
+    if (!canPay || submittingRef.current) return;
+    submittingRef.current = true;
+    setSubmitting(true);
+    setError("");
+    try {
+      await onPay(isSplit ? [{ method: method1, amount: amt1 }, { method: method2, amount: amt2 }] : [{ method: payMethod, amount: cents(due) }]);
+    } catch (e) {
+      console.error("pay invoice credit failed", e);
+      setError(t(creditPayErrorKey(e)));
+    } finally {
+      submittingRef.current = false;
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <Modal title={t("creditPay_title")} onClose={onClose} onSubmit={canPay ? confirm : undefined}>
+      <div data-testid="credit-pay">
+        <div className="mb-4 rounded-lg border border-warning-200 bg-warning-50 px-3 py-2.5 text-sm font-medium text-warning-800">{t("creditPay_notice", { code: invoice.code })}</div>
+        <div className="mb-4 grid grid-cols-2 gap-3">
+          <div className="rounded-lg border border-app-border bg-app-bg p-3">
+            <div className="text-xs text-app-text-muted">{t("common_customer")}</div>
+            <div className="truncate font-semibold text-app-text">{invoice.customerName}</div>
+            {customer && <div className="mt-0.5 text-[11px] text-app-text-muted">{t("pos_wallet")}: {sar(wallet)}</div>}
+          </div>
+          <div className="rounded-lg border border-danger-200 bg-danger-50 p-3">
+            <div className="text-xs text-danger-700">{t("creditPay_amountDue")}</div>
+            <div className="f-mono text-lg font-semibold text-danger-800" data-testid="credit-pay-due">{sar(due)}</div>
+          </div>
+        </div>
+        {methods.length === 0
+          ? <div className="mb-4 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{t("creditPay_noMethods")}</div>
+          : <Field label={t("common_paymentMethod")}><PayMethodGrid methods={methods} value={payMethod} onChange={setPayMethod} /></Field>}
+        {isSplit && (
+          <div className="mb-3">
+            <SplitPaymentFields methods={splitMethods} method1={method1} onMethod1={setMethod1} amount1={amount1} onAmount1={setAmount1}
+              method2={method2} onMethod2={setMethod2} remaining={amt2} amountInvalid={splitAmountInvalid}>
+              {sameMethods && <div className="text-xs font-medium text-danger-600">{t("creditPay_errSameMethod")}</div>}
+            </SplitPaymentFields>
+          </div>
+        )}
+        {walletShort && <div className="mb-3 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700">{t("pos_walletInsufficient")}</div>}
+        {error && <div className="mb-3 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2 text-xs font-medium text-danger-700" data-testid="credit-pay-error">{error}</div>}
+        <div className="flex gap-2">
+          <button type="button" onClick={confirm} disabled={!canPay} data-testid="credit-pay-confirm"
+            className="flex-1 rounded-lg bg-brand-500 py-2.5 font-semibold text-white hover:bg-brand-600 disabled:bg-app-border-strong">{t("creditPay_confirm")}</button>
+          <button type="button" onClick={onClose} className="rounded-lg border border-app-border-strong px-4 py-2.5 text-sm font-semibold text-app-text-muted hover:bg-app-bg">{t("common_cancel")}</button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoice, merchant, zatcaRecord, customerPhone, whatsappTemplate, whatsappEnabled, notice }) {
   const { t } = useLang();
   const branchUi = useBranches();
   const status = invoiceOverallStatus(invoice);
@@ -2994,6 +3130,11 @@ function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoi
           <CheckCircle2 size={14} /> {t("invoiceDetail_zatcaSigned")}
         </div>
       )}
+      {Number(invoice.creditDue || 0) > 0 && (
+        <div className="mb-6 flex items-center gap-1.5 rounded-lg border border-warning-200 bg-warning-50 px-3 py-2 text-xs font-semibold text-warning-800" data-testid="invoice-credit-due">
+          <Clock size={14} /> {t("invoiceDetail_creditDue", { amount: sar(invoice.creditDue) })}
+        </div>
+      )}
       {invoice.isDelivery && (
         <div className="mb-6 flex items-center justify-between rounded-lg border border-teal-200 bg-teal-50 px-4 py-2.5 text-sm">
           <span className="flex items-center gap-1.5 font-medium text-teal-800"><Truck size={14} /> {t("invoiceDetail_deliveryOrder")}</span>
@@ -3019,6 +3160,7 @@ function InvoiceDetailModal({ invoice, onClose, onUpdateItemStatus, onCloseInvoi
         ))}
       </div>
 
+      {notice && <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{notice}</div>}
       {printError && <div className="mb-3 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{printError}</div>}
       <div className="flex gap-2">
         <button onClick={printDeliveryReceipt} className="flex flex-1 items-center justify-center gap-2 rounded-lg border border-teal-300 bg-teal-50 py-3 font-semibold text-teal-700 hover:bg-teal-100">
@@ -3163,9 +3305,25 @@ function deliveryStatusMeta(t, inv) {
   return { tone: "bg-app-bg text-app-text-muted", label: t("invoices_statusWaitingCourier") };
 }
 
-function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, merchant, zatcaInvoices = [], whatsappTemplate, whatsappEnabled, readyMessageEnabled, readyMessageTemplate, whatsappReadySendMode }) {
+// True for an invoice sold (fully or partly) on pay-later, or one the
+// database still shows something owed on.
+function invoiceHasCredit(inv) {
+  return inv.payMethod === "Credit (On Account)"
+    || (inv.payMethod === "Split" && (inv.splitPayments || []).some((sp) => sp.method === "Credit (On Account)"))
+    || Number(inv.creditDue || 0) > 0;
+}
+
+function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, merchant, zatcaInvoices = [], whatsappTemplate, whatsappEnabled, readyMessageEnabled, readyMessageTemplate, whatsappReadySendMode, enabledPayMethods, fetchCreditDue, payInvoiceCredit }) {
   const { t, lang } = useLang();
   const [openId, setOpenId] = useState(null);
+  // { invoiceId, due, action } while the pay-later window is open; `action`
+  // is the hand-over the cashier asked for, run once the invoice is paid.
+  const [creditGate, setCreditGate] = useState(null);
+  const [deliverNotice, setDeliverNotice] = useState("");
+  // The hand-over runs after an await (and after payment), so it reads the
+  // invoice as it is then, not as it was when the cashier clicked.
+  const invoicesRef = useRef(invoices);
+  invoicesRef.current = invoices;
   const [customerFilter, setCustomerFilter] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
   // { phone, message } while the "السؤال قبل الإرسال" popup is open, else
@@ -3204,8 +3362,45 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
     setReadyConfirm({ phone: cleanedPhone, message });
   };
 
-  const updateItemStatus = (invId, itemId, status) => {
-    const inv = invoices.find((i) => i.id === invId);
+  // A pay-later invoice is handed over only once nothing is owed on it. The
+  // amount is read from the database at this moment (the database also
+  // refuses the hand-over itself while anything is owed — see
+  // supabase-credit-invoice-payment.sql); if something is, the payment window
+  // opens and the status stays as it was until it's paid.
+  const deliverAfterPayment = async (inv, action) => {
+    setDeliverNotice("");
+    if (!invoiceHasCredit(inv)) { action(); return; }
+    let due;
+    try {
+      due = await fetchCreditDue(inv.id);
+    } catch (e) {
+      console.error("fetchCreditDue failed", e);
+      setDeliverNotice(t("invoices_creditCheckFailed"));
+      return;
+    }
+    if (due > 0) setCreditGate({ invoiceId: inv.id, due, action });
+    else action();
+  };
+  const payGatedInvoice = async (payments) => {
+    const gate = creditGate;
+    try {
+      await payInvoiceCredit(gate.invoiceId, payments);
+    } catch (e) {
+      const msg = e?.message || "";
+      if (msg.includes("amount_mismatch") || msg.includes("already_paid")) {
+        // Paid (partly or fully) from somewhere else meanwhile: go by what is owed now.
+        const due = await fetchCreditDue(gate.invoiceId);
+        if (due > 0) { setCreditGate({ ...gate, due }); throw e; }
+      } else {
+        throw e;
+      }
+    }
+    setCreditGate(null);
+    gate.action();
+  };
+
+  const applyItemStatus = (invId, itemId, status) => {
+    const inv = invoicesRef.current.find((i) => i.id === invId);
     if (!inv) return;
     // readyAt is what the pickup reminders count their days from (see
     // utils/pickupReminders.js), stamped each time an item turns Ready.
@@ -3213,13 +3408,25 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
     updateInvoice(invId, { items });
     maybeNotifyReady(inv, items);
   };
+  const updateItemStatus = (invId, itemId, status) => {
+    const inv = invoices.find((i) => i.id === invId);
+    if (!inv) return;
+    const handingOver = status === "Delivered" && inv.items.find((it) => it.itemId === itemId)?.status !== "Delivered";
+    if (handingOver) deliverAfterPayment(inv, () => applyItemStatus(invId, itemId, status));
+    else applyItemStatus(invId, itemId, status);
+  };
   const closeInvoice = (invId) => {
     const inv = invoices.find((i) => i.id === invId);
     if (!inv) return;
-    const items = inv.items.map((it) => ({ ...it, status: "Delivered", deliveredAt: it.deliveredAt || nowISO() }));
-    updateInvoice(invId, { closed: true, items });
-    setOpenId(null);
+    deliverAfterPayment(inv, () => {
+      const current = invoicesRef.current.find((i) => i.id === invId);
+      if (!current) return;
+      const items = current.items.map((it) => ({ ...it, status: "Delivered", deliveredAt: it.deliveredAt || nowISO() }));
+      updateInvoice(invId, { closed: true, items });
+      setOpenId(null);
+    });
   };
+  const gatedInvoice = creditGate ? invoices.find((i) => i.id === creditGate.invoiceId) : null;
 
   return (
     <div>
@@ -3290,7 +3497,17 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
           </tbody>
         </table>
       </div>
-      {openInvoice && <InvoiceDetailModal invoice={openInvoice} onClose={() => setOpenId(null)} onUpdateItemStatus={updateItemStatus} onCloseInvoice={closeInvoice} merchant={merchant} zatcaRecord={openInvoiceZatcaRecord} customerPhone={openInvoiceCustomerPhone} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} />}
+      {openInvoice && <InvoiceDetailModal invoice={openInvoice} onClose={() => { setOpenId(null); setDeliverNotice(""); }} onUpdateItemStatus={updateItemStatus} onCloseInvoice={closeInvoice} merchant={merchant} zatcaRecord={openInvoiceZatcaRecord} customerPhone={openInvoiceCustomerPhone} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} notice={deliverNotice} />}
+      {gatedInvoice && (
+        <CreditPaymentModal
+          invoice={gatedInvoice}
+          customer={customers.find((c) => c.id === gatedInvoice.customerId)}
+          due={creditGate.due}
+          enabledPayMethods={enabledPayMethods}
+          onPay={payGatedInvoice}
+          onClose={() => setCreditGate(null)}
+        />
+      )}
       {readyConfirm && (
         <WhatsAppReadyConfirmModal
           message={readyConfirm.message}
@@ -3397,14 +3614,29 @@ function TopUpModal({ customer, onClose, onSubmit, error }) {
   );
 }
 
-function SettleDebtModal({ customer, onClose, onSubmit, error }) {
+// Every payment is settled against one target: a pay-later invoice (its own
+// remaining amount, so what was paid and for what stays on that invoice) or
+// the customer's debt that has no invoice (a wallet top-up on credit).
+function SettleDebtModal({ customer, invoices, onClose, onSubmit, error }) {
   const { t } = useLang();
-  const [amount, setAmount] = useState(customer.debt);
+  const owing = invoices
+    .filter((i) => i.customerId === customer.id && Number(i.creditDue || 0) > 0)
+    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  const unlinked = Math.round((Number(customer.debt) - owing.reduce((s, i) => s + Number(i.creditDue), 0)) * 100) / 100;
+  const targets = [
+    ...owing.map((i) => ({ key: i.id, invoiceId: i.id, max: Number(i.creditDue), label: t("settle_invoiceOption", { code: i.code, date: fmtDate(i.createdAt), amount: sar(i.creditDue) }) })),
+    ...(unlinked > 0.005 ? [{ key: "unlinked", invoiceId: null, max: unlinked, label: t("settle_unlinkedDebt", { amount: sar(unlinked) }) }] : []),
+  ];
+  const [targetKey, setTargetKey] = useState(targets[0]?.key || "");
+  const target = targets.find((x) => x.key === targetKey) || targets[0] || null;
+  const [amount, setAmount] = useState(target ? target.max : 0);
   const [payMethod, setPayMethod] = useState("Cash");
   const [notes, setNotes] = useState("");
-  const remaining = Math.max(0, Number(customer.debt) - Number(amount || 0));
+  const pickTarget = (key) => { setTargetKey(key); const next = targets.find((x) => x.key === key); if (next) setAmount(next.max); };
+  const maxAmount = target ? target.max : 0;
+  const remaining = Math.max(0, maxAmount - Number(amount || 0));
   const overWallet = payMethod === "Wallet Balance" && Number(amount || 0) > customer.walletBalance;
-  const exceedsDebt = Number(amount || 0) > customer.debt;
+  const exceedsDebt = Number(amount || 0) > maxAmount + 0.005;
   // Same rapid-double-click guard as TopUpModal (ref, not just state — see there for why).
   const submittingRef = useRef(false);
   const [submitting, setSubmitting] = useState(false);
@@ -3413,14 +3645,14 @@ function SettleDebtModal({ customer, onClose, onSubmit, error }) {
     submittingRef.current = true;
     setSubmitting(true);
     try {
-      await onSubmit({ amount: Number(amount || 0), notes, payMethod });
+      await onSubmit({ invoiceId: target.invoiceId, amount: Number(amount || 0), notes, payMethod });
     } finally {
       submittingRef.current = false;
       setSubmitting(false);
     }
   };
 
-  const canSettle = !overWallet && !exceedsDebt && Number(amount || 0) > 0;
+  const canSettle = Boolean(target) && !overWallet && !exceedsDebt && Number(amount || 0) > 0;
   return (
     <Modal title={`${t("settle_title")} · ${customer.name}`} onClose={onClose} onSubmit={canSettle ? confirm : undefined}>
       <div className="mb-4 grid grid-cols-2 gap-3">
@@ -3440,14 +3672,20 @@ function SettleDebtModal({ customer, onClose, onSubmit, error }) {
           <option value="Wallet Balance">{t("common_walletBalance")}</option>
         </select>
       </Field>
-      <Field label={t("settle_amount")}><input type="number" min="0" max={customer.debt} value={amount} onChange={(e) => setAmount(e.target.value)} className={inputCls} /></Field>
-      {exceedsDebt && <div className="mb-4 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{t("settle_exceedsDebtError", { amount: sar(customer.debt) })}</div>}
+      <Field label={t("settle_target")}>
+        <select value={target?.key || ""} onChange={(e) => pickTarget(e.target.value)} className={inputCls} data-testid="settle-target">
+          {targets.map((x) => <option key={x.key} value={x.key}>{x.label}</option>)}
+        </select>
+      </Field>
+      <Field label={t("settle_amount")}><input type="number" min="0" max={maxAmount} value={amount} onChange={(e) => setAmount(e.target.value)} className={inputCls} /></Field>
+      {exceedsDebt && <div className="mb-4 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{t("settle_exceedsDebtError", { amount: sar(maxAmount) })}</div>}
       {overWallet && <div className="mb-4 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{t("settle_overWallet")}</div>}
       <div className="mb-4 rounded-lg bg-stone-50 border border-stone-200 p-3">
         <div className="text-xs text-slate-500">{t("settle_remaining")}</div>
         <div className="f-mono font-semibold text-slate-900">{sar(remaining)}</div>
       </div>
-      <Field label={t("common_notes")}><textarea maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputCls} /></Field>
+      {/* A payment on an invoice is recorded with that invoice's number as its note. */}
+      {target && !target.invoiceId && <Field label={t("common_notes")}><textarea maxLength={500} value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={inputCls} /></Field>}
       {error && <div className="mb-4 rounded-lg bg-rose-50 border border-rose-200 px-3 py-2 text-xs font-medium text-rose-700">{error}</div>}
       <button
         disabled={!canSettle || submitting}
@@ -3512,7 +3750,10 @@ function CustomerDetailModal({ customer, invoices, transactions, onClose, onOpen
                   <td className="px-3 py-2 f-mono text-slate-600">{inv.code}</td>
                   <td className="px-3 py-2 f-mono text-xs text-slate-500">{fmtDate(inv.createdAt)}</td>
                   <td className="px-3 py-2 text-slate-600">{inv.items.length}</td>
-                  <td className="px-3 py-2 text-slate-600">{payMethodLabel(t, inv.payMethod)}</td>
+                  <td className="px-3 py-2 text-slate-600">
+                    {payMethodLabel(t, inv.payMethod)}
+                    {Number(inv.creditDue || 0) > 0 && <div className="f-mono text-[11px] font-semibold text-rose-700">{t("customerDetail_creditDue", { amount: sar(inv.creditDue) })}</div>}
+                  </td>
                   <td className="px-3 py-2 f-mono font-semibold text-slate-900">{sar(inv.total)}</td>
                   <td className="px-3 py-2">
                     <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${inv.closed ? "bg-teal-100 text-teal-700" : "bg-amber-100 text-amber-700"}`}>{inv.closed ? t("customerDetail_delivered") : t("customerDetail_processing")}</span>
@@ -3538,7 +3779,9 @@ function CustomerDetailModal({ customer, invoices, transactions, onClose, onOpen
                 <td className="px-3 py-2 f-mono text-slate-600">{tx.code}</td>
                 <td className="px-3 py-2 f-mono text-xs text-slate-500">{fmtDate(tx.date)}</td>
                 <td className="px-3 py-2"><span className={`rounded-full px-2 py-0.5 text-xs font-medium ${tx.type === "topup" ? "bg-teal-100 text-teal-700" : "bg-rose-100 text-rose-700"}`}>{tx.type === "topup" ? t("customerDetail_topupType") : t("customerDetail_debtType")}</span></td>
-                <td className="px-3 py-2 text-slate-600">{tx.type === "topup" ? t("customerDetail_creditedDetail", { credited: sar(tx.creditedAmount), discount: discountLabel(tx), method: payMethodLabel(t, tx.payMethod) }) : t("customerDetail_debtDetail", { method: payMethodLabel(t, tx.payMethod) })}</td>
+                <td className="px-3 py-2 text-slate-600">{tx.type === "topup" ? t("customerDetail_creditedDetail", { credited: sar(tx.creditedAmount), discount: discountLabel(tx), method: payMethodLabel(t, tx.payMethod) }) : tx.invoiceId
+                    ? t("customerDetail_debtInvoiceDetail", { code: invoices.find((i) => i.id === tx.invoiceId)?.code || tx.notes, method: payMethodLabel(t, tx.payMethod) })
+                    : t("customerDetail_debtDetail", { method: payMethodLabel(t, tx.payMethod) })}</td>
                 <td className="px-3 py-2 f-mono font-semibold text-slate-900">{sar(tx.paidAmount)}</td>
               </tr>
             ))}
@@ -3574,7 +3817,7 @@ function lastOrderRelativeLabel(t, iso) {
   return years === 1 ? t("customers_yearAgo") : t("customers_yearsAgo", { n: years });
 }
 
-function CustomersView({ customers, updateCustomer, addCustomer, invoices, addInvoice, transactions, addTransaction, merchant, applyCustomerPayment, nextDocNumber, whatsappTemplate, whatsappEnabled }) {
+function CustomersView({ customers, updateCustomer, addCustomer, invoices, addInvoice, transactions, addTransaction, merchant, applyCustomerPayment, payInvoiceCredit, nextDocNumber, whatsappTemplate, whatsappEnabled }) {
   const { t } = useLang();
   const branchUi = useBranches();
   const [query, setQuery] = useState("");
@@ -3671,10 +3914,21 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
     }
   };
 
-  const applySettle = async ({ amount, notes, payMethod }) => {
+  const applySettle = async ({ invoiceId, amount, notes, payMethod }) => {
     const customer = settleFor;
     setSettleError("");
     if (!amount || amount <= 0 || amount > customer.debt) return; // belt-and-braces — the modal's own disabled button already blocks this
+    if (invoiceId) {
+      // Settled on that invoice only (pay_invoice_credit), recorded with it.
+      try {
+        await payInvoiceCredit(invoiceId, [{ method: payMethod, amount: Math.round(amount * 100) / 100 }]);
+        setSettleFor(null);
+      } catch (e) {
+        console.error("applySettle (invoice) failed", e);
+        setSettleError(t(creditPayErrorKey(e)));
+      }
+      return;
+    }
     try {
       // Delta-based (-amount from debt, and also -amount from the wallet if
       // that's where it's coming from) via apply_customer_payment().
@@ -3687,7 +3941,7 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
       setSettleFor(null);
     } catch (e) {
       console.error("applySettle failed", e);
-      setSettleError(t("common_operationFailed"));
+      setSettleError(t(creditPayErrorKey(e)));
     }
   };
 
@@ -3766,7 +4020,7 @@ function CustomersView({ customers, updateCustomer, addCustomer, invoices, addIn
         />
       )}
       {topUpFor && <TopUpModal customer={topUpFor} onClose={() => setTopUpFor(null)} onSubmit={applyTopUp} error={topUpError} />}
-      {settleFor && <SettleDebtModal customer={settleFor} onClose={() => setSettleFor(null)} onSubmit={applySettle} error={settleError} />}
+      {settleFor && <SettleDebtModal customer={settleFor} invoices={invoices} onClose={() => setSettleFor(null)} onSubmit={applySettle} error={settleError} />}
       {showAddCustomer && <AddCustomerModal customers={customers} onClose={() => setShowAddCustomer(false)} onSave={saveNewCustomer} />}
       {printDoc && <PrintDocumentModal doc={printDoc} onClose={() => setPrintDoc(null)} />}
     </div>
@@ -6991,7 +7245,7 @@ function HomeDashboardView({ invoices, merchant, setTab }) {
 /* =========================================================================
    ROOT APP
    ========================================================================= */
-function AppShell({ tab, tabReady, skeletonTab, pickup, tenantId, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, addProduct, updateProduct, deleteProduct, deleteServiceType, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode, onLogout, applyCustomerPayment, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
+function AppShell({ tab, tabReady, skeletonTab, pickup, tenantId, setTab, navigateTab, reportsSubTab, purchasesSubTab, pendingNav, setPendingNav, categories, addCategory, products, addProduct, updateProduct, deleteProduct, deleteServiceType, addons, addAddon, removeAddon, serviceTypes, addServiceType, customers, addCustomer, updateCustomer, customerTransactions, addTransaction, invoices, addInvoice, updateInvoice, suppliers, addSupplier, updateSupplier, purchases, addPurchase, expenseCategories, addExpenseCategory, expenses, addExpense, promotions, addPromotion, updatePromotion, createInvoice, merchant, setMerchant, ownerPinSet, sectionLocks, enabledPayMethods, setEnabledPayMethods, whatsappTemplate, setWhatsappTemplate, whatsappEnabled, setWhatsappEnabled, readyMessageEnabled, setReadyMessageEnabled, readyMessageTemplate, setReadyMessageTemplate, whatsappReadySendMode, setWhatsappReadySendMode, onLogout, applyCustomerPayment, payInvoiceCredit, fetchCreditDue, adjustSupplierBalance, nextDocNumber, zatcaConfig, zatcaInvoices, generateZatcaCsr, enableZatca, disableZatca, resetZatcaConfig }) {
   const { dir, t } = useLang();
   // Branch scope for the owner's "view all / one branch" picker: sales, purchases
   // and expenses follow it; customers, wallets and products are shared and never filtered.
@@ -7034,9 +7288,9 @@ function AppShell({ tab, tabReady, skeletonTab, pickup, tenantId, setTab, naviga
         {tabReady && (<>
         {tab === "home" && <HomeDashboardView invoices={scopedInvoices} merchant={merchant} setTab={setTab} />}
         {tab === "pos" && <POSView categories={categories} products={products} addons={addons} customers={customers} addCustomer={addCustomer} onCreateInvoice={createInvoice} merchant={merchant} promotions={promosForSale} enabledPayMethods={enabledPayMethods} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} setTab={setTab} />}
-        {tab === "invoices" && <InvoicesView invoices={scopedInvoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} readyMessageEnabled={readyMessageEnabled} readyMessageTemplate={readyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} />}
-        {tab === "delivery_invoices" && <InvoicesView invoices={scopedInvoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} readyMessageEnabled={readyMessageEnabled} readyMessageTemplate={readyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} isDelivery />}
-        {tab === "customers" && <CustomersView customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} invoices={invoices} addInvoice={addInvoice} transactions={customerTransactions} addTransaction={addTransaction} merchant={merchant} applyCustomerPayment={applyCustomerPayment} nextDocNumber={nextDocNumber} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} />}
+        {tab === "invoices" && <InvoicesView invoices={scopedInvoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} readyMessageEnabled={readyMessageEnabled} readyMessageTemplate={readyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} enabledPayMethods={enabledPayMethods} fetchCreditDue={fetchCreditDue} payInvoiceCredit={payInvoiceCredit} />}
+        {tab === "delivery_invoices" && <InvoicesView invoices={scopedInvoices} customers={customers} updateInvoice={updateInvoice} merchant={merchant} zatcaInvoices={zatcaInvoices} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} readyMessageEnabled={readyMessageEnabled} readyMessageTemplate={readyMessageTemplate} whatsappReadySendMode={whatsappReadySendMode} enabledPayMethods={enabledPayMethods} fetchCreditDue={fetchCreditDue} payInvoiceCredit={payInvoiceCredit} isDelivery />}
+        {tab === "customers" && <CustomersView customers={customers} updateCustomer={updateCustomer} addCustomer={addCustomer} invoices={invoices} addInvoice={addInvoice} transactions={customerTransactions} addTransaction={addTransaction} merchant={merchant} applyCustomerPayment={applyCustomerPayment} payInvoiceCredit={payInvoiceCredit} nextDocNumber={nextDocNumber} whatsappTemplate={whatsappTemplate} whatsappEnabled={whatsappEnabled} />}
         {tab === "inventory" && <InventoryView categories={categories} addCategory={addCategory} products={products} addProduct={addProduct} updateProduct={updateProduct} deleteProduct={deleteProduct} addons={addons} addAddon={addAddon} removeAddon={removeAddon} serviceTypes={serviceTypes} addServiceType={addServiceType} deleteServiceType={deleteServiceType} />}
         {tab === "purchases" && <PurchasesExpensesView tab={purchasesSubTab} setTab={(s) => navigateTab("purchases", s)} suppliers={suppliers} addSupplier={addSupplier} updateSupplier={updateSupplier} purchases={scopedPurchases} addPurchase={addPurchase} expenseCategories={expenseCategories} addExpenseCategory={addExpenseCategory} expenses={scopedExpenses} addExpense={addExpense} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber} />}
         {tab === "promotions" && <PromotionsView promotions={scopedPromotions} addPromotion={addPromotion} updatePromotion={updatePromotion} />}
@@ -7427,6 +7681,35 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
       throw updErr;
     }
     return { wallet_balance: newWallet, debt: newDebt };
+  };
+
+  // What is still owed on one pay-later invoice, read from the database at
+  // the moment of hand-over rather than from (possibly stale) screen state.
+  const fetchCreditDue = async (invoiceId) => {
+    const { data, error } = await db.from("invoices").select("credit_due").eq("id", invoiceId).single();
+    if (error) throw error;
+    return Number(data.credit_due || 0);
+  };
+
+  // Pays all or part of ONE invoice via pay_invoice_credit() (see
+  // supabase-credit-invoice-payment.sql): the invoice's balance, the
+  // customer's debt/wallet and the linked payment record change together or
+  // not at all. payments = [{ method, amount }] (one or two methods).
+  const payInvoiceCredit = async (invoiceId, payments) => {
+    const { data, error } = await db.rpc("pay_invoice_credit", { p_invoice_id: invoiceId, p_payments: payments });
+    if (error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    const inv = invoices.find((i) => i.id === invoiceId);
+    setInvoicesState((prev) => prev.map((i) => (i.id === invoiceId ? { ...i, creditDue: Number(row.credit_due) } : i)));
+    if (inv) setCustomersState((prev) => prev.map((c) => (c.id === inv.customerId ? { ...c, walletBalance: row.wallet_balance, debt: row.debt } : c)));
+    // The payment records are written by the database, so pull them in now
+    // instead of waiting for the realtime echo (the customer record shows them).
+    const { data: txns } = await db.from("customer_transactions").select("*").eq("invoice_id", invoiceId);
+    if (txns?.length) {
+      const fresh = txns.map(toCamelCase);
+      setCustomerTransactionsState((prev) => [...prev.filter((x) => !fresh.some((f) => f.id === x.id)), ...fresh]);
+    }
+    return row;
   };
 
   // Shared add/update/remove helpers for every plain catalog table (addons,
@@ -8026,7 +8309,7 @@ function LaundryOpsApp({ tenantId, branchId, onLogout, initialLang }) {
         readyMessageTemplate={readyMessageTemplate} setReadyMessageTemplate={setReadyMessageTemplate}
         whatsappReadySendMode={whatsappReadySendMode} setWhatsappReadySendMode={setWhatsappReadySendMode}
         onLogout={onLogout}
-        applyCustomerPayment={applyCustomerPayment} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber}
+        applyCustomerPayment={applyCustomerPayment} payInvoiceCredit={payInvoiceCredit} fetchCreditDue={fetchCreditDue} adjustSupplierBalance={adjustSupplierBalance} nextDocNumber={nextDocNumber}
         zatcaConfig={zatcaConfig} zatcaInvoices={zatcaInvoices} generateZatcaCsr={generateZatcaCsr} enableZatca={enableZatca} disableZatca={disableZatca} resetZatcaConfig={resetZatcaConfig}
         pendingNav={pendingNav} setPendingNav={setPendingNav}
       />
