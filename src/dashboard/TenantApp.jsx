@@ -3316,8 +3316,7 @@ function invoiceHasCredit(inv) {
 function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, merchant, zatcaInvoices = [], whatsappTemplate, whatsappEnabled, readyMessageEnabled, readyMessageTemplate, whatsappReadySendMode, enabledPayMethods, fetchCreditDue, payInvoiceCredit }) {
   const { t, lang } = useLang();
   const [openId, setOpenId] = useState(null);
-  // { invoiceId, due, action } while the pay-later window is open; `action`
-  // is the hand-over the cashier asked for, run once the invoice is paid.
+  // { invoiceId, due } while the pay-later window is open.
   const [creditGate, setCreditGate] = useState(null);
   const [deliverNotice, setDeliverNotice] = useState("");
   // The hand-over runs after an await (and after payment), so it reads the
@@ -3366,7 +3365,8 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
   // amount is read from the database at this moment (the database also
   // refuses the hand-over itself while anything is owed — see
   // supabase-credit-invoice-payment.sql); if something is, the payment window
-  // opens and the status stays as it was until it's paid.
+  // opens and the status stays as it was until it's paid; once paid, the whole
+  // invoice is handed over and closed in one go (see payGatedInvoice).
   const deliverAfterPayment = async (inv, action) => {
     setDeliverNotice("");
     if (!invoiceHasCredit(inv)) { action(); return; }
@@ -3378,7 +3378,7 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
       setDeliverNotice(t("invoices_creditCheckFailed"));
       return;
     }
-    if (due > 0) setCreditGate({ invoiceId: inv.id, due, action });
+    if (due > 0) setCreditGate({ invoiceId: inv.id, due });
     else action();
   };
   const payGatedInvoice = async (payments) => {
@@ -3396,7 +3396,7 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
       }
     }
     setCreditGate(null);
-    gate.action();
+    deliverAll(gate.invoiceId);
   };
 
   const applyItemStatus = (invId, itemId, status) => {
@@ -3415,16 +3415,19 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
     if (handingOver) deliverAfterPayment(inv, () => applyItemStatus(invId, itemId, status));
     else applyItemStatus(invId, itemId, status);
   };
+  // Every piece Delivered (keeping the time of any already handed over), the
+  // invoice closed and its window shut.
+  const deliverAll = (invId) => {
+    const current = invoicesRef.current.find((i) => i.id === invId);
+    if (!current) return;
+    const items = current.items.map((it) => ({ ...it, status: "Delivered", deliveredAt: it.deliveredAt || nowISO() }));
+    updateInvoice(invId, { closed: true, items });
+    setOpenId(null);
+  };
   const closeInvoice = (invId) => {
     const inv = invoices.find((i) => i.id === invId);
     if (!inv) return;
-    deliverAfterPayment(inv, () => {
-      const current = invoicesRef.current.find((i) => i.id === invId);
-      if (!current) return;
-      const items = current.items.map((it) => ({ ...it, status: "Delivered", deliveredAt: it.deliveredAt || nowISO() }));
-      updateInvoice(invId, { closed: true, items });
-      setOpenId(null);
-    });
+    deliverAfterPayment(inv, () => deliverAll(invId));
   };
   const gatedInvoice = creditGate ? invoices.find((i) => i.id === creditGate.invoiceId) : null;
 
