@@ -3361,12 +3361,13 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
     setReadyConfirm({ phone: cleanedPhone, message });
   };
 
-  // A pay-later invoice is handed over only once nothing is owed on it. The
-  // amount is read from the database at this moment (the database also
-  // refuses the hand-over itself while anything is owed — see
-  // supabase-credit-invoice-payment.sql); if something is, the payment window
-  // opens and the status stays as it was until it's paid; once paid, the whole
-  // invoice is handed over and closed in one go (see payGatedInvoice).
+  // A customer may take single pieces of a pay-later order without paying;
+  // what's owed is collected when the LAST piece is handed over or the
+  // invoice is closed. The amount is read from the database at that moment
+  // (the database also refuses that hand-over itself while anything is owed
+  // — see supabase-credit-partial-handover.sql); if something is, the payment
+  // window opens and the status stays as it was until it's paid; once paid,
+  // the whole invoice is handed over and closed in one go (payGatedInvoice).
   const deliverAfterPayment = async (inv, action) => {
     setDeliverNotice("");
     if (!invoiceHasCredit(inv)) { action(); return; }
@@ -3411,8 +3412,10 @@ function InvoicesView({ invoices, customers, updateInvoice, isDelivery = false, 
   const updateItemStatus = (invId, itemId, status) => {
     const inv = invoices.find((i) => i.id === invId);
     if (!inv) return;
-    const handingOver = status === "Delivered" && inv.items.find((it) => it.itemId === itemId)?.status !== "Delivered";
-    if (handingOver) deliverAfterPayment(inv, () => applyItemStatus(invId, itemId, status));
+    // Only the last piece still in the shop asks for payment.
+    const handingOverLast = status === "Delivered" && inv.items.every((it) => it.itemId === itemId || it.status === "Delivered")
+      && inv.items.find((it) => it.itemId === itemId)?.status !== "Delivered";
+    if (handingOverLast) deliverAfterPayment(inv, () => applyItemStatus(invId, itemId, status));
     else applyItemStatus(invId, itemId, status);
   };
   // Every piece Delivered (keeping the time of any already handed over), the

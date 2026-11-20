@@ -8,8 +8,9 @@
 --    database when the invoice is created (from its own payment method /
 --    split), never from what the browser sends, and frozen on any later
 --    update except through pay_invoice_credit() below.
--- 2) An invoice with credit_due > 0 can't be closed or have more pieces
---    marked Delivered.
+-- 2) An invoice with credit_due > 0 can't be closed or have all its pieces
+--    marked Delivered (single pieces may go out before that — see
+--    supabase-credit-partial-handover.sql, which also carries this rule).
 -- 3) pay_invoice_credit() pays (all or part of) one invoice: locks it,
 --    lowers its credit_due, the customer's debt (and wallet, for a wallet
 --    payment) and records a debt_payment linked to the invoice, all in one
@@ -60,6 +61,9 @@ grant execute on function invoice_delivered_count(jsonb) to authenticated, servi
 
 create or replace function invoices_credit_guard() returns trigger
 language plpgsql set search_path = public as $$
+declare
+  v_new_count int := case when jsonb_typeof(new.items) = 'array' then jsonb_array_length(new.items) else 0 end;
+  v_old_count int := case when jsonb_typeof(old.items) = 'array' then jsonb_array_length(old.items) else 0 end;
 begin
   if tg_op = 'INSERT' then
     new.credit_due := invoice_credit_portion(new.pay_method, new.split_payments, new.total);
@@ -70,9 +74,12 @@ begin
   if coalesce(current_setting('ragwa.credit_write', true), '') <> 'on' then
     new.credit_due := old.credit_due;
   end if;
+  -- While anything is owed: no closing, and no handing over the last
+  -- piece(s); single pieces may go out before that.
   if new.credit_due > 0 and (
        (new.closed and not coalesce(old.closed, false))
-       or invoice_delivered_count(new.items) > invoice_delivered_count(old.items)) then
+       or (v_new_count > 0 and invoice_delivered_count(new.items) = v_new_count
+           and not (v_old_count > 0 and invoice_delivered_count(old.items) = v_old_count))) then
     raise exception 'credit_unpaid' using errcode = 'P0001';
   end if;
   return new;
